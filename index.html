@@ -1670,8 +1670,7 @@
       cropTool.classList.remove("show");
       cropState.active=false;
       // 替换当前画面
-      if(state.fileURL) URL.revokeObjectURL(state.fileURL);
-      state.fileURL=null;
+      // v1.3.0-fix: 保留原 blob URL 供撤销恢复（不在裁切时 revoke，由换图/清除统一回收）
       setPhotoSource(url,"upload","裁切后");
       state.cropResult=url;
       setZoom(1); setFilter(state.filter);
