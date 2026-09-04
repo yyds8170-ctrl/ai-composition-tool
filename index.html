@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v1.1.0 · 专业取景器</title>
+<title>AI 构图助手 Pro v1.2.0 · 专业取景器</title>
 <meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
@@ -280,6 +280,11 @@
   .s-chip.active{color:var(--amber);border-color:var(--amber);background:var(--panel2);}
   /* 滤镜条 */
   .strength-row{display:flex;align-items:center;gap:9px;}
+    .ai-suggest{margin:10px 0 2px;padding:10px 12px;border-radius:13px;background:linear-gradient(135deg,rgba(224,144,47,.10),rgba(224,144,47,.04));border:1px solid rgba(224,144,47,.18);opacity:0;transform:translateY(6px);transition:.35s ease;}
+    .ai-suggest.show{opacity:1;transform:none;}
+    .ai-suggest .db-head{margin-bottom:7px;}
+    .ai-suggest .sg-row{display:flex;gap:7px;font-size:12.5px;line-height:1.55;color:var(--fg);padding:3px 0;}
+    .ai-suggest .sg-b{color:var(--amber);font-weight:700;flex:0 0 auto;}
   .strength-row .lbl{font-size:10.5px;color:var(--sub);white-space:nowrap;}
   .strength-row .sv{font-size:12px;color:var(--amber);font-family:'JetBrains Mono',monospace;min-width:36px;text-align:right;}
   .strength-range{flex:1;appearance:none;height:24px;background:transparent;cursor:pointer;}
@@ -295,6 +300,10 @@
   .filter-pill.active .sw{border-color:var(--amber);}
   /* 副操作行 */
   .sec-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+    .act-row{display:flex;gap:8px;align-items:center;margin-top:2px;}
+    .btn.act{flex:1 1 0;min-width:0;min-height:44px;background:linear-gradient(180deg,#fff,#f6f2ea);border:1px solid rgba(20,16,10,.10);}
+    .btn.act.pri{background:linear-gradient(180deg,var(--amber),#d98a1f);color:#16100A;border:none;font-weight:700;}
+    .btn.act:disabled{opacity:.42;filter:grayscale(.6);pointer-events:none;}
   .sec-row .btn{min-height:38px;font-size:11px;padding:0 9px;flex:1 1 auto;min-width:0;}
   .sec-row .btn svg{width:13px;height:13px;}
   .spacer{flex:1;}
@@ -347,7 +356,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.1.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.2.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
   </div>
@@ -480,6 +489,12 @@
       <div class="spacer"></div>
       <button class="btn help" id="btnHelp" title="使用说明" style="flex:0 0 auto;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.2 9a2.8 2.8 0 0 1 5.5.8c0 1.8-2.7 2.3-2.7 4"/><circle cx="12" cy="17.6" r=".4" fill="currentColor"/></svg>帮助</button>
       <button class="btn" id="btnGallery" style="flex:0 0 auto;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 15l5-5 4 4 3-3 6 6"/></svg>作品</button>
+    </div>
+    <!-- v1.2.0: 成品操作栏 -->
+    <div class="act-row">
+      <button class="btn act" id="btnUndo" disabled title="撤销上一步操作（滤镜/变焦/裁切/清除）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-4"/></svg>撤销</button>
+      <button class="btn act pri" id="btnExport" disabled title="导出当前成品图（含滤镜/变焦/裁切）为高清 PNG"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>导出</button>
+      <button class="btn act" id="btnShare" disabled title="一键分享成品图到微信 / 抖音等"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>分享</button>
     </div>
   </div>
 
@@ -766,17 +781,23 @@
     }
     filterBar.addEventListener("click",function(e){
       var b=e.target.closest(".filter-pill"); if(!b) return;
+      pushUndo();
       setFilter(b.dataset.f);
       var f=FILTERS[b.dataset.f];
       toastMsg("滤镜："+f.name+" · "+f.desc);
     });
-    zoomRange.addEventListener("input",function(){ state.zoom=parseFloat(zoomRange.value); applyZoom(); });
+    var zoomSlid=false;
+    zoomRange.addEventListener("pointerdown",function(){ zoomSlid=false; });
+    zoomRange.addEventListener("input",function(){ if(!zoomSlid){ pushUndo(); zoomSlid=true; } state.zoom=parseFloat(zoomRange.value); applyZoom(); });
+    var strengthSlid=false;
+    strengthRange.addEventListener("pointerdown",function(){ strengthSlid=false; });
     strengthRange.addEventListener("input",function(){
+      if(!strengthSlid){ pushUndo(); strengthSlid=true; }
       state.strength=parseFloat(strengthRange.value);
       applyStrength();
     });
     document.querySelectorAll(".ztick").forEach(function(t){
-      t.addEventListener("click",function(){ setZoom(parseFloat(t.dataset.z)); });
+      t.addEventListener("click",function(){ pushUndo(); setZoom(parseFloat(t.dataset.z)); });
     });
 
     /* ===================== cover 布局计算 ===================== */
@@ -932,6 +953,7 @@
       baseLayer.style.display="none";
       resetGuides(); closeAi();
       setZoom(1); setFilter("clear");
+      updateActBtns();
       setStatus("已载入「"+name+"」· 点击「AI 分析」", "idle");
     }
 
@@ -948,7 +970,7 @@
     sampleStrip.addEventListener("click",function(e){
       var c=e.target.closest(".s-chip"); if(!c) return;
       var s=SAMPLES.filter(function(x){return x.id===c.dataset.id;})[0];
-      if(s){ loadSample(s); closeSampleStrip(); }
+      if(s){ pushUndo(); loadSample(s); closeSampleStrip(); }
     });
     btnSample.addEventListener("click",function(e){
       e.stopPropagation();
@@ -1292,6 +1314,18 @@
         aiBody.appendChild(card);
         setTimeout(function(){ card.classList.add("show"); }, 100);
       })();
+      // v1.2.0: 构图建议（基于光学数据）
+      (function(){
+        var suggs=buildSuggestions(plan, state.aiData);
+        if(!suggs || !suggs.length) return;
+        var scard=document.createElement("div");
+        scard.className="ai-suggest";
+        var sh='<div class="db-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.8.6 1 1.5 1 2.3h6c0-.8.2-1.7 1-2.3A7 7 0 0 0 12 2z"/></svg>构图建议</div>';
+        suggs.forEach(function(t){ sh+='<div class="sg-row"><span class="sg-b">✦</span><span>'+t+'</span></div>'; });
+        scard.innerHTML=sh;
+        aiBody.appendChild(scard);
+        setTimeout(function(){ scard.classList.add("show"); }, 80);
+      })();
       var ICONS={
         S:'<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 3"/>',
         G:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>',
@@ -1608,6 +1642,7 @@
     });
     cropApply.addEventListener("click",function(){
       if(!cropState.active) return;
+      pushUndo();
       var d=cropState.disp, r=cropState.rect;
       // 换算回图片像素坐标
       var fx=(r.x-d.ox)/d.w, fy=(r.y-d.oy)/d.h, fw=r.w/d.w, fh=r.h/d.h;
@@ -1837,6 +1872,7 @@
 
     /* ===================== 清除画布 ===================== */
     btnClear.addEventListener("click",function(){
+      pushUndo();
       invalidateAnalysis();
       // 停止相机
       if(state.mode==="camera" && state.stream){ stopStream(); }
@@ -1870,6 +1906,7 @@
       noSrc.classList.add("show");
       updateSrcMeta(0,0);
       setStatus("画布已清除 · 可重新上传照片或连接相机", "idle");
+      updateActBtns();
       toastMsg("已清除画布");
     });
 
@@ -1945,13 +1982,18 @@
        html:"<p>点右下角<span class='hl'>圆形快门</span>拍摄当前画面（带当前变焦+滤镜）。浮层可选「<span class='hl'>保存</span>」下载到手机相册，或「<span class='hl'>存入作品</span>」保存到本地作品画廊（右上「作品」可查看）。</p>"},
       {t:"⑩ 引导线", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M3 3h18v18H3z'/><path d='M3 9h18M3 15h18M9 3v18M15 3v18'/></svg>",
        html:"<p>点「<span class='hl'>引导线</span>」可循环切换取景参考线：<b>三分线+黄金点</b> → <b>对角线</b> → <b>关闭</b>。手动构图时可参考这些专业辅助线（v1.1.0 新增）。</p>"},
+      {t:"⑨ 导出 / 分享 / 撤销（v1.2.0）", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/><path d='M7 10l5 5 5-5'/><path d='M12 15V3'/></svg>",
+       html:"<p><span class='hl'>导出</span>：把当前画面（含滤镜+强度+变焦+裁切效果）一键导出为高清 PNG，可保存到相册 / 发工作群。</p>"+
+            "<p><span class='hl'>分享</span>：通过系统分享直接发给微信 / 抖音等 App（需系统支持，不支持时自动转为下载）。</p>"+
+            "<p><span class='hl'>撤销</span>：误操作（换滤镜 / 调变焦 / 裁切 / 清除）后点一下即可回退上一步，最多回退 20 步。</p>"},
       {t:"⑪ 常见问题", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='9'/><path d='M9.2 9a2.8 2.8 0 0 1 5.5.8c0 1.8-2.7 2.3-2.7 4'/><circle cx='12' cy='17.6' r='.4' fill='currentColor'/></svg>",
        html:"<p><b>相机点不开？</b> 需在 HTTPS 环境（预览发布后），或改用相册/示例。</p>"+
             "<p><b>拍照后图片没保存？</b> 拍完点「保存」会下载到相册；点「存入作品」进画廊。作品存在本机浏览器缓存。</p>"+
             "<p><b>想重拍 / 换照片？</b> 点「<span class='hl'>清除</span>」清空画布，再从相册上传新照片或重新选示例。</p>"+
             "<p><b>滤镜不生效？</b> 底部滤镜条向左/右滑动可看到全部 26 款。</p>"},
       {t:"⑫ 版本信息", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/></svg>",
-       html:"<p><b>当前版本：v1.1.0</b>（2026-09-04）</p>"+
+       html:"<p><b>当前版本：v1.2.0</b>（2026-09-04）</p>"+
+            "<p><b>v1.2.0 更新内容：</b>新增「导出成品图」（含滤镜/变焦/裁切）、「一键分享」、「撤销操作」（最多20步）、AI「构图建议」（基于光学数据生成可执行改进方案）；APK 已签名加固。</p>"+
             "<p><b>v1.1.0 更新内容：</b>滤镜增至 26 款（新增日落暖调/赛博霓虹/莫兰迪/褪色胶片/重彩/柔焦/极光青紫/银盐）；AI 光学数据新增主体位置/对称度/对角线/三分匹配 4 项；裁切新增 2:3/4:3/2.35:1 电影比例；新增引导线模式切换；帮助页完善。</p>"+
             "<p>所有功能均为本地运行，照片不上传任何服务器，隐私安全。作品画廊最多保存 24 张。</p>"}
     ];
@@ -1968,6 +2010,128 @@
     btnHelp.addEventListener("click",openHelp);
     helpClose.addEventListener("click",function(){ helpSheet.classList.remove("show"); });
 
+    /* ===================== v1.2.0: 撤销 / 导出 / 分享 / 构图建议 ===================== */
+    var btnUndo=$("btnUndo"), btnExport=$("btnExport"), btnShare=$("btnShare");
+    var undoStack=[];
+    function pushUndo(){
+      if(state.mode!=="photo" || !photoView.src) return;
+      undoStack.push({filter:state.filter, strength:state.strength, zoom:state.zoom,
+        cropResult:state.cropResult||null, origURL:state.origURL||null, src:photoView.src});
+      if(undoStack.length>20) undoStack.shift();
+      updateActBtns();
+    }
+    function undo(){
+      if(!undoStack.length){ toastMsg("没有可撤销的操作"); return; }
+      var s=undoStack.pop();
+      state.cropResult=s.cropResult||null;
+      if(photoView.src!==s.src){
+        photoView.onload=function(){ photoView.onload=null; applyZoom(); };
+        photoView.src=s.src;
+      }
+      setFilter(s.filter);
+      state.strength=s.strength; state.zoom=s.zoom;
+      applyStrength(); applyZoom();
+      updateActBtns();
+      toastMsg("已撤销上一步操作");
+    }
+    btnUndo.addEventListener("click",undo);
+
+    function exportCanvas(){
+      var el=currentEl(); if(!el){ toastMsg("请先加载图片或打开相机"); return null; }
+      try{
+        var src,w,h;
+        if(state.mode==="camera"){
+          if(!videoCam.videoWidth){ toastMsg("相机画面尚未就绪"); return null; }
+          w=videoCam.videoWidth; h=videoCam.videoHeight; src=videoCam;
+        } else {
+          if(!photoView.naturalWidth){ toastMsg("图片尚未加载完成"); return null; }
+          src=photoView; w=photoView.naturalWidth; h=photoView.naturalHeight;
+        }
+        var z=state.zoom||1;
+        var sw=w/z, sh=h/z, sx=(w-sw)/2, sy=(h-sh)/2;
+        sw=Math.max(4,Math.round(sw)); sh=Math.max(4,Math.round(sh));
+        var c1=document.createElement("canvas"); c1.width=sw; c1.height=sh;
+        var x1=c1.getContext("2d");
+        x1.drawImage(src, sx, sy, sw, sh, 0, 0, sw, sh);
+        var css=(state.filter&&FILTERS[state.filter])?FILTERS[state.filter].css:null;
+        var strength=(state.strength===undefined)?100:state.strength;
+        var c2=document.createElement("canvas"); c2.width=sw; c2.height=sh;
+        var x2=c2.getContext("2d");
+        if(css && css!=="none"){ try{ x2.filter=css; }catch(e){} }
+        x2.drawImage(c1,0,0);
+        var out=document.createElement("canvas"); out.width=sw; out.height=sh;
+        var xo=out.getContext("2d");
+        if(css && css!=="none" && strength<100){
+          xo.drawImage(c1,0,0);
+          xo.globalAlpha=strength/100; xo.drawImage(c2,0,0); xo.globalAlpha=1;
+        } else if(css && css!=="none"){ xo.drawImage(c2,0,0); }
+        else { xo.drawImage(c1,0,0); }
+        return out.toDataURL("image/png");
+      }catch(e){ console.error(e); toastMsg("导出失败："+(e.message||"")); return null; }
+    }
+    function downloadPng(dataUrl, name){
+      var a=document.createElement("a");
+      a.href=dataUrl; a.download=name||"ai-composition.png";
+      a.style.display="none"; document.body.appendChild(a); a.click();
+      setTimeout(function(){ document.body.removeChild(a); }, 120);
+    }
+    btnExport.addEventListener("click",function(){
+      var d=exportCanvas(); if(!d) return;
+      downloadPng(d, "构图助手成品_"+new Date().getTime()+".png");
+      toastMsg("已导出高清 PNG（可在相册/下载目录查看）");
+    });
+    btnShare.addEventListener("click",function(){
+      var d=exportCanvas(); if(!d) return;
+      var img=new Image();
+      img.onload=function(){
+        var c=document.createElement("canvas"); c.width=img.width; c.height=img.height;
+        c.getContext("2d").drawImage(img,0,0);
+        c.toBlob(function(blob){
+          if(!blob){ toastMsg("生成分享图片失败"); return; }
+          var file=new File([blob], "构图助手成品_"+new Date().getTime()+".png", {type:"image/png"});
+          if(navigator.canShare && navigator.canShare({files:[file]})){
+            navigator.share({files:[file], title:"AI 构图助手 成品", text:"我的 AI 构图成品"}).catch(function(){});
+          } else {
+            var fr=new FileReader();
+            fr.onload=function(){ downloadPng(fr.result, file.name); };
+            fr.readAsDataURL(blob);
+            toastMsg("当前环境不支持直接分享，已转为下载保存");
+          }
+        }, "image/png");
+      };
+      img.onerror=function(){ toastMsg("生成分享图片失败"); };
+      img.src=d;
+    });
+
+    function buildSuggestions(plan, a){
+      if(!a) return [];
+      var s=[];
+      if(a.cx<0.38) s.push("主体位置偏左（X "+(a.cx*100).toFixed(0)+"%），建议向右移动，让主体贴近右侧三分线，画面更稳。");
+      else if(a.cx>0.62) s.push("主体位置偏右（X "+(a.cx*100).toFixed(0)+"%），建议向左移动，让主体落在左侧三分线上。");
+      else if(a.cy<0.34) s.push("主体偏上（Y "+(a.cy*100).toFixed(0)+"%），建议适当下移，让视觉重心落得更稳。");
+      else if(a.cy>0.66) s.push("主体偏下（Y "+(a.cy*100).toFixed(0)+"%），建议上移，避免画面产生下坠感。");
+      if(a.highClip>0.06) s.push("高光过曝区域约 "+(a.highClip*100).toFixed(0)+"%，建议降低曝光或避开过亮背景，防止高光死白。");
+      if(a.shadowClip>0.20) s.push("暗部死黑约 "+(a.shadowClip*100).toFixed(0)+"%，建议提亮阴影或补光，找回暗部细节。");
+      if(a.bodyRatio<0.12) s.push("主体占比较小（约 "+(a.bodyRatio*100).toFixed(0)+"%），建议靠近主体或拉大变焦，让重点更突出。");
+      else if(a.bodyRatio>0.72) s.push("主体占比偏大（约 "+(a.bodyRatio*100).toFixed(0)+"%），画面略满，可适当后退留出呼吸空间。");
+      if(a.sym<0.40) s.push("左右对称度偏低（"+(a.sym*100).toFixed(0)+"%），若为建筑或倒影题材，可调机位居中增强秩序感。");
+      if(a.diagStrength>0.5) s.push("存在较强的对角线引导，善用光影线条可增强画面纵深与动势。");
+      if(a.wb>0.12) s.push("整体色调偏暖（+"+(a.wb*1000).toFixed(0)+"K），想还原中性可适当调低色温。");
+      else if(a.wb<-0.12) s.push("整体色调偏冷（"+(a.wb*1000).toFixed(0)+"K），想营造暖意可适当提升色温。");
+      if(s.length<2){
+        if(plan&&plan.rule==="thirds") s.push("三分法契合良好，可继续保持主体位于分割线交叉点附近。");
+        else if(plan&&plan.rule==="diag") s.push("对角线构图契合度高，沿引导线排布主体会更有张力。");
+        else s.push("当前构图整体均衡，可尝试轻微平移机位探索更多可能性。");
+      }
+      return s.slice(0,4);
+    }
+    function updateActBtns(){
+      var has = state.mode==="photo" ? !!photoView.src : !!videoCam.videoWidth;
+      if(btnExport){ btnExport.disabled=!has; }
+      if(btnShare){ btnShare.disabled=!has; }
+      if(btnUndo){ btnUndo.disabled=undoStack.length===0; }
+    }
+
     /* ===================== 引导线叠加的辅助功能 ===================== */
     function refreshView(){
       var el=currentEl();
@@ -1980,6 +2144,7 @@
     setFilter("clear");
     // 默认载入示例
     loadSample(SAMPLES[0]);
+    undoStack=[];
     if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
       camBadge.classList.add("err");
       camBadgeTxt.textContent="不支持";
