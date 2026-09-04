@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v1.3.0 · 专业取景器</title>
+<title>AI 构图助手 Pro v1.3.1 · 专业取景器</title>
 <meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
@@ -366,7 +366,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.3.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.3.1</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
   </div>
@@ -2007,8 +2007,9 @@
             "<p><b>想重拍 / 换照片？</b> 点「<span class='hl'>清除</span>」清空画布，再从相册上传新照片或重新选示例。</p>"+
             "<p><b>滤镜不生效？</b> 底部滤镜条向左/右滑动可看到全部 26 款。</p>"},
       {t:"⑫ 版本信息", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/></svg>",
-       html:"<p><b>当前版本：v1.3.0</b>（2026-09-04）</p>"+
+       html:"<p><b>当前版本：v1.3.1</b>（2026-09-04）</p>"+
             "<p><b>设计师：</b><span class='brand' style='-webkit-background-clip:text;background-clip:text;color:transparent;background-image:linear-gradient(135deg,#E9A23B,#f6d48e);font-style:italic;font-weight:700;font-family:STKaiti,KaiTi,serif;font-size:14px;'>· 洋洋 ·</span></p>"+
+            "<p><b>v1.3.1 修复内容：</b>修复「上传照片 → 裁切 → 撤销」后图片无法恢复、导出提示『图片尚未加载完成』的问题（裁切时保留原图缓存供撤销正确恢复）。</p>"+
             "<p><b>v1.3.0 更新内容：</b>新增<b>真 AI 视觉识别</b>（本地运行 Coco-SSD 深度学习模型，识别画面主体 80 类，主体位置/占比用真实检测结果，识别框叠加显示，自动降级）；加入「洋洋」品牌角标；APK 签名改为专属密钥「YangYang」。</p>"+
             "<p><b>v1.2.0 更新内容：</b>新增「导出成品图」（含滤镜/变焦/裁切）、「一键分享」、「撤销操作」（最多20步）、AI「构图建议」；APK 签名加固。</p>"+
             "<p><b>v1.1.0 更新内容：</b>滤镜增至 26 款；AI 光学数据新增 4 项；裁切新增 2:3/4:3/2.35:1；引导线模式切换。</p>"+
