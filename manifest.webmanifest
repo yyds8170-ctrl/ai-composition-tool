@@ -1,0 +1,27 @@
+{
+  "name": "AI 构图助手",
+  "short_name": "构图助手",
+  "description": "AI 构图助手 Pro · 专业取景器：相机取景、AI 构图分析、18 款滤镜、智能裁切",
+  "id": "/ai-composition-tool/",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A0C0E",
+  "theme_color": "#0A0C0E",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
