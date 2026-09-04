@@ -217,6 +217,8 @@
     .ai-detect .db-head{margin-bottom:6px;color:#3d7fd6;}
     .ai-detect .dt-row{font-size:12.5px;line-height:1.6;color:var(--fg);}
     .ai-detect .dt-row.dim{color:var(--dim);font-size:11.5px;}
+    .ai-detect.model-status.on{background:linear-gradient(135deg,rgba(70,140,220,.14),rgba(70,140,220,.05));border-color:rgba(70,140,220,.28);}
+    .ai-detect.model-status.off{background:linear-gradient(135deg,rgba(217,138,31,.10),rgba(217,138,31,.04));border-color:rgba(217,138,31,.25);}
     .ai-box{position:absolute;border:2px solid #4d9fff;border-radius:3px;box-shadow:0 0 0 1px rgba(0,0,0,.35), 0 0 14px rgba(77,159,255,.35);pointer-events:none;z-index:6;}
     .ai-box-lbl{position:absolute;top:-20px;left:-2px;background:#4d9fff;color:#fff;font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap;letter-spacing:.3px;}
   .shot-actions .sec{background:var(--panel2);color:var(--text);border:1px solid var(--line2);}
@@ -2164,6 +2166,7 @@
       {t:"⑫ 版本信息", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/></svg>",
        html:"<p><b>当前版本：v1.3.2</b>（2026-09-04）</p>"+
             "<p><b>设计师：</b><span class='brand' style='-webkit-background-clip:text;background-clip:text;color:transparent;background-image:linear-gradient(135deg,#E9A23B,#f6d48e);font-style:italic;font-weight:700;font-family:STKaiti,KaiTi,serif;font-size:14px;'>· 洋洋 ·</span></p>"+
+            "<p><b>模型状态怎么看：</b>点「AI 分析」后，面板顶部会出现「🤖 真 AI 模型已加载/加载中/未加载」提示。绿色=真 AI 在识别主体；橙色=离线或网络慢，自动用基础分析（首次联网请稍候后再点一次分析）。</p>"+
             "<p><b>v1.3.2 新功能：</b>① 专业调色（曝光/对比度/饱和度/色温，实时预览、导出生效）；② 品牌水印「洋洋」（可开关/三位置/透明度）；③ 电商尺寸快捷导出（800×800 主图 / 750×1000 / 1080×1080 / 900×1200）+ PNG/JPEG 格式选择；④ AI 场景识别（按检测主体推断人像/街拍/萌宠/静物/美食等并给专属构图建议）。</p>"+
             "<p><b>v1.3.2 修复内容：</b>修复「一键应用」后导出仍是原图的问题（旧版一键应用未执行裁切，现改为自动裁切+滤镜+变焦一次到位，且应用后仍可继续「按构图框智能裁切」手动微调）。</p>"+
             "<p><b>v1.3.1 修复内容：</b>修复「上传照片 → 裁切 → 撤销」后图片无法恢复、导出提示『图片尚未加载完成』的问题（裁切时保留原图缓存供撤销正确恢复）。</p>"+
@@ -2316,14 +2319,28 @@
       // 画面检测框
       drawAiBox(preds[0], el);
     }
+    function renderAiModelStatus(mode){
+      // mode: "loading" | "on" | "off"
+      var txt = mode==="on"
+        ? '<div class="dt-row">🤖 <b>真 AI 模型已加载</b>：本地运行 Coco-SSD，正在识别画面主体（80 类）</div>'
+        : (mode==="loading"
+           ? '<div class="dt-row">🤖 <b>真 AI 模型加载中…</b>（首次约需下载 18MB，请稍候再点一次「AI 分析」）</div>'
+           : '<div class="dt-row">🤖 <b>真 AI 模型未加载</b>（离线打开或网络较慢）：已用基础构图分析，主体识别框暂不显示</div>');
+      var card=document.createElement("div");
+      card.className="ai-detect model-status"+(mode==="on"?" on":(mode==="off"?" off":""));
+      card.innerHTML=txt;
+      aiBody.insertBefore(card, aiBody.firstChild);
+      setTimeout(function(){ card.classList.add("show"); }, 60);
+    }
     function runAIDetection(){
       var el=currentEl();
       if(!el) return;
       var token=state.analyzeToken;
       var elSnap=el;
       loadAIModel().then(function(ok){
-        if(!ok) return;
+        if(!ok){ renderAiModelStatus("off"); return; }
         if(token!==state.analyzeToken || currentEl()!==elSnap) return;
+        renderAiModelStatus("on");
         aiModel.detect(elSnap).then(function(preds){
           if(token!==state.analyzeToken) return;
           if(!preds||!preds.length){ return; }
