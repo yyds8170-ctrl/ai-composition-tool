@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v1.4.0 · 实时取景</title>
+<title>AI 构图助手 Pro v1.4.1 · 实时取景</title>
 <meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
@@ -421,7 +421,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.4.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.4.1</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
   </div>
@@ -676,7 +676,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v1.4.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v1.4.1 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v1.4.0 AI 真模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1421,7 +1421,7 @@
       // 3.2s 后出结果
       setTimeout(function(){
         // 期间已切换画面/清除，作废本次分析
-        if(token!==state.analyzeToken){ return; }
+        if(token!==state.analyzeToken){ state.analyzing=false; btnAnalyze.disabled=false; stage.classList.remove("scanning"); return; }
         try{
           var plan;
           if(state.sourceKind==="sample" && state.plan){
@@ -1440,6 +1440,7 @@
           }
           state.plan=plan;
           state.analyzed=true;
+          state.analyzing=false;
           stage.classList.remove("scanning");
           btnAnalyze.disabled=false;
           drawGuides(plan);
@@ -1717,11 +1718,11 @@
       var iw, ih;
       if(cropState.usePlan){
         var cp=cropState.usePlan.crop;
+        // 严格按 AI 推荐的 [左,上,右,下] 百分比计算裁切框，不强制原始宽高比
         iw=dispW*(100-cp[0]-cp[2])/100;
-        ih=dispW/cropState.imgRatio;
-        var scH=dispH*(100-cp[1]-cp[3])/100;
-        ih=Math.min(ih, scH);
-        iw=ih*cropState.imgRatio;
+        ih=dispH*(100-cp[1]-cp[3])/100;
+        iw=Math.max(36, Math.min(dispW, iw));
+        ih=Math.max(36, Math.min(dispH, ih));
       } else {
         iw=dispW*0.86; ih=dispW*0.86/cropState.imgRatio*0.9;
         if(ih>dispH*0.86){ ih=dispH*0.86; iw=ih*cropState.imgRatio; }
@@ -1903,6 +1904,8 @@
     btnShoot.addEventListener("click",function(){
       var el=currentEl();
       if(!el){ setStatus("没有可拍摄的画面", "err"); return; }
+      // 拍照前关闭实时取景辅助，避免 HUD 叠加在拍照预览上
+      if(state.liveMode){ stopLive(); }
       try{
         var vw=el.videoWidth||el.naturalWidth, vh=el.videoHeight||el.naturalHeight;
         var z=state.zoom;
@@ -2250,8 +2253,9 @@
             "<p><b>想重拍 / 换照片？</b> 点「<span class='hl'>清除</span>」清空画布，再从相册上传新照片或重新选示例。</p>"+
             "<p><b>滤镜不生效？</b> 底部滤镜条向左/右滑动可看到全部 26 款。</p>"},
       {t:"⑫ 版本信息", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/></svg>",
-       html:"<p><b>当前版本：v1.4.0</b>（2026-09-05）</p>"+
+       html:"<p><b>当前版本：v1.4.1</b>（2026-09-05）</p>"+
             "<p><b>设计师：</b><span class='brand' style='-webkit-background-clip:text;background-clip:text;color:transparent;background-image:linear-gradient(135deg,#E9A23B,#f6d48e);font-style:italic;font-weight:700;font-family:STKaiti,KaiTi,serif;font-size:14px;'>· 洋洋 ·</span></p>"+
+            "<p><b>v1.4.1 修复与优化：</b>① 修复<b>「实时取景后 AI 分析点不了」</b>的核心 bug（分析成功后 state.analyzing 未重置导致按钮被拦截，现已修复并增加中断时的状态清理）；② 修复<b>智能裁切框不生效</b>的问题（旧版强制保持原始宽高比导致 AI 推荐裁切百分比被忽略，现已严格按 [左,上,右,下] 百分比计算）；③ 拍照后自动关闭实时取景 HUD，避免叠加干扰；④ 全面审核 AI 分析引擎与裁切逻辑，确保分析准确、裁切到位。</p>"+
             "<p><b>v1.4.0 更新内容：</b>① 新增<b>实时取景辅助</b>（按下快门前的 AI 拍摄指导：主体锁定+移动建议 / 实时光线检测 / 实时水平仪 / 变焦建议 / 自动抓拍提示）；② 新增<b>AI 真模型管理</b>（可开关、可查看加载状态、可重新加载，模型是否下载完整一目了然）；③ 实时滤镜预览优化。</p>"+
             "<p><b>模型状态怎么看：</b>点「帮助」→「🤖 AI 真模型」区块可看状态徽章；实时取景时右上角有小徽章（绿=已加载 / 黄=加载中 / 红=失败 / 灰=关闭）。点「AI 分析」后面板顶部也有提示。</p>"+
             "<p><b>v1.3.2 新功能：</b>① 专业调色（曝光/对比度/饱和度/色温，实时预览、导出生效）；② 品牌水印「洋洋」（可开关/三位置/透明度）；③ 电商尺寸快捷导出（800×800 主图 / 750×1000 / 1080×1080 / 900×1200）+ PNG/JPEG 格式选择；④ AI 场景识别（按检测主体推断人像/街拍/萌宠/静物/美食等并给专属构图建议）。</p>"+
