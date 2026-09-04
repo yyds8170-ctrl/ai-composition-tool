@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 · 专业版</title>
-<meta name="description" content="AI 构图助手 Pro：相机实时取景、AI 构图分析、18 款胶片滤镜、智能裁切，全部本地运行不联网">
+<title>AI 构图助手 Pro v1.1.0 · 专业取景器</title>
+<meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -142,6 +142,15 @@
   .ftags{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;}
   .ftag{font-size:10px;padding:3px 8px;border-radius:999px;background:rgba(84,200,247,.12);color:var(--cyan);border:1px solid rgba(84,200,247,.28);}
   .ftag.warm{background:rgba(255,180,84,.12);color:var(--amber);border-color:rgba(255,180,84,.3);}
+  .ai-history{margin-top:4px;padding:10px 12px;border-radius:12px;background:rgba(20,24,29,.75);border:1px dashed var(--line);opacity:0;transform:translateY(5px);transition:all .4s;}
+  .ai-history.show{opacity:1;transform:none;}
+  .ai-history .h-hd{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--sub);font-weight:600;margin-bottom:7px;}
+  .ai-history .h-hd svg{color:var(--cyan);}
+  .ai-history .h-row{display:flex;align-items:center;gap:8px;font-size:11px;padding:5px 0;border-bottom:1px solid rgba(38,45,54,.6);}
+  .ai-history .h-row:last-child{border-bottom:none;}
+  .ai-history .h-t{color:var(--dim);flex:0 0 auto;width:78px;}
+  .ai-history .h-r{color:var(--text);flex:1 1 auto;}
+  .ai-history .h-c{color:var(--amber);font-weight:700;}
     .ai-preview{position:relative;margin:2px 14px 10px;border-radius:12px;overflow:hidden;background:#000;border:1px solid var(--line2);}
   .ai-preview .pv-stage{position:relative;width:100%;aspect-ratio:4/5;max-height:200px;overflow:hidden;}
   .ai-preview .pv-stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
@@ -308,6 +317,14 @@
   .f-chrome{filter:contrast(1.28) saturate(.72) brightness(.95) sepia(.05);}
   .f-ektar{filter:saturate(1.32) contrast(1.08) brightness(1.03) sepia(.05) hue-rotate(-3deg);}
   .f-cine{filter:contrast(1.18) saturate(.9) brightness(.96) sepia(.1) hue-rotate(8deg);}
+  .f-sunset{filter:sepia(.32) saturate(1.28) brightness(1.04) contrast(.98) hue-rotate(-6deg);}
+  .f-cyber{filter:saturate(1.42) contrast(1.2) brightness(.96) hue-rotate(12deg);}
+  .f-morandi{filter:saturate(.72) contrast(.95) brightness(1.05) sepia(.08);}
+  .f-fade{filter:saturate(.78) contrast(.88) brightness(1.07) sepia(.14);}
+  .f-vivid{filter:saturate(1.5) contrast(1.1) brightness(1.01);}
+  .f-soft{filter:blur(.5px) brightness(1.05) saturate(.94) contrast(.93);}
+  .f-aurora{filter:saturate(1.24) contrast(1.06) brightness(1.03) hue-rotate(18deg) sepia(.06);}
+  .f-silver{filter:grayscale(1) contrast(1.3) brightness(.97);}
   /* toast */
   .help-sheet{position:fixed;left:0;right:0;bottom:0;top:0;background:var(--bg);z-index:60;display:none;flex-direction:column;padding:14px 16px calc(16px + var(--safe-b));overflow:hidden;}
   .help-sheet.show{display:flex;animation:sheetUp .25s ease;}
@@ -330,7 +347,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器</span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.1.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
   </div>
@@ -438,6 +455,14 @@
       <button class="filter-pill" data-f="chrome"><span class="sw" style="background:linear-gradient(135deg,#3d4750,#8d9aa6)"></span>Chrome</button>
       <button class="filter-pill" data-f="ektar"><span class="sw" style="background:linear-gradient(135deg,#d98e63,#f2c79a)"></span>Ektar100</button>
       <button class="filter-pill" data-f="cine"><span class="sw" style="background:linear-gradient(135deg,#1e4d52,#c98a4b)"></span>电影LUT</button>
+      <button class="filter-pill" data-f="sunset"><span class="sw" style="background:linear-gradient(135deg,#c25e1e,#f0a24b)"></span>日落暖调</button>
+      <button class="filter-pill" data-f="cyber"><span class="sw" style="background:linear-gradient(135deg,#7a1fa8,#2a9df4)"></span>赛博霓虹</button>
+      <button class="filter-pill" data-f="morandi"><span class="sw" style="background:linear-gradient(135deg,#a89f91,#cfc8bd)"></span>莫兰迪</button>
+      <button class="filter-pill" data-f="fade"><span class="sw" style="background:linear-gradient(135deg,#b8a98e,#e5d9c4)"></span>褪色胶片</button>
+      <button class="filter-pill" data-f="vivid"><span class="sw" style="background:linear-gradient(135deg,#e3342f,#ff8c00)"></span>重彩</button>
+      <button class="filter-pill" data-f="soft"><span class="sw" style="background:linear-gradient(135deg,#e8d8f0,#f6f1fa)"></span>柔焦</button>
+      <button class="filter-pill" data-f="aurora"><span class="sw" style="background:linear-gradient(135deg,#6b2fa0,#2fe6c8)"></span>极光青紫</button>
+      <button class="filter-pill" data-f="silver"><span class="sw" style="background:linear-gradient(135deg,#4a5058,#c3ccd4)"></span>银盐</button>
     </div>
     <div class="strength-row" id="strengthRow" style="display:none;">
       <span class="lbl">滤镜强度</span>
@@ -446,6 +471,7 @@
     </div>
     <div class="sec-row">
       <button class="btn" id="btnRules"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>构图法则</button>
+      <button class="btn" id="btnGrid" title="切换引导线模式：三分线 / 黄金分割 / 对角线 / 关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/><path d="M3 3l18 18M21 3L3 21" stroke-opacity=".7"/></svg>引导线</button>
       <button class="btn" id="btnCrop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v16h16"/><path d="M2 6h16v16"/></svg>裁剪</button>
       <button class="btn" id="btnClear" title="清除当前画布，可重新上传"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>清除</button>
       <button class="btn" id="btnCmp" title="原图 vs 效果对比"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v14H4z"/><path d="M12 5v14"/></svg>对比</button>
@@ -477,8 +503,11 @@
           <button class="c-ratio" data-r="1:1">1:1</button>
           <button class="c-ratio" data-r="3:4">3:4</button>
           <button class="c-ratio" data-r="4:5">4:5</button>
+          <button class="c-ratio" data-r="2:3">2:3</button>
           <button class="c-ratio" data-r="9:16">9:16</button>
+          <button class="c-ratio" data-r="4:3">4:3</button>
           <button class="c-ratio" data-r="16:9">16:9</button>
+          <button class="c-ratio" data-r="2.35:1">2.35:1 电影</button>
         </div>
         <div class="crop-ops">
           <button class="c-cancel" id="cropRotate" title="旋转90°">⟳ 旋转</button>
@@ -558,6 +587,7 @@
         btnShotClose=$("btnShotClose"), btnShotAgain=$("btnShotAgain"), btnShotSave=$("btnShotSave"), btnShotKeep=$("btnShotKeep"),
         filterBar=$("filterBar"), btnSample=$("btnSample"), sampleStrip=$("sampleStrip"),
         btnRules=$("btnRules"), ruleSheet=$("ruleSheet"), ruleBody=$("ruleBody"), ruleClose=$("ruleClose"),
+        btnGrid=$("btnGrid"),
         btnCrop=$("btnCrop"), btnClear=$("btnClear"), cropTool=$("cropTool"), cropStage=$("cropStage"), cropBg=$("cropBg"),
         cropMask=$("cropMask"), cropCancel=$("cropCancel"), cropRotate=$("cropRotate"), cropApply=$("cropApply"),
         btnHist=$("btnHist"), histBox=$("histBox"), histCanvas=$("histCanvas"),
@@ -609,7 +639,15 @@
       "mono-warm":{name:"暖黑白",css:"grayscale(1) sepia(0.18) contrast(1.1) brightness(1.01)",desc:"暖调黑白，复古质感"},
       chrome:{name:"Chrome",css:"contrast(1.28) saturate(0.72) brightness(0.95) sepia(0.05)",desc:"高反差灰调，蓝调阴影，硬朗纪实"},
       ektar:{name:"Ektar100",css:"saturate(1.32) contrast(1.08) brightness(1.03) sepia(0.05) hue-rotate(-3deg)",desc:"高饱和暖调，肤色通透，人像利器"},
-      cine:{name:"电影LUT",css:"contrast(1.18) saturate(0.9) brightness(0.96) sepia(0.1) hue-rotate(8deg)",desc:"青橙电影调，暗部偏青，高光偏橙"}
+      cine:{name:"电影LUT",css:"contrast(1.18) saturate(0.9) brightness(0.96) sepia(0.1) hue-rotate(8deg)",desc:"青橙电影调，暗部偏青，高光偏橙"},
+      sunset:{name:"日落暖调",css:"sepia(0.32) saturate(1.28) brightness(1.04) contrast(0.98) hue-rotate(-6deg)",desc:"橙金落日色，暖意浓烈"},
+      cyber:{name:"赛博霓虹",css:"saturate(1.42) contrast(1.2) brightness(0.96) hue-rotate(12deg)",desc:"霓虹高饱和，赛博都市感"},
+      morandi:{name:"莫兰迪",css:"saturate(0.72) contrast(0.95) brightness(1.05) sepia(0.08)",desc:"低饱和高级灰，柔和雅致"},
+      fade:{name:"褪色胶片",css:"saturate(0.78) contrast(0.88) brightness(1.07) sepia(0.14)",desc:"褪色做旧，怀旧胶片感"},
+      vivid:{name:"重彩",css:"saturate(1.5) contrast(1.1) brightness(1.01)",desc:"极致浓郁，色彩爆炸"},
+      soft:{name:"柔焦",css:"blur(0.5px) brightness(1.05) saturate(0.94) contrast(0.93)",desc:"轻微柔光，梦幻氛围"},
+      aurora:{name:"极光青紫",css:"saturate(1.24) contrast(1.06) brightness(1.03) hue-rotate(18deg) sepia(0.06)",desc:"青紫冷调，极光氛围"},
+      silver:{name:"银盐",css:"grayscale(1) contrast(1.3) brightness(0.97)",desc:"硬朗银盐黑白，层次分明"}
     };
 
     var RULES={
@@ -1240,7 +1278,11 @@
           ["色温", (a.wb*1000).toFixed(0)+"K 偏移", a.wb>0?"偏暖":(a.wb<0?"偏冷":"中性"), a.wb>0?"暖调":(a.wb<0?"冷调":"中性")],
           ["饱和度", f2(a.sat), "色彩浓度", a.sat>0.35?"浓郁":(a.sat<0.15?"低饱和":"适中")],
           ["高光", f2(a.highClip), "过曝区域", a.highClip>0.06?"⚠ 注意过曝":"正常"],
-          ["阴影", f2(a.shadowClip), "死黑区域", a.shadowClip>0.20?"⚠ 暗部死黑":"正常"]
+          ["阴影", f2(a.shadowClip), "死黑区域", a.shadowClip>0.20?"⚠ 暗部死黑":"正常"],
+          ["主体位置", a.cx<0.38?"偏左":(a.cx>0.62?"偏右":"居中"), "X:"+(a.cx*100).toFixed(0)+"% Y:"+(a.cy*100).toFixed(0)+"%", "主体占比 "+f2(a.bodyRatio)],
+          ["对称度", f2(a.sym), "左右对称评分", a.sym>0.72?"高对称":(a.sym<0.4?"低对称":"中")],
+          ["对角线", f2(a.diagStrength), "光影引导强度", a.diagStrength>0.5?"强引导":(a.diagStrength>0.2?"中":"弱")],
+          ["三分匹配", f2(a.thirdFit), "主体距分割线", a.thirdFit>0.78?"高契合":(a.thirdFit>0.5?"中契合":"低契合")]
         ];
         var html='<div class="db-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg>专业光学数据</div>';
         rows.forEach(function(r){
@@ -1272,6 +1314,27 @@
         aiBody.appendChild(d);
         setTimeout(function(){ d.classList.add("show"); }, 120+i*320);
       });
+      // v1.1.0: 记录分析历史（最近 5 条，本地存储）
+      try{
+        var hist=[]; try{ hist=JSON.parse(localStorage.getItem("ai_cmp_hist")||"[]"); }catch(e){ hist=[]; }
+        var now=new Date();
+        var hrec={
+          t: (now.getMonth()+1)+"月"+now.getDate()+"日 "+String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0"),
+          rule: rule.cn, conf: plan.conf, f: (plan.filters&&plan.filters[0])||"", z: plan.z
+        };
+        hist.unshift(hrec);
+        if(hist.length>5) hist=hist.slice(0,5);
+        localStorage.setItem("ai_cmp_hist",JSON.stringify(hist));
+        // 渲染历史
+        var hwrap=document.createElement("div");
+        hwrap.className="ai-history";
+        hwrap.innerHTML='<div class="h-hd"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>最近分析</div>';
+        hist.forEach(function(h){
+          hwrap.innerHTML+='<div class="h-row"><span class="h-t">'+h.t+'</span><span class="h-r">'+h.rule+'</span><span class="h-c">'+h.conf+'%</span></div>';
+        });
+        aiBody.appendChild(hwrap);
+        setTimeout(function(){ hwrap.classList.add("show"); }, 140+items.length*320);
+      }catch(e){}
     }
     aiApply.addEventListener("click",function(){
       if(!state.analyzed || !state.plan) return;
@@ -1810,6 +1873,39 @@
       toastMsg("已清除画布");
     });
 
+    /* ===================== 引导线模式切换 ===================== */
+    var gridMode=0; // 0=三分+黄金点, 1=仅对角线, 2=关闭
+    function setGridMode(m){
+      gridMode=m;
+      guides.classList.remove("on");
+      // 三分线 + 黄金点始终作为 DOM 结构存在，通过 .on 控制显隐
+      if(gridMode===1){
+        // 仅显示对角线
+        guides.classList.remove("on");
+        diagEl.style.width="200%"; diagEl.style.height="2px";
+        diagEl.style.left="0"; diagEl.style.top="0";
+        diagEl.style.transform="rotate(45deg)";
+        diagEl.style.background="rgba(84,200,247,.55)";
+      } else if(gridMode===2){
+        // 全关
+        diagEl.style.width="0px";
+        diagEl.style.background="rgba(84,200,247,0)";
+      } else {
+        // 三分线+黄金点
+        diagEl.style.width="0px";
+        diagEl.style.background="rgba(84,200,247,.6)";
+        guides.classList.add("on");
+      }
+      var labels=["三分线 · 黄金点","对角线","引导线已关闭"];
+      toastMsg(labels[gridMode]);
+      setStatus("引导线模式："+labels[gridMode], "done");
+    }
+    if(btnGrid){
+      btnGrid.addEventListener("click",function(){
+        setGridMode((gridMode+1)%3);
+      });
+    }
+
     /* ===================== 法则百科 ===================== */
     btnRules.addEventListener("click",function(){
       ruleBody.innerHTML="";
@@ -1835,25 +1931,29 @@
       {t:"② AI 分析（核心功能）", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='11' cy='11' r='7'/><path d='M21 21l-4.3-4.3'/></svg>",
        html:"<p>选好画面后点「<span class='hl'>AI 分析</span>」，约 2-3 秒出结果：识别构图法则（对角线/三分法/对称等）、匹配度、曝光诊断、推荐变焦与滤镜，并画出引导线和裁切框。</p>"+
             "<p>面板下方两个按钮：<span class='hl'>一键应用</span>＝自动变焦+自动切滤镜；<span class='hl'>按构图框智能裁切</span>＝直接按建议比例裁好。</p>"},
-      {t:"③ 滤镜（18 款）", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='3'/><path d='M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9l2.2 2.2m9.8 9.8l2.2 2.2M19.1 4.9l-2.2 2.2M7.1 16.9l-2.2 2.2'/></svg>",
-       html:"<p>底部横条滑动选择，含胶片经典（FClassic/FCC/FVelvia/F160C/FC200/Portra400/Chrome/Ektar100/电影LUT）与现代风格（冷/暖/青橙/港风/日系/黑白/暖黑白）。点选即时预览。</p>"},
+      {t:"③ 滤镜（26 款）", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='3'/><path d='M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9l2.2 2.2m9.8 9.8l2.2 2.2M19.1 4.9l-2.2 2.2M7.1 16.9l-2.2 2.2'/></svg>",
+       html:"<p>底部横条滑动选择，含胶片经典（FClassic/FCC/FVelvia/F160C/FC200/Portra400/Chrome/Ektar100/电影LUT）与现代风格（冷/暖/青橙/港风/日系/黑白/暖黑白），<b>v1.1.0 新增</b>日落暖调/赛博霓虹/莫兰迪/褪色胶片/重彩/柔焦/极光青紫/银盐。点选即时预览。</p>"},
       {t:"④ 变焦", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='11' cy='11' r='7'/><path d='M21 21l-4.3-4.3'/></svg>",
        html:"<p>拖动滑块或点 1x/2x/3x 快捷档，1.0x-5.0x 无损缩放。AI 分析后点「一键应用」会自动调到推荐焦段。</p>"},
       {t:"⑤ 裁剪 & 旋转", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M6 2v16h16'/><path d='M2 6h16v16'/></svg>",
-       html:"<p>点「<span class='hl'>裁剪</span>」进入：选比例（自由/1:1/3:4/4:5/9:16/16:9）→ 拖动四角 → 可 ⟳ 旋转90° → 点「应用裁切」。顶部实时显示输出尺寸。</p>"},
+       html:"<p>点「<span class='hl'>裁剪</span>」进入：选比例（自由/1:1/3:4/4:5/2:3/9:16/4:3/16:9/<b>2.35:1 电影</b>）→ 拖动四角 → 可 ⟳ 旋转90° → 点「应用裁切」。顶部实时显示输出尺寸。</p>"},
       {t:"⑥ 原图 vs 效果对比", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 5h16v14H4z'/><path d='M12 5v14'/></svg>",
        html:"<p>点「<span class='hl'>对比</span>」进入：画面被白线一分为二，左侧原图、右侧当前滤镜效果。<b>按住中间圆钮左右拖动</b>即可对比「我看到的 vs 我拍到的」。再点一次退出。</p>"},
       {t:"⑦ 直方图 & 水平仪", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M3 20h18M6 20V10m4 10V5m4 15v-7m4 7V8'/></svg>",
        html:"<p><span class='hl'>直方图</span>：取景区底部显示亮度分布，帮判断过曝/欠曝。横向平移画面时<span class='hl'>水平仪</span>实时显示倾斜角，归零即水平。</p>"},
       {t:"⑧ 拍照 & 作品", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='8'/><circle cx='12' cy='12' r='3' fill='currentColor'/></svg>",
        html:"<p>点右下角<span class='hl'>圆形快门</span>拍摄当前画面（带当前变焦+滤镜）。浮层可选「<span class='hl'>保存</span>」下载到手机相册，或「<span class='hl'>存入作品</span>」保存到本地作品画廊（右上「作品」可查看）。</p>"},
-      {t:"⑨ 常见问题", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='9'/><path d='M9.2 9a2.8 2.8 0 0 1 5.5.8c0 1.8-2.7 2.3-2.7 4'/><circle cx='12' cy='17.6' r='.4' fill='currentColor'/></svg>",
+      {t:"⑩ 引导线", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M3 3h18v18H3z'/><path d='M3 9h18M3 15h18M9 3v18M15 3v18'/></svg>",
+       html:"<p>点「<span class='hl'>引导线</span>」可循环切换取景参考线：<b>三分线+黄金点</b> → <b>对角线</b> → <b>关闭</b>。手动构图时可参考这些专业辅助线（v1.1.0 新增）。</p>"},
+      {t:"⑪ 常见问题", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='9'/><path d='M9.2 9a2.8 2.8 0 0 1 5.5.8c0 1.8-2.7 2.3-2.7 4'/><circle cx='12' cy='17.6' r='.4' fill='currentColor'/></svg>",
        html:"<p><b>相机点不开？</b> 需在 HTTPS 环境（预览发布后），或改用相册/示例。</p>"+
             "<p><b>拍照后图片没保存？</b> 拍完点「保存」会下载到相册；点「存入作品」进画廊。作品存在本机浏览器缓存。</p>"+
             "<p><b>想重拍 / 换照片？</b> 点「<span class='hl'>清除</span>」清空画布，再从相册上传新照片或重新选示例。</p>"+
-            "<p><b>滤镜不生效？</b> 底部滤镜条向左/右滑动可看到全部 18 款。</p>"},
-      {t:"⑩ 提示", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/></svg>",
-       html:"<p>所有功能均为本地运行，照片不上传任何服务器，隐私安全。作品画廊最多保存 24 张。</p>"}
+            "<p><b>滤镜不生效？</b> 底部滤镜条向左/右滑动可看到全部 26 款。</p>"},
+      {t:"⑫ 版本信息", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/></svg>",
+       html:"<p><b>当前版本：v1.1.0</b>（2026-09-04）</p>"+
+            "<p><b>v1.1.0 更新内容：</b>滤镜增至 26 款（新增日落暖调/赛博霓虹/莫兰迪/褪色胶片/重彩/柔焦/极光青紫/银盐）；AI 光学数据新增主体位置/对称度/对角线/三分匹配 4 项；裁切新增 2:3/4:3/2.35:1 电影比例；新增引导线模式切换；帮助页完善。</p>"+
+            "<p>所有功能均为本地运行，照片不上传任何服务器，隐私安全。作品画廊最多保存 24 张。</p>"}
     ];
     function openHelp(){
       helpBody.innerHTML="";
