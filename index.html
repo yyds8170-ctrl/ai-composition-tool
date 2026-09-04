@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v1.3.1 · 专业取景器</title>
+<title>AI 构图助手 Pro v1.3.2 · 专业取景器</title>
 <meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
@@ -302,6 +302,22 @@
   .strength-range::-webkit-slider-thumb{appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;margin-top:-8px;box-shadow:0 1px 6px rgba(0,0,0,.5);border:2.5px solid var(--amber);}
   .strength-range::-moz-range-track{height:4px;border-radius:2px;background:var(--line);}
   .strength-range::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:#fff;border:2.5px solid var(--amber);}
+  /* v1.3.2 专业调色 / 水印 / 导出设置 */
+  .tone-row{display:none;flex-direction:column;gap:9px;padding:11px 13px;margin-top:6px;background:linear-gradient(180deg,var(--panel),#f7f3ec);border:1px solid var(--line2);border-radius:14px;}
+  .tone-row.show{display:flex;}
+  .tone-row .t-group{display:flex;align-items:center;gap:9px;}
+  .tone-row .t-group .lbl{font-size:12px;color:var(--dim);width:44px;flex:0 0 auto;}
+  .tone-row input[type=range]{flex:1;appearance:none;height:24px;background:transparent;cursor:pointer;}
+  .tone-row input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:var(--line);}
+  .tone-row input[type=range]::-webkit-slider-thumb{appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;margin-top:-7px;border:2.5px solid var(--amber);box-shadow:0 1px 5px rgba(0,0,0,.4);}
+  .tone-row .tv{font-size:12px;color:var(--amber);width:42px;text-align:right;font-family:'JetBrains Mono',monospace;}
+  .wm-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-top:9px;border-top:1px dashed var(--line2);}
+  .wm-row label{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--fg);min-height:30px;}
+  .wm-row label input{width:16px;height:16px;accent-color:#d98a1f;}
+  .wm-pos{display:flex;gap:5px;}
+  .wm-pos button,.exp-chip{background:var(--panel2);border:1px solid var(--line2);color:var(--sub);font-size:11.5px;padding:6px 10px;border-radius:9px;cursor:pointer;min-height:32px;}
+  .wm-pos button.on,.exp-chip.on{border-color:var(--amber);color:var(--amber);background:rgba(217,138,31,.08);}
+  .exp-row{display:flex;flex-wrap:wrap;gap:7px;align-items:center;padding-top:9px;border-top:1px dashed var(--line2);}
   .filters{display:flex;gap:7px;overflow-x:auto;padding:2px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
   .filters::-webkit-scrollbar{display:none;}
   .filter-pill{flex-shrink:0;min-height:40px;padding:0 13px;border-radius:999px;background:var(--panel);border:1px solid var(--line);color:var(--sub);font-size:11.5px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .15s;}
@@ -366,7 +382,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.3.1</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.3.2</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
   </div>
@@ -419,7 +435,7 @@
       </div>
       <div class="ai-body" id="aiBody"></div>
       <div class="ai-foot">
-        <button class="ai-btn" id="aiApply"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg>一键应用（自动变焦 + 滤镜）</button>
+        <button class="ai-btn" id="aiApply"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg>一键成品（智能裁切 + 滤镜 + 变焦）</button>
         <button class="ai-btn ghost" id="aiCropNow">按构图框智能裁切</button>
       </div>
     </div>
@@ -488,6 +504,33 @@
       <input type="range" id="strengthRange" class="strength-range" min="0" max="100" value="100">
       <b id="strengthVal" class="sv">100%</b>
     </div>
+    <!-- v1.3.2 专业调色 / 品牌水印 / 导出设置 -->
+    <div class="tone-row" id="tonePanel">
+      <div class="t-group"><span class="lbl">曝光</span><input type="range" id="toneExpo" min="-50" max="50" value="0" step="1"><b class="tv" id="toneExpoV">0</b></div>
+      <div class="t-group"><span class="lbl">对比</span><input type="range" id="toneCont" min="-50" max="50" value="0" step="1"><b class="tv" id="toneContV">0</b></div>
+      <div class="t-group"><span class="lbl">饱和</span><input type="range" id="toneSatu" min="-50" max="50" value="0" step="1"><b class="tv" id="toneSatuV">0</b></div>
+      <div class="t-group"><span class="lbl">色温</span><input type="range" id="toneTemp" min="-50" max="50" value="0" step="1"><b class="tv" id="toneTempV">0</b></div>
+      <div class="wm-row">
+        <label><input type="checkbox" id="wmOn"> 品牌水印「洋洋」</label>
+        <span class="lbl" style="width:auto;">位置</span>
+        <div class="wm-pos">
+          <button data-pos="left">左下</button><button class="on" data-pos="right">右下</button><button data-pos="center">居中</button>
+        </div>
+        <span class="lbl" style="width:auto;">透明</span>
+        <input type="range" id="wmOp" min="20" max="80" value="50" step="1"><b class="tv" id="wmOpV">50%</b>
+      </div>
+      <div class="exp-row">
+        <span class="lbl" style="width:auto;">尺寸</span>
+        <button class="exp-chip on" data-size="orig">原尺寸</button>
+        <button class="exp-chip" data-size="800">800×800 主图</button>
+        <button class="exp-chip" data-size="750x1000">750×1000</button>
+        <button class="exp-chip" data-size="1080">1080×1080</button>
+        <button class="exp-chip" data-size="900x1200">900×1200</button>
+        <span class="lbl" style="width:auto;">格式</span>
+        <button class="exp-chip on" data-format="png">PNG 高清</button>
+        <button class="exp-chip" data-format="jpeg">JPEG 压缩</button>
+      </div>
+    </div>
     <div class="sec-row">
       <button class="btn" id="btnRules"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>构图法则</button>
       <button class="btn" id="btnGrid" title="切换引导线模式：三分线 / 黄金分割 / 对角线 / 关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/><path d="M3 3l18 18M21 3L3 21" stroke-opacity=".7"/></svg>引导线</button>
@@ -502,6 +545,7 @@
     </div>
     <!-- v1.2.0: 成品操作栏 -->
     <div class="act-row">
+      <button class="btn act" id="btnTone" title="专业调色 / 品牌水印 / 导出尺寸设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z"/><circle cx="12" cy="12" r="4"/><path d="M12 8v8M8 12h8" opacity=".6"/></svg>调色</button>
       <button class="btn act" id="btnUndo" disabled title="撤销上一步操作（滤镜/变焦/裁切/清除）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-4"/></svg>撤销</button>
       <button class="btn act pri" id="btnExport" disabled title="导出当前成品图（含滤镜/变焦/裁切）为高清 PNG"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>导出</button>
       <button class="btn act" id="btnShare" disabled title="一键分享成品图到微信 / 抖音等"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>分享</button>
@@ -622,7 +666,11 @@
         btnHelp=$("btnHelp"), helpSheet=$("helpSheet"), helpBody=$("helpBody"), helpClose=$("helpClose"),
         btnCmp=$("btnCmp"), cmpBase=$("cmpBase"), cmpUI=$("cmpUI"), cmpLine=$("cmpLine"), cmpHandle=$("cmpHandle"),
         baseLayer=$("baseLayer"), strengthRow=$("strengthRow"), strengthRange=$("strengthRange"), strengthVal=$("strengthVal"),
-        toast=$("toast");
+        toast=$("toast"),
+        tonePanel=$("tonePanel"), btnTone=$("btnTone"),
+        toneExpo=$("toneExpo"), toneCont=$("toneCont"), toneSatu=$("toneSatu"), toneTemp=$("toneTemp"),
+        toneExpoV=$("toneExpoV"), toneContV=$("toneContV"), toneSatuV=$("toneSatuV"), toneTempV=$("toneTempV"),
+        wmOn=$("wmOn"), wmOp=$("wmOp"), wmOpV=$("wmOpV");
 
     var state={
       mode:"photo",       // photo | camera
@@ -630,6 +678,10 @@
       zoom:1,
       filter:"clear",
       strength:100,
+      tone:{exposure:0,contrast:0,saturation:0,temp:0},
+      wm:{on:false,pos:"right",opacity:50},
+      expSize:"orig",
+      expFormat:"png",
       analyzing:false,
       analyzed:false,
       plan:null,
@@ -749,6 +801,83 @@
       var p=((state.zoom-1)/4)*100;
       zoomRange.style.setProperty("--p",p+"%");
     }
+    /* ===== v1.3.2 专业调色 ===== */
+    var EXP_SIZES={orig:null,"800":{w:800,h:800},"750x1000":{w:750,h:1000},"1080":{w:1080,h:1080},"900x1200":{w:900,h:1200}};
+    function toneCss(t){
+      if(!t) return "";
+      var p=[];
+      var e=(t.exposure||0)/100, c=(t.contrast||0)/100, s=(t.saturation||0)/100, k=(t.temp||0);
+      if(e) p.push("brightness("+(1+e).toFixed(3)+")");
+      if(c) p.push("contrast("+(1+c).toFixed(3)+")");
+      if(s) p.push("saturate("+(1+s).toFixed(3)+")");
+      if(k>0) p.push("sepia("+(k/260).toFixed(3)+") hue-rotate("+(-k/7).toFixed(2)+"deg)");
+      else if(k<0) p.push("hue-rotate("+(-k/7).toFixed(2)+"deg) saturate("+(1-k/280).toFixed(3)+")");
+      return p.join(" ");
+    }
+    function applyTone(){
+      var el = state.mode==="camera" ? videoCam : photoView;
+      var base = (state.filter && FILTERS[state.filter]) ? FILTERS[state.filter].css : "none";
+      var parts=[];
+      if(base && base!=="none") parts.push(base);
+      var t=toneCss(state.tone);
+      if(t) parts.push(t);
+      el.style.filter = parts.length ? parts.join(" ") : "none";
+    }
+    function bindTone(){
+      var map={toneExpo:"exposure",toneCont:"contrast",toneSatu:"saturation",toneTemp:"temp"};
+      Object.keys(map).forEach(function(id){
+        var el=$(id), key=map[id], vEl=$(id+"V");
+        el.addEventListener("input",function(){
+          state.tone[key]=parseInt(el.value,10)||0;
+          vEl.textContent=(el.value>0?"+":"")+el.value;
+          applyTone();
+        });
+      });
+      wmOn.addEventListener("change",function(){ state.wm.on=wmOn.checked; });
+      wmOp.addEventListener("input",function(){
+        state.wm.opacity=parseInt(wmOp.value,10);
+        wmOpV.textContent=wmOp.value+"%";
+      });
+      document.querySelectorAll(".wm-pos button").forEach(function(b){
+        b.addEventListener("click",function(){
+          state.wm.pos=b.dataset.pos;
+          document.querySelectorAll(".wm-pos button").forEach(function(x){ x.classList.toggle("on",x===b); });
+        });
+      });
+      document.querySelectorAll(".exp-chip[data-size]").forEach(function(b){
+        b.addEventListener("click",function(){
+          state.expSize=b.dataset.size;
+          document.querySelectorAll(".exp-chip[data-size]").forEach(function(x){ x.classList.toggle("on",x===b); });
+        });
+      });
+      document.querySelectorAll(".exp-chip[data-format]").forEach(function(b){
+        b.addEventListener("click",function(){
+          state.expFormat=b.dataset.format;
+          document.querySelectorAll(".exp-chip[data-format]").forEach(function(x){ x.classList.toggle("on",x===b); });
+        });
+      });
+      btnTone.addEventListener("click",function(){
+        tonePanel.classList.toggle("show");
+        btnTone.style.borderColor=tonePanel.classList.contains("show")?"var(--amber)":"";
+      });
+    }
+    function drawWatermark(ctx,w,h,opt){
+      if(!opt||!opt.on) return;
+      ctx.save();
+      ctx.globalAlpha=(opt.opacity||50)/100;
+      ctx.fillStyle="#f3d9a4";
+      var fs=Math.max(16,Math.round(Math.min(w,h)*0.045));
+      ctx.font="600 "+fs+"px 'STKaiti','KaiTi','PingFang SC','Microsoft YaHei',sans-serif";
+      ctx.shadowColor="rgba(0,0,0,.55)"; ctx.shadowBlur=Math.max(2,fs*0.12);
+      var t="洋洋";
+      var tx,ty;
+      var pad=Math.max(12,Math.round(Math.min(w,h)*0.03));
+      if(opt.pos==="center"){ ctx.textAlign="center"; ctx.textBaseline="middle"; tx=w/2; ty=h/2; }
+      else if(opt.pos==="left"){ ctx.textAlign="left"; ctx.textBaseline="alphabetic"; tx=pad; ty=h-pad; }
+      else { ctx.textAlign="right"; ctx.textBaseline="alphabetic"; tx=w-pad; ty=h-pad; }
+      ctx.fillText(t,tx,ty);
+      ctx.restore();
+    }
     function syncBaseLayer(){
       // 在滤镜层下方铺原图，供强度调节使用
       if(state.filter!=="clear" && state.strength<100){
@@ -788,6 +917,7 @@
       // 显示强度条（非原图滤镜时）
       strengthRow.style.display = (f==="clear") ? "none" : "flex";
       applyStrength();
+      applyTone();
     }
     filterBar.addEventListener("click",function(e){
       var b=e.target.closest(".filter-pill"); if(!b) return;
@@ -1382,13 +1512,36 @@
         setTimeout(function(){ hwrap.classList.add("show"); }, 140+items.length*320);
       }catch(e){}
     }
+    // v1.3.2: 一键应用 = 完整成品（按 AI 推荐框直接裁切 + 滤镜 + 变焦）
+    function applyPlanCrop(){
+      var p=state.plan; if(!p) return false;
+      var el=currentEl(); if(!el) return false;
+      var dims=currentSrcDims(el);
+      var cp=p.crop||[12,10,14,14];
+      var iw=dims.w, ih=dims.h;
+      var sx=Math.round(cp[0]/100*iw), sy=Math.round(cp[1]/100*ih);
+      var sw=Math.round((100-cp[0]-cp[2])/100*iw), sh=Math.round((100-cp[1]-cp[3])/100*ih);
+      sx=Math.max(0,Math.min(iw-1,sx)); sy=Math.max(0,Math.min(ih-1,sy));
+      sw=Math.max(4,Math.min(iw-sx,sw)); sh=Math.max(4,Math.min(ih-sy,sh));
+      var c=document.createElement("canvas");
+      c.width=sw; c.height=sh;
+      c.getContext("2d").drawImage(el,sx,sy,sw,sh,0,0,sw,sh);
+      var url=c.toDataURL("image/jpeg",0.92);
+      pushUndo();
+      setPhotoSource(url,"upload","AI智能裁切");
+      state.cropResult=url;
+      return true;
+    }
     aiApply.addEventListener("click",function(){
       if(!state.analyzed || !state.plan) return;
       var p=state.plan;
-      setZoom(p.z);
-      setFilter(p.f);
-      setStatus("已应用：变焦 "+p.z.toFixed(1)+"x · "+FILTERS[p.f].name, "done");
-      toastMsg("已应用 "+FILTERS[p.f].name+" 滤镜 + "+p.z.toFixed(1)+"x 变焦");
+      var ok=applyPlanCrop();
+      if(!ok){ setStatus("智能裁切失败，请重试", "err"); return; }
+      state.plan=p; state.analyzed=true;   // 保留 AI 结果，可继续智能裁切微调
+      setZoom(p.z||1);
+      setFilter(p.f||"clear");
+      setStatus("已一键应用：智能裁切 + 滤镜 + 变焦", "done");
+      toastMsg("已应用智能裁切 + "+FILTERS[p.f].name+" + "+(p.z||1).toFixed(1)+"x，可继续「按构图框智能裁切」微调");
       aiPanel.classList.remove("open");
     });
     aiCropNow.addEventListener("click",function(){
@@ -1679,6 +1832,8 @@
     });
 
     /* ===================== 拍照 ===================== */
+    bindTone();
+
     btnShoot.addEventListener("click",function(){
       var el=currentEl();
       if(!el){ setStatus("没有可拍摄的画面", "err"); return; }
@@ -1978,7 +2133,7 @@
             "<p><span class='help-tag'>清除</span>点「<span class='hl'>清除</span>」一键清空当前画布回到初始状态，可重新上传照片 / 重新选示例 / 连接相机。</p>"},
       {t:"② AI 分析（核心功能）", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='11' cy='11' r='7'/><path d='M21 21l-4.3-4.3'/></svg>",
        html:"<p>选好画面后点「<span class='hl'>AI 分析</span>」，约 2-3 秒出结果：识别构图法则（对角线/三分法/对称等）、匹配度、曝光诊断、推荐变焦与滤镜，并画出引导线和裁切框。</p>"+
-            "<p>面板下方两个按钮：<span class='hl'>一键应用</span>＝自动变焦+自动切滤镜；<span class='hl'>按构图框智能裁切</span>＝直接按建议比例裁好。</p>"},
+            "<p>面板下方两个按钮：<span class='hl'>一键成品</span>＝按 AI 推荐框<b>自动裁切 + 滤镜 + 变焦</b>一次到位；应用后仍可点<span class='hl'>按构图框智能裁切</span>继续手动微调（裁剪工具会按推荐框预设，可拖动改比例后点「应用裁切」）。两者是<b>先后叠加</b>关系，不是二选一。</p>"},
       {t:"③ 滤镜（26 款）", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='3'/><path d='M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9l2.2 2.2m9.8 9.8l2.2 2.2M19.1 4.9l-2.2 2.2M7.1 16.9l-2.2 2.2'/></svg>",
        html:"<p>底部横条滑动选择，含胶片经典（FClassic/FCC/FVelvia/F160C/FC200/Portra400/Chrome/Ektar100/电影LUT）与现代风格（冷/暖/青橙/港风/日系/黑白/暖黑白），<b>v1.1.0 新增</b>日落暖调/赛博霓虹/莫兰迪/褪色胶片/重彩/柔焦/极光青紫/银盐。点选即时预览。</p>"},
       {t:"④ 变焦", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='11' cy='11' r='7'/><path d='M21 21l-4.3-4.3'/></svg>",
@@ -2007,8 +2162,10 @@
             "<p><b>想重拍 / 换照片？</b> 点「<span class='hl'>清除</span>」清空画布，再从相册上传新照片或重新选示例。</p>"+
             "<p><b>滤镜不生效？</b> 底部滤镜条向左/右滑动可看到全部 26 款。</p>"},
       {t:"⑫ 版本信息", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/></svg>",
-       html:"<p><b>当前版本：v1.3.1</b>（2026-09-04）</p>"+
+       html:"<p><b>当前版本：v1.3.2</b>（2026-09-04）</p>"+
             "<p><b>设计师：</b><span class='brand' style='-webkit-background-clip:text;background-clip:text;color:transparent;background-image:linear-gradient(135deg,#E9A23B,#f6d48e);font-style:italic;font-weight:700;font-family:STKaiti,KaiTi,serif;font-size:14px;'>· 洋洋 ·</span></p>"+
+            "<p><b>v1.3.2 新功能：</b>① 专业调色（曝光/对比度/饱和度/色温，实时预览、导出生效）；② 品牌水印「洋洋」（可开关/三位置/透明度）；③ 电商尺寸快捷导出（800×800 主图 / 750×1000 / 1080×1080 / 900×1200）+ PNG/JPEG 格式选择；④ AI 场景识别（按检测主体推断人像/街拍/萌宠/静物/美食等并给专属构图建议）。</p>"+
+            "<p><b>v1.3.2 修复内容：</b>修复「一键应用」后导出仍是原图的问题（旧版一键应用未执行裁切，现改为自动裁切+滤镜+变焦一次到位，且应用后仍可继续「按构图框智能裁切」手动微调）。</p>"+
             "<p><b>v1.3.1 修复内容：</b>修复「上传照片 → 裁切 → 撤销」后图片无法恢复、导出提示『图片尚未加载完成』的问题（裁切时保留原图缓存供撤销正确恢复）。</p>"+
             "<p><b>v1.3.0 更新内容：</b>新增<b>真 AI 视觉识别</b>（本地运行 Coco-SSD 深度学习模型，识别画面主体 80 类，主体位置/占比用真实检测结果，识别框叠加显示，自动降级）；加入「洋洋」品牌角标；APK 签名改为专属密钥「YangYang」。</p>"+
             "<p><b>v1.2.0 更新内容：</b>新增「导出成品图」（含滤镜/变焦/裁切）、「一键分享」、「撤销操作」（最多20步）、AI「构图建议」；APK 签名加固。</p>"+
@@ -2066,6 +2223,62 @@
       var g=document.getElementById("guides"); if(g) g.appendChild(box);
       aiDetectEl=box;
     }
+    var SCENE_MAP={
+      person:"人像/街拍", car:"街景·车辆", truck:"街景·车辆", bus:"街景·车辆", motorcycle:"街景·车辆", bicycle:"街景·骑行",
+      cat:"萌宠", dog:"萌宠", horse:"动物", sheep:"动物", cow:"动物", bird:"动物·自然", bear:"动物", zebra:"动物", giraffe:"动物", elephant:"动物",
+      bottle:"静物·桌面", cup:"静物·桌面", bowl:"静物·桌面", book:"静物·桌面", laptop:"静物·数码", cellphone:"静物·数码", remote:"室内·器物", keyboard:"静物·数码", mouse:"静物·数码",
+      tv:"室内·家电", couch:"室内", chair:"室内", diningtable:"室内", pottedplant:"室内绿植", sink:"室内", bed:"室内",
+      airplane:"交通·航空", train:"交通·轨道", boat:"水景", "traffic light":"城市", "stop sign":"城市", bench:"公园",
+      backpack:"人物配饰", handbag:"人物配饰", suitcase:"旅行", umbrella:"人物配饰", tie:"人物配饰",
+      frisbee:"户外运动", "sports ball":"户外运动", skateboard:"户外运动", surfboard:"户外运动", snowboard:"户外运动", skis:"户外运动",
+      kite:"户外", "baseball glove":"户外运动", "baseball bat":"户外运动", "tennis racket":"户外运动", "ski": "户外运动",
+      vase:"静物·器皿", clock:"室内·器物", oven:"室内·厨房", toaster:"室内·厨房", refrigerator:"室内·厨房", microwave:"室内·厨房",
+      "wine glass":"静物·酒", pizza:"美食", sandwich:"美食", "hot dog":"美食", donut:"美食", cake:"美食",
+      banana:"美食·水果", apple:"美食·水果", orange:"美食·水果", broccoli:"美食·蔬菜", carrot:"美食·蔬菜",
+      "fire hydrant":"城市", "parking meter":"城市", truck:"街景·车辆"
+    };
+    var SCENE_TIP={
+      "人像/街拍":"人物眼睛尽量落在上三分线交叉点，背景留白增加呼吸感；想显瘦可侧身、机位稍高。",
+      "街景·车辆":"利用道路/建筑线条做引导线，主体放侧三分位，透视纵深更强。",
+      "街景·骑行":"骑行主体前置，前进方向留白，动感更足。",
+      "萌宠":"把眼睛放在上三分线交叉点，主体占比30-45%更讨喜。",
+      "动物·自然":"眼睛对焦、保留环境留白，避免主体顶满画面。",
+      "动物":"眼睛对焦、保留环境留白，避免主体顶满画面。",
+      "静物·桌面":"俯拍或45°角，主体居中偏上，背景干净突出质感。",
+      "静物·数码":"45°侧光+浅景深，主体放黄金分割点。",
+      "静物·器皿":"对称构图或侧光勾勒轮廓，突出器物线条。",
+      "静物·酒":"侧逆光勾勒杯体轮廓，深色背景更显高级。",
+      "美食":"光源放侧前方，主体占40-60%，餐盘边缘作天然框线。",
+      "美食·水果":"亮色主体放亮区，暗背景衬托，色彩更跳。",
+      "美食·蔬菜":"色彩对比构图，主体占位约40%。",
+      "室内":"利用门窗作框架式构图，保持竖线垂直减少畸变。",
+      "室内·家电":"正面取景保持水平线，主体居中或黄金分割。",
+      "室内·厨房":"俯拍45°主体居中，注意色温统一。",
+      "室内·器物":"45°侧光+浅景深，主体放黄金分割点。",
+      "室内绿植":"植物放侧三分位，留白干净，可拍窗光轮廓。",
+      "风景":"地平线放上/下三分线，前景找引导线（路/栏杆/水岸）。",
+      "水景":"地平线别居中，船/倒影做视觉焦点。",
+      "城市":"三分法+对角线，用灯光/线条增强纵深。",
+      "交通·航空":"主体留出运动方向空间（前进方向留白）。",
+      "交通·轨道":"沿轨道方向延伸引导线，列车占侧三分位。",
+      "户外运动":"动作主体前置，运动方向留白，快门感更强。",
+      "户外":"风筝/运动物作兴趣点，天空留白不超2/3。",
+      "人物配饰":"主体放三分交叉点，留白做负空间。",
+      "公园":"长椅/树木作前景引导线，人物作点缀。",
+      "旅行":"行李箱/街景作故事感前景，三分法布局。"
+    };
+    function sceneFromPreds(preds){
+      if(!preds||!preds.length) return null;
+      var seen={};
+      for(var i=0;i<preds.length;i++){
+        var key=preds[i].class;
+        var sc=SCENE_MAP[key];
+        if(sc){ seen[sc]=(seen[sc]||0)+1; }
+      }
+      var best=null, bestN=0;
+      for(var k in seen){ if(seen[k]>bestN){ bestN=seen[k]; best=k; } }
+      return best;
+    }
     function renderAiDetect(preds, el){
       if(!preds||!preds.length) return;
       // 更新主体数据
@@ -2079,13 +2292,20 @@
           state.aiData.subject=cnLabel(t.class);
         }
       }
+      // v1.3.2: AI 场景识别
+      var scene=sceneFromPreds(preds);
       // 面板卡片
       var card=document.createElement("div");
       card.className="ai-detect";
       var names=preds.slice(0,4).map(function(p){ return "<b>"+cnLabel(p.class)+"</b> "+Math.round(p.score*100)+"%"; }).join(" &nbsp;·&nbsp; ");
+      var sceneHtml="";
+      if(scene){
+        sceneHtml='<div class="dt-row scene" style="margin-top:4px;padding-top:6px;border-top:1px dashed rgba(70,140,220,.25);"><b>📷 场景识别：'+scene+'</b><br><span style="opacity:.85;font-weight:400;">'+(SCENE_TIP[scene]||"已按该场景推荐构图法则。")+'</span></div>';
+      }
       card.innerHTML='<div class="db-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9l2.1 2.1m9.9 9.9l2.1 2.1M19.1 4.9L17 7m-9.9 9.9L5 19.1"/></svg>AI 视觉识别</div>'+
         '<div class="dt-row">识别到 '+preds.length+' 个主体：'+names+'</div>'+
-        '<div class="dt-row dim">已用主体「'+cnLabel(preds[0].class)+'」更新构图评分（位置 / 占比 / 建议）</div>';
+        '<div class="dt-row dim">已用主体「'+cnLabel(preds[0].class)+'」更新构图评分（位置 / 占比 / 建议）</div>'+
+        sceneHtml;
       var firstChild=aiBody.firstChild;
       aiBody.insertBefore(card, firstChild);
       setTimeout(function(){ card.classList.add("show"); }, 60);
@@ -2155,20 +2375,40 @@
         var c1=document.createElement("canvas"); c1.width=sw; c1.height=sh;
         var x1=c1.getContext("2d");
         x1.drawImage(src, sx, sy, sw, sh, 0, 0, sw, sh);
+        // v1.3.2: 滤镜 + 专业调色 叠加
         var css=(state.filter&&FILTERS[state.filter])?FILTERS[state.filter].css:null;
+        var tone=toneCss(state.tone);
+        var combined=[];
+        if(css && css!=="none") combined.push(css);
+        if(tone) combined.push(tone);
+        var fullCss=combined.join(" ")||"none";
         var strength=(state.strength===undefined)?100:state.strength;
         var c2=document.createElement("canvas"); c2.width=sw; c2.height=sh;
         var x2=c2.getContext("2d");
-        if(css && css!=="none"){ try{ x2.filter=css; }catch(e){} }
+        if(fullCss && fullCss!=="none"){ try{ x2.filter=fullCss; }catch(e){} }
         x2.drawImage(c1,0,0);
         var out=document.createElement("canvas"); out.width=sw; out.height=sh;
         var xo=out.getContext("2d");
-        if(css && css!=="none" && strength<100){
+        if(fullCss && fullCss!=="none" && strength<100){
           xo.drawImage(c1,0,0);
           xo.globalAlpha=strength/100; xo.drawImage(c2,0,0); xo.globalAlpha=1;
-        } else if(css && css!=="none"){ xo.drawImage(c2,0,0); }
+        } else if(fullCss && fullCss!=="none"){ xo.drawImage(c2,0,0); }
         else { xo.drawImage(c1,0,0); }
-        return out.toDataURL("image/png");
+        // v1.3.2: 目标尺寸预设（等比 cover 重采样）
+        var tgt=EXP_SIZES[state.expSize]||null;
+        var outC=out;
+        if(tgt){
+          var tsw=tgt.w, tsh=tgt.h, sr=tsw/tsh, or=sw/sh;
+          var cw,ch,cox,coy;
+          if(or>sr){ ch=sh; cw=Math.round(sh*sr); cox=(sw-cw)/2; coy=0; }
+          else { cw=sw; ch=Math.round(sw/sr); cox=0; coy=(sh-ch)/2; }
+          var c3=document.createElement("canvas"); c3.width=tsw; c3.height=tsh;
+          c3.getContext("2d").drawImage(outC, cox,coy,cw,ch, 0,0,tsw,tsh);
+          outC=c3;
+        }
+        // v1.3.2: 品牌水印「洋洋」
+        if(state.wm && state.wm.on) drawWatermark(outC.getContext("2d"), outC.width, outC.height, state.wm);
+        return outC.toDataURL(state.expFormat==="jpeg" ? "image/jpeg" : "image/png", state.expFormat==="jpeg"?0.92:undefined);
       }catch(e){ console.error(e); toastMsg("导出失败："+(e.message||"")); return null; }
     }
     function downloadPng(dataUrl, name){
