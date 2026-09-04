@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v1.3.2 · 专业取景器</title>
+<title>AI 构图助手 Pro v1.4.0 · 实时取景</title>
 <meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
@@ -221,6 +221,43 @@
     .ai-detect.model-status.off{background:linear-gradient(135deg,rgba(217,138,31,.10),rgba(217,138,31,.04));border-color:rgba(217,138,31,.25);}
     .ai-box{position:absolute;border:2px solid #4d9fff;border-radius:3px;box-shadow:0 0 0 1px rgba(0,0,0,.35), 0 0 14px rgba(77,159,255,.35);pointer-events:none;z-index:6;}
     .ai-box-lbl{position:absolute;top:-20px;left:-2px;background:#4d9fff;color:#fff;font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap;letter-spacing:.3px;}
+    /* ============ v1.4.0 实时取景辅助 HUD ============ */
+    .live-hud{position:absolute;inset:0;pointer-events:none;z-index:7;}
+    .live-top{position:absolute;top:10px;left:10px;right:10px;display:flex;gap:8px;justify-content:space-between;}
+    .lh{background:rgba(10,12,14,.62);border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:5px 9px;font-size:11.5px;color:#fff;display:inline-flex;align-items:center;gap:4px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);letter-spacing:.2px;}
+    .lh.ok{background:rgba(23,98,40,.72);border-color:rgba(103,217,122,.5);color:#d8ffdf;}
+    .lh.warn{background:rgba(124,86,13,.78);border-color:rgba(255,180,84,.55);color:#ffe3b3;}
+    .lh.bad{background:rgba(132,33,33,.8);border-color:rgba(239,107,107,.55);color:#ffd3d3;}
+    .live-model{position:absolute;top:46px;right:10px;background:rgba(10,12,14,.62);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:4px 8px;font-size:10.5px;color:#cfe7ff;display:inline-flex;align-items:center;gap:5px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}
+    .live-model .dot2{width:7px;height:7px;border-radius:50%;background:var(--dim);}
+    .live-model.on .dot2{background:var(--green);box-shadow:0 0 8px rgba(103,217,122,.8);}
+    .live-model.loading .dot2{background:var(--amber);animation:pulse 1s infinite;}
+    .live-model.fail .dot2{background:var(--red);}
+    .live-model.off .dot2{background:var(--dim);}
+    .live-subject{position:absolute;left:10px;bottom:88px;max-width:78%;background:rgba(10,12,14,.62);border:1px solid rgba(77,159,255,.4);border-radius:9px;padding:5px 10px;font-size:12px;color:#d6e9ff;display:inline-flex;align-items:center;gap:5px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}
+    .live-bottom{position:absolute;left:10px;right:10px;bottom:40px;background:linear-gradient(90deg,rgba(20,24,29,.88),rgba(20,24,29,.55));border:1px solid rgba(255,255,255,.16);border-radius:11px;padding:8px 12px;font-size:12.5px;color:#fff;text-align:center;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);letter-spacing:.3px;}
+    .live-bottom.ready{background:linear-gradient(90deg,rgba(23,98,40,.92),rgba(23,98,40,.55));border-color:rgba(103,217,122,.6);color:#e2ffe9;}
+    .btn.live{position:relative;}
+    .btn.live.on{border-color:var(--cyan);color:var(--cyan);}
+    .btn.live.on::after{content:'';position:absolute;top:5px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px rgba(103,217,122,.9);}
+    /* ============ v1.4.0 AI 真模型管理面板 ============ */
+    .model-panel{margin:0 12px 10px;padding:11px 13px;border-radius:13px;background:linear-gradient(135deg,rgba(70,140,220,.13),rgba(70,140,220,.04));border:1px solid rgba(70,140,220,.28);}
+    .mp-head{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px;}
+    .mp-badge{margin-left:auto;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:7px;background:rgba(95,107,119,.28);color:var(--sub);}
+    .mp-badge.idle{background:rgba(95,107,119,.28);color:var(--sub);}
+    .mp-badge.loading{background:rgba(255,180,84,.2);color:var(--amber);}
+    .mp-badge.ready{background:rgba(103,217,122,.2);color:var(--green);}
+    .mp-badge.fail{background:rgba(239,107,107,.22);color:var(--red);}
+    .mp-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;}
+    .mp-sw{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text);cursor:pointer;-webkit-user-select:none;user-select:none;}
+    .mp-sw input{display:none;}
+    .mp-sl{width:40px;height:22px;border-radius:12px;background:var(--panel3);border:1px solid var(--line2);position:relative;transition:.25s;flex-shrink:0;}
+    .mp-sl::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#8b98a6;transition:.25s;}
+    .mp-sw input:checked + .mp-sl{background:rgba(70,140,220,.45);border-color:var(--cyan);}
+    .mp-sw input:checked + .mp-sl::after{left:20px;background:var(--cyan);}
+    .mp-btn{margin-left:auto;font-size:11.5px;color:var(--text);background:var(--panel3);border:1px solid var(--line2);border-radius:8px;padding:5px 11px;cursor:pointer;}
+    .mp-btn:active{background:var(--panel2);}
+    .mp-desc{font-size:11px;color:var(--sub);line-height:1.6;padding-top:4px;border-top:1px dashed rgba(95,107,119,.3);}
   .shot-actions .sec{background:var(--panel2);color:var(--text);border:1px solid var(--line2);}
   .shot-actions .pri{background:linear-gradient(135deg,#FFB454,#E0902F);color:#16100A;font-weight:700;}
   /* ===================== 法则百科 ===================== */
@@ -384,7 +421,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.3.2</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.4.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
   </div>
@@ -408,6 +445,7 @@
       <div class="gl gl-a"></div><div class="gl gl-b"></div><div class="gl gl-c"></div><div class="gl gl-d"></div>
       <div class="gold gold-1"></div><div class="gold gold-2"></div><div class="gold gold-3"></div><div class="gold gold-4"></div>
       <div class="diag" id="diagEl"></div>
+      <div class="diag" id="diagEl2"></div>
       <div class="cropbox" id="cropEl"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div>
     </div>
     <div class="hist" id="histBox"><span class="hist-cap">亮度直方图</span><canvas id="histCanvas" width="140" height="36"></canvas></div>
@@ -420,6 +458,16 @@
       <b>等待取景画面</b>
       <p>点击下方「相机」连接后置摄像头实时取景，<br>或从「相册」上传照片 / 「示例」体验样张。</p>
       <span class="hint">摄像头需在 HTTPS 环境调用</span>
+    </div>
+    <!-- v1.4.0 实时取景辅助 HUD -->
+    <div class="live-hud" id="liveHUD" style="display:none;">
+      <div class="live-top">
+        <span class="lh lh-light" id="lhLight">💡 光线检测中…</span>
+        <span class="lh lh-level" id="lhLevel">➡ 水平检测中…</span>
+      </div>
+      <div class="live-model" id="lhModel" title="AI 真模型状态">🤖 模型未加载</div>
+      <div class="live-subject" id="lhSubject"></div>
+      <div class="live-bottom" id="lhTip">实时辅助已开启 · 对准主体</div>
     </div>
     <div class="statusbar idle" id="statusbar"><span class="dot"></span><span id="statusText">选择输入源开始取景</span><span class="src-meta" id="srcMeta"></span></div>
 
@@ -455,6 +503,7 @@
       </label>
       <button class="btn" id="btnSample"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 15l5-5 4 4 3-3 6 6"/></svg><span class="b-txt">示例</span></button>
       <button class="btn primary" id="btnAnalyze"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>AI 分析</button>
+      <button class="btn live" id="btnLive" title="实时取景辅助：开启后取景框实时显示 AI 主体锁定 / 光线 / 水平 / 变焦建议 / 可拍提示"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg><span class="b-txt">实时取景</span></button>
     </div>
     <div class="sample-strip" id="sampleStrip">
       <span class="s-tip">示例样张：</span>
@@ -627,8 +676,17 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v1.4.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
+    <!-- v1.4.0 AI 真模型管理 -->
+    <div class="model-panel" id="modelPanel">
+      <div class="mp-head">🤖 AI 真模型 <span class="mp-badge idle" id="mpBadge">未加载</span></div>
+      <div class="mp-row">
+        <label class="mp-sw"><input type="checkbox" id="mpOn"><span class="mp-sl"></span>启用真 AI 识别</label>
+        <button class="mp-btn" id="mpReload">重新加载</button>
+      </div>
+      <div class="mp-desc">本地运行 Coco-SSD 深度学习模型（识别 80 类主体），照片不上传、隐私安全。首次加载需联网下载约 18MB，加载成功后离线可用。开启后可自由关闭，随时查看状态。</div>
+    </div>
     <div class="help-body" id="helpBody"></div>
   </div>
 
@@ -651,7 +709,7 @@
         statusbar=$("statusbar"), statusText=$("statusText"),
         btnCam=$("btnCam"), fileInput=$("fileInput"), btnAnalyze=$("btnAnalyze"), btnShoot=$("btnShoot"),
         zoomRange=$("zoomRange"), zoomVal=$("zoomVal"), camBadge=$("camBadge"), camBadgeTxt=$("camBadgeTxt"),
-        noSrc=$("noSrc"), guides=$("guides"), diagEl=$("diagEl"), cropEl=$("cropEl"),
+        noSrc=$("noSrc"), guides=$("guides"), diagEl=$("diagEl"), diagEl2=$("diagEl2"), cropEl=$("cropEl"),
         aiPanel=$("aiPanel"), aiBody=$("aiBody"), aiClose=$("aiClose"), aiApply=$("aiApply"),
         aiRuleTag=$("aiRuleTag"), aiConfTxt=$("aiConfTxt"), aiConfBar=$("aiConfBar"), aiCropNow=$("aiCropNow"),
         shotOverlay=$("shotOverlay"), shotImg=$("shotImg"), shotCapChips=$("shotCapChips"), shotCapText=$("shotCapText"),
@@ -666,6 +724,9 @@
         btnLevel=$("btnLevel"), levelBox=$("levelBox"), levelVal=$("levelVal"), bubbleI=$("bubbleI"),
         btnGallery=$("btnGallery"), gallery=$("gallery"), galBody=$("galBody"), galCount=$("galCount"), galClose=$("galClose"),
         btnHelp=$("btnHelp"), helpSheet=$("helpSheet"), helpBody=$("helpBody"), helpClose=$("helpClose"),
+        btnLive=$("btnLive"), liveHUD=$("liveHUD"), lhLight=$("lhLight"), lhLevel=$("lhLevel"),
+        lhTip=$("lhTip"), lhModel=$("lhModel"), lhSubject=$("lhSubject"),
+        modelPanel=$("modelPanel"), mpBadge=$("mpBadge"), mpOn=$("mpOn"), mpReload=$("mpReload"),
         btnCmp=$("btnCmp"), cmpBase=$("cmpBase"), cmpUI=$("cmpUI"), cmpLine=$("cmpLine"), cmpHandle=$("cmpHandle"),
         baseLayer=$("baseLayer"), strengthRow=$("strengthRow"), strengthRange=$("strengthRange"), strengthVal=$("strengthVal"),
         toast=$("toast"),
@@ -696,7 +757,9 @@
       cropResult:null,
       aiData:null,
       origURL:null,
-      analyzeToken:0
+      analyzeToken:0,
+      aiModelEnabled: (function(){ try{ var v=localStorage.getItem("aiModelEnabled"); return v===null?true:v==="1"; }catch(e){ return true; } })(),
+      liveMode:false
     };
 
     /* ===================== 数据 ===================== */
@@ -1128,6 +1191,7 @@
     function resetGuides(){
       guides.classList.remove("on");
       diagEl.style.width="0px"; diagEl.style.left="0"; diagEl.style.top="0"; diagEl.style.transform="rotate(0deg)";
+      diagEl2.style.width="0px"; diagEl2.style.right="0"; diagEl2.style.top="0"; diagEl2.style.transform="rotate(0deg)";
       cropEl.style.left="0"; cropEl.style.top="0"; cropEl.style.width="0"; cropEl.style.height="0";
     }
     function drawGuides(plan){
@@ -2085,20 +2149,28 @@
       guides.classList.remove("on");
       // 三分线 + 黄金点始终作为 DOM 结构存在，通过 .on 控制显隐
       if(gridMode===1){
-        // 仅显示对角线
+        // X 形双对角线（左上→右下 + 右上→左下）
         guides.classList.remove("on");
-        diagEl.style.width="200%"; diagEl.style.height="2px";
+        diagEl.style.width="220%"; diagEl.style.height="2px";
         diagEl.style.left="0"; diagEl.style.top="0";
+        diagEl.style.transformOrigin="0 0";
         diagEl.style.transform="rotate(45deg)";
         diagEl.style.background="rgba(84,200,247,.55)";
+        diagEl2.style.width="220%"; diagEl2.style.height="2px";
+        diagEl2.style.right="0"; diagEl2.style.top="0"; diagEl2.style.left="auto";
+        diagEl2.style.transformOrigin="100% 0";
+        diagEl2.style.transform="rotate(-45deg)";
+        diagEl2.style.background="rgba(84,200,247,.55)";
       } else if(gridMode===2){
         // 全关
-        diagEl.style.width="0px";
+        diagEl.style.width="0px"; diagEl2.style.width="0px";
         diagEl.style.background="rgba(84,200,247,0)";
+        diagEl2.style.background="rgba(84,200,247,0)";
       } else {
         // 三分线+黄金点
-        diagEl.style.width="0px";
+        diagEl.style.width="0px"; diagEl2.style.width="0px";
         diagEl.style.background="rgba(84,200,247,.6)";
+        diagEl2.style.background="rgba(84,200,247,.6)";
         guides.classList.add("on");
       }
       var labels=["三分线 · 黄金点","对角线","引导线已关闭"];
@@ -2128,6 +2200,20 @@
 
     /* ===================== 使用说明 ===================== */
     var HELP_SECTIONS=[
+      {t:"⓪ 实时取景辅助（v1.4.0 · 核心新增）", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z'/><circle cx='12' cy='12' r='2.6'/></svg>",
+       html:"<p>点「<span class='hl'>实时取景</span>」按钮（连接相机后），取景框进入<b>实时拍摄辅助</b>模式，AI 在按下快门前就给你专业建议：</p>"+
+            "<p>🔲 <b>AI 主体锁定</b>：实时识别画面主体（人物/服装/商品/宠物等），绿色锁定框+置信度，自动给「偏左/偏右/居中」移动建议。</p>"+
+            "<p>🔍 <b>变焦建议</b>：主体太小提示「拉近到 2x」，太满提示「拉远留白」。</p>"+
+            "<p>💡 <b>实时光线判断</b>：偏暗提示开灯/靠近光源，过曝提示避开强光。</p>"+
+            "<p>➡ <b>实时水平仪</b>：画面歪了直接告诉你「向右转 3°」，拍平铺/挂拍/正面图超好用。</p>"+
+            "<p>✅ <b>自动抓拍建议</b>：当主体清晰+画面水平+光线合适时，底部变绿提示「可以拍摄了」，此时按右下角快门即可。</p>"+
+            "<p>顶部右角徽章显示<b>真 AI 模型状态</b>（绿=已加载 / 黄=加载中 / 红=失败 / 灰=关闭）。拍摄全程建议开启真 AI，锁定效果最佳；不开启也能用光线/水平/三分线辅助。</p>"},
+      {t:"⓪·AI 真模型管理（v1.4.0）", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='2.5'/><path d='M12 2v3m0 14v3M2 12h3m14 0h3'/></svg>",
+       html:"<p>本面板顶部（点「<span class='hl'>帮助</span>」可见）的「<span class='hl'>🤖 AI 真模型</span>」区块可：</p>"+
+            "<p>✅ <b>开关</b>：自由开启/关闭真 AI 识别，选择保存在本机（下次打开记住）。关闭后用基础构图分析，不联网不下载。</p>"+
+            "<p>📦 <b>状态徽章</b>：显示「未加载 / 加载中… / 已加载·xxms / 加载失败 / 已关闭」，<b>已加载=模型下载完整</b>，说明 80 类主体都能识别。</p>"+
+            "<p>🔄 <b>重新加载</b>：加载失败或想重试时点一下，重新下载并校验模型（约 18MB，Wi-Fi 下更省流量）。</p>"+
+            "<p>🔒 模型在<b>手机本地</b>运行，照片绝不上传，隐私安全。</p>"},
       {t:"① 三种画面来源", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><rect x='3' y='7' width='18' height='13' rx='3'/><path d='M8 7l2-3h4l2 3'/></svg>",
        html:"<p><span class='help-tag'>相机</span>点击下方「<span class='hl'>相机</span>」按钮，授权后即接通手机后置摄像头（<b>需 HTTPS 环境</b>，本页直接打开是受限的）。再点一次可关闭。</p>"+
             "<p><span class='help-tag'>相册</span>点「<span class='hl'>相册</span>」从手机相册选图，支持 JPG/PNG。</p>"+
@@ -2164,9 +2250,10 @@
             "<p><b>想重拍 / 换照片？</b> 点「<span class='hl'>清除</span>」清空画布，再从相册上传新照片或重新选示例。</p>"+
             "<p><b>滤镜不生效？</b> 底部滤镜条向左/右滑动可看到全部 26 款。</p>"},
       {t:"⑫ 版本信息", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/></svg>",
-       html:"<p><b>当前版本：v1.3.2</b>（2026-09-04）</p>"+
+       html:"<p><b>当前版本：v1.4.0</b>（2026-09-05）</p>"+
             "<p><b>设计师：</b><span class='brand' style='-webkit-background-clip:text;background-clip:text;color:transparent;background-image:linear-gradient(135deg,#E9A23B,#f6d48e);font-style:italic;font-weight:700;font-family:STKaiti,KaiTi,serif;font-size:14px;'>· 洋洋 ·</span></p>"+
-            "<p><b>模型状态怎么看：</b>点「AI 分析」后，面板顶部会出现「🤖 真 AI 模型已加载/加载中/未加载」提示。绿色=真 AI 在识别主体；橙色=离线或网络慢，自动用基础分析（首次联网请稍候后再点一次分析）。</p>"+
+            "<p><b>v1.4.0 更新内容：</b>① 新增<b>实时取景辅助</b>（按下快门前的 AI 拍摄指导：主体锁定+移动建议 / 实时光线检测 / 实时水平仪 / 变焦建议 / 自动抓拍提示）；② 新增<b>AI 真模型管理</b>（可开关、可查看加载状态、可重新加载，模型是否下载完整一目了然）；③ 实时滤镜预览优化。</p>"+
+            "<p><b>模型状态怎么看：</b>点「帮助」→「🤖 AI 真模型」区块可看状态徽章；实时取景时右上角有小徽章（绿=已加载 / 黄=加载中 / 红=失败 / 灰=关闭）。点「AI 分析」后面板顶部也有提示。</p>"+
             "<p><b>v1.3.2 新功能：</b>① 专业调色（曝光/对比度/饱和度/色温，实时预览、导出生效）；② 品牌水印「洋洋」（可开关/三位置/透明度）；③ 电商尺寸快捷导出（800×800 主图 / 750×1000 / 1080×1080 / 900×1200）+ PNG/JPEG 格式选择；④ AI 场景识别（按检测主体推断人像/街拍/萌宠/静物/美食等并给专属构图建议）。</p>"+
             "<p><b>v1.3.2 修复内容：</b>修复「一键应用」后导出仍是原图的问题（旧版一键应用未执行裁切，现改为自动裁切+滤镜+变焦一次到位，且应用后仍可继续「按构图框智能裁切」手动微调）。</p>"+
             "<p><b>v1.3.1 修复内容：</b>修复「上传照片 → 裁切 → 撤销」后图片无法恢复、导出提示『图片尚未加载完成』的问题（裁切时保留原图缓存供撤销正确恢复）。</p>"+
@@ -2321,11 +2408,14 @@
     }
     function renderAiModelStatus(mode){
       // mode: "loading" | "on" | "off"
+      var offTxt = !state.aiModelEnabled
+        ? '<div class="dt-row">🤖 <b>真 AI 模型已关闭</b>：可在「帮助」里开启开关，开启后本地识别画面主体（80 类）</div>'
+        : '<div class="dt-row">🤖 <b>真 AI 模型未加载</b>（离线打开或网络较慢）：已用基础构图分析，主体识别框暂不显示</div>';
       var txt = mode==="on"
         ? '<div class="dt-row">🤖 <b>真 AI 模型已加载</b>：本地运行 Coco-SSD，正在识别画面主体（80 类）</div>'
         : (mode==="loading"
            ? '<div class="dt-row">🤖 <b>真 AI 模型加载中…</b>（首次约需下载 18MB，请稍候再点一次「AI 分析」）</div>'
-           : '<div class="dt-row">🤖 <b>真 AI 模型未加载</b>（离线打开或网络较慢）：已用基础构图分析，主体识别框暂不显示</div>');
+           : offTxt);
       var card=document.createElement("div");
       card.className="ai-detect model-status"+(mode==="on"?" on":(mode==="off"?" off":""));
       card.innerHTML=txt;
@@ -2337,6 +2427,7 @@
       if(!el) return;
       var token=state.analyzeToken;
       var elSnap=el;
+      if(!state.aiModelEnabled){ renderAiModelStatus("off"); return; }
       loadAIModel().then(function(ok){
         if(!ok){ renderAiModelStatus("off"); return; }
         if(token!==state.analyzeToken || currentEl()!==elSnap) return;
@@ -2348,6 +2439,199 @@
         }).catch(function(e){ console.warn("AI 检测失败:", e); });
       });
     }
+
+    /* ===================== v1.4.0: AI 真模型管理（开关/状态/重载） ===================== */
+    var aiModelLoadTime=0;
+    function persistModelEnabled(on){
+      state.aiModelEnabled=on;
+      try{ localStorage.setItem("aiModelEnabled", on?"1":"0"); }catch(e){}
+      updateModelUI();
+    }
+    function updateModelUI(){
+      if(mpOn) mpOn.checked=state.aiModelEnabled;
+      var st=aiModelState;
+      var txt, cls;
+      if(!state.aiModelEnabled){ txt="已关闭"; cls="idle"; }
+      else if(st==="ready"){ txt=aiModelLoadTime?("已加载 · "+aiModelLoadTime+"ms"):"已加载"; cls="ready"; }
+      else if(st==="loading"){ txt="加载中…"; cls="loading"; }
+      else if(st==="fail"){ txt="加载失败"; cls="fail"; }
+      else { txt="未加载"; cls="idle"; }
+      if(mpBadge){ mpBadge.textContent=txt; mpBadge.className="mp-badge "+cls; }
+      if(lhModel){
+        var on=state.aiModelEnabled;
+        var mcls=on?(st==="ready"?"on":(st==="loading"?"loading":(st==="fail"?"fail":"loading"))):"off";
+        var mtxt=on?(st==="ready"?"真AI已加载":(st==="loading"?"模型加载中…":(st==="fail"?"模型加载失败":"模型待加载"))):"真AI已关闭";
+        lhModel.className="live-model "+mcls;
+        lhModel.innerHTML='<span class="dot2"></span>🤖 '+mtxt;
+      }
+    }
+    function tryLoadModel(force){
+      if(!state.aiModelEnabled){ updateModelUI(); return; }
+      if(aiModelState==="ready"){ updateModelUI(); return; }
+      if(aiModelState==="loading" && !force){ updateModelUI(); return; }
+      var t0=Date.now();
+      loadAIModel().then(function(ok){
+        aiModelLoadTime=Date.now()-t0;
+        updateModelUI();
+        if(ok){ toastMsg("🤖 真 AI 模型加载成功（"+(Math.round(aiModelLoadTime/100)/10)+"s）"); }
+        else { toastMsg("模型加载失败，已用基础分析；可检查网络后点「重新加载」","err"); }
+      });
+    }
+    function initModelUI(){
+      if(mpOn) mpOn.addEventListener("change",function(){
+        var on=mpOn.checked;
+        persistModelEnabled(on);
+        if(on){ toastMsg("已启用真 AI，开始加载模型…"); tryLoadModel(false); }
+        else { toastMsg("真 AI 已关闭，使用基础构图分析"); }
+      });
+      if(mpReload) mpReload.addEventListener("click",function(){
+        if(!state.aiModelEnabled){ persistModelEnabled(true); }
+        if(aiModelState==="ready"){ toastMsg("模型已是最新，无需重载"); updateModelUI(); return; }
+        aiModelState="idle";
+        toastMsg("开始重新加载 AI 模型…");
+        tryLoadModel(true);
+      });
+      updateModelUI();
+    }
+
+    /* ===================== v1.4.0: 实时取景辅助（AI主体锁定/光线/水平/变焦/可拍建议） ===================== */
+    var live={raf:null,bright:105,gamma:0,lastDetect:0,detecting:false,subj:null,subjScore:0,brightTick:0,devOK:false};
+    var LIVE_INTERVAL=1600;
+    function startLive(){
+      if(state.liveMode) return;
+      if(state.mode!=="camera" || !state.stream){ setStatus("请先点击「相机」连接摄像头，再开启实时取景","err"); toastMsg("请先连接相机再开启实时取景"); return; }
+      state.liveMode=true;
+      btnLive.classList.add("on");
+      liveHUD.style.display="block";
+      setStatus("实时取景辅助已开启 · AI 实时给出拍摄建议","done");
+      var onDev=function(e){ if(e.gamma!=null){ live.gamma=e.gamma; live.devOK=true; } };
+      window.addEventListener("deviceorientation",onDev);
+      live._cleanup=function(){ window.removeEventListener("deviceorientation",onDev); };
+      setTimeout(function(){ if(!live.devOK && state.liveMode){ lhLevel.className="lh"; lhLevel.textContent="➡ 水平仪不可用（无陀螺仪）"; } },2600);
+      if(state.aiModelEnabled && aiModelState==="idle"){ tryLoadModel(false); }
+      else { updateModelUI(); }
+      function tick(){
+        if(!state.liveMode || state.mode!=="camera"){ if(state.liveMode){ stopLive(); } return; }
+        live.brightTick++;
+        if(live.brightTick%20===0){ checkBrightness(); }
+        updateLiveLevel();
+        var now=Date.now();
+        if(now-live.lastDetect>LIVE_INTERVAL && !live.detecting && state.aiModelEnabled && aiModelState==="ready"){
+          live.lastDetect=now; detectLiveSubject();
+        }
+        updateLiveAdvice();
+        live.raf=requestAnimationFrame(tick);
+      }
+      live.raf=requestAnimationFrame(tick);
+    }
+    function stopLive(){
+      if(!state.liveMode) return;
+      state.liveMode=false;
+      btnLive.classList.remove("on");
+      liveHUD.style.display="none";
+      if(live.raf){ cancelAnimationFrame(live.raf); live.raf=null; }
+      if(live._cleanup){ live._cleanup(); live._cleanup=null; }
+      removeAiBox();
+      setStatus("实时取景辅助已关闭","idle");
+    }
+    btnLive.addEventListener("click",function(){
+      if(state.liveMode){ stopLive(); }
+      else { startLive(); }
+    });
+    function checkBrightness(){
+      try{
+        if(!videoCam.videoWidth) return;
+        var c=document.createElement("canvas");
+        c.width=48; c.height=36;
+        var ctx=c.getContext("2d");
+        ctx.drawImage(videoCam,0,0,48,36);
+        var data=ctx.getImageData(0,0,48,36).data;
+        var sum=0;
+        for(var i=0;i<data.length;i+=4){ sum+=(data[i]*0.299+data[i+1]*0.587+data[i+2]*0.114); }
+        live.bright=sum/(48*36);
+        var b=live.bright, el=lhLight;
+        if(b<70){ el.className="lh bad"; el.textContent="💡 光线偏暗 · 建议开灯/靠近光源"; }
+        else if(b<110){ el.className="lh warn"; el.textContent="💡 光线一般 · 可稍补光"; }
+        else if(b>230){ el.className="lh bad"; el.textContent="💡 过曝 · 避开强光源"; }
+        else { el.className="lh ok"; el.textContent="💡 光线合适"; }
+      }catch(e){}
+    }
+    function updateLiveLevel(){
+      var g=live.gamma||0, el=lhLevel;
+      if(!live.devOK){ return; }
+      if(Math.abs(g)<1.5){ el.className="lh ok"; el.textContent="➡ 水平 OK"; }
+      else if(g>0){ el.className="lh warn"; el.textContent="↗ 左低右高 · 向右转 "+Math.round(g)+"°"; }
+      else { el.className="lh warn"; el.textContent="↘ 右低左高 · 向左转 "+Math.round(Math.abs(g))+"°"; }
+    }
+    function detectLiveSubject(){
+      live.detecting=true;
+      try{
+        var vw=videoCam.videoWidth, vh=videoCam.videoHeight;
+        if(!vw||!vh){ live.detecting=false; return; }
+        var W=320, H=Math.max(1,Math.round(W*vh/vw));
+        var c=document.createElement("canvas");
+        c.width=W; c.height=H;
+        c.getContext("2d").drawImage(videoCam,0,0,W,H);
+        aiModel.detect(c).then(function(preds){
+          live.detecting=false;
+          if(!state.liveMode) return;
+          var best=null;
+          if(preds && preds.length){
+            for(var i=0;i<preds.length;i++){ if(!best||preds[i].score>best.score) best=preds[i]; }
+          }
+          live.subj=best; live.subjScore=best?best.score:0;
+          drawLiveBox(best, W, H);
+        }).catch(function(){ live.detecting=false; });
+      }catch(e){ live.detecting=false; }
+    }
+    function drawLiveBox(top, iw, ih){
+      removeAiBox();
+      if(!top || !iw || !ih) return;
+      var dr=state.displayRect;
+      if(!dr) return;
+      var bx=top.bbox[0], by=top.bbox[1], bw=top.bbox[2], bh=top.bbox[3];
+      var x=dr.x+(bx/iw)*dr.w, y=dr.y+(by/ih)*dr.h, w=Math.max(20,(bw/iw)*dr.w), h=Math.max(20,(bh/ih)*dr.h);
+      var box=document.createElement("div");
+      box.className="ai-box";
+      box.style.left=x+"px"; box.style.top=y+"px"; box.style.width=w+"px"; box.style.height=h+"px";
+      box.innerHTML='<span class="ai-box-lbl">'+cnLabel(top.class)+' '+Math.round(top.score*100)+'%</span>';
+      var g=$("guides"); if(g) g.appendChild(box);
+      aiDetectEl=box;
+    }
+    function updateLiveAdvice(){
+      var tips=[];
+      if(live.subj){
+        var bx=live.subj.bbox;
+        var vw=videoCam.videoWidth||1, vh=videoCam.videoHeight||1;
+        var ratio=(bx[2]/vw)*(bx[3]/vh);
+        if(ratio>0&&ratio<0.06){ tips.push("🔍 主体太小 · 建议拉近到 2x"); }
+        else if(ratio>=0.06&&ratio<0.13){ tips.push("🔍 主体偏小 · 可拉近到 1.5x"); }
+        else if(ratio>0.62){ tips.push("🖼 主体太满 · 可拉远留白"); }
+        var cxb=(bx[0]+bx[2]/2)/vw;
+        if(cxb<0.3){ tips.push("👈 主体偏左 · 向右移机位"); }
+        else if(cxb>0.7){ tips.push("👉 主体偏右 · 向左移机位"); }
+        else if(cxb>0.4&&cxb<0.6){ tips.push("🎯 主体居中 · 可移到三分点更有张力"); }
+      }
+      var okBright=(live.bright>=70&&live.bright<=230);
+      var okLevel=(!live.devOK)||(Math.abs(live.gamma||0)<3);
+      var okSubj=(live.subj&&live.subjScore>=0.6);
+      if(okBright&&okLevel&&okSubj){
+        lhTip.className="live-bottom ready";
+        lhTip.textContent="✅ 画面就绪 · 可以拍摄了！（"+cnLabel(live.subj.class)+" "+Math.round(live.subjScore*100)+"% 置信）";
+      } else if(tips.length){
+        lhTip.className="live-bottom";
+        lhTip.textContent=tips[0]+(tips.length>1?(" · "+tips[1]):"");
+      } else {
+        lhTip.className="live-bottom";
+        lhTip.textContent=(state.aiModelEnabled&&aiModelState==="ready")?"🎥 实时取景中 · 对准主体":"🎥 实时取景中 · 可在「帮助」开启真 AI 获得主体锁定";
+      }
+      if(live.subj){ lhSubject.style.display="inline-flex"; lhSubject.textContent="🎯 "+cnLabel(live.subj.class)+" "+Math.round(live.subjScore*100)+"%"; }
+      else { lhSubject.style.display="none"; }
+    }
+    // 应用关闭相机/切换照片时自动退出实时模式
+    var _origStopStream=stopStream;
+    stopStream=function(){ stopLive(); return _origStopStream(); };
+    initModelUI();
 
     /* ===================== v1.2.0: 撤销 / 导出 / 分享 / 构图建议 ===================== */
     var btnUndo=$("btnUndo"), btnExport=$("btnExport"), btnShare=$("btnShare");
