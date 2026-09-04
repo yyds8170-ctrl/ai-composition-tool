@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v1.4.1 · 实时取景</title>
+<title>AI 构图助手 Pro v1.5.0 · 实时取景</title>
 <meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
@@ -415,13 +415,53 @@
   .help-tag{display:inline-block;padding:1px 8px;border-radius:999px;background:var(--panel2);color:var(--amber);font-size:10.5px;font-weight:600;margin-right:4px;}
   .toast{position:fixed;left:50%;bottom:calc(120px + var(--safe-b));transform:translateX(-50%) translateY(12px);background:rgba(20,24,29,.95);border:1px solid var(--line2);color:var(--text);font-size:12px;padding:9px 16px;border-radius:999px;opacity:0;transition:all .3s;pointer-events:none;z-index:40;white-space:nowrap;max-width:88vw;text-overflow:ellipsis;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.4);}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  /* ============ v1.5.0 Doka 风格 AI 构图 ============ */
+  .btn.doka{background:linear-gradient(135deg,#E9A23B,#f6d48e);color:#1a1208;border-color:transparent;font-weight:700;}
+  .btn.doka.active{background:linear-gradient(135deg,#54C8F7,#7dd8fa);color:#0a1620;box-shadow:0 0 16px rgba(84,200,247,.5);}
+  .doka-overlay{position:absolute;inset:0;pointer-events:none;z-index:8;}
+  .doka-mask{position:absolute;background:rgba(0,0,0,.55);transition:all .35s cubic-bezier(.4,0,.2,1);}
+  .doka-mask.doka-top{top:0;left:0;right:0;}
+  .doka-mask.doka-bottom{bottom:0;left:0;right:0;}
+  .doka-mask.doka-left{top:0;bottom:0;left:0;}
+  .doka-mask.doka-right{top:0;bottom:0;right:0;}
+  .doka-frame{position:absolute;border:2px solid transparent;border-radius:4px;background:
+    linear-gradient(var(--bg),var(--bg)) padding-box,
+    linear-gradient(135deg,#ff6b9d,#c44dff,#54C8F7,#67D97A,#FFB454) border-box;
+    box-shadow:0 0 24px rgba(255,180,84,.3),inset 0 0 20px rgba(84,200,247,.1);
+    transition:all .35s cubic-bezier(.4,0,.2,1);pointer-events:none;}
+  .doka-frame::before{content:'';position:absolute;inset:-2px;border-radius:6px;background:linear-gradient(135deg,#ff6b9d,#c44dff,#54C8F7,#67D97A,#FFB454);opacity:.3;filter:blur(8px);z-index:-1;}
+  .doka-crosshair{position:absolute;width:44px;height:44px;transform:translate(-50%,-50%);transition:all .25s ease;}
+  .doka-crosshair .dc-h{position:absolute;top:50%;left:0;right:0;height:1.5px;background:#fff;box-shadow:0 0 6px rgba(255,255,255,.8);}
+  .doka-crosshair .dc-v{position:absolute;left:50%;top:0;bottom:0;width:1.5px;background:#fff;box-shadow:0 0 6px rgba(255,255,255,.8);}
+  .doka-crosshair .dc-ring{position:absolute;inset:6px;border:1.5px solid rgba(255,255,255,.9);border-radius:50%;box-shadow:0 0 10px rgba(255,255,255,.5);animation:dokaPulse 1.8s ease-in-out infinite;}
+  @keyframes dokaPulse{0%,100%{transform:scale(1);opacity:.9;}50%{transform:scale(1.15);opacity:.5;}}
+  .doka-crosshair.locked .dc-ring{border-color:#67D97A;box-shadow:0 0 14px rgba(103,217,122,.7);animation:none;}
+  .doka-guide{position:absolute;pointer-events:none;}
+  .doka-guide .dg-line{position:absolute;height:1.5px;background:rgba(255,255,255,.6);box-shadow:0 0 4px rgba(255,255,255,.4);}
+  .doka-filter-panel{margin:8px 12px 0;background:linear-gradient(180deg,rgba(30,35,42,.98),rgba(20,24,29,.98));border:1px solid var(--line2);border-radius:14px;padding:10px 12px;animation:dfpSlide .3s ease;}
+  @keyframes dfpSlide{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  .dfp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .dfp-title{font-size:13px;font-weight:700;color:var(--amber);}
+  .dfp-close{background:none;border:none;color:var(--sub);font-size:14px;cursor:pointer;padding:2px 6px;}
+  .dfp-list{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;}
+  .dfp-item{flex:0 0 auto;width:90px;text-align:center;cursor:pointer;transition:transform .2s;}
+  .dfp-item:active{transform:scale(.95);}
+  .dfp-thumb{width:80px;height:100px;border-radius:8px;overflow:hidden;margin:0 auto 4px;position:relative;border:2px solid transparent;}
+  .dfp-item.active .dfp-thumb{border-color:var(--amber);box-shadow:0 0 12px rgba(233,162,59,.5);}
+  .dfp-thumb::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(0,0,0,.6));}
+  .dfp-thumb::after{content:'';position:absolute;top:0;bottom:0;left:5px;width:3px;background:repeating-linear-gradient(to bottom,#000 0,#000 3px,transparent 3px,transparent 6px);}
+  .dfp-name{font-size:11px;font-weight:700;color:var(--text);}
+  .dfp-scene{font-size:9.5px;color:var(--sub);margin-top:1px;}
+  .doka-zoom-btn{display:flex;align-items:center;gap:6px;margin:8px 12px 0;padding:10px 16px;background:linear-gradient(135deg,rgba(84,200,247,.15),rgba(84,200,247,.08));border:1px solid rgba(84,200,247,.4);border-radius:999px;color:#54C8F7;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;animation:dfpSlide .3s ease;}
+  .doka-zoom-btn:active{transform:scale(.96);background:rgba(84,200,247,.25);}
+  .doka-zoom-btn svg{width:16px;height:16px;}
 </style>
 </head>
 <body>
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.4.1</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.5.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
   </div>
@@ -447,6 +487,19 @@
       <div class="diag" id="diagEl"></div>
       <div class="diag" id="diagEl2"></div>
       <div class="cropbox" id="cropEl"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div>
+    </div>
+    <!-- v1.5.0 Doka 风格 AI 构图：实时裁切预览 + 目标锁定 -->
+    <div class="doka-overlay" id="dokaOverlay" style="display:none;">
+      <div class="doka-mask doka-top"></div>
+      <div class="doka-mask doka-bottom"></div>
+      <div class="doka-mask doka-left"></div>
+      <div class="doka-mask doka-right"></div>
+      <div class="doka-frame" id="dokaFrame"></div>
+      <div class="doka-crosshair" id="dokaCross" style="display:none;">
+        <div class="dc-h"></div><div class="dc-v"></div>
+        <div class="dc-ring"></div>
+      </div>
+      <div class="doka-guide" id="dokaGuide"></div>
     </div>
     <div class="hist" id="histBox"><span class="hist-cap">亮度直方图</span><canvas id="histCanvas" width="140" height="36"></canvas></div>
     <div class="level" id="levelBox">
@@ -504,6 +557,7 @@
       <button class="btn" id="btnSample"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 15l5-5 4 4 3-3 6 6"/></svg><span class="b-txt">示例</span></button>
       <button class="btn primary" id="btnAnalyze"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>AI 分析</button>
       <button class="btn live" id="btnLive" title="实时取景辅助：开启后取景框实时显示 AI 主体锁定 / 光线 / 水平 / 变焦建议 / 可拍提示"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg><span class="b-txt">实时取景</span></button>
+      <button class="btn doka" id="btnAIC" title="AI 构图（Doka 模式）：实时引导线+目标锁定+裁切预览+滤镜推荐，拍完即成品"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6z"/></svg><span class="b-txt">AI构图</span></button>
     </div>
     <div class="sample-strip" id="sampleStrip">
       <span class="s-tip">示例样张：</span>
@@ -601,6 +655,19 @@
       <button class="btn act pri" id="btnExport" disabled title="导出当前成品图（含滤镜/变焦/裁切）为高清 PNG"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>导出</button>
       <button class="btn act" id="btnShare" disabled title="一键分享成品图到微信 / 抖音等"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>分享</button>
     </div>
+    <!-- v1.5.0 Doka 风格：AI 滤镜推荐面板 -->
+    <div class="doka-filter-panel" id="dokaFilterPanel" style="display:none;">
+      <div class="dfp-head">
+        <span class="dfp-title">🎞️ AI 滤镜推荐</span>
+        <button class="dfp-close" id="dfpClose">✕</button>
+      </div>
+      <div class="dfp-list" id="dfpList"></div>
+    </div>
+    <!-- v1.5.0 Doka 风格：变焦建议按钮 -->
+    <button class="doka-zoom-btn" id="dokaZoomBtn" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M11 8v6M8 11h6"/></svg>
+      <span id="dokaZoomTxt">拉近到 2x</span>
+    </button>
   </div>
 
 
@@ -676,7 +743,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v1.4.1 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v1.5.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v1.4.0 AI 真模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -2253,8 +2320,9 @@
             "<p><b>想重拍 / 换照片？</b> 点「<span class='hl'>清除</span>」清空画布，再从相册上传新照片或重新选示例。</p>"+
             "<p><b>滤镜不生效？</b> 底部滤镜条向左/右滑动可看到全部 26 款。</p>"},
       {t:"⑫ 版本信息", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/></svg>",
-       html:"<p><b>当前版本：v1.4.1</b>（2026-09-05）</p>"+
+       html:"<p><b>当前版本：v1.5.0</b>（2026-09-05）</p>"+
             "<p><b>设计师：</b><span class='brand' style='-webkit-background-clip:text;background-clip:text;color:transparent;background-image:linear-gradient(135deg,#E9A23B,#f6d48e);font-style:italic;font-weight:700;font-family:STKaiti,KaiTi,serif;font-size:14px;'>· 洋洋 ·</span></p>"+
+            "<p><b>v1.5.0 重大更新（Doka 风格 AI 构图）：</b>① 新增「AI构图」按钮（Doka 模式）：点一下直接在取景框实时显示彩色渐变裁切框（框外暗化）+目标锁定十字准星，1.2秒即时反馈；② 新增AI滤镜推荐面板（胶卷样式，按场景推荐3款，点击直接应用）；③ 新增变焦建议按钮（左下角「拉近到2x」，点击直接应用）；④ 拍完即成品：Doka模式下拍照自动应用裁切+滤镜+变焦；⑤ 全面学习Doka相机交互逻辑。</p>"+
             "<p><b>v1.4.1 修复与优化：</b>① 修复<b>「实时取景后 AI 分析点不了」</b>的核心 bug（分析成功后 state.analyzing 未重置导致按钮被拦截，现已修复并增加中断时的状态清理）；② 修复<b>智能裁切框不生效</b>的问题（旧版强制保持原始宽高比导致 AI 推荐裁切百分比被忽略，现已严格按 [左,上,右,下] 百分比计算）；③ 拍照后自动关闭实时取景 HUD，避免叠加干扰；④ 全面审核 AI 分析引擎与裁切逻辑，确保分析准确、裁切到位。</p>"+
             "<p><b>v1.4.0 更新内容：</b>① 新增<b>实时取景辅助</b>（按下快门前的 AI 拍摄指导：主体锁定+移动建议 / 实时光线检测 / 实时水平仪 / 变焦建议 / 自动抓拍提示）；② 新增<b>AI 真模型管理</b>（可开关、可查看加载状态、可重新加载，模型是否下载完整一目了然）；③ 实时滤镜预览优化。</p>"+
             "<p><b>模型状态怎么看：</b>点「帮助」→「🤖 AI 真模型」区块可看状态徽章；实时取景时右上角有小徽章（绿=已加载 / 黄=加载中 / 红=失败 / 灰=关闭）。点「AI 分析」后面板顶部也有提示。</p>"+
@@ -2536,12 +2604,188 @@
       if(live.raf){ cancelAnimationFrame(live.raf); live.raf=null; }
       if(live._cleanup){ live._cleanup(); live._cleanup=null; }
       removeAiBox();
+      // v1.5.0: 关闭实时取景时同时退出 Doka AI 构图模式
+      if(state.dokaMode){ stopDokaMode(); }
       setStatus("实时取景辅助已关闭","idle");
     }
     btnLive.addEventListener("click",function(){
       if(state.liveMode){ stopLive(); }
       else { startLive(); }
     });
+
+    /* ============ v1.5.0 Doka 风格 AI 构图模式 ============ */
+    var dokaOverlay=$("dokaOverlay"), dokaFrame=$("dokaFrame"), dokaCross=$("dokaCross"),
+        dokaFilterPanel=$("dokaFilterPanel"), dfpList=$("dfpList"), dokaZoomBtn=$("dokaZoomBtn"),
+        dokaZoomTxt=$("dokaZoomTxt"), btnAIC=$("btnAIC"), dfpClose=$("dfpClose");
+    state.dokaMode=false;
+    state.dokaPlan=null;
+
+    function startDokaMode(){
+      if(state.dokaMode) return;
+      if(state.mode!=="camera" || !state.stream){
+        setStatus("AI 构图需先连接相机","err"); toastMsg("请先点「相机」连接摄像头"); return;
+      }
+      state.dokaMode=true;
+      btnAIC.classList.add("active");
+      // 启动实时取景（如果还没启动）
+      if(!state.liveMode){ startLive(); }
+      setStatus("AI 构图中 · 移动手机对准主体，拍完即成品","done");
+      // 快速分析（缩短到 1.2 秒，Doka 风格即时反馈）
+      runDokaAnalysis();
+    }
+    function stopDokaMode(){
+      if(!state.dokaMode) return;
+      state.dokaMode=false;
+      state.dokaPlan=null;
+      btnAIC.classList.remove("active");
+      dokaOverlay.style.display="none";
+      dokaFilterPanel.style.display="none";
+      dokaZoomBtn.style.display="none";
+      setStatus("已退出 AI 构图模式","idle");
+    }
+    function runDokaAnalysis(){
+      if(!state.dokaMode) return;
+      var el=currentEl();
+      if(!el){ setTimeout(runDokaAnalysis,300); return; }
+      state.analyzing=true;
+      var token=++state.analyzeToken;
+      setStatus("AI 正在分析构图…","");
+      setTimeout(function(){
+        if(token!==state.analyzeToken || !state.dokaMode){ state.analyzing=false; return; }
+        try{
+          var dims=currentSrcDims(el);
+          var a=analyzePixels(el,dims);
+          state.aiData=a;
+          var plan = a ? planFromAnalysis(a) : null;
+          if(!plan){ plan={subject:"画面主体",rule:"thirds",diag:[20,30,75,70],crop:[12,10,14,14],z:1.4,f:"natural",conf:80,desc:"建议三分法构图",filters:["自然","FClassic"]}; }
+          state.plan=plan; state.dokaPlan=plan; state.analyzed=true; state.analyzing=false;
+          // 显示 Doka 风格实时裁切预览
+          showDokaCrop(plan);
+          // 显示目标锁定
+          showDokaCrosshair(plan);
+          // 显示 AI 滤镜推荐
+          showDokaFilters(plan);
+          // 显示变焦建议
+          showDokaZoom(plan);
+          setStatus("构图已锁定 · 可直接拍照，拍完即成品","done");
+          // 如果模型已加载，运行真实检测
+          if(state.aiModelEnabled && aiModelState==="ready"){ runAIDetection(); }
+        }catch(err){ console.error("Doka分析异常:",err); state.analyzing=false; }
+      }, 1200);
+    }
+    function showDokaCrop(plan){
+      dokaOverlay.style.display="block";
+      var w=stage.clientWidth, h=stage.clientHeight;
+      var c=plan.crop; // [左%,上%,右%,下%]
+      var cx=c[0]/100*w, cy=c[1]/100*h, cw=w-(c[0]+c[2])/100*w, ch=h-(c[1]+c[3])/100*h;
+      // 4 个暗化遮罩
+      dokaOverlay.querySelector(".doka-top").style.height=cy+"px";
+      dokaOverlay.querySelector(".doka-bottom").style.height=(h-cy-ch)+"px";
+      dokaOverlay.querySelector(".doka-left").style.top=cy+"px";
+      dokaOverlay.querySelector(".doka-left").style.height=ch+"px";
+      dokaOverlay.querySelector(".doka-left").style.width=cx+"px";
+      dokaOverlay.querySelector(".doka-right").style.top=cy+"px";
+      dokaOverlay.querySelector(".doka-right").style.height=ch+"px";
+      dokaOverlay.querySelector(".doka-right").style.width=(w-cx-cw)+"px";
+      // 彩色渐变边框裁切框
+      dokaFrame.style.left=cx+"px";
+      dokaFrame.style.top=cy+"px";
+      dokaFrame.style.width=cw+"px";
+      dokaFrame.style.height=ch+"px";
+    }
+    function showDokaCrosshair(plan){
+      var w=stage.clientWidth, h=stage.clientHeight;
+      // 主体位置：用 diag 的第一个点作为主体中心
+      var sx=plan.diag[0]/100*w, sy=plan.diag[1]/100*h;
+      dokaCross.style.display="block";
+      dokaCross.style.left=sx+"px";
+      dokaCross.style.top=sy+"px";
+      dokaCross.classList.add("locked");
+    }
+    function showDokaFilters(plan){
+      dokaFilterPanel.style.display="block";
+      dfpList.innerHTML="";
+      // 根据场景推荐滤镜
+      var recs=plan.filters && plan.filters.length ? plan.filters : ["自然","FClassic","FCC"];
+      var sceneMap={"人像":"portra","街拍":"fcc","风景":"velvia","静物":"ektar","美食":"warm","夜景":"cyber","人文":"classic","萌宠":"c200"};
+      var scene=plan.subject||"";
+      var filterDefs={
+        "自然":{f:"natural",grad:"linear-gradient(135deg,#7fb069,#a9c46d)",scene:"通用"},
+        "FClassic":{f:"classic",grad:"linear-gradient(135deg,#8492a6,#b8c2d0)",scene:"人文纪实"},
+        "FCC":{f:"fcc",grad:"linear-gradient(135deg,#46586e,#7e90a5)",scene:"街拍"},
+        "FVelvia":{f:"velvia",grad:"linear-gradient(135deg,#c2494f,#e07a5f)",scene:"风景"},
+        "Portra400":{f:"portra",grad:"linear-gradient(135deg,#c9a26b,#e3c195)",scene:"人像"},
+        "Ektar100":{f:"ektar",grad:"linear-gradient(135deg,#d98e63,#f2c79a)",scene:"静物"},
+        "电影LUT":{f:"cine",grad:"linear-gradient(135deg,#1e4d52,#c98a4b)",scene:"电影感"},
+        "日系":{f:"japan",grad:"linear-gradient(135deg,#9db8a0,#cfe0d2)",scene:"清新"}
+      };
+      recs.slice(0,3).forEach(function(name,idx){
+        var def=filterDefs[name]||{f:"natural",grad:"linear-gradient(135deg,#7fb069,#a9c46d)",scene:"通用"};
+        var item=document.createElement("div");
+        item.className="dfp-item"+(idx===0?" active":"");
+        item.innerHTML='<div class="dfp-thumb" style="background:'+def.grad+'"></div><div class="dfp-name">'+name+'</div><div class="dfp-scene">'+def.scene+'</div>';
+        item.addEventListener("click",function(){
+          dfpList.querySelectorAll(".dfp-item").forEach(function(x){x.classList.remove("active");});
+          item.classList.add("active");
+          applyFilter(def.f);
+          toastMsg("已应用滤镜："+name);
+        });
+        dfpList.appendChild(item);
+      });
+    }
+    function showDokaZoom(plan){
+      var z=plan.z||1.4;
+      if(z<=1.05){ dokaZoomBtn.style.display="none"; return; }
+      dokaZoomBtn.style.display="flex";
+      dokaZoomTxt.textContent="拉近到 "+z.toFixed(1)+"x";
+      dokaZoomBtn.onclick=function(){
+        zoomRange.value=z; applyZoom(z);
+        toastMsg("已变焦至 "+z.toFixed(1)+"x");
+      };
+    }
+    btnAIC.addEventListener("click",function(){
+      if(state.dokaMode){ stopDokaMode(); }
+      else { startDokaMode(); }
+    });
+    dfpClose.addEventListener("click",function(){ dokaFilterPanel.style.display="none"; });
+
+    // Doka 模式下拍照自动应用裁切+滤镜+变焦
+    var _origShoot=btnShoot.onclick;
+    btnShoot.addEventListener("click",function(){
+      if(state.dokaMode && state.dokaPlan){
+        // 延迟到拍照完成后应用
+        setTimeout(function(){
+          if(state.dokaPlan){
+            var p=state.dokaPlan;
+            // 应用滤镜
+            if(p.f && p.f!=="clear"){ applyFilter(p.f); }
+            // 应用变焦
+            if(p.z && p.z>1.05){ zoomRange.value=p.z; applyZoom(p.z); }
+            // 应用裁切
+            if(p.crop){ applyCropFromPlan(p.crop); }
+            toastMsg("AI 构图已应用：裁切+滤镜+变焦");
+          }
+        },600);
+      }
+    },true);
+
+    function applyCropFromPlan(crop){
+      // crop: [左%,上%,右%,下%]
+      var img=photoView;
+      if(!img || !img.naturalWidth) return;
+      var iw=img.naturalWidth, ih=img.naturalHeight;
+      var sx=crop[0]/100*iw, sy=crop[1]/100*ih;
+      var sw=iw-(crop[0]+crop[2])/100*iw, sh=ih-(crop[1]+crop[3])/100*ih;
+      var c=document.createElement("canvas");
+      c.width=Math.round(sw); c.height=Math.round(sh);
+      c.getContext("2d").drawImage(img,sx,sy,sw,sh,0,0,sw,sh);
+      var url=c.toDataURL("image/jpeg",0.92);
+      pushUndo();
+      photoView.src=url;
+      state.cropped=true;
+      state.sourceKind="edited";
+      setStatus("已按 AI 构图裁切","done");
+    }
     function checkBrightness(){
       try{
         if(!videoCam.videoWidth) return;
