@@ -1,5 +1,5 @@
 /* AI 构图助手 · Service Worker v1.3.2 —— 离线缓存，让应用像原生 App 一样秒开 */
-const CACHE = 'ai-compose-v7';
+const CACHE = 'ai-compose-v8';
 const CORE = [
   './',
   './index.html',
@@ -26,20 +26,36 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   const url = e.request.url;
-  // 只处理同源 GET；跨域字体/资源走网络
   if (e.request.method !== 'GET') return;
   if (url.indexOf(self.location.origin) !== 0) return;
-  e.respondWith(
-    caches.match(e.request).then((hit) => {
-      if (hit) return hit;
-      return fetch(e.request).then((res) => {
-        // 只缓存成功的同源响应
+  const p = new URL(e.request.url).pathname;
+  const isCore = (p === '/' || p.endsWith('/index.html') || p.endsWith('/manifest.webmanifest'));
+  if (isCore) {
+    // 核心页面：network-first，每次联网拿最新版本，离线时回退缓存
+    e.respondWith(
+      fetch(e.request).then((res) => {
         if (res && res.ok) {
           const clone = res.clone();
           caches.open(CACHE).then((c) => c.put(e.request, clone)).catch(() => {});
         }
         return res;
-      }).catch(() => caches.match('./index.html'));
-    })
-  );
+      }).catch(() =>
+        caches.match(e.request).then((hit) => hit || caches.match('./index.html'))
+      )
+    );
+  } else {
+    // 静态资源：cache-first + 后台更新
+    e.respondWith(
+      caches.match(e.request).then((hit) => {
+        if (hit) return hit;
+        return fetch(e.request).then((res) => {
+          if (res && res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE).then((c) => c.put(e.request, clone)).catch(() => {});
+          }
+          return res;
+        }).catch(() => caches.match('./index.html'));
+      })
+    );
+  }
 });
