@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v1.2.0 · 专业取景器</title>
+<title>AI 构图助手 Pro v1.3.0 · 专业取景器</title>
 <meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
@@ -209,6 +209,16 @@
   .shot-box .cap .chip{font-size:9.5px;padding:2px 7px;border-radius:999px;background:rgba(255,255,255,.15);}
   .shot-actions{display:flex;gap:10px;}
   .shot-actions .btn{min-width:104px;min-height:46px;border-radius:13px;font-size:13px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px;border:none;}
+    .brand{font-style:italic;font-weight:700;font-size:11px;letter-spacing:1.5px;margin-left:4px;
+      background:linear-gradient(135deg,#E9A23B,#f6d48e);-webkit-background-clip:text;background-clip:text;color:transparent;
+      font-family:"STKaiti","KaiTi","Noto Serif SC",serif;}
+    .ai-detect{margin:10px 0 2px;padding:10px 12px;border-radius:13px;background:linear-gradient(135deg,rgba(70,140,220,.12),rgba(70,140,220,.04));border:1px solid rgba(70,140,220,.20);opacity:0;transform:translateY(6px);transition:.35s ease;}
+    .ai-detect.show{opacity:1;transform:none;}
+    .ai-detect .db-head{margin-bottom:6px;color:#3d7fd6;}
+    .ai-detect .dt-row{font-size:12.5px;line-height:1.6;color:var(--fg);}
+    .ai-detect .dt-row.dim{color:var(--dim);font-size:11.5px;}
+    .ai-box{position:absolute;border:2px solid #4d9fff;border-radius:3px;box-shadow:0 0 0 1px rgba(0,0,0,.35), 0 0 14px rgba(77,159,255,.35);pointer-events:none;z-index:6;}
+    .ai-box-lbl{position:absolute;top:-20px;left:-2px;background:#4d9fff;color:#fff;font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap;letter-spacing:.3px;}
   .shot-actions .sec{background:var(--panel2);color:var(--text);border:1px solid var(--line2);}
   .shot-actions .pri{background:linear-gradient(135deg,#FFB454,#E0902F);color:#16100A;font-weight:700;}
   /* ===================== 法则百科 ===================== */
@@ -356,7 +366,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.2.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.3.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
   </div>
@@ -951,7 +961,7 @@
       if(cmpOn){ setCmp(false); }
       baseLayer.style.display="none"; strengthRow.style.display="none"; state.strength=100;
       baseLayer.style.display="none";
-      resetGuides(); closeAi();
+      resetGuides(); closeAi(); removeAiBox();
       setZoom(1); setFilter("clear");
       updateActBtns();
       setStatus("已载入「"+name+"」· 点击「AI 分析」", "idle");
@@ -1238,6 +1248,8 @@
           btnAnalyze.disabled=false;
           drawGuides(plan);
           presentAnalysis(plan);
+          // v1.3.0: 异步真 AI 视觉识别（加载失败自动静默，不影响基础分析）
+          runAIDetection();
           setStatus("构图已锁定 · 可一键应用 或 智能裁切", "done");
         }catch(err){
           console.error("AI 分析异常:", err);
@@ -1889,7 +1901,7 @@
       state.sourceKind=""; state.sourceName=""; state.cropResult=null; state.origURL=null;
       state.displayRect=null;
       // 关闭浮层与覆盖层
-      closeAi(); resetGuides();
+      closeAi(); resetGuides(); removeAiBox();
       if(cmpOn){ setCmp(false); }
       baseLayer.style.display="none"; strengthRow.style.display="none"; state.strength=100;
       if(state.histOn){ state.histOn=false; histBox.classList.remove("show"); btnHist.classList.remove("active"); }
@@ -1986,15 +1998,21 @@
        html:"<p><span class='hl'>导出</span>：把当前画面（含滤镜+强度+变焦+裁切效果）一键导出为高清 PNG，可保存到相册 / 发工作群。</p>"+
             "<p><span class='hl'>分享</span>：通过系统分享直接发给微信 / 抖音等 App（需系统支持，不支持时自动转为下载）。</p>"+
             "<p><span class='hl'>撤销</span>：误操作（换滤镜 / 调变焦 / 裁切 / 清除）后点一下即可回退上一步，最多回退 20 步。</p>"},
+      {t:"⑩·AI 真视觉识别（v1.3.0）", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='2.5'/><path d='M12 2v3m0 14v3M2 12h3m14 0h3'/></svg>",
+       html:"<p>点「AI 分析」后，除了构图规则评分，还会在<b>手机本地</b>运行深度学习模型（Coco-SSD）识别画面里的真实主体（人物 / 汽车 / 猫狗 / 背包等 80 类），识别框会标在画面上。</p>"+
+            "<p>识别到主体后，构图评分（主体位置 / 占比）会用<b>真实检测结果</b>计算，比纯像素估算更准。全程<b>本地运行、照片不上传</b>，首次使用需联网加载模型（约 18MB），之后离线可用。</p>"+
+            "<p>若设备不支持或未联网，会自动回退到基础分析，功能不受影响。</p>"},
       {t:"⑪ 常见问题", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='9'/><path d='M9.2 9a2.8 2.8 0 0 1 5.5.8c0 1.8-2.7 2.3-2.7 4'/><circle cx='12' cy='17.6' r='.4' fill='currentColor'/></svg>",
        html:"<p><b>相机点不开？</b> 需在 HTTPS 环境（预览发布后），或改用相册/示例。</p>"+
             "<p><b>拍照后图片没保存？</b> 拍完点「保存」会下载到相册；点「存入作品」进画廊。作品存在本机浏览器缓存。</p>"+
             "<p><b>想重拍 / 换照片？</b> 点「<span class='hl'>清除</span>」清空画布，再从相册上传新照片或重新选示例。</p>"+
             "<p><b>滤镜不生效？</b> 底部滤镜条向左/右滑动可看到全部 26 款。</p>"},
       {t:"⑫ 版本信息", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/></svg>",
-       html:"<p><b>当前版本：v1.2.0</b>（2026-09-04）</p>"+
-            "<p><b>v1.2.0 更新内容：</b>新增「导出成品图」（含滤镜/变焦/裁切）、「一键分享」、「撤销操作」（最多20步）、AI「构图建议」（基于光学数据生成可执行改进方案）；APK 已签名加固。</p>"+
-            "<p><b>v1.1.0 更新内容：</b>滤镜增至 26 款（新增日落暖调/赛博霓虹/莫兰迪/褪色胶片/重彩/柔焦/极光青紫/银盐）；AI 光学数据新增主体位置/对称度/对角线/三分匹配 4 项；裁切新增 2:3/4:3/2.35:1 电影比例；新增引导线模式切换；帮助页完善。</p>"+
+       html:"<p><b>当前版本：v1.3.0</b>（2026-09-04）</p>"+
+            "<p><b>设计师：</b><span class='brand' style='-webkit-background-clip:text;background-clip:text;color:transparent;background-image:linear-gradient(135deg,#E9A23B,#f6d48e);font-style:italic;font-weight:700;font-family:STKaiti,KaiTi,serif;font-size:14px;'>· 洋洋 ·</span></p>"+
+            "<p><b>v1.3.0 更新内容：</b>新增<b>真 AI 视觉识别</b>（本地运行 Coco-SSD 深度学习模型，识别画面主体 80 类，主体位置/占比用真实检测结果，识别框叠加显示，自动降级）；加入「洋洋」品牌角标；APK 签名改为专属密钥「YangYang」。</p>"+
+            "<p><b>v1.2.0 更新内容：</b>新增「导出成品图」（含滤镜/变焦/裁切）、「一键分享」、「撤销操作」（最多20步）、AI「构图建议」；APK 签名加固。</p>"+
+            "<p><b>v1.1.0 更新内容：</b>滤镜增至 26 款；AI 光学数据新增 4 项；裁切新增 2:3/4:3/2.35:1；引导线模式切换。</p>"+
             "<p>所有功能均为本地运行，照片不上传任何服务器，隐私安全。作品画廊最多保存 24 张。</p>"}
     ];
     function openHelp(){
@@ -2009,6 +2027,90 @@
     }
     btnHelp.addEventListener("click",openHelp);
     helpClose.addEventListener("click",function(){ helpSheet.classList.remove("show"); });
+
+    /* ===================== v1.3.0: 真 AI 视觉识别（本地 Coco-SSD，懒加载+自动降级） ===================== */
+    var aiModelState="idle", aiModel=null, aiDetectEl=null;
+    var AI_TFJS_URL="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js";
+    var AI_COCO_URL="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js";
+    var AI_MODEL_URL="model/model.json";
+    function loadScript(src){ return new Promise(function(res,rej){ var s=document.createElement("script"); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
+    function loadAIModel(){
+      return new Promise(function(resolve){
+        if(aiModelState==="ready"){ resolve(true); return; }
+        if(aiModelState!=="idle"){ resolve(false); return; }
+        // file:// 离线打开时无法加载模型文件，直接降级（避免 CORS 报错）
+        if(location.protocol==="file:" || location.protocol==="null"){ aiModelState="fail"; resolve(false); return; }
+        aiModelState="loading";
+        var chain=Promise.resolve();
+        chain=chain.then(function(){ if(typeof tf==="undefined") return loadScript(AI_TFJS_URL); });
+        chain=chain.then(function(){ if(typeof cocoSsd==="undefined") return loadScript(AI_COCO_URL); });
+        chain=chain.then(function(){ return cocoSsd.load({modelUrl:AI_MODEL_URL}); });
+        chain.then(function(m){ aiModel=m; aiModelState="ready"; resolve(true); })
+             .catch(function(e){ console.warn("AI 模型加载失败，使用基础分析:", e); aiModelState="fail"; resolve(false); });
+      });
+    }
+    var COCO_CN={person:"人物",bicycle:"自行车",car:"汽车",motorcycle:"摩托车",airplane:"飞机",bus:"公交车",train:"火车",truck:"卡车",boat:"船",traffic_light:"红绿灯",fire_hydrant:"消防栓",stop_sign:"停车牌",parking_meter:"停车计费器",bench:"长椅",bird:"鸟",cat:"猫",dog:"狗",horse:"马",sheep:"羊",cow:"牛",elephant:"大象",bear:"熊",zebra:"斑马",giraffe:"长颈鹿",backpack:"背包",umbrella:"雨伞",handbag:"手提包",tie:"领带",suitcase:"行李箱",frisbee:"飞盘",skis:"滑雪板",snowboard:"滑雪板",sports_ball:"球",kite:"风筝",baseball_bat:"棒球棒",baseball_glove:"棒球手套",skateboard:"滑板",surfboard:"冲浪板",tennis_racket:"网球拍",bottle:"瓶子",wine_glass:"酒杯",cup:"杯子",fork:"叉子",knife:"刀",spoon:"勺子",bowl:"碗",banana:"香蕉",apple:"苹果",sandwich:"三明治",orange:"橙子",broccoli:"西兰花",carrot:"胡萝卜",hot_dog:"热狗",pizza:"披萨",donut:"甜甜圈",cake:"蛋糕",chair:"椅子",couch:"沙发",potted_plant:"盆栽",bed:"床",dining_table:"餐桌",toilet:"马桶",tv:"电视",laptop:"笔记本电脑",mouse:"鼠标",remote:"遥控器",keyboard:"键盘",cell_phone:"手机",microwave:"微波炉",oven:"烤箱",toaster:"烤面包机",sink:"水槽",refrigerator:"冰箱",book:"书本",clock:"时钟",vase:"花瓶",scissors:"剪刀",teddy_bear:"泰迪熊",hair_drier:"吹风机",toothbrush:"牙刷"};
+    function cnLabel(c){ return COCO_CN[c]||c; }
+    function removeAiBox(){ if(aiDetectEl&&aiDetectEl.parentNode){ aiDetectEl.parentNode.removeChild(aiDetectEl); } aiDetectEl=null; }
+    function drawAiBox(top, el){
+      removeAiBox();
+      var iw=el.naturalWidth||el.videoWidth, ih=el.naturalHeight||el.videoHeight;
+      var dr=state.displayRect;
+      if(!iw||!ih||!dr) return;
+      var bx=top.bbox[0], by=top.bbox[1], bw=top.bbox[2], bh=top.bbox[3];
+      var x=dr.x+(bx/iw)*dr.w, y=dr.y+(by/ih)*dr.h, w=Math.max(24,(bw/iw)*dr.w), h=Math.max(24,(bh/ih)*dr.h);
+      var box=document.createElement("div");
+      box.className="ai-box";
+      box.style.left=x+"px"; box.style.top=y+"px"; box.style.width=w+"px"; box.style.height=h+"px";
+      box.innerHTML='<span class="ai-box-lbl">'+cnLabel(top.class)+' '+(Math.round(top.score*100))+'%</span>';
+      var g=document.getElementById("guides"); if(g) g.appendChild(box);
+      aiDetectEl=box;
+    }
+    function renderAiDetect(preds, el){
+      if(!preds||!preds.length) return;
+      // 更新主体数据
+      if(state.aiData && el){
+        var iw=el.naturalWidth||el.videoWidth, ih=el.naturalHeight||el.videoHeight;
+        if(iw&&ih){
+          var t=preds[0];
+          state.aiData.cx=Math.max(0,Math.min(1,(t.bbox[0]+t.bbox[2]/2)/iw));
+          state.aiData.cy=Math.max(0,Math.min(1,(t.bbox[1]+t.bbox[3]/2)/ih));
+          state.aiData.bodyRatio=Math.max(0.01,Math.min(0.95,(t.bbox[2]*t.bbox[3])/(iw*ih)));
+          state.aiData.subject=cnLabel(t.class);
+        }
+      }
+      // 面板卡片
+      var card=document.createElement("div");
+      card.className="ai-detect";
+      var names=preds.slice(0,4).map(function(p){ return "<b>"+cnLabel(p.class)+"</b> "+Math.round(p.score*100)+"%"; }).join(" &nbsp;·&nbsp; ");
+      card.innerHTML='<div class="db-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9l2.1 2.1m9.9 9.9l2.1 2.1M19.1 4.9L17 7m-9.9 9.9L5 19.1"/></svg>AI 视觉识别</div>'+
+        '<div class="dt-row">识别到 '+preds.length+' 个主体：'+names+'</div>'+
+        '<div class="dt-row dim">已用主体「'+cnLabel(preds[0].class)+'」更新构图评分（位置 / 占比 / 建议）</div>';
+      var firstChild=aiBody.firstChild;
+      aiBody.insertBefore(card, firstChild);
+      setTimeout(function(){ card.classList.add("show"); }, 60);
+      // 同步更新「识别主体」行
+      aiBody.querySelectorAll(".ai-item .tx").forEach(function(tx){
+        if(tx.textContent.indexOf("识别主体")>=0){ tx.innerHTML="<b>识别主体：</b>"+cnLabel(preds[0].class); }
+      });
+      // 画面检测框
+      drawAiBox(preds[0], el);
+    }
+    function runAIDetection(){
+      var el=currentEl();
+      if(!el) return;
+      var token=state.analyzeToken;
+      var elSnap=el;
+      loadAIModel().then(function(ok){
+        if(!ok) return;
+        if(token!==state.analyzeToken || currentEl()!==elSnap) return;
+        aiModel.detect(elSnap).then(function(preds){
+          if(token!==state.analyzeToken) return;
+          if(!preds||!preds.length){ return; }
+          renderAiDetect(preds, elSnap);
+        }).catch(function(e){ console.warn("AI 检测失败:", e); });
+      });
+    }
 
     /* ===================== v1.2.0: 撤销 / 导出 / 分享 / 构图建议 ===================== */
     var btnUndo=$("btnUndo"), btnExport=$("btnExport"), btnShare=$("btnShare");
