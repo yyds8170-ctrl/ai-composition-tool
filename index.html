@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v1.9.1 · 实时取景</title>
+<title>AI 构图助手 Pro v2.0.0 · 实时取景</title>
 <meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
@@ -514,7 +514,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.9.1</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v2.0.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -852,16 +852,23 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v1.9.1 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v2.0.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
-    <!-- v1.4.0 AI 真模型管理 -->
+    <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
       <div class="mp-head">🤖 AI 真模型 <span class="mp-badge idle" id="mpBadge">未加载</span></div>
       <div class="mp-row">
-        <label class="mp-sw"><input type="checkbox" id="mpOn"><span class="mp-sl"></span>启用真 AI 识别</label>
+        <label class="mp-sw"><input type="checkbox" id="mpOn"><span class="mp-sl"></span>物体检测（Coco-SSD）</label>
         <button class="mp-btn" id="mpReload">重新加载</button>
       </div>
-      <div class="mp-desc">本地运行 Coco-SSD 深度学习模型（识别 80 类主体，同时驱动<b>背景虚化</b>的人体检测），照片不上传、隐私安全。首次加载需联网下载约 18MB，加载成功后离线可用。开启后可自由关闭，随时查看状态。</div>
+      <div class="mp-desc">识别 80 类主体（人/车/动物等），驱动背景虚化的人体检测，约 18MB。</div>
+      <div style="height:8px;"></div>
+      <div class="mp-head" style="font-size:13px;">👤 人脸检测 <span class="mp-badge idle" id="faceBadge">未加载</span></div>
+      <div class="mp-row">
+        <label class="mp-sw"><input type="checkbox" id="faceOn"><span class="mp-sl"></span>启用精准人脸检测</label>
+        <button class="mp-btn" id="faceReload">重新加载</button>
+      </div>
+      <div class="mp-desc">MediaPipe Face Detection，专门识别人脸位置，比估算更准确，解决"把汽车当人脸"问题，约 3MB。加载成功后自动用于人像构图。</div>
     </div>
     <div class="help-body" id="helpBody"></div>
   </div>
@@ -1730,7 +1737,7 @@
       
       // ===== 7. 人像专项分析（专业人像摄影法则） =====
       var personData = (state.aiData && state.aiData.isPerson) ? state.aiData : a;
-      if(personData.isPerson){
+      if(personData.isPerson && personData.faceAvailable!==false){
         plan.isPerson=true;
         // 头顶留白：专业人像建议 5-10%
         if(personData.headTop<0.03){ notes.push("⚠ 头顶留白过多（>10%），建议上移机位压缩留白"); }
@@ -2901,7 +2908,7 @@
             "<p><b>想重拍 / 换照片？</b> 点「<span class='hl'>清除</span>」清空画布，再从相册上传新照片或重新选示例。</p>"+
             "<p><b>滤镜不生效？</b> 底部滤镜条向左/右滑动可看到全部 26 款。</p>"},
       {t:"⑫ 版本信息", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/></svg>",
-       html:"<p><b>当前版本：v1.9.1</b>（2026-09-05）</p>"+
+       html:"<p><b>当前版本：v2.0.0</b>（2026-09-05）</p>"+
             "<p><b>设计师：</b><span class='brand' style='-webkit-background-clip:text;background-clip:text;color:transparent;background-image:linear-gradient(135deg,#E9A23B,#f6d48e);font-style:italic;font-weight:700;font-family:STKaiti,KaiTi,serif;font-size:14px;'>· 洋洋 ·</span></p>"+
             "<p><b>v1.6.1 Bug 修复：</b>①修复 Doka 拍照时变焦不生效（applyZoom 未读参数）；②修复 Doka 拍照后裁切可能未生效（等待图片加载完成再生成成品）；③修复拍照预览半成品闪烁（先隐藏再显示成品）；④<b>修复人像分析不生效的严重 bug</b>（planFromAnalysis 未读取 state.aiData 的人像字段，Doka 模式 AI 检测后重新生成 plan）；⑤showShot 滤镜名空值保护。</p>"+
             "<p><b>v1.6.0 人像大版本：</b>①<b>人像面部黄金分割点</b>——AI检测到人后显示面部对焦框，提示把脸移到三分点；②<b>人像专属滤镜×3</b>（人像暖/人像冷/人像黑白），AI推荐时优先；③<b>头顶留白+视线方向检测</b>——提示头顶留白过多/人物偏左往右移机位；④<b>极简模式</b>——顶栏⚡按钮一键切换，只留快门+AI构图+滤镜；⑤<b>拍完直接显示成品</b>——Doka模式拍完自动应用裁切+滤镜+变焦，全屏显示成品，底部只留保存/重拍/分享。</p>"+
@@ -2941,6 +2948,10 @@
     var AI_TFJS_URL="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js";
     var AI_COCO_URL="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js";
     var AI_MODEL_URL="model/model.json";
+    // v2.0.0: MediaPipe Face Detection（精准人脸检测）
+    var FACE_DET_URL="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js";
+    var faceModelState="idle", faceModel=null, faceEnabled=false;
+    var mpBadge=null, faceBadge=null;
     // v1.7.1: MediaPipe Selfie Segmentation（人像像素级分割，用于真正的背景虚化）
     var MP_SEG_URL="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js";
     var segModelState="idle", segModel=null, segCanvas=null, segCtx=null, segMaskCanvas=null, segMaskCtx=null;
@@ -3081,26 +3092,36 @@
     }
     function renderAiDetect(preds, el){
       if(!preds||!preds.length) return;
+      // v1.9.2: 过滤低置信度结果，按面积排序选主要主体
+      var valid=preds.filter(function(p){ return p.score>=0.45; });
+      if(!valid.length) return;
+      // 按面积排序，选最大的作为主要主体
+      valid.sort(function(a,b){ return (b.bbox[2]*b.bbox[3])-(a.bbox[2]*a.bbox[3]); });
       // 更新主体数据
       if(state.aiData && el){
         var iw=el.naturalWidth||el.videoWidth, ih=el.naturalHeight||el.videoHeight;
         if(iw&&ih){
-          var t=preds[0];
+          var t=valid[0];
           state.aiData.cx=Math.max(0,Math.min(1,(t.bbox[0]+t.bbox[2]/2)/iw));
           state.aiData.cy=Math.max(0,Math.min(1,(t.bbox[1]+t.bbox[3]/2)/ih));
           state.aiData.bodyRatio=Math.max(0.01,Math.min(0.95,(t.bbox[2]*t.bbox[3])/(iw*ih)));
           state.aiData.subject=cnLabel(t.class);
-          // v1.6.0: 人像专项——估算面部位置（人体上1/3处）+ 头顶留白 + 视线方向
-          if(t.class==="person"){
+          // v1.9.2: 人像检测优化——只有足够大的 person 才识别人像
+          var personHeight=t.bbox[3]/ih; // person 占画面高度比例
+          var isBigPerson = (t.class==="person" && personHeight>=0.20 && t.score>=0.5);
+          if(isBigPerson){
             state.aiData.isPerson=true;
             state.aiData.faceX=Math.max(0,Math.min(1,(t.bbox[0]+t.bbox[2]/2)/iw));
             state.aiData.faceY=Math.max(0,Math.min(1,(t.bbox[1]+t.bbox[3]*0.18)/ih));
-            state.aiData.headTop=t.bbox[1]/ih; // 头顶位置（0=顶部）
+            state.aiData.headTop=t.bbox[1]/ih;
             state.aiData.personLeft=t.bbox[0]/iw;
             state.aiData.personRight=(t.bbox[0]+t.bbox[2])/iw;
             state.aiData.personBottom=(t.bbox[1]+t.bbox[3])/ih;
+            // v1.9.2: 只有 person 高度 >35% 画面时才显示面部提示（远景不显示）
+            state.aiData.faceAvailable = personHeight>=0.35;
           } else {
             state.aiData.isPerson=false;
+            state.aiData.faceAvailable=false;
           }
         }
       }
@@ -3127,8 +3148,8 @@
       });
       // 画面检测框
       drawAiBox(preds[0], el);
-      // v1.7.0: 实时人脸跟踪提示（仅实时取景模式下）
-      if(state.liveMode && preds[0].class==="person"){
+      // v1.7.0: 实时人脸跟踪提示（仅实时取景模式下，v1.9.2: 只有足够大的人才显示）
+      if(state.liveMode && state.aiData.isPerson && state.aiData.faceAvailable){
         var faceX=state.aiData.faceX;
         var tip="";
         if(faceX<0.3) tip="👉 把脸移到右侧三分点";
@@ -3196,6 +3217,8 @@
           if(token!==state.analyzeToken) return;
           if(!preds||!preds.length){ return; }
           renderAiDetect(preds, elSnap);
+          // v2.0.0: 同时运行人脸检测（如果已启用并加载）
+          if(faceEnabled && faceModelState==="ready"){ detectFace(elSnap); }
         }).catch(function(e){ console.warn("AI 检测失败:", e); });
       });
     }
@@ -3253,6 +3276,77 @@
       });
       updateModelUI();
     }
+
+    /* ===================== v2.0.0: MediaPipe Face Detection 精准人脸检测 ===================== */
+    function updateFaceUI(){
+      if(!faceBadge) faceBadge=document.getElementById("faceBadge");
+      if(!faceBadge) return;
+      faceBadge.className="mp-badge "+(faceModelState==="ready"?"ready":faceModelState==="loading"?"loading":faceModelState==="fail"?"fail":"idle");
+      faceBadge.textContent=faceModelState==="ready"?"已加载":faceModelState==="loading"?"加载中…":faceModelState==="fail"?"加载失败":"未加载";
+      var cb=document.getElementById("faceOn");
+      if(cb) cb.checked=faceEnabled;
+    }
+    function loadFaceModel(force){
+      return new Promise(function(resolve){
+        if(faceModelState==="ready"){ resolve(true); return; }
+        if(faceModelState==="loading"){ resolve(false); return; }
+        if(location.protocol==="file:" || location.protocol==="null"){ faceModelState="fail"; updateFaceUI(); resolve(false); return; }
+        faceModelState="loading"; updateFaceUI();
+        loadScript(FACE_DET_URL).then(function(){
+          if(typeof FaceDetection==="undefined"){ faceModelState="fail"; updateFaceUI(); resolve(false); return; }
+          try{
+            faceModel=new FaceDetection({locateFile:function(file){ return "https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/"+file; }});
+            faceModel.setOptions({model:"short", minDetectionConfidence:0.6});
+            faceModel.onResults(function(results){
+              if(results.detections && results.detections.length>0){
+                var d=results.detections[0];
+                // MediaPipe 返回的是归一化坐标 [x,y,w,h]
+                var bbox=d.locationData.relativeBoundingBox;
+                if(bbox){
+                  state.aiData.faceX=Math.max(0,Math.min(1,bbox.xmin+bbox.width/2));
+                  state.aiData.faceY=Math.max(0,Math.min(1,bbox.ymin+bbox.height/2));
+                  state.aiData.faceAvailable=true;
+                  state.aiData.faceConfidence=d.score[0];
+                }
+              } else {
+                state.aiData.faceAvailable=false;
+              }
+            });
+            faceModelState="ready"; updateFaceUI();
+            toastMsg("人脸检测模型加载成功");
+            resolve(true);
+          }catch(e){ console.warn("人脸模型初始化失败:",e); faceModelState="fail"; updateFaceUI(); resolve(false); }
+        }).catch(function(e){ console.warn("人脸模型加载失败:",e); faceModelState="fail"; updateFaceUI(); resolve(false); });
+      });
+    }
+    var lastFaceDetect=0;
+    function detectFace(el){
+      if(!faceEnabled || faceModelState!=="ready" || !faceModel || !el) return;
+      // v2.0.0: 节流，最多每 400ms 运行一次，避免卡顿
+      var now=Date.now();
+      if(now-lastFaceDetect<400) return;
+      lastFaceDetect=now;
+      try{ faceModel.send({image:el}); }catch(e){}
+    }
+    // 绑定人脸检测开关
+    var faceOnEl=document.getElementById("faceOn");
+    if(faceOnEl){
+      faceOnEl.addEventListener("change",function(){
+        faceEnabled=faceOnEl.checked;
+        if(faceEnabled){ loadFaceModel(true); }
+        else { faceModelState="idle"; faceModel=null; updateFaceUI(); toastMsg("人脸检测已关闭"); }
+      });
+    }
+    var faceReloadEl=document.getElementById("faceReload");
+    if(faceReloadEl){
+      faceReloadEl.addEventListener("click",function(){
+        faceEnabled=true;
+        var cb=document.getElementById("faceOn"); if(cb) cb.checked=true;
+        faceModelState="idle";
+        loadFaceModel(true);
+      });
+    }
+    updateFaceUI();
 
     /* ===================== v1.4.0: 实时取景辅助（AI主体锁定/光线/水平/变焦/可拍建议） ===================== */
     var live={raf:null,bright:105,gamma:0,lastDetect:0,detecting:false,subj:null,subjScore:0,brightTick:0,devOK:false};
@@ -3388,8 +3482,8 @@
       // 不显示独立十字准星，改为主体标签变绿色表示已锁定
       if(lhSubject.textContent){ lhSubject.classList.add("locked"); }
       dokaCross.style.display="none";
-      // v1.6.0: 人像模式显示面部对焦框
-      if(state.aiData && state.aiData.isPerson && state.aiData.faceX!=null){
+      // v1.6.0: 人像模式显示面部对焦框（v1.9.2: 只有足够大的人才显示）
+      if(state.aiData && state.aiData.isPerson && state.aiData.faceAvailable && state.aiData.faceX!=null){
         var w=stage.clientWidth, h=stage.clientHeight;
         if(w>10 && h>10){
           dokaFaceBox.style.display="block";
