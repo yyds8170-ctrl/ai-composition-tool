@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v1.5.5 · 实时取景</title>
+<title>AI 构图助手 Pro v1.5.6 · 实时取景</title>
 <meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
@@ -235,6 +235,7 @@
     .live-model.fail .dot2{background:var(--red);}
     .live-model.off .dot2{background:var(--dim);}
     .live-subject{position:absolute;left:10px;bottom:88px;max-width:78%;background:rgba(10,12,14,.62);border:1px solid rgba(77,159,255,.4);border-radius:9px;padding:5px 10px;font-size:12px;color:#d6e9ff;display:inline-flex;align-items:center;gap:5px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}
+  .live-subject.locked{border-color:rgba(103,217,122,.7);color:#c8ffd4;box-shadow:0 0 12px rgba(103,217,122,.3);}
     .live-bottom{position:absolute;left:10px;right:10px;bottom:40px;background:linear-gradient(90deg,rgba(20,24,29,.88),rgba(20,24,29,.55));border:1px solid rgba(255,255,255,.16);border-radius:11px;padding:8px 12px;font-size:12.5px;color:#fff;text-align:center;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);letter-spacing:.3px;}
     .live-bottom.ready{background:linear-gradient(90deg,rgba(23,98,40,.92),rgba(23,98,40,.55));border-color:rgba(103,217,122,.6);color:#e2ffe9;}
     .btn.live{position:relative;}
@@ -459,7 +460,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.5.5</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.5.6</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
   </div>
@@ -743,7 +744,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v1.5.5 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v1.5.6 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v1.4.0 AI 真模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -2373,8 +2374,9 @@
             "<p><b>想重拍 / 换照片？</b> 点「<span class='hl'>清除</span>」清空画布，再从相册上传新照片或重新选示例。</p>"+
             "<p><b>滤镜不生效？</b> 底部滤镜条向左/右滑动可看到全部 26 款。</p>"},
       {t:"⑫ 版本信息", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/></svg>",
-       html:"<p><b>当前版本：v1.5.5</b>（2026-09-05）</p>"+
+       html:"<p><b>当前版本：v1.5.6</b>（2026-09-05）</p>"+
             "<p><b>设计师：</b><span class='brand' style='-webkit-background-clip:text;background-clip:text;color:transparent;background-image:linear-gradient(135deg,#E9A23B,#f6d48e);font-style:italic;font-weight:700;font-family:STKaiti,KaiTi,serif;font-size:14px;'>· 洋洋 ·</span></p>"+
+            "<p><b>v1.5.6 界面精简：</b>去掉 AI 构图模式下独立的十字准星（避免与光线提示重叠、界面杂乱），改为主体检测标签（如「键盘 68%」）变<b>绿色边框</b>表示 AI 已锁定主体，更简洁直观。</p>"+
             "<p><b>v1.5.5 修复：</b>修复 AI 构图裁切框显示为「彩色渐变实心矩形」的问题——改用 box-shadow 双层方案（2px青色边框+9999px暗化遮罩），彻底兼容移动端浏览器；裁切框内画面完全透明可见。</p>"+
             "<p><b>v1.5.4 根本性修复：</b>彻底重写 Doka AI 构图的暗化遮罩实现——从「4个独立遮罩元素」改为「box-shadow 单元素暗化」，<b>彻底解决手机上点AI构图后画面全黑的问题</b>；同时 stage 添加 min-height:200px 防止被压缩；startDokaMode 强制 videoCam 显示、photoView 隐藏。</p>"+
             "<p><b>v1.5.3 修复：</b>彻底重做底部按钮样式（调色/撤销/导出/分享），从白底灰字改为<b>深色背景+浅色文字+明确边框</b>，disabled 状态文字颜色从半透明改为 #8a929d 实色，现在任何状态下都清晰可读。</p>"+
@@ -2702,6 +2704,7 @@
       dokaOverlay.style.display="none";
       dokaFrame.style.display="none";
       dokaCross.style.display="none";
+      lhSubject.classList.remove("locked");
       dokaFilterPanel.style.display="none";
       dokaZoomBtn.style.display="none";
       setStatus("已退出 AI 构图模式","idle");
@@ -2753,13 +2756,9 @@
       dokaFrame.style.display="block";
     }
     function showDokaCrosshair(plan){
-      var w=stage.clientWidth, h=stage.clientHeight;
-      // 主体位置：用 diag 的第一个点作为主体中心
-      var sx=plan.diag[0]/100*w, sy=plan.diag[1]/100*h;
-      dokaCross.style.display="block";
-      dokaCross.style.left=sx+"px";
-      dokaCross.style.top=sy+"px";
-      dokaCross.classList.add("locked");
+      // 不显示独立十字准星，改为主体标签变绿色表示已锁定
+      if(lhSubject.textContent){ lhSubject.classList.add("locked"); }
+      dokaCross.style.display="none";
     }
     function showDokaFilters(plan){
       dokaFilterPanel.style.display="block";
