@@ -1,7 +1,7 @@
 {
   "name": "AI 构图助手",
   "short_name": "构图助手",
-  "description": "AI 构图助手 Pro v1.5.4 · 专业取景器：实时取景辅助、AI 构图分析、26 款滤镜、智能裁切、导出分享、构图法则百科",
+  "description": "AI 构图助手 Pro v1.5.5 · 专业取景器：实时取景辅助、AI 构图分析、26 款滤镜、智能裁切、导出分享、构图法则百科",
   "id": "/ai-composition-tool/",
   "start_url": "./index.html",
   "scope": "./",
