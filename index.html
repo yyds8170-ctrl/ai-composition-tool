@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v1.7.0 · 实时取景</title>
+<title>AI 构图助手 Pro v1.7.1 · 实时取景</title>
 <meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
@@ -514,7 +514,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.7.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.7.1</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -563,6 +563,8 @@
       <div class="burst-indicator" id="burstIndicator">连拍中…</div>
       <!-- v1.7.0: 实时提示气泡 -->
       <div class="live-tip hide" id="liveTip"></div>
+      <!-- v1.7.1: 背景虚化用 canvas（叠加在视频上方，只显示模糊背景） -->
+      <canvas id="segCanvas" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;pointer-events:none;z-index:5;"></canvas>
     </div>
     <div class="hist" id="histBox"><span class="hist-cap">亮度直方图</span><canvas id="histCanvas" width="140" height="36"></canvas></div>
     <div class="level" id="levelBox">
@@ -841,7 +843,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v1.7.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v1.7.1 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v1.4.0 AI 真模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1514,106 +1516,174 @@
       }
     }
     function planFromAnalysis(a){
-      // V4 决策引擎：基于多维特征生成精准构图建议
-      var plan={subject:"画面主体",diag:[20,30,75,70],crop:[12,10,14,14],z:1.4,f:"natural",filters:["自然 · 忠实还原","FClassic · 冷峻"],conf:85,desc:"",exp:""};
+      // v1.7.1 智能构图引擎：多维度评分 + 动态裁切 + 精准推荐
+      var plan={subject:"画面主体",diag:[20,30,75,70],crop:[10,8,10,8],z:1.4,f:"natural",filters:[],conf:85,desc:"",exp:""};
       var notes=[];
-      // 1. 主体位置 + 三分匹配
-      var pos = a.cx<0.38?"左":a.cx>0.62?"右":"中";
-      if(a.thirdFit>0.78){
-        plan.rule="thirds"; plan.subject="已对齐三分点的核心主体";
-      } else if(pos==="中" && a.sym>0.72 && a.diagStrength<0.15){
-        plan.rule="sym"; plan.subject="画面中的对称结构";
-      } else if(pos==="中"){
-        plan.rule="center"; plan.subject="居中的主体";
-      } else {
-        plan.rule="thirds"; plan.subject="画面中的主体（偏"+pos+"）";
-      }
-      // 2. 对角线/引导线检测（优先于对称）
-      if(a.diagStrength>0.15 || a.contrast>88){
-        plan.rule="diag";
-        plan.subject= a.diagStrength>0.5? "沿对角延伸的光影线条":"高对比对角光带";
-        plan.diag=[12,18,88,82];
-        plan.crop=[6,4,12,12];
-        plan.desc="检测到画面存在明显的对角光影走势，建议让光线沿主对角线贯穿取景框，裁掉边角无关杂物，强化纵深感。";
-      } else if(a.rowGap>40 && a.ratio>0.42 && a.ratio<0.72){
-        plan.rule="thirds";
-        plan.subject="明暗交界处的水平线";
-        plan.crop=[8,8,14,16];
-        if(a.ratio>0.55){ plan.desc="水平线位于画面下三分之一，天空留白充分，建议把地平线放在下三分线，突出纵深与空间感。"; }
-        else { plan.desc="水平线略偏中，建议下拉到画面下三分之一，让天空与前景比例更协调。"; }
-      } else if(a.colGap>38 && a.sym>0.55 && a.diagStrength<0.15){
-        plan.rule="sym"; plan.subject="中轴对称的垂直线条";
-        plan.crop=[12,6,20,14];
-        plan.desc="画面左右对称度高，建议保持中轴对称构图，垂直线居中，去除一侧干扰元素。";
-      } else {
-        if(!plan.desc){
-          plan.desc = "已识别画面主体位于"+(pos==="左"?"左侧":pos==="右"?"右侧":"居中")+"区域，建议采用"+(RULES[plan.rule].cn)+"构图，将主体对齐分割线，裁去边缘干扰元素，使画面更聚焦。";
+      
+      // ===== 1. 多维度构图评分 =====
+      var scores={
+        thirds: 0,    // 三分法
+        sym: 0,       // 对称
+        diag: 0,      // 对角线
+        center: 0,    // 中心
+        golden: 0     // 黄金螺旋
+      };
+      
+      // 三分法评分：主体距三分线越近分越高
+      var thirdX = Math.abs(a.cx-0.333) < Math.abs(a.cx-0.667) ? 0.333 : 0.667;
+      var thirdY = Math.abs(a.cy-0.333) < Math.abs(a.cy-0.667) ? 0.333 : 0.667;
+      scores.thirds = Math.max(0, 1 - (Math.abs(a.cx-thirdX)+Math.abs(a.cy-thirdY))*2.5);
+      
+      // 对称评分
+      scores.sym = a.sym;
+      
+      // 对角线评分
+      scores.diag = a.diagStrength;
+      
+      // 中心构图评分
+      scores.center = Math.max(0, 1 - (Math.abs(a.cx-0.5)+Math.abs(a.cy-0.5))*2);
+      
+      // 选最高分的构图法则
+      var bestRule="thirds", bestScore=scores.thirds;
+      if(scores.sym>bestScore && a.sym>0.65){ bestRule="sym"; bestScore=scores.sym; }
+      if(scores.diag>bestScore && a.diagStrength>0.25){ bestRule="diag"; bestScore=scores.diag; }
+      if(scores.center>bestScore && a.sym>0.5){ bestRule="center"; bestScore=scores.center; }
+      plan.rule=bestRule;
+      plan.conf=Math.round(70+bestScore*25);
+      
+      // ===== 2. 动态裁切框计算（核心优化） =====
+      // 目标：把主体放到裁切后的黄金分割点上
+      var subW=a.bodyRatio, subH=a.bodyRatio; // 主体占比近似
+      var targetX = bestRule==="thirds" ? (a.cx<0.5?0.382:0.618) : 0.5;
+      var targetY = bestRule==="thirds" ? (a.cy<0.5?0.382:0.618) : 0.5;
+      
+      // 计算裁切边距，使主体移到目标位置
+      var cropLeft=0, cropRight=0, cropTop=0, cropBottom=0;
+      var maxCrop=0.35; // 最大裁切35%
+      
+      if(bestRule==="thirds"){
+        // 水平方向：让主体对齐三分点
+        if(a.cx < 0.4){
+          cropLeft = Math.min(maxCrop, (0.382-a.cx)*0.8);
+          cropRight = Math.min(maxCrop*0.6, cropLeft*0.7);
+        } else if(a.cx > 0.6){
+          cropRight = Math.min(maxCrop, (a.cx-0.618)*0.8);
+          cropLeft = Math.min(maxCrop*0.6, cropRight*0.7);
+        } else {
+          cropLeft = cropRight = 0.06;
         }
-      }
-      // 3. 曝光诊断
-      if(a.highClip>0.06){
-        plan.exp="⚠ 高光溢出 "+Math.round(a.highClip*100)+"%：天空/灯光过曝丢失细节，建议拉低曝光或改为欠曝方向取景";
-      } else if(a.shadowClip>0.20){
-        plan.exp="⚠ 暗部死黑 "+Math.round(a.shadowClip*100)+"%：暗区细节丢失，建议提亮阴影或调整取景";
+        // 垂直方向
+        if(a.cy < 0.4){
+          cropTop = Math.min(maxCrop*0.8, (0.382-a.cy)*0.7);
+          cropBottom = Math.min(maxCrop*0.5, cropTop*0.6);
+        } else if(a.cy > 0.6){
+          cropBottom = Math.min(maxCrop*0.8, (a.cy-0.618)*0.7);
+          cropTop = Math.min(maxCrop*0.5, cropBottom*0.6);
+        } else {
+          cropTop = cropBottom = 0.05;
+        }
+      } else if(bestRule==="sym"){
+        // 对称构图：居中裁切，左右对称
+        cropLeft = cropRight = 0.08;
+        cropTop = cropBottom = 0.06;
+      } else if(bestRule==="diag"){
+        // 对角线：保留更多画面空间
+        cropLeft = cropRight = 0.05;
+        cropTop = cropBottom = 0.04;
       } else {
-        plan.exp="✓ 曝光均衡：明暗层次保留完整，可直接出片";
+        // 中心：小幅裁切去边
+        cropLeft = cropRight = 0.07;
+        cropTop = cropBottom = 0.05;
+      }
+      
+      plan.crop=[
+        Math.round(cropLeft*100),
+        Math.round(cropTop*100),
+        Math.round(cropRight*100),
+        Math.round(cropBottom*100)
+      ];
+      
+      // ===== 3. 智能变焦推荐 =====
+      if(a.bodyRatio < 0.15){
+        plan.z = Math.min(3.0, 1.4 + (0.15-a.bodyRatio)*8); // 主体太小，拉近
+      } else if(a.bodyRatio > 0.5){
+        plan.z = 1.0; // 主体太大，不用变焦
+      } else {
+        plan.z = 1.0 + (0.3-a.bodyRatio)*1.5;
+        plan.z = Math.max(1.0, Math.min(2.5, plan.z));
+      }
+      
+      // ===== 4. 精准滤镜推荐 =====
+      var isPerson = (state.aiData && state.aiData.isPerson) || a.isPerson;
+      if(isPerson){
+        plan.filters=["人像暖 · 优化肤色","人像冷 · 清透通透","人像黑白 · 高对比"];
+        plan.f = a.wb>0 ? "portrait-warm" : "portrait-cool";
+        plan.z = Math.max(plan.z, 1.8); // 人像至少1.8x避免广角变形
+        plan.subject="人像";
+      } else if(a.mean < 60){
+        // 夜景/暗光
+        plan.filters=["暗夜 · 提升暗部","胶片 · 颗粒感","FClassic · 冷峻"];
+        plan.f = "night";
+        plan.subject="暗光场景";
+      } else if(a.sat > 0.45){
+        // 高饱和（风景/美食）
+        plan.filters=["鲜艳 · 增强色彩","自然 · 忠实还原","胶片 · 复古"];
+        plan.f = "vivid";
+        plan.subject="高饱和场景";
+      } else if(a.sat < 0.15){
+        // 低饱和（街拍/人文）
+        plan.filters=["黑白 · 经典","FClassic · 冷峻","胶片 · 复古"];
+        plan.f = "mono";
+        plan.subject="低饱和场景";
+      } else if(a.wb > 0.05){
+        // 暖色调（黄昏/室内）
+        plan.filters=["暖调 · 强化氛围","自然 · 忠实还原","人像暖 · 优化肤色"];
+        plan.f = "warm";
+        plan.subject="暖调场景";
+      } else if(a.wb < -0.05){
+        // 冷色调（阴天/户外）
+        plan.filters=["清透 · 冷白","自然 · 忠实还原","人像冷 · 清透"];
+        plan.f = "cool";
+        plan.subject="冷调场景";
+      } else {
+        plan.filters=["自然 · 忠实还原","FClassic · 冷峻","鲜艳 · 增强色彩"];
+        plan.f = "natural";
+        plan.subject="画面主体";
+      }
+      
+      // ===== 5. 构图描述 =====
+      var ruleNames={thirds:"三分法",sym:"对称构图",diag:"对角线构图",center:"中心构图",golden:"黄金螺旋"};
+      plan.desc = "检测到"+plan.subject+"，推荐"+ruleNames[bestRule]+"构图（匹配度"+plan.conf+"%）。" +
+        "裁切后主体将位于"+(bestRule==="thirds"?"黄金分割点":"画面中心")+"，" +
+        "推荐"+plan.z.toFixed(1)+"x焦段，"+(FILTERS[plan.f]?FILTERS[plan.f].name:"自然")+"滤镜。";
+      
+      // ===== 6. 曝光诊断 =====
+      if(a.highClip>0.06){
+        plan.exp="⚠ 高光溢出 "+Math.round(a.highClip*100)+"%：过曝丢失细节，建议拉低曝光";
+      } else if(a.shadowClip>0.20){
+        plan.exp="⚠ 暗部死黑 "+Math.round(a.shadowClip*100)+"%：暗区细节丢失，建议提亮阴影";
+      } else {
+        plan.exp="✓ 曝光均衡：明暗层次保留完整";
       }
       notes.push(plan.exp);
-      // 3.5 v1.6.0: 人像专项分析（头顶留白 + 视线方向 + 面部黄金分割点）
-      // 修复：人像字段可能在 state.aiData 中（runAIDetection 设置），优先读取
+      
+      // ===== 7. 人像专项分析 =====
       var personData = (state.aiData && state.aiData.isPerson) ? state.aiData : a;
       if(personData.isPerson){
         plan.isPerson=true;
-        // 头顶留白检测
         if(personData.headTop<0.04){ notes.push("⚠ 头顶留白过多，建议往上移机位"); }
         else if(personData.headTop>0.18){ notes.push("⚠ 头顶太贴边，建议往下移一点"); }
         else { notes.push("✓ 头顶留白适中"); }
-        // 视线方向（人物在左侧→视线多向左，建议往左移机位；右侧同理）
-        if(personData.personLeft<0.25){ notes.push("👀 人物偏左，建议往左移机位，视线方向多留空间"); plan.faceTip="left"; }
-        else if(personData.personRight>0.75){ notes.push("👀 人物偏右，建议往右移机位，视线方向多留空间"); plan.faceTip="right"; }
-        else { plan.faceTip="center"; }
-        // 面部黄金分割点提示
+        if(personData.personLeft<0.25){ notes.push("👀 人物偏左，建议往左移机位，视线方向多留空间"); }
+        else if(personData.personRight>0.75){ notes.push("👀 人物偏右，建议往右移机位"); }
         if(personData.faceX<0.3){ notes.push("🎯 面部偏左，建议把脸移到右侧三分点"); }
         else if(personData.faceX>0.7){ notes.push("🎯 面部偏右，建议把脸移到左侧三分点"); }
-        else if(personData.faceY<0.2){ notes.push("🎯 面部偏上，建议下移一点到上三分线"); }
-        else if(personData.faceY>0.45){ notes.push("🎯 面部偏下，建议上移一点到上三分线"); }
         else { notes.push("🎯 面部位于黄金分割点，构图佳"); }
-        // 人像焦段建议：2x 避免广角变形
-        plan.z=Math.max(plan.z, 1.8);
       }
-      // 4. 色彩 → 滤镜
-      var warm = a.wb>0.06;
-      if(a.sat<0.16){
-        plan.f="mono"; plan.filters=["黑白 · 强调影调","FClassic · 低饱和线条感","FCC · 高对比明暗"];
-        plan.conf=86;
-      } else if(a.sat<0.26){
-        plan.f="classic"; plan.filters=["FClassic · 冷峻线条","FCC · 电影感","黑白 · 影调"];
-        plan.conf=87;
-      } else if(a.sat<0.38){
-        if(personData.isPerson){
-          plan.f = warm? "portrait-warm":"portrait-cool";
-          plan.filters = warm? ["人像暖 · 优化肤色","Portra400 · 暖调人像","人像黑白 · 质感"] : ["人像冷 · 清透肤色","自然 · 忠实还原","人像黑白 · 质感"];
-        } else {
-          plan.f = warm? "portra":"natural";
-          plan.filters = warm? ["Portra400 · 暖调人像","暖调 · 落日氛围","日系 · 清新"] : ["自然 · 忠实还原","日系 · 清新","F160C · 通透"];
-        }
-        plan.conf=88;
-      } else {
-        plan.f="velvia"; plan.filters=["FVelvia · 浓郁色彩","F160C · 通透","港风 · 高饱和"];
-        plan.conf=89;
-      }
-      if(warm && a.sat<0.38){ plan.f="portra"; }
-      // 5. 主体占比 → 变焦
-      if(a.bodyRatio<0.08){ plan.z=1.8; notes.push("主体占比较小，建议变焦至 1.8x 拉近主体"); }
-      else if(a.bodyRatio<0.18){ plan.z=1.5; notes.push("主体略小，建议变焦至 1.5x 突出主体"); }
-      else { plan.z=1.2; notes.push("主体占比适中，保持 1.2x 轻微增强即可"); }
-      // 6. 综合匹配度
-      plan.conf = Math.max(80, Math.min(96, Math.round(84 + a.thirdFit*8 + a.sym*4 - Math.abs(a.cx-0.5)*10)));
-      plan.desc = plan.desc + " " + notes.filter(function(n){return n.indexOf("建议变焦")>=0;}).join("；");
+      
+      plan.notes=notes;
       return plan;
     }
-
-    /* ===================== AI 分析 ===================== */
     btnAnalyze.addEventListener("click",function(){
       if(state.analyzing) return;
       var el=currentEl();
@@ -1661,7 +1731,31 @@
           presentAnalysis(plan);
           // v1.3.0: 异步真 AI 视觉识别（加载失败自动静默，不影响基础分析）
           runAIDetection();
-          setStatus("构图已锁定 · 可一键应用 或 智能裁切", "done");
+          setStatus("构图已锁定 · 正在自动应用…", "");
+          // v1.7.1: AI 分析后自动应用（不需要再点一键成品）
+          var _autoPlan=plan;
+          setTimeout(function(){
+            if(_autoPlan){
+              var p=_autoPlan;
+              var ok=applyPlanCrop();
+              if(ok){
+                state.plan=p; state.analyzed=true;
+                // 等待裁切后的图片加载完成再应用变焦和滤镜
+                var _check=setInterval(function(){
+                  if(photoView.naturalWidth && photoView.complete){
+                    clearInterval(_check);
+                    setZoom(p.z||1);
+                    setFilter(p.f||"clear");
+                    setStatus("已自动应用：裁切+滤镜+变焦", "done");
+                    toastMsg("已自动应用：智能裁切 + "+(FILTERS[p.f]?FILTERS[p.f].name:"原图")+" + "+(p.z||1).toFixed(1)+"x");
+                  }
+                },50);
+                setTimeout(function(){ if(_check){ clearInterval(_check); setZoom(p.z||1); setFilter(p.f||"clear"); } },2000);
+              } else {
+                setStatus("自动应用失败，请手动点一键成品", "err");
+              }
+            }
+          },600);
         }catch(err){
           console.error("AI 分析异常:", err);
           state.analyzing=false;
@@ -2576,7 +2670,7 @@
             "<p><b>想重拍 / 换照片？</b> 点「<span class='hl'>清除</span>」清空画布，再从相册上传新照片或重新选示例。</p>"+
             "<p><b>滤镜不生效？</b> 底部滤镜条向左/右滑动可看到全部 26 款。</p>"},
       {t:"⑫ 版本信息", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/></svg>",
-       html:"<p><b>当前版本：v1.7.0</b>（2026-09-05）</p>"+
+       html:"<p><b>当前版本：v1.7.1</b>（2026-09-05）</p>"+
             "<p><b>设计师：</b><span class='brand' style='-webkit-background-clip:text;background-clip:text;color:transparent;background-image:linear-gradient(135deg,#E9A23B,#f6d48e);font-style:italic;font-weight:700;font-family:STKaiti,KaiTi,serif;font-size:14px;'>· 洋洋 ·</span></p>"+
             "<p><b>v1.6.1 Bug 修复：</b>①修复 Doka 拍照时变焦不生效（applyZoom 未读参数）；②修复 Doka 拍照后裁切可能未生效（等待图片加载完成再生成成品）；③修复拍照预览半成品闪烁（先隐藏再显示成品）；④<b>修复人像分析不生效的严重 bug</b>（planFromAnalysis 未读取 state.aiData 的人像字段，Doka 模式 AI 检测后重新生成 plan）；⑤showShot 滤镜名空值保护。</p>"+
             "<p><b>v1.6.0 人像大版本：</b>①<b>人像面部黄金分割点</b>——AI检测到人后显示面部对焦框，提示把脸移到三分点；②<b>人像专属滤镜×3</b>（人像暖/人像冷/人像黑白），AI推荐时优先；③<b>头顶留白+视线方向检测</b>——提示头顶留白过多/人物偏左往右移机位；④<b>极简模式</b>——顶栏⚡按钮一键切换，只留快门+AI构图+滤镜；⑤<b>拍完直接显示成品</b>——Doka模式拍完自动应用裁切+滤镜+变焦，全屏显示成品，底部只留保存/重拍/分享。</p>"+
@@ -2616,6 +2710,55 @@
     var AI_TFJS_URL="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js";
     var AI_COCO_URL="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js";
     var AI_MODEL_URL="model/model.json";
+    // v1.7.1: MediaPipe Selfie Segmentation（人像像素级分割，用于真正的背景虚化）
+    var MP_SEG_URL="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js";
+    var segModelState="idle", segModel=null, segCanvas=null, segCtx=null, segMaskCanvas=null, segMaskCtx=null;
+    var segRunning=false, segFrameCount=0;
+    function loadSegmentation(){
+      return new Promise(function(resolve){
+        if(segModelState==="ready"){ resolve(true); return; }
+        if(segModelState!=="idle"){ resolve(false); return; }
+        if(location.protocol==="file:" || location.protocol==="null"){ segModelState="fail"; resolve(false); return; }
+        segModelState="loading";
+        loadScript(MP_SEG_URL).then(function(){
+          if(typeof SelfieSegmentation==="undefined"){ segModelState="fail"; resolve(false); return; }
+          segModel=new SelfieSegmentation({locateFile:function(file){ return "https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/"+file; }});
+          segModel.setOptions({modelSelection:1, selfieMode:true});
+          segModel.onResults(onSegmentationResults);
+          segModelState="ready";
+          resolve(true);
+        }).catch(function(e){ console.warn("人像分割模型加载失败:",e); segModelState="fail"; resolve(false); });
+      });
+    }
+    function onSegmentationResults(results){
+      if(!state.blurOn || !segCanvas) return;
+      var w=results.image.width, h=results.image.height;
+      if(segCanvas.width!==w){ segCanvas.width=w; segCanvas.height=h; }
+      if(segMaskCanvas.width!==w){ segMaskCanvas.width=w; segMaskCanvas.height=h; }
+      // 1. 绘制模糊背景
+      segCtx.filter="blur("+Math.max(2,(8-state.blurAperture)*2)+"px)";
+      segCtx.drawImage(results.image,0,0,w,h);
+      segCtx.filter="none";
+      // 2. 用分割掩码把人物区域擦除（显示底层清晰画面）
+      segMaskCtx.clearRect(0,0,w,h);
+      segMaskCtx.drawImage(results.segmentationMask,0,0,w,h);
+      segCtx.globalCompositeOperation="destination-out";
+      segCtx.drawImage(segMaskCanvas,0,0,w,h);
+      segCtx.globalCompositeOperation="source-over";
+    }
+    function startSegmentationLoop(){
+      if(segRunning || !segModel || state.mode!=="camera") return;
+      segRunning=true;
+      function loop(){
+        if(!segRunning || !state.blurOn || state.mode!=="camera"){ segRunning=false; return; }
+        var el=videoCam;
+        if(el.readyState>=2){
+          try{ segModel.send({image:el}); }catch(e){}
+        }
+        requestAnimationFrame(loop);
+      }
+      loop();
+    }
     function loadScript(src){ return new Promise(function(res,rej){ var s=document.createElement("script"); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
     function loadAIModel(){
       return new Promise(function(resolve){
@@ -3537,54 +3680,70 @@
       }
     });
 
-    /* ===================== v1.7.0 背景虚化 ===================== */
+    /* ===================== v1.7.1 真正的背景虚化（MediaPipe 人像分割） ===================== */
     btnBlur.addEventListener("click",function(){
-      state.blurOn=!state.blurOn;
       if(state.blurOn){
-        btnBlur.style.color="var(--cyan)";
-        showBlurControl();
-        toastMsg("背景虚化已开启 f/"+state.blurAperture.toFixed(1));
-      } else {
+        // 关闭虚化
+        state.blurOn=false;
         btnBlur.style.color="";
         hideBlurControl();
-        applyBlur();
+        if(segCanvas) segCanvas.style.display="none";
+        segRunning=false;
         toastMsg("背景虚化已关闭");
+      } else {
+        // 开启虚化：先加载分割模型
+        btnBlur.style.color="var(--cyan)";
+        setStatus("正在加载人像分割模型…","");
+        loadSegmentation().then(function(ok){
+          if(ok){
+            state.blurOn=true;
+            showBlurControl();
+            // 初始化 canvas
+            if(!segCanvas){ segCanvas=document.getElementById("segCanvas"); segCtx=segCanvas.getContext("2d"); }
+            if(!segMaskCanvas){ segMaskCanvas=document.createElement("canvas"); segMaskCtx=segMaskCanvas.getContext("2d"); }
+            segCanvas.style.display="block";
+            if(state.mode==="camera"){ startSegmentationLoop(); }
+            else { applyBlurToPhoto(); } // 图片模式下处理静态图
+            setStatus("背景虚化已开启 f/"+state.blurAperture.toFixed(1)+" · 人物保持清晰","done");
+            toastMsg("背景虚化已开启，人物保持清晰");
+          } else {
+            state.blurOn=false;
+            btnBlur.style.color="";
+            setStatus("人像分割模型加载失败，使用基础分析","err");
+            toastMsg("模型加载失败，请检查网络");
+          }
+        });
       }
     });
     function showBlurControl(){
-      // 在顶栏下方显示虚化控制条
       var existing=document.getElementById("blurControlBar");
       if(existing) existing.remove();
       var bar=document.createElement("div");
       bar.id="blurControlBar";
       bar.className="blur-control";
       bar.style.cssText="position:absolute;top:48px;right:12px;z-index:50;";
-      bar.innerHTML='<span class="label">虚化</span><input type="range" id="blurRange" min="1.4" max="8" step="0.2" value="'+state.blurAperture+'"><span class="fval" id="blurFVal">f/'+state.blurAperture.toFixed(1)+'</span>';
+      bar.innerHTML='<span class="label">光圈</span><input type="range" id="blurRange" min="1.4" max="8" step="0.2" value="'+state.blurAperture+'"><span class="fval" id="blurFVal">f/'+state.blurAperture.toFixed(1)+'</span>';
       document.querySelector(".stage").appendChild(bar);
       var range=bar.querySelector("#blurRange");
       var fval=bar.querySelector("#blurFVal");
       range.addEventListener("input",function(){
         state.blurAperture=parseFloat(range.value);
         fval.textContent="f/"+state.blurAperture.toFixed(1);
-        applyBlur();
+        if(state.mode==="photo" && state.blurOn){ applyBlurToPhoto(); }
       });
     }
     function hideBlurControl(){
       var bar=document.getElementById("blurControlBar");
       if(bar) bar.remove();
     }
-    function applyBlur(){
-      var el = state.mode==="camera" ? videoCam : photoView;
-      if(state.blurOn){
-        // 光圈越小（f/1.4）虚化越强
-        var blurPx=Math.max(0,(8-state.blurAperture)*1.5);
-        el.style.filter=(el.style.filter&&el.style.filter!=="none"?el.style.filter+" ":"")+"blur("+blurPx+"px)";
-      } else {
-        // 移除 blur
-        if(el.style.filter){
-          el.style.filter=el.style.filter.replace(/blur\([^)]+\)\s*/g,"").trim()||"none";
-        }
-      }
+    // 图片模式下的背景虚化处理
+    function applyBlurToPhoto(){
+      if(!state.blurOn || !segModel || state.mode!=="photo") return;
+      var el=photoView;
+      if(!el.naturalWidth) return;
+      segModel.send({image:el}).then(function(){
+        // onSegmentationResults 会处理
+      }).catch(function(e){ console.warn("分割处理失败:",e); });
     }
 
     /* ===================== v1.7.0 实时提示 ===================== */
