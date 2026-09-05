@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v1.5.1 · 实时取景</title>
+<title>AI 构图助手 Pro v1.5.2 · 实时取景</title>
 <meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
@@ -295,12 +295,12 @@
   .btn .b-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
   .btn.help{border-color:rgba(148,212,208,.4);color:#8fd6d0;}
   .main-row .btn{min-width:0;padding:0 9px;font-size:11.5px;}
-  .ai-row{margin-top:6px;gap:6px;}
-  .ai-row .btn{flex:1;min-width:0;padding:8px 4px;font-size:11.5px;}
-  .ai-row .btn svg{width:15px;height:15px;}
+  .ai-row{margin-top:6px;gap:8px;justify-content:center;}
+  .ai-row .btn{flex:0 1 auto;min-width:110px;max-width:180px;padding:9px 14px;font-size:12.5px;}
+  .ai-row .btn svg{width:16px;height:16px;}
   .main-row .btn .b-txt{font-size:11.5px;}
   /* 悬浮拍摄按钮 */
-  .shoot-fab{position:fixed;right:16px;bottom:150px;width:64px;height:64px;border-radius:50%;
+  .shoot-fab{position:fixed;right:16px;bottom:150px;width:64px;height:64px;border-radius:50%;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
     background:radial-gradient(circle at 32% 28%,#FFC97A,#E08A2C 70%);border:3px solid rgba(255,255,255,.85);
     color:#1b1208;display:flex;align-items:center;justify-content:center;z-index:40;
     box-shadow:0 6px 22px rgba(255,170,60,.45),0 2px 6px rgba(0,0,0,.35);cursor:pointer;
@@ -464,7 +464,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.5.1</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.5.2</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
   </div>
@@ -748,7 +748,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v1.5.1 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v1.5.2 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v1.4.0 AI 真模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1973,6 +1973,59 @@
     /* ===================== 拍照 ===================== */
     bindTone();
 
+    /* ===== 快门按钮可拖动 ===== */
+    (function(){
+      var dragging=false, moved=false, sx=0, sy=0, ox=0, oy=0;
+      // 恢复保存的位置
+      try{
+        var saved=localStorage.getItem("shootFabPos");
+        if(saved){
+          var pos=JSON.parse(saved);
+          if(pos.left!=null){ btnShoot.style.left=pos.left+"px"; btnShoot.style.right="auto"; }
+          if(pos.top!=null){ btnShoot.style.top=pos.top+"px"; btnShoot.style.bottom="auto"; }
+        }
+      }catch(e){}
+      btnShoot.addEventListener("pointerdown",function(e){
+        dragging=true; moved=false;
+        sx=e.clientX; sy=e.clientY;
+        var rect=btnShoot.getBoundingClientRect();
+        ox=rect.left; oy=rect.top;
+        btnShoot.style.cursor="grabbing";
+        btnShoot.setPointerCapture(e.pointerId);
+      });
+      btnShoot.addEventListener("pointermove",function(e){
+        if(!dragging) return;
+        var dx=e.clientX-sx, dy=e.clientY-sy;
+        if(Math.abs(dx)>4||Math.abs(dy)>4){ moved=true; }
+        if(moved){
+          var nx=ox+dx, ny=oy+dy;
+          // 限制在可视区域内
+          nx=Math.max(8,Math.min(window.innerWidth-72,nx));
+          ny=Math.max(8,Math.min(window.innerHeight-72,ny));
+          btnShoot.style.left=nx+"px";
+          btnShoot.style.top=ny+"px";
+          btnShoot.style.right="auto";
+          btnShoot.style.bottom="auto";
+        }
+      });
+      btnShoot.addEventListener("pointerup",function(e){
+        dragging=false;
+        btnShoot.style.cursor="grab";
+        if(moved){
+          // 保存位置
+          try{
+            var rect=btnShoot.getBoundingClientRect();
+            localStorage.setItem("shootFabPos",JSON.stringify({left:Math.round(rect.left),top:Math.round(rect.top)}));
+          }catch(err){}
+          // 阻止 click 事件触发拍照
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      });
+      btnShoot.addEventListener("click",function(e){
+        if(moved){ e.stopImmediatePropagation(); moved=false; return; }
+      },true);
+    })();
     btnShoot.addEventListener("click",function(){
       var el=currentEl();
       if(!el){ setStatus("没有可拍摄的画面", "err"); return; }
@@ -2325,8 +2378,9 @@
             "<p><b>想重拍 / 换照片？</b> 点「<span class='hl'>清除</span>」清空画布，再从相册上传新照片或重新选示例。</p>"+
             "<p><b>滤镜不生效？</b> 底部滤镜条向左/右滑动可看到全部 26 款。</p>"},
       {t:"⑫ 版本信息", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/></svg>",
-       html:"<p><b>当前版本：v1.5.1</b>（2026-09-05）</p>"+
+       html:"<p><b>当前版本：v1.5.2</b>（2026-09-05）</p>"+
             "<p><b>设计师：</b><span class='brand' style='-webkit-background-clip:text;background-clip:text;color:transparent;background-image:linear-gradient(135deg,#E9A23B,#f6d48e);font-style:italic;font-weight:700;font-family:STKaiti,KaiTi,serif;font-size:14px;'>· 洋洋 ·</span></p>"+
+            "<p><b>v1.5.2 优化：</b>① <b>快门按钮可自由拖动</b>（按住拖动到任意位置，自动保存，下次打开恢复；轻点拍照，拖动不触发拍照）；② AI功能行按钮紧凑化（不再拉满整行，居中显示更美观）。</p>"+
             "<p><b>v1.5.1 修复：</b>① 修复<b>手机端按钮溢出截断</b>（6个按钮拆分为两行：输入源一行+AI功能一行）；② 修复<b>AI构图/实时取景后画面变黑</b>（Doka遮罩层边界检查+清除bottom冲突，避免遮罩覆盖整个画面）；③ 修复<b>底部按钮太淡看不清</b>（disabled按钮opacity从0.35/0.42调亮到0.55/0.65，去掉灰度滤镜）。</p>"+
             "<p><b>v1.5.0 重大更新（Doka 风格 AI 构图）：</b>① 新增「AI构图」按钮（Doka 模式）：点一下直接在取景框实时显示彩色渐变裁切框（框外暗化）+目标锁定十字准星，1.2秒即时反馈；② 新增AI滤镜推荐面板（胶卷样式，按场景推荐3款，点击直接应用）；③ 新增变焦建议按钮（左下角「拉近到2x」，点击直接应用）；④ 拍完即成品：Doka模式下拍照自动应用裁切+滤镜+变焦；⑤ 全面学习Doka相机交互逻辑。</p>"+
             "<p><b>v1.4.1 修复与优化：</b>① 修复<b>「实时取景后 AI 分析点不了」</b>的核心 bug（分析成功后 state.analyzing 未重置导致按钮被拦截，现已修复并增加中断时的状态清理）；② 修复<b>智能裁切框不生效</b>的问题（旧版强制保持原始宽高比导致 AI 推荐裁切百分比被忽略，现已严格按 [左,上,右,下] 百分比计算）；③ 拍照后自动关闭实时取景 HUD，避免叠加干扰；④ 全面审核 AI 分析引擎与裁切逻辑，确保分析准确、裁切到位。</p>"+
