@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v1.5.3 · 实时取景</title>
+<title>AI 构图助手 Pro v1.5.4 · 实时取景</title>
 <meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
@@ -42,7 +42,7 @@
   .cam-badge.err{color:var(--red);border-color:rgba(239,107,107,.3);}
   .cam-badge.err .st{background:var(--red);}
   /* ===================== 取景器 ===================== */
-  .stage{flex:1 1 auto;position:relative;margin:4px 12px;border-radius:18px;overflow:hidden;background:#000;border:1px solid var(--line);min-height:0;}
+  .stage{flex:1 1 auto;position:relative;margin:4px 12px;border-radius:18px;overflow:hidden;background:#000;border:1px solid var(--line);min-height:200px;}
   .stage-inner{position:absolute;inset:0;overflow:hidden;}
   #cmpBase{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;transform-origin:center center;}
   .faint{transition:opacity .15s;}
@@ -424,17 +424,12 @@
   .btn.doka{background:linear-gradient(135deg,#E9A23B,#f6d48e);color:#1a1208;border-color:transparent;font-weight:700;}
   .btn.doka.active{background:linear-gradient(135deg,#54C8F7,#7dd8fa);color:#0a1620;box-shadow:0 0 16px rgba(84,200,247,.5);}
   .doka-overlay{position:absolute;inset:0;pointer-events:none;z-index:8;}
-  .doka-mask{position:absolute;background:rgba(0,0,0,.55);transition:all .35s cubic-bezier(.4,0,.2,1);}
-  .doka-mask.doka-top{top:0;left:0;right:0;}
-  .doka-mask.doka-bottom{bottom:0;left:0;right:0;}
-  .doka-mask.doka-left{top:0;bottom:0;left:0;}
-  .doka-mask.doka-right{top:0;bottom:0;right:0;}
   .doka-frame{position:absolute;border:2px solid transparent;border-radius:4px;background:
-    linear-gradient(var(--bg),var(--bg)) padding-box,
+    linear-gradient(transparent,transparent) padding-box,
     linear-gradient(135deg,#ff6b9d,#c44dff,#54C8F7,#67D97A,#FFB454) border-box;
-    box-shadow:0 0 24px rgba(255,180,84,.3),inset 0 0 20px rgba(84,200,247,.1);
+    box-shadow:0 0 0 9999px rgba(0,0,0,.5),0 0 24px rgba(255,180,84,.3);
     transition:all .35s cubic-bezier(.4,0,.2,1);pointer-events:none;}
-  .doka-frame::before{content:'';position:absolute;inset:-2px;border-radius:6px;background:linear-gradient(135deg,#ff6b9d,#c44dff,#54C8F7,#67D97A,#FFB454);opacity:.3;filter:blur(8px);z-index:-1;}
+  .doka-frame::before{content:'';position:absolute;inset:-2px;border-radius:6px;background:linear-gradient(135deg,#ff6b9d,#c44dff,#54C8F7,#67D97A,#FFB454);opacity:.3;filter:blur(8px);z-index:-1;pointer-events:none;}
   .doka-crosshair{position:absolute;width:44px;height:44px;transform:translate(-50%,-50%);transition:all .25s ease;}
   .doka-crosshair .dc-h{position:absolute;top:50%;left:0;right:0;height:1.5px;background:#fff;box-shadow:0 0 6px rgba(255,255,255,.8);}
   .doka-crosshair .dc-v{position:absolute;left:50%;top:0;bottom:0;width:1.5px;background:#fff;box-shadow:0 0 6px rgba(255,255,255,.8);}
@@ -466,7 +461,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.5.3</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.5.4</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
   </div>
@@ -750,7 +745,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v1.5.3 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v1.5.4 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v1.4.0 AI 真模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -2380,8 +2375,9 @@
             "<p><b>想重拍 / 换照片？</b> 点「<span class='hl'>清除</span>」清空画布，再从相册上传新照片或重新选示例。</p>"+
             "<p><b>滤镜不生效？</b> 底部滤镜条向左/右滑动可看到全部 26 款。</p>"},
       {t:"⑫ 版本信息", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/></svg>",
-       html:"<p><b>当前版本：v1.5.3</b>（2026-09-05）</p>"+
+       html:"<p><b>当前版本：v1.5.4</b>（2026-09-05）</p>"+
             "<p><b>设计师：</b><span class='brand' style='-webkit-background-clip:text;background-clip:text;color:transparent;background-image:linear-gradient(135deg,#E9A23B,#f6d48e);font-style:italic;font-weight:700;font-family:STKaiti,KaiTi,serif;font-size:14px;'>· 洋洋 ·</span></p>"+
+            "<p><b>v1.5.4 根本性修复：</b>彻底重写 Doka AI 构图的暗化遮罩实现——从「4个独立遮罩元素」改为「box-shadow 单元素暗化」，<b>彻底解决手机上点AI构图后画面全黑的问题</b>；同时 stage 添加 min-height:200px 防止被压缩；startDokaMode 强制 videoCam 显示、photoView 隐藏。</p>"+
             "<p><b>v1.5.3 修复：</b>彻底重做底部按钮样式（调色/撤销/导出/分享），从白底灰字改为<b>深色背景+浅色文字+明确边框</b>，disabled 状态文字颜色从半透明改为 #8a929d 实色，现在任何状态下都清晰可读。</p>"+
             "<p><b>v1.5.2 优化：</b>① <b>快门按钮可自由拖动</b>（按住拖动到任意位置，自动保存，下次打开恢复；轻点拍照，拖动不触发拍照）；② AI功能行按钮紧凑化（不再拉满整行，居中显示更美观）。</p>"+
             "<p><b>v1.5.1 修复：</b>① 修复<b>手机端按钮溢出截断</b>（6个按钮拆分为两行：输入源一行+AI功能一行）；② 修复<b>AI构图/实时取景后画面变黑</b>（Doka遮罩层边界检查+清除bottom冲突，避免遮罩覆盖整个画面）；③ 修复<b>底部按钮太淡看不清</b>（disabled按钮opacity从0.35/0.42调亮到0.55/0.65，去掉灰度滤镜）。</p>"+
@@ -2688,6 +2684,9 @@
       if(state.mode!=="camera" || !state.stream){
         setStatus("AI 构图需先连接相机","err"); toastMsg("请先点「相机」连接摄像头"); return;
       }
+      // 确保 videoCam 显示、photoView 隐藏
+      videoCam.classList.add("show");
+      photoView.classList.remove("show");
       state.dokaMode=true;
       btnAIC.classList.add("active");
       // 启动实时取景（如果还没启动）
@@ -2702,6 +2701,8 @@
       state.dokaPlan=null;
       btnAIC.classList.remove("active");
       dokaOverlay.style.display="none";
+      dokaFrame.style.display="none";
+      dokaCross.style.display="none";
       dokaFilterPanel.style.display="none";
       dokaZoomBtn.style.display="none";
       setStatus("已退出 AI 构图模式","idle");
@@ -2741,25 +2742,16 @@
       var w=stage.clientWidth, h=stage.clientHeight;
       if(w<10||h<10){ setTimeout(function(){ showDokaCrop(plan); },100); return; }
       var c=plan.crop; // [左%,上%,右%,下%]
-      // 边界检查：裁切百分比不能超过 45%
-      var cl=Math.min(45,Math.max(0,c[0])), ct=Math.min(45,Math.max(0,c[1]));
-      var cr=Math.min(45,Math.max(0,c[2])), cb=Math.min(45,Math.max(0,c[3]));
+      var cl=Math.min(40,Math.max(2,c[0])), ct=Math.min(40,Math.max(2,c[1]));
+      var cr=Math.min(40,Math.max(2,c[2])), cb=Math.min(40,Math.max(2,c[3]));
       var cx=cl/100*w, cy=ct/100*h;
-      var cw=Math.max(20,w-(cl+cr)/100*w), ch=Math.max(20,h-(ct+cb)/100*h);
-      // 4 个暗化遮罩（清除 bottom 避免冲突）
-      var topEl=dokaOverlay.querySelector(".doka-top");
-      var botEl=dokaOverlay.querySelector(".doka-bottom");
-      var leftEl=dokaOverlay.querySelector(".doka-left");
-      var rightEl=dokaOverlay.querySelector(".doka-right");
-      topEl.style.height=Math.max(0,cy)+"px";
-      botEl.style.height=Math.max(0,h-cy-ch)+"px";
-      leftEl.style.top=cy+"px"; leftEl.style.bottom="auto"; leftEl.style.height=ch+"px"; leftEl.style.width=Math.max(0,cx)+"px";
-      rightEl.style.top=cy+"px"; rightEl.style.bottom="auto"; rightEl.style.height=ch+"px"; rightEl.style.width=Math.max(0,w-cx-cw)+"px";
-      // 彩色渐变边框裁切框
+      var cw=Math.max(40,w-(cl+cr)/100*w), ch=Math.max(40,h-(ct+cb)/100*h);
+      // box-shadow 暗化：只设置裁切框位置尺寸，框外自动暗化
       dokaFrame.style.left=cx+"px";
       dokaFrame.style.top=cy+"px";
       dokaFrame.style.width=cw+"px";
       dokaFrame.style.height=ch+"px";
+      dokaFrame.style.display="block";
     }
     function showDokaCrosshair(plan){
       var w=stage.clientWidth, h=stage.clientHeight;
