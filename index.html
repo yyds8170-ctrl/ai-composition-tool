@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v1.5.0 · 实时取景</title>
+<title>AI 构图助手 Pro v1.5.1 · 实时取景</title>
 <meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
@@ -291,10 +291,13 @@
   .btn:active{transform:scale(.97);}
   .btn.primary{background:linear-gradient(135deg,#FFB454,#E0902F);color:#16100A;border:none;font-weight:700;flex:1;}
   .btn.shoot{background:var(--panel2);border-color:rgba(255,180,84,.5);color:var(--amber);font-weight:600;}
-  .btn:disabled{opacity:.35;cursor:not-allowed;}
+  .btn:disabled{opacity:.55;cursor:not-allowed;}
   .btn .b-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
   .btn.help{border-color:rgba(148,212,208,.4);color:#8fd6d0;}
   .main-row .btn{min-width:0;padding:0 9px;font-size:11.5px;}
+  .ai-row{margin-top:6px;gap:6px;}
+  .ai-row .btn{flex:1;min-width:0;padding:8px 4px;font-size:11.5px;}
+  .ai-row .btn svg{width:15px;height:15px;}
   .main-row .btn .b-txt{font-size:11.5px;}
   /* 悬浮拍摄按钮 */
   .shoot-fab{position:fixed;right:16px;bottom:150px;width:64px;height:64px;border-radius:50%;
@@ -368,7 +371,7 @@
     .act-row{display:flex;gap:8px;align-items:center;margin-top:2px;}
     .btn.act{flex:1 1 0;min-width:0;min-height:44px;background:linear-gradient(180deg,#fff,#f6f2ea);border:1px solid rgba(20,16,10,.10);}
     .btn.act.pri{background:linear-gradient(180deg,var(--amber),#d98a1f);color:#16100A;border:none;font-weight:700;}
-    .btn.act:disabled{opacity:.42;filter:grayscale(.6);pointer-events:none;}
+    .btn.act:disabled{opacity:.65;filter:none;pointer-events:none;color:rgba(220,225,230,.7);}
   .sec-row .btn{min-height:38px;font-size:11px;padding:0 9px;flex:1 1 auto;min-width:0;}
   .sec-row .btn svg{width:13px;height:13px;}
   .spacer{flex:1;}
@@ -461,7 +464,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.5.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.5.1</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
   </div>
@@ -555,6 +558,8 @@
         <input type="file" id="fileInput" accept="image/*" style="display:none">
       </label>
       <button class="btn" id="btnSample"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 15l5-5 4 4 3-3 6 6"/></svg><span class="b-txt">示例</span></button>
+    </div>
+    <div class="ctrl-row ai-row">
       <button class="btn primary" id="btnAnalyze"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>AI 分析</button>
       <button class="btn live" id="btnLive" title="实时取景辅助：开启后取景框实时显示 AI 主体锁定 / 光线 / 水平 / 变焦建议 / 可拍提示"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg><span class="b-txt">实时取景</span></button>
       <button class="btn doka" id="btnAIC" title="AI 构图（Doka 模式）：实时引导线+目标锁定+裁切预览+滤镜推荐，拍完即成品"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6z"/></svg><span class="b-txt">AI构图</span></button>
@@ -743,7 +748,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v1.5.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v1.5.1 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v1.4.0 AI 真模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -2320,8 +2325,9 @@
             "<p><b>想重拍 / 换照片？</b> 点「<span class='hl'>清除</span>」清空画布，再从相册上传新照片或重新选示例。</p>"+
             "<p><b>滤镜不生效？</b> 底部滤镜条向左/右滑动可看到全部 26 款。</p>"},
       {t:"⑫ 版本信息", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/></svg>",
-       html:"<p><b>当前版本：v1.5.0</b>（2026-09-05）</p>"+
+       html:"<p><b>当前版本：v1.5.1</b>（2026-09-05）</p>"+
             "<p><b>设计师：</b><span class='brand' style='-webkit-background-clip:text;background-clip:text;color:transparent;background-image:linear-gradient(135deg,#E9A23B,#f6d48e);font-style:italic;font-weight:700;font-family:STKaiti,KaiTi,serif;font-size:14px;'>· 洋洋 ·</span></p>"+
+            "<p><b>v1.5.1 修复：</b>① 修复<b>手机端按钮溢出截断</b>（6个按钮拆分为两行：输入源一行+AI功能一行）；② 修复<b>AI构图/实时取景后画面变黑</b>（Doka遮罩层边界检查+清除bottom冲突，避免遮罩覆盖整个画面）；③ 修复<b>底部按钮太淡看不清</b>（disabled按钮opacity从0.35/0.42调亮到0.55/0.65，去掉灰度滤镜）。</p>"+
             "<p><b>v1.5.0 重大更新（Doka 风格 AI 构图）：</b>① 新增「AI构图」按钮（Doka 模式）：点一下直接在取景框实时显示彩色渐变裁切框（框外暗化）+目标锁定十字准星，1.2秒即时反馈；② 新增AI滤镜推荐面板（胶卷样式，按场景推荐3款，点击直接应用）；③ 新增变焦建议按钮（左下角「拉近到2x」，点击直接应用）；④ 拍完即成品：Doka模式下拍照自动应用裁切+滤镜+变焦；⑤ 全面学习Doka相机交互逻辑。</p>"+
             "<p><b>v1.4.1 修复与优化：</b>① 修复<b>「实时取景后 AI 分析点不了」</b>的核心 bug（分析成功后 state.analyzing 未重置导致按钮被拦截，现已修复并增加中断时的状态清理）；② 修复<b>智能裁切框不生效</b>的问题（旧版强制保持原始宽高比导致 AI 推荐裁切百分比被忽略，现已严格按 [左,上,右,下] 百分比计算）；③ 拍照后自动关闭实时取景 HUD，避免叠加干扰；④ 全面审核 AI 分析引擎与裁切逻辑，确保分析准确、裁切到位。</p>"+
             "<p><b>v1.4.0 更新内容：</b>① 新增<b>实时取景辅助</b>（按下快门前的 AI 拍摄指导：主体锁定+移动建议 / 实时光线检测 / 实时水平仪 / 变焦建议 / 自动抓拍提示）；② 新增<b>AI 真模型管理</b>（可开关、可查看加载状态、可重新加载，模型是否下载完整一目了然）；③ 实时滤镜预览优化。</p>"+
@@ -2676,17 +2682,22 @@
     function showDokaCrop(plan){
       dokaOverlay.style.display="block";
       var w=stage.clientWidth, h=stage.clientHeight;
+      if(w<10||h<10){ setTimeout(function(){ showDokaCrop(plan); },100); return; }
       var c=plan.crop; // [左%,上%,右%,下%]
-      var cx=c[0]/100*w, cy=c[1]/100*h, cw=w-(c[0]+c[2])/100*w, ch=h-(c[1]+c[3])/100*h;
-      // 4 个暗化遮罩
-      dokaOverlay.querySelector(".doka-top").style.height=cy+"px";
-      dokaOverlay.querySelector(".doka-bottom").style.height=(h-cy-ch)+"px";
-      dokaOverlay.querySelector(".doka-left").style.top=cy+"px";
-      dokaOverlay.querySelector(".doka-left").style.height=ch+"px";
-      dokaOverlay.querySelector(".doka-left").style.width=cx+"px";
-      dokaOverlay.querySelector(".doka-right").style.top=cy+"px";
-      dokaOverlay.querySelector(".doka-right").style.height=ch+"px";
-      dokaOverlay.querySelector(".doka-right").style.width=(w-cx-cw)+"px";
+      // 边界检查：裁切百分比不能超过 45%
+      var cl=Math.min(45,Math.max(0,c[0])), ct=Math.min(45,Math.max(0,c[1]));
+      var cr=Math.min(45,Math.max(0,c[2])), cb=Math.min(45,Math.max(0,c[3]));
+      var cx=cl/100*w, cy=ct/100*h;
+      var cw=Math.max(20,w-(cl+cr)/100*w), ch=Math.max(20,h-(ct+cb)/100*h);
+      // 4 个暗化遮罩（清除 bottom 避免冲突）
+      var topEl=dokaOverlay.querySelector(".doka-top");
+      var botEl=dokaOverlay.querySelector(".doka-bottom");
+      var leftEl=dokaOverlay.querySelector(".doka-left");
+      var rightEl=dokaOverlay.querySelector(".doka-right");
+      topEl.style.height=Math.max(0,cy)+"px";
+      botEl.style.height=Math.max(0,h-cy-ch)+"px";
+      leftEl.style.top=cy+"px"; leftEl.style.bottom="auto"; leftEl.style.height=ch+"px"; leftEl.style.width=Math.max(0,cx)+"px";
+      rightEl.style.top=cy+"px"; rightEl.style.bottom="auto"; rightEl.style.height=ch+"px"; rightEl.style.width=Math.max(0,w-cx-cw)+"px";
       // 彩色渐变边框裁切框
       dokaFrame.style.left=cx+"px";
       dokaFrame.style.top=cy+"px";
