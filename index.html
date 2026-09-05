@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v2.0.4 · 实时取景</title>
+<title>AI 构图助手 Pro v3.0.0 · 实时取景</title>
 <meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
@@ -514,7 +514,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v2.0.4</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v3.0.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -542,21 +542,7 @@
       <div class="gold gold-1"></div><div class="gold gold-2"></div><div class="gold gold-3"></div><div class="gold gold-4"></div>
       <div class="diag" id="diagEl"></div>
       <div class="diag" id="diagEl2"></div>
-      <svg id="goldenSpiral" viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:none;z-index:4;">
-        <!-- 黄金螺旋分割框（可开关） -->
-        <g id="spiralGrid" style="display:none;">
-          <rect x="0" y="0" width="100" height="61.8" fill="none" stroke="rgba(255,180,84,0.2)" stroke-width="0.3"/>
-          <rect x="0" y="61.8" width="61.8" height="38.2" fill="none" stroke="rgba(255,180,84,0.2)" stroke-width="0.3"/>
-          <rect x="61.8" y="0" width="38.2" height="38.2" fill="none" stroke="rgba(255,180,84,0.2)" stroke-width="0.3"/>
-          <rect x="38.2" y="61.8" width="23.6" height="23.6" fill="none" stroke="rgba(255,180,84,0.2)" stroke-width="0.3"/>
-          <rect x="61.8" y="38.2" width="14.6" height="14.6" fill="none" stroke="rgba(255,180,84,0.2)" stroke-width="0.3"/>
-        </g>
-        <!-- 真正的对数螺线（黄金螺旋） -->
-        <path id="spiralPath" d="M100,0 A100,100 0 0,1 0,100 A61.8,61.8 0 0,1 61.8,38.2 A38.2,38.2 0 0,1 100,76.4 A23.6,23.6 0 0,1 76.4,52.8 A14.6,14.6 0 0,1 61.8,67.4 A9.0,9.0 0 0,1 70.8,61.8 A5.6,5.6 0 0,1 67.4,67.4 A3.4,3.4 0 0,1 69.5,65.3" fill="none" stroke="rgba(255,180,84,0.75)" stroke-width="0.4" stroke-linecap="round" stroke-linejoin="round"/> fill="none" stroke="rgba(255,180,84,0.7)" stroke-width="0.5" stroke-linejoin="round"/>
-        <!-- 螺旋中心点（主体放置位置） -->
-        <circle id="spiralCenter" cx="61.8" cy="61.8" r="1.5" fill="rgba(255,180,84,0.9)" stroke="rgba(255,255,255,0.8)" stroke-width="0.3"/>
-        <circle cx="61.8" cy="61.8" r="3" fill="none" stroke="rgba(255,180,84,0.5)" stroke-width="0.3"/>
-      </svg>
+      <!-- 黄金螺旋已移除（v3.0.0） -->
       <div class="cropbox" id="cropEl"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div>
     </div>
     <!-- v1.5.0 Doka 风格 AI 构图：实时裁切预览 + 目标锁定 -->
@@ -753,7 +739,7 @@
     </div>
     <div class="sec-row">
       <button class="btn" id="btnRules"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>构图法则</button>
-      <button class="btn" id="btnGrid" title="切换引导线模式：三分线 / 黄金分割 / 对角线 / 关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/><path d="M3 3l18 18M21 3L3 21" stroke-opacity=".7"/></svg>引导线</button>
+      <button class="btn" id="btnGrid" title="切换引导线模式：三分线 / 对角线 / 关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/><path d="M3 3l18 18M21 3L3 21" stroke-opacity=".7"/></svg>引导线</button>
       <button class="btn" id="btnCrop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v16h16"/><path d="M2 6h16v16"/></svg>裁剪</button>
       <button class="btn" id="btnClear" title="清除当前画布，可重新上传"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>清除</button>
       <button class="btn" id="btnCmp" title="原图 vs 效果对比"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v14H4z"/><path d="M12 5v14"/></svg>对比</button>
@@ -860,7 +846,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v2.0.4 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v3.0.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -877,6 +863,13 @@
         <button class="mp-btn" id="faceReload">重新加载</button>
       </div>
       <div class="mp-desc">MediaPipe Face Detection，专门识别人脸位置，比估算更准确，解决"把汽车当人脸"问题，约 3MB。加载成功后自动用于人像构图。</div>
+      <div style="height:8px;"></div>
+      <div class="mp-head" style="font-size:13px;">🧍 姿态检测 <span class="mp-badge idle" id="poseBadge">未加载</span></div>
+      <div class="mp-row">
+        <label class="mp-sw"><input type="checkbox" id="poseOn"><span class="mp-sl"></span>启用人体姿态检测</label>
+        <button class="mp-btn" id="poseReload">重新加载</button>
+      </div>
+      <div class="mp-desc">MediaPipe Pose，检测 33 个人体关节点（头/肩/肘/手/髋/膝/脚），用于精准人像构图、姿态引导、背景虚化人体轮廓，约 5MB。</div>
     </div>
     <div class="help-body" id="helpBody"></div>
   </div>
@@ -2782,9 +2775,8 @@
     function setGridMode(m){
       gridMode=m;
       guides.classList.remove("on");
-      // 三分线 + 黄金点始终作为 DOM 结构存在，通过 .on 控制显隐
       if(gridMode===1){
-        // X 形双对角线（左上→右下 + 右上→左下）
+        // X 形双对角线
         guides.classList.remove("on");
         diagEl.style.width="220%"; diagEl.style.height="2px";
         diagEl.style.left="0"; diagEl.style.top="0";
@@ -2796,148 +2788,23 @@
         diagEl2.style.transformOrigin="100% 0";
         diagEl2.style.transform="rotate(-45deg)";
         diagEl2.style.background="rgba(84,200,247,.55)";
-        var gs1=document.getElementById("goldenSpiral");
-        if(gs1) gs1.style.display="none";
       } else if(gridMode===2){
-        // 黄金螺旋
-        diagEl.style.width="0px"; diagEl2.style.width="0px";
-        diagEl.style.background="rgba(84,200,247,0)";
-        diagEl2.style.background="rgba(84,200,247,0)";
-        guides.classList.remove("on");
-        var gs=document.getElementById("goldenSpiral");
-        if(gs){
-          gs.style.display="block";
-          // 黄金螺旋路径已预渲染（真正的对数螺线），只需控制显示
-          var sp=document.getElementById("spiralPath");
-          if(sp){ sp.style.display="block"; }
-          // 中心点显示
-          var sc=document.getElementById("spiralCenter");
-          if(sc){ sc.style.display="block"; }
-        }
-      } else if(gridMode===3){
         // 全关
         diagEl.style.width="0px"; diagEl2.style.width="0px";
         diagEl.style.background="rgba(84,200,247,0)";
         diagEl2.style.background="rgba(84,200,247,0)";
-        var gs2=document.getElementById("goldenSpiral");
-        if(gs2) gs2.style.display="none";
       } else {
         // 三分线+黄金点
         diagEl.style.width="0px"; diagEl2.style.width="0px";
         diagEl.style.background="rgba(84,200,247,.6)";
         diagEl2.style.background="rgba(84,200,247,.6)";
         guides.classList.add("on");
-        var gs0=document.getElementById("goldenSpiral");
-        if(gs0) gs0.style.display="none";
       }
-      var labels=["三分线 · 黄金点","对角线","黄金螺旋","引导线已关闭"];
+      var labels=["三分线 · 黄金点","对角线","引导线已关闭"];
       toastMsg(labels[gridMode]);
       setStatus("引导线模式："+labels[gridMode], "done");
     }
-    if(btnGrid){
-      btnGrid.addEventListener("click",function(){
-        setGridMode((gridMode+1)%4);
-      });
-    }
-
-    /* ===================== 法则百科 ===================== */
-    btnRules.addEventListener("click",function(){
-      ruleBody.innerHTML="";
-      RULE_LIST.forEach(function(r,i){
-        var d=document.createElement("div");
-        d.className="rule-card";
-        d.innerHTML='<div class="rt"><span class="n">'+String(i+1).padStart(2,"0")+'</span><b>'+r.data.cn+'</b></div>'+
-          '<div class="rd">'+r.data.zh+'</div>'+
-          '<div class="ru">适用：'+r.data.use+'</div>';
-        ruleBody.appendChild(d);
-      });
-      ruleSheet.classList.add("show");
-    });
-    ruleClose.addEventListener("click",function(){ ruleSheet.classList.remove("show"); });
-
-    /* ===================== 使用说明 ===================== */
-    var HELP_SECTIONS=[
-      {t:"✨ v1.8.0 核心功能简介", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6z'/></svg>",
-       html:"<p><b>AI 构图助手 Pro</b> 是一款专注<b>人像拍摄</b>的实时构图辅助工具，核心功能：</p>"+
-            "<p>📷 <b>AI 分析一键成品</b>：点「AI 分析」后自动应用<b>智能裁切 + 推荐滤镜 + 最佳变焦</b>，不需要再点其他按钮，2-3 秒出成品。</p>"+
-            "<p>🎯 <b>专业人像构图</b>：多维度评分（三分法/对称/对角线），动态裁切框把人物面部放到黄金分割点，头顶留白 5-10% 专业标准，视线方向自动留空间。</p>"+
-            "<p>💡 <b>稳定背景虚化</b>：基于 Coco-SSD 人体检测，只模糊背景、人物保持清晰，光圈 f/1.4~f/8 可调，实时预览。</p>"+
-            "<p>👁 <b>实时取景辅助</b>：连接相机后，AI 在按下快门前实时提示主体位置、变焦建议、光线判断、水平仪，帮你拍正拍美。</p>"+
-            "<p>🎨 <b>26 款滤镜 + 美颜</b>：胶片/现代/人像专属滤镜，磨皮/美白/瘦脸/红润四档美颜，即时预览。</p>"+
-            "<p>⏱ <b>定时/连拍/音量键</b>：3s/5s/10s 定时，长按快门连拍 5 张选最稳，音量键也能拍照。</p>"},
-      {t:"⓪ 实时取景辅助（v1.4.0 · 核心新增）", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z'/><circle cx='12' cy='12' r='2.6'/></svg>",
-       html:"<p>点「<span class='hl'>实时取景</span>」按钮（连接相机后），取景框进入<b>实时拍摄辅助</b>模式，AI 在按下快门前就给你专业建议：</p>"+
-            "<p>🔲 <b>AI 主体锁定</b>：实时识别画面主体（人物/服装/商品/宠物等），绿色锁定框+置信度，自动给「偏左/偏右/居中」移动建议。</p>"+
-            "<p>🔍 <b>变焦建议</b>：主体太小提示「拉近到 2x」，太满提示「拉远留白」。</p>"+
-            "<p>💡 <b>实时光线判断</b>：偏暗提示开灯/靠近光源，过曝提示避开强光。</p>"+
-            "<p>➡ <b>实时水平仪</b>：画面歪了直接告诉你「向右转 3°」，拍平铺/挂拍/正面图超好用。</p>"+
-            "<p>✅ <b>自动抓拍建议</b>：当主体清晰+画面水平+光线合适时，底部变绿提示「可以拍摄了」，此时按右下角快门即可。</p>"+
-            "<p>顶部右角徽章显示<b>真 AI 模型状态</b>（绿=已加载 / 黄=加载中 / 红=失败 / 灰=关闭）。拍摄全程建议开启真 AI，锁定效果最佳；不开启也能用光线/水平/三分线辅助。</p>"},
-      {t:"⓪·AI 真模型管理（v1.4.0）", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='2.5'/><path d='M12 2v3m0 14v3M2 12h3m14 0h3'/></svg>",
-       html:"<p>本面板顶部（点「<span class='hl'>帮助</span>」可见）的「<span class='hl'>🤖 AI 真模型</span>」区块可：</p>"+
-            "<p>✅ <b>开关</b>：自由开启/关闭真 AI 识别，选择保存在本机（下次打开记住）。关闭后用基础构图分析，不联网不下载。</p>"+
-            "<p>📦 <b>状态徽章</b>：显示「未加载 / 加载中… / 已加载·xxms / 加载失败 / 已关闭」，<b>已加载=模型下载完整</b>，说明 80 类主体都能识别。</p>"+
-            "<p>🔄 <b>重新加载</b>：加载失败或想重试时点一下，重新下载并校验模型（约 18MB，Wi-Fi 下更省流量）。</p>"+
-            "<p>🔒 模型在<b>手机本地</b>运行，照片绝不上传，隐私安全。</p>"},
-      {t:"① 三种画面来源", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><rect x='3' y='7' width='18' height='13' rx='3'/><path d='M8 7l2-3h4l2 3'/></svg>",
-       html:"<p><span class='help-tag'>相机</span>点击下方「<span class='hl'>相机</span>」按钮，授权后即接通手机后置摄像头（<b>需 HTTPS 环境</b>，本页直接打开是受限的）。再点一次可关闭。</p>"+
-            "<p><span class='help-tag'>相册</span>点「<span class='hl'>相册</span>」从手机相册选图，支持 JPG/PNG。</p>"+
-            "<p><span class='help-tag'>示例</span>点「<span class='hl'>示例</span>」展开 5 张内置样张，点任一即可载入，再次点「示例」收起。</p>"+
-            "<p><span class='help-tag'>清除</span>点「<span class='hl'>清除</span>」一键清空当前画布回到初始状态，可重新上传照片 / 重新选示例 / 连接相机。</p>"},
-      {t:"② AI 分析（核心功能）", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='11' cy='11' r='7'/><path d='M21 21l-4.3-4.3'/></svg>",
-       html:"<p>选好画面后点「<span class='hl'>AI 分析</span>」，约 2-3 秒出结果：识别构图法则（对角线/三分法/对称等）、匹配度、曝光诊断、推荐变焦与滤镜，并画出引导线和裁切框。</p>"+
-            "<p>面板下方两个按钮：<span class='hl'>一键成品</span>＝按 AI 推荐框<b>自动裁切 + 滤镜 + 变焦</b>一次到位；应用后仍可点<span class='hl'>按构图框智能裁切</span>继续手动微调（裁剪工具会按推荐框预设，可拖动改比例后点「应用裁切」）。两者是<b>先后叠加</b>关系，不是二选一。</p>"},
-      {t:"③ 滤镜（26 款）", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='3'/><path d='M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9l2.2 2.2m9.8 9.8l2.2 2.2M19.1 4.9l-2.2 2.2M7.1 16.9l-2.2 2.2'/></svg>",
-       html:"<p>底部横条滑动选择，含胶片经典（FClassic/FCC/FVelvia/F160C/FC200/Portra400/Chrome/Ektar100/电影LUT）与现代风格（冷/暖/青橙/港风/日系/黑白/暖黑白），<b>v1.1.0 新增</b>日落暖调/赛博霓虹/莫兰迪/褪色胶片/重彩/柔焦/极光青紫/银盐。点选即时预览。</p>"},
-      {t:"④ 变焦", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='11' cy='11' r='7'/><path d='M21 21l-4.3-4.3'/></svg>",
-       html:"<p>拖动滑块或点 1x/2x/3x 快捷档，1.0x-5.0x 无损缩放。AI 分析后点「一键应用」会自动调到推荐焦段。</p>"},
-      {t:"⑤ 裁剪 & 旋转", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M6 2v16h16'/><path d='M2 6h16v16'/></svg>",
-       html:"<p>点「<span class='hl'>裁剪</span>」进入：选比例（自由/1:1/3:4/4:5/2:3/9:16/4:3/16:9/<b>2.35:1 电影</b>）→ 拖动四角 → 可 ⟳ 旋转90° → 点「应用裁切」。顶部实时显示输出尺寸。</p>"},
-      {t:"⑥ 原图 vs 效果对比", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M4 5h16v14H4z'/><path d='M12 5v14'/></svg>",
-       html:"<p>点「<span class='hl'>对比</span>」进入：画面被白线一分为二，左侧原图、右侧当前滤镜效果。<b>按住中间圆钮左右拖动</b>即可对比「我看到的 vs 我拍到的」。再点一次退出。</p>"},
-      {t:"⑦ 直方图 & 水平仪", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M3 20h18M6 20V10m4 10V5m4 15v-7m4 7V8'/></svg>",
-       html:"<p><span class='hl'>直方图</span>：取景区底部显示亮度分布，帮判断过曝/欠曝。横向平移画面时<span class='hl'>水平仪</span>实时显示倾斜角，归零即水平。</p>"},
-      {t:"⑧ 拍照 & 作品", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='8'/><circle cx='12' cy='12' r='3' fill='currentColor'/></svg>",
-       html:"<p>点右下角<span class='hl'>圆形快门</span>拍摄当前画面（带当前变焦+滤镜）。浮层可选「<span class='hl'>保存</span>」下载到手机相册，或「<span class='hl'>存入作品</span>」保存到本地作品画廊（右上「作品」可查看）。</p>"},
-      {t:"⑩ 引导线", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M3 3h18v18H3z'/><path d='M3 9h18M3 15h18M9 3v18M15 3v18'/></svg>",
-       html:"<p>点「<span class='hl'>引导线</span>」可循环切换取景参考线：<b>三分线+黄金点</b> → <b>对角线</b> → <b>关闭</b>。手动构图时可参考这些专业辅助线（v1.1.0 新增）。</p>"},
-      {t:"⑨ 导出 / 分享 / 撤销（v1.2.0）", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/><path d='M7 10l5 5 5-5'/><path d='M12 15V3'/></svg>",
-       html:"<p><span class='hl'>导出</span>：把当前画面（含滤镜+强度+变焦+裁切效果）一键导出为高清 PNG，可保存到相册 / 发工作群。</p>"+
-            "<p><span class='hl'>分享</span>：通过系统分享直接发给微信 / 抖音等 App（需系统支持，不支持时自动转为下载）。</p>"+
-            "<p><span class='hl'>撤销</span>：误操作（换滤镜 / 调变焦 / 裁切 / 清除）后点一下即可回退上一步，最多回退 20 步。</p>"},
-      {t:"⑩·AI 真视觉识别（v1.3.0）", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='2.5'/><path d='M12 2v3m0 14v3M2 12h3m14 0h3'/></svg>",
-       html:"<p>点「AI 分析」后，除了构图规则评分，还会在<b>手机本地</b>运行深度学习模型（Coco-SSD）识别画面里的真实主体（人物 / 汽车 / 猫狗 / 背包等 80 类），识别框会标在画面上。</p>"+
-            "<p>识别到主体后，构图评分（主体位置 / 占比）会用<b>真实检测结果</b>计算，比纯像素估算更准。全程<b>本地运行、照片不上传</b>，首次使用需联网加载模型（约 18MB），之后离线可用。</p>"+
-            "<p>若设备不支持或未联网，会自动回退到基础分析，功能不受影响。</p>"},
-      {t:"⑪ 常见问题", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='9'/><path d='M9.2 9a2.8 2.8 0 0 1 5.5.8c0 1.8-2.7 2.3-2.7 4'/><circle cx='12' cy='17.6' r='.4' fill='currentColor'/></svg>",
-       html:"<p><b>相机点不开？</b> 需在 HTTPS 环境（预览发布后），或改用相册/示例。</p>"+
-            "<p><b>拍照后图片没保存？</b> 拍完点「保存」会下载到相册；点「存入作品」进画廊。作品存在本机浏览器缓存。</p>"+
-            "<p><b>想重拍 / 换照片？</b> 点「<span class='hl'>清除</span>」清空画布，再从相册上传新照片或重新选示例。</p>"+
-            "<p><b>滤镜不生效？</b> 底部滤镜条向左/右滑动可看到全部 26 款。</p>"},
-      {t:"⑫ 版本信息", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/></svg>",
-       html:"<p><b>当前版本：v2.0.4</b>（2026-09-05）</p>"+
-            "<p><b>设计师：</b><span class='brand' style='-webkit-background-clip:text;background-clip:text;color:transparent;background-image:linear-gradient(135deg,#E9A23B,#f6d48e);font-style:italic;font-weight:700;font-family:STKaiti,KaiTi,serif;font-size:14px;'>· 洋洋 ·</span></p>"+
-            "<p><b>v1.6.1 Bug 修复：</b>①修复 Doka 拍照时变焦不生效（applyZoom 未读参数）；②修复 Doka 拍照后裁切可能未生效（等待图片加载完成再生成成品）；③修复拍照预览半成品闪烁（先隐藏再显示成品）；④<b>修复人像分析不生效的严重 bug</b>（planFromAnalysis 未读取 state.aiData 的人像字段，Doka 模式 AI 检测后重新生成 plan）；⑤showShot 滤镜名空值保护。</p>"+
-            "<p><b>v1.6.0 人像大版本：</b>①<b>人像面部黄金分割点</b>——AI检测到人后显示面部对焦框，提示把脸移到三分点；②<b>人像专属滤镜×3</b>（人像暖/人像冷/人像黑白），AI推荐时优先；③<b>头顶留白+视线方向检测</b>——提示头顶留白过多/人物偏左往右移机位；④<b>极简模式</b>——顶栏⚡按钮一键切换，只留快门+AI构图+滤镜；⑤<b>拍完直接显示成品</b>——Doka模式拍完自动应用裁切+滤镜+变焦，全屏显示成品，底部只留保存/重拍/分享。</p>"+
-            "<p><b>v1.5.6 界面精简：</b>去掉 AI 构图模式下独立的十字准星（避免与光线提示重叠、界面杂乱），改为主体检测标签（如「键盘 68%」）变<b>绿色边框</b>表示 AI 已锁定主体，更简洁直观。</p>"+
-            "<p><b>v1.5.5 修复：</b>修复 AI 构图裁切框显示为「彩色渐变实心矩形」的问题——改用 box-shadow 双层方案（2px青色边框+9999px暗化遮罩），彻底兼容移动端浏览器；裁切框内画面完全透明可见。</p>"+
-            "<p><b>v1.5.4 根本性修复：</b>彻底重写 Doka AI 构图的暗化遮罩实现——从「4个独立遮罩元素」改为「box-shadow 单元素暗化」，<b>彻底解决手机上点AI构图后画面全黑的问题</b>；同时 stage 添加 min-height:200px 防止被压缩；startDokaMode 强制 videoCam 显示、photoView 隐藏。</p>"+
-            "<p><b>v1.5.3 修复：</b>彻底重做底部按钮样式（调色/撤销/导出/分享），从白底灰字改为<b>深色背景+浅色文字+明确边框</b>，disabled 状态文字颜色从半透明改为 #8a929d 实色，现在任何状态下都清晰可读。</p>"+
-            "<p><b>v1.5.2 优化：</b>① <b>快门按钮可自由拖动</b>（按住拖动到任意位置，自动保存，下次打开恢复；轻点拍照，拖动不触发拍照）；② AI功能行按钮紧凑化（不再拉满整行，居中显示更美观）。</p>"+
-            "<p><b>v1.5.1 修复：</b>① 修复<b>手机端按钮溢出截断</b>（6个按钮拆分为两行：输入源一行+AI功能一行）；② 修复<b>AI构图/实时取景后画面变黑</b>（Doka遮罩层边界检查+清除bottom冲突，避免遮罩覆盖整个画面）；③ 修复<b>底部按钮太淡看不清</b>（disabled按钮opacity从0.35/0.42调亮到0.55/0.65，去掉灰度滤镜）。</p>"+
-            "<p><b>v1.5.0 重大更新（Doka 风格 AI 构图）：</b>① 新增「AI构图」按钮（Doka 模式）：点一下直接在取景框实时显示彩色渐变裁切框（框外暗化）+目标锁定十字准星，1.2秒即时反馈；② 新增AI滤镜推荐面板（胶卷样式，按场景推荐3款，点击直接应用）；③ 新增变焦建议按钮（左下角「拉近到2x」，点击直接应用）；④ 拍完即成品：Doka模式下拍照自动应用裁切+滤镜+变焦；⑤ 全面学习Doka相机交互逻辑。</p>"+
-            "<p><b>v1.4.1 修复与优化：</b>① 修复<b>「实时取景后 AI 分析点不了」</b>的核心 bug（分析成功后 state.analyzing 未重置导致按钮被拦截，现已修复并增加中断时的状态清理）；② 修复<b>智能裁切框不生效</b>的问题（旧版强制保持原始宽高比导致 AI 推荐裁切百分比被忽略，现已严格按 [左,上,右,下] 百分比计算）；③ 拍照后自动关闭实时取景 HUD，避免叠加干扰；④ 全面审核 AI 分析引擎与裁切逻辑，确保分析准确、裁切到位。</p>"+
-            "<p><b>v1.4.0 更新内容：</b>① 新增<b>实时取景辅助</b>（按下快门前的 AI 拍摄指导：主体锁定+移动建议 / 实时光线检测 / 实时水平仪 / 变焦建议 / 自动抓拍提示）；② 新增<b>AI 真模型管理</b>（可开关、可查看加载状态、可重新加载，模型是否下载完整一目了然）；③ 实时滤镜预览优化。</p>"+
-            "<p><b>模型状态怎么看：</b>点「帮助」→「🤖 AI 真模型」区块可看状态徽章；实时取景时右上角有小徽章（绿=已加载 / 黄=加载中 / 红=失败 / 灰=关闭）。点「AI 分析」后面板顶部也有提示。</p>"+
-            "<p><b>v1.3.2 新功能：</b>① 专业调色（曝光/对比度/饱和度/色温，实时预览、导出生效）；② 品牌水印「洋洋」（可开关/三位置/透明度）；③ 电商尺寸快捷导出（800×800 主图 / 750×1000 / 1080×1080 / 900×1200）+ PNG/JPEG 格式选择；④ AI 场景识别（按检测主体推断人像/街拍/萌宠/静物/美食等并给专属构图建议）。</p>"+
-            "<p><b>v1.3.2 修复内容：</b>修复「一键应用」后导出仍是原图的问题（旧版一键应用未执行裁切，现改为自动裁切+滤镜+变焦一次到位，且应用后仍可继续「按构图框智能裁切」手动微调）。</p>"+
-            "<p><b>v1.3.1 修复内容：</b>修复「上传照片 → 裁切 → 撤销」后图片无法恢复、导出提示『图片尚未加载完成』的问题（裁切时保留原图缓存供撤销正确恢复）。</p>"+
-            "<p><b>v1.3.0 更新内容：</b>新增<b>真 AI 视觉识别</b>（本地运行 Coco-SSD 深度学习模型，识别画面主体 80 类，主体位置/占比用真实检测结果，识别框叠加显示，自动降级）；加入「洋洋」品牌角标；APK 签名改为专属密钥「YangYang」。</p>"+
-            "<p><b>v1.2.0 更新内容：</b>新增「导出成品图」（含滤镜/变焦/裁切）、「一键分享」、「撤销操作」（最多20步）、AI「构图建议」；APK 签名加固。</p>"+
-            "<p><b>v1.1.0 更新内容：</b>滤镜增至 26 款；AI 光学数据新增 4 项；裁切新增 2:3/4:3/2.35:1；引导线模式切换。</p>"+
-            "<p>所有功能均为本地运行，照片不上传任何服务器，隐私安全。作品画廊最多保存 24 张。</p>"}
-    ];
-    function openHelp(){
+function openHelp(){
       helpBody.innerHTML="";
       HELP_SECTIONS.forEach(function(s){
         var d=document.createElement("div");
@@ -2959,6 +2826,11 @@
     var FACE_DET_URL="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js";
     var faceModelState="idle", faceModel=null, faceEnabled=true;
     var faceBadge=null;  // mpBadge 已在前面初始化，不要覆盖
+    // v3.0.0: MediaPipe Pose 人体姿态检测
+    var POSE_URL="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js";
+    var poseModelState="idle", poseModel=null, poseEnabled=true;
+    var poseBadge=null, lastPoseDetect=0;
+    var poseData=null; // 存储最新的姿态关键点
     // v1.7.1: MediaPipe Selfie Segmentation（人像像素级分割，用于真正的背景虚化）
     var MP_SEG_URL="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js";
     var segModelState="idle", segModel=null, segCanvas=null, segCtx=null, segMaskCanvas=null, segMaskCtx=null;
@@ -3100,7 +2972,7 @@
     function renderAiDetect(preds, el){
       if(!preds||!preds.length) return;
       // v1.9.2: 过滤低置信度结果，按面积排序选主要主体
-      var valid=preds.filter(function(p){ return p.score>=0.35; });
+      var valid=preds.filter(function(p){ return p.score>=0.25; });
       if(!valid.length) return;
       // 按面积排序，选最大的作为主要主体
       valid.sort(function(a,b){ return (b.bbox[2]*b.bbox[3])-(a.bbox[2]*a.bbox[3]); });
@@ -3115,7 +2987,7 @@
           state.aiData.subject=cnLabel(t.class);
           // v1.9.2: 人像检测优化——只有足够大的 person 才识别人像
           var personHeight=t.bbox[3]/ih; // person 占画面高度比例
-          var isBigPerson = (t.class==="person" && personHeight>=0.15 && t.score>=0.4);
+          var isBigPerson = (t.class==="person" && personHeight>=0.08 && t.score>=0.3);
           if(isBigPerson){
             state.aiData.isPerson=true;
             state.aiData.faceX=Math.max(0,Math.min(1,(t.bbox[0]+t.bbox[2]/2)/iw));
@@ -3224,8 +3096,10 @@
           if(token!==state.analyzeToken) return;
           if(!preds||!preds.length){ return; }
           renderAiDetect(preds, elSnap);
-          // v2.0.0: 同时运行人脸检测（如果已启用并加载）
+          // v2.0.0: 同时运行人脸检测
           if(faceEnabled && faceModelState==="ready"){ detectFace(elSnap); }
+          // v3.0.0: 同时运行姿态检测（更精准的人体定位）
+          if(poseEnabled && poseModelState==="ready"){ detectPose(elSnap); }
         }).catch(function(e){ console.warn("AI 检测失败:", e); });
       });
     }
@@ -3365,6 +3239,89 @@
     if(faceCb) faceCb.checked=faceEnabled;
     if(faceEnabled){
       setTimeout(function(){ loadFaceModel(true); }, 1500);
+    }
+
+    /* ===================== v3.0.0: MediaPipe Pose 人体姿态检测 ===================== */
+    function updatePoseUI(){
+      if(!poseBadge) poseBadge=document.getElementById("poseBadge");
+      if(!poseBadge) return;
+      poseBadge.className="mp-badge "+(poseModelState==="ready"?"ready":poseModelState==="loading"?"loading":poseModelState==="fail"?"fail":"idle");
+      poseBadge.textContent=poseModelState==="ready"?"已加载":poseModelState==="loading"?"加载中…":poseModelState==="fail"?"加载失败":"未加载";
+      var cb=document.getElementById("poseOn");
+      if(cb) cb.checked=poseEnabled;
+    }
+    function loadPoseModel(force){
+      return new Promise(function(resolve){
+        if(poseModelState==="ready"){ resolve(true); return; }
+        if(poseModelState==="loading"){ resolve(false); return; }
+        if(location.protocol==="file:" || location.protocol==="null"){ poseModelState="fail"; updatePoseUI(); resolve(false); return; }
+        poseModelState="loading"; updatePoseUI();
+        loadScript(POSE_URL).then(function(){
+          if(typeof Pose==="undefined"){ poseModelState="fail"; updatePoseUI(); resolve(false); return; }
+          try{
+            poseModel=new Pose({locateFile:function(file){ return "https://cdn.jsdelivr.net/npm/@mediapipe/pose/"+file; }});
+            poseModel.setOptions({modelComplexity:1, enableSegmentation:false, smoothLandmarks:true});
+            poseModel.onResults(function(results){
+              if(results.poseLandmarks){
+                poseData=results.poseLandmarks; // 33个关键点
+                // 用姿态数据优化人体位置
+                var nose=poseData[0], ls=poseData[11], rs=poseData[12];
+                if(nose && ls && rs){
+                  state.aiData.faceX=Math.max(0,Math.min(1,nose.x));
+                  state.aiData.faceY=Math.max(0,Math.min(1,nose.y));
+                  state.aiData.faceAvailable=true;
+                  state.aiData.isPerson=true;
+                  // 肩膀中心
+                  var sx=(ls.x+rs.x)/2, sy=(ls.y+rs.y)/2;
+                  state.aiData.personLeft=Math.max(0,Math.min(1,Math.min(ls.x,rs.x)-0.1));
+                  state.aiData.personRight=Math.max(0,Math.min(1,Math.max(ls.x,rs.x)+0.1));
+                  state.aiData.headTop=Math.max(0,nose.y-0.08);
+                  state.aiData.personBottom=Math.min(1,Math.max(poseData[23]?poseData[23].y:0.8, poseData[24]?poseData[24].y:0.8)+0.1);
+                  // 姿态分析
+                  var shoulderTilt=Math.atan2(rs.y-ls.y, rs.x-ls.x)*180/Math.PI;
+                  state.aiData.shoulderTilt=shoulderTilt;
+                  state.aiData.poseReady=true;
+                }
+              }
+            });
+            poseModelState="ready"; updatePoseUI();
+            toastMsg("姿态检测模型加载成功");
+            resolve(true);
+          }catch(e){ console.warn("姿态模型初始化失败:",e); poseModelState="fail"; updatePoseUI(); resolve(false); }
+        }).catch(function(e){ console.warn("姿态模型加载失败:",e); poseModelState="fail"; updatePoseUI(); resolve(false); });
+      });
+    }
+    function detectPose(el){
+      if(!poseEnabled || poseModelState!=="ready" || !poseModel || !el) return;
+      var now=Date.now();
+      if(now-lastPoseDetect<700) return; // 节流 700ms
+      lastPoseDetect=now;
+      try{ poseModel.send({image:el}); }catch(e){}
+    }
+    var poseOnEl=document.getElementById("poseOn");
+    if(poseOnEl){
+      poseOnEl.addEventListener("change",function(){
+        poseEnabled=poseOnEl.checked;
+        try{ localStorage.setItem("poseEnabled", poseEnabled?"true":"false"); }catch(e){}
+        if(poseEnabled){ loadPoseModel(true); }
+        else { poseModelState="idle"; poseModel=null; updatePoseUI(); toastMsg("姿态检测已关闭"); }
+      });
+    }
+    var poseReloadEl=document.getElementById("poseReload");
+    if(poseReloadEl){
+      poseReloadEl.addEventListener("click",function(){
+        poseEnabled=true;
+        var cb=document.getElementById("poseOn"); if(cb) cb.checked=true;
+        poseModelState="idle";
+        loadPoseModel(true);
+      });
+    }
+    updatePoseUI();
+    // 页面初始化时自动加载姿态检测
+    var poseCb=document.getElementById("poseOn");
+    if(poseCb) poseCb.checked=poseEnabled;
+    if(poseEnabled){
+      setTimeout(function(){ loadPoseModel(true); }, 2000);
     }
 
     /* ===================== v1.4.0: 实时取景辅助（AI主体锁定/光线/水平/变焦/可拍建议） ===================== */
@@ -4044,10 +4001,24 @@
       if(blurCanvas.width!==vw){ blurCanvas.width=vw; blurCanvas.height=vh; }
       blurCtx.clearRect(0,0,vw,vh);
       // v2.0.1: 没检测到人时不显示虚化，避免整个画面都模糊
-      var hasPerson = state.aiData && state.aiData.isPerson && state.aiData.personLeft!==undefined && state.aiData.personBottom!==undefined;
+      // v3.0.0: 优先用姿态检测的人体数据，其次用 Coco-SSD
+      var hasPerson = (state.aiData && state.aiData.isPerson && state.aiData.personLeft!==undefined && state.aiData.personBottom!==undefined) || (poseData && poseData.length>0);
       if(!hasPerson){
         if(blurCanvas) blurCanvas.style.display="none";
         return;
+      }
+      // 如果姿态检测可用，用姿态数据更新人体框
+      if(poseData && poseData.length>0 && poseData[0]){
+        try{
+          var nose=poseData[0], ls=poseData[11], rs=poseData[12], lh=poseData[23], rh=poseData[24];
+          if(nose && ls && rs){
+            state.aiData.isPerson=true;
+            state.aiData.personLeft=Math.max(0, Math.min(ls.x, rs.x)-0.12);
+            state.aiData.personRight=Math.min(1, Math.max(ls.x, rs.x)+0.12);
+            state.aiData.headTop=Math.max(0, nose.y-0.1);
+            state.aiData.personBottom=Math.min(1, Math.max(lh?lh.y:0.9, rh?rh.y:0.9)+0.08);
+          }
+        }catch(e){}
       }
       if(blurCanvas) blurCanvas.style.display="block";
       // 1. 绘制模糊层（更精确的光圈换算）
@@ -4125,6 +4096,8 @@
         btnBlur.style.color="var(--cyan)";
         showBlurControl();
         startBlurLoop();
+        // v3.0.0: 立即触发检测（物体+人脸+姿态）
+        if(state.aiModelEnabled && aiModelState==="ready"){ runAIDetection(); }
         // v2.0.1: 检查是否检测到人
         var hasP = state.aiData && state.aiData.isPerson;
         if(hasP){
