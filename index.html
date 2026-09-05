@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v1.8.0 · 实时取景</title>
+<title>AI 构图助手 Pro v1.9.0 · 实时取景</title>
 <meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
@@ -514,7 +514,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.8.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.9.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -542,6 +542,13 @@
       <div class="gold gold-1"></div><div class="gold gold-2"></div><div class="gold gold-3"></div><div class="gold gold-4"></div>
       <div class="diag" id="diagEl"></div>
       <div class="diag" id="diagEl2"></div>
+      <svg id="goldenSpiral" viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:none;z-index:4;">
+        <path id="spiralPath" d="" fill="none" stroke="rgba(255,180,84,0.6)" stroke-width="0.3"/>
+        <rect x="0" y="0" width="61.8" height="61.8" fill="none" stroke="rgba(255,180,84,0.3)" stroke-width="0.2"/>
+        <rect x="61.8" y="0" width="38.2" height="38.2" fill="none" stroke="rgba(255,180,84,0.3)" stroke-width="0.2"/>
+        <rect x="61.8" y="38.2" width="23.6" height="23.6" fill="none" stroke="rgba(255,180,84,0.3)" stroke-width="0.2"/>
+        <circle cx="61.8" cy="38.2" r="1.5" fill="rgba(255,180,84,0.8)"/>
+      </svg>
       <div class="cropbox" id="cropEl"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div>
     </div>
     <!-- v1.5.0 Doka 风格 AI 构图：实时裁切预览 + 目标锁定 -->
@@ -647,6 +654,8 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg><span class="b-txt">相册</span>
         <input type="file" id="fileInput" accept="image/*" style="display:none">
       </label>
+      <button class="btn" id="btnEnhance"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1M18.4 5.6l-2.1 2.1M7.8 16.2l-2.1 2.1"/><circle cx="12" cy="12" r="3"/></svg><span class="b-txt">美化</span></button>
+      <button class="btn" id="btnTemplate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg><span class="b-txt">模板</span></button>
       <button class="btn" id="btnSample"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 15l5-5 4 4 3-3 6 6"/></svg><span class="b-txt">示例</span></button>
     </div>
     <div class="ctrl-row ai-row">
@@ -843,7 +852,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v1.8.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v1.9.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v1.4.0 AI 真模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -889,6 +898,7 @@
         btnBlur=$("btnBlur"), burstIndicator=$("burstIndicator"), liveTip=$("liveTip"),
         aiApplyTip=$("aiApplyTip"),
         filterBar=$("filterBar"), btnSample=$("btnSample"), sampleStrip=$("sampleStrip"),
+        btnEnhance=$("btnEnhance"), btnTemplate=$("btnTemplate"),
         btnRules=$("btnRules"), ruleSheet=$("ruleSheet"), ruleBody=$("ruleBody"), ruleClose=$("ruleClose"),
         btnGrid=$("btnGrid"),
         btnCrop=$("btnCrop"), btnClear=$("btnClear"), cropTool=$("cropTool"), cropStage=$("cropStage"), cropBg=$("cropBg"),
@@ -1366,6 +1376,39 @@
       var s=SAMPLES.filter(function(x){return x.id===c.dataset.id;})[0];
       if(s){ pushUndo(); loadSample(s); closeSampleStrip(); }
     });
+    btnEnhance.addEventListener("click",autoEnhance);
+    /* v1.9.0 构图模板 */
+    var COMP_TEMPLATES=[
+      {name:"人像特写",ratio:"3:4",zoom:2.5,filter:"portrait-warm",desc:"胸部以上，面部在右上三分点，大光圈虚化"},
+      {name:"人像半身",ratio:"2:3",zoom:1.8,filter:"portrait-warm",desc:"腰部以上，头顶留白5-10%，视线方向留空间"},
+      {name:"人像全身",ratio:"9:16",zoom:1.2,filter:"natural",desc:"从头到脚，脚下留空间，避免切脚踝"},
+      {name:"街拍人文",ratio:"1:1",zoom:1.5,filter:"FClassic",desc:"正方形构图，抓拍瞬间，胶片滤镜"},
+      {name:"风景全景",ratio:"16:9",zoom:1.0,filter:"FVelvia",desc:"宽幅风景，三分法地平线，鲜艳滤镜"}
+    ];
+    function showTemplatePanel(){
+      var old=document.getElementById("templatePanel");
+      if(old){ old.remove(); return; }
+      var panel=document.createElement("div");
+      panel.id="templatePanel";
+      panel.style.cssText="position:absolute;bottom:120px;left:50%;transform:translateX(-50%);z-index:55;background:rgba(10,12,14,0.95);border:1px solid rgba(255,180,84,0.3);border-radius:12px;padding:12px;display:flex;gap:8px;backdrop-filter:blur(10px);";
+      COMP_TEMPLATES.forEach(function(t,i){
+        var b=document.createElement("button");
+        b.style.cssText="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer;white-space:nowrap;";
+        b.textContent=t.name;
+        b.onclick=function(){
+          // 应用模板：设置变焦+滤镜+裁切比例提示
+          setZoom(t.zoom);
+          setFilter(t.filter);
+          toastMsg(t.name+"："+t.desc);
+          setStatus("已套用「"+t.name+"」模板 · "+t.ratio+" · "+t.zoom+"x","done");
+          panel.remove();
+        };
+        panel.appendChild(b);
+      });
+      document.querySelector(".stage").appendChild(panel);
+      setTimeout(function(){ if(panel.parentNode) panel.remove(); }, 8000);
+    }
+    btnTemplate.addEventListener("click",showTemplatePanel);
     btnSample.addEventListener("click",function(e){
       e.stopPropagation();
       sampleStrip.classList.toggle("show");
@@ -1694,6 +1737,120 @@
       plan.notes=notes;
       return plan;
     }
+    /* ===================== v1.9.0 AI 照片评分系统 ===================== */
+    function scorePhoto(el, a){
+      if(!el || !a) return null;
+      var scores={};
+      // 兼容属性名
+      var brightness=a.mean!==undefined?a.mean:(a.brightness||128);
+      var saturation=a.sat!==undefined?a.sat:(a.saturation||40);
+      var colorTemp=a.wb!==undefined?a.wb:(a.colorTemp||5000);
+      var highClip=a.highClip!==undefined?a.highClip:(a.highlights||0);
+      var shadowClip=a.shadowClip!==undefined?a.shadowClip:(a.shadows||0);
+      var contrast=a.contrast||40;
+      var subjX=a.cx!==undefined?a.cx:(a.subjectX||0.5);
+      var subjY=a.cy!==undefined?a.cy:(a.subjectY||0.5);
+      var isPerson=(state.aiData&&state.aiData.isPerson)?true:!!a.isPerson;
+      // 1. 构图分（0-100）
+      var compScore=60;
+      if(a.thirdFit>0.6) compScore+=20;
+      else if(a.sym>0.6) compScore+=15;
+      else if(a.diagStrength>0.5) compScore+=18;
+      else compScore+=8;
+      if(subjX>0.25 && subjX<0.75 && subjY>0.2 && subjY<0.8) compScore+=15;
+      if(isPerson) compScore+=5;
+      compScore=Math.min(100,Math.max(0,compScore));
+      // 2. 光线分（0-100）
+      var lightScore=60;
+      if(brightness>40 && brightness<190) lightScore+=25;
+      else if(brightness>25 && brightness<210) lightScore+=12;
+      if(contrast>25 && contrast<75) lightScore+=10;
+      if(highClip<0.1 && shadowClip<0.1) lightScore+=5;
+      lightScore=Math.min(100,Math.max(0,lightScore));
+      // 3. 色彩分（0-100）
+      var colorScore=60;
+      if(saturation>15 && saturation<75) colorScore+=20;
+      else if(saturation>8) colorScore+=10;
+      if(colorTemp>3500 && colorTemp<6500) colorScore+=15;
+      else colorScore+=5;
+      colorScore=Math.min(100,Math.max(0,colorScore));
+      // 4. 清晰度分（0-100）
+      var sharpScore=Math.min(100,Math.max(0, contrast*1.3 + 15));
+      scores.composition=Math.round(compScore);
+      scores.light=Math.round(lightScore);
+      scores.color=Math.round(colorScore);
+      scores.sharpness=Math.round(sharpScore);
+      scores.total=Math.round((compScore*0.35 + lightScore*0.3 + colorScore*0.2 + sharpScore*0.15));
+      if(isNaN(scores.total)) scores.total=70;
+      scores.grade = scores.total>=90?"S":scores.total>=80?"A":scores.total>=70?"B":scores.total>=60?"C":"D";
+      scores.tips=[];
+      if(compScore<75) scores.tips.push("构图：主体偏边，建议移到三分线交点");
+      if(lightScore<70) scores.tips.push(brightness<80?"光线：偏暗，建议开灯或靠近光源":"光线：过曝，建议避开强光");
+      if(colorScore<70) scores.tips.push("色彩：建议加滤镜提升色调");
+      if(sharpScore<60) scores.tips.push("清晰度：建议对焦后再拍");
+      if(scores.total>=85) scores.tips.unshift("✓ 很棒的照片！");
+      return scores;
+    }
+    function showScorePanel(scores){
+      if(!scores) return;
+      var old=document.getElementById("scorePanel");
+      if(old) old.remove();
+      var panel=document.createElement("div");
+      panel.id="scorePanel";
+      panel.style.cssText="position:absolute;top:50px;left:50%;transform:translateX(-50%);z-index:60;background:rgba(10,12,14,0.92);border:1px solid rgba(255,180,84,0.4);border-radius:14px;padding:14px 18px;min-width:240px;backdrop-filter:blur(10px);";
+      var gradeColor=scores.grade==="S"?"#FFD700":scores.grade==="A"?"#67D97A":scores.grade==="B"?"#54C8F7":scores.grade==="C"?"#FFB454":"#EF6B6B";
+      panel.innerHTML='<div style="text-align:center;margin-bottom:10px;"><span style="font-size:32px;font-weight:700;color:'+gradeColor+';">'+scores.grade+'</span><span style="font-size:20px;color:#fff;margin-left:8px;">'+scores.total+'分</span></div>'+
+        '<div style="display:flex;gap:12px;justify-content:center;margin-bottom:8px;font-size:11px;">'+
+        '<span style="color:#54C8F7;">构图 '+scores.composition+'</span>'+
+        '<span style="color:#FFB454;">光线 '+scores.light+'</span>'+
+        '<span style="color:#DEBEF8;">色彩 '+scores.color+'</span>'+
+        '<span style="color:#67D97A;">清晰 '+scores.sharpness+'</span></div>'+
+        (scores.tips.length?'<div style="font-size:11px;color:#ccc;line-height:1.6;">'+scores.tips.join('<br>')+'</div>':'');
+      document.querySelector(".stage").appendChild(panel);
+      setTimeout(function(){ if(panel.parentNode) panel.remove(); }, 6000);
+    }
+    /* ===================== v1.9.0 一键美化 ===================== */
+    function autoEnhance(){
+      var el=currentEl();
+      if(!el){ setStatus("请先选择画面","err"); return; }
+      var dims=currentSrcDims(el);
+      var a=analyzePixels(el,dims);
+      if(!a){ setStatus("分析失败","err"); return; }
+      var c=document.createElement("canvas");
+      c.width=dims.w; c.height=dims.h;
+      var ctx=c.getContext("2d");
+      ctx.drawImage(el,0,0);
+      try{
+        var imgData=ctx.getImageData(0,0,c.width,c.height);
+        var d=imgData.data;
+        // 自动曝光：目标亮度 128
+        var exposure=128/(a.brightness||128);
+        exposure=Math.max(0.7,Math.min(1.4,exposure));
+        // 自动对比度
+        var contrast=1+((a.contrast<40)?0.15:(a.contrast>70?-0.1:0));
+        // 自动饱和度
+        var satFactor=1+((a.saturation<30)?0.15:(a.saturation>70?-0.1:0));
+        for(var i=0;i<d.length;i+=4){
+          var r=d[i],g=d[i+1],b=d[i+2];
+          // 曝光
+          r*=exposure; g*=exposure; b*=exposure;
+          // 对比度
+          r=(r-128)*contrast+128; g=(g-128)*contrast+128; b=(b-128)*contrast+128;
+          // 饱和度
+          var gray=0.299*r+0.587*g+0.114*b;
+          r=gray+(r-gray)*satFactor; g=gray+(g-gray)*satFactor; b=gray+(b-gray)*satFactor;
+          d[i]=Math.max(0,Math.min(255,r));
+          d[i+1]=Math.max(0,Math.min(255,g));
+          d[i+2]=Math.max(0,Math.min(255,b));
+        }
+        ctx.putImageData(imgData,0,0);
+      }catch(e){ console.warn("美化失败",e); }
+      var url=c.toDataURL("image/jpeg",0.92);
+      pushUndo();
+      setPhotoSource(url,"upload","一键美化");
+      toastMsg("已自动美化：曝光+对比度+饱和度");
+      setStatus("一键美化完成","done");
+    }
     btnAnalyze.addEventListener("click",function(){
       if(state.analyzing) return;
       var el=currentEl();
@@ -1717,14 +1874,15 @@
         // 期间已切换画面/清除，作废本次分析
         if(token!==state.analyzeToken){ state.analyzing=false; btnAnalyze.disabled=false; stage.classList.remove("scanning"); return; }
         try{
-          var plan;
+          var plan, a;
           if(state.sourceKind==="sample" && state.plan){
             plan=state.plan;
             var dims0=currentSrcDims(el);
-            state.aiData=analyzePixels(el,dims0);
+            a=analyzePixels(el,dims0);
+            state.aiData=a;
           } else {
             var dims=currentSrcDims(el);
-            var a=analyzePixels(el,dims);
+            a=analyzePixels(el,dims);
             state.aiData=a;
             plan = a ? planFromAnalysis(a) : null;
             if(!plan){
@@ -1744,6 +1902,9 @@
           setStatus("构图已锁定 · 正在自动应用…", "");
           // v1.7.1: AI 分析后自动应用（不需要再点一键成品）
           var _autoPlan=plan;
+          // v1.9.0: 立即显示评分（基于分析结果，不依赖裁切完成）
+          var _scores=scorePhoto(el, a);
+          if(_scores) showScorePanel(_scores);
           setTimeout(function(){
             if(_autoPlan){
               var p=_autoPlan;
@@ -1756,11 +1917,11 @@
                     clearInterval(_check);
                     setZoom(p.z||1);
                     setFilter(p.f||"clear");
-                    setStatus("已自动应用：裁切+滤镜+变焦", "done");
+                    setStatus("已自动应用：裁切+滤镜+变焦 · "+(_scores?_scores.grade+"级 "+_scores.total+"分":""), "done");
                     toastMsg("已自动应用：智能裁切 + "+(FILTERS[p.f]?FILTERS[p.f].name:"原图")+" + "+(p.z||1).toFixed(1)+"x");
                   }
                 },50);
-                setTimeout(function(){ if(_check){ clearInterval(_check); setZoom(p.z||1); setFilter(p.f||"clear"); } },2000);
+                setTimeout(function(){ if(_check){ clearInterval(_check); setZoom(p.z||1); setFilter(p.f||"clear"); setStatus("已自动应用：裁切+滤镜+变焦", "done"); } },2000);
               } else {
                 setStatus("自动应用失败，请手动点一键成品", "err");
               }
@@ -2332,6 +2493,17 @@
         chips.push('<span class="chip">变焦 '+state.zoom.toFixed(1)+'x</span>');
         chips.push('<span class="chip">'+(FILTERS[state.filter]?FILTERS[state.filter].name:'原图')+'</span>');
         chips.push('<span class="chip">'+(state.plan?RULES[state.plan.rule].cn:"自由构图")+'</span>');
+        // v1.9.0: 拍照后自动评分
+        try{
+          var dims={w:shotImg.naturalWidth,h:shotImg.naturalHeight};
+          var sa=analyzePixels(shotImg,dims);
+          if(sa){
+            var ss=scorePhoto(shotImg,sa);
+            if(ss){
+              chips.push('<span class="chip" style="color:'+(ss.grade==="S"?"#FFD700":ss.grade==="A"?"#67D97A":"#FFB454")+';">'+ss.grade+'级 '+ss.total+'分</span>');
+            }
+          }
+        }catch(e){}
         shotCapChips.innerHTML=chips.join("");
         shotCapText.textContent=state.plan?(state.plan.desc||""):"";
         shotOverlay.classList.add("show");
@@ -2591,25 +2763,47 @@
         diagEl2.style.transformOrigin="100% 0";
         diagEl2.style.transform="rotate(-45deg)";
         diagEl2.style.background="rgba(84,200,247,.55)";
+        var gs1=document.getElementById("goldenSpiral");
+        if(gs1) gs1.style.display="none";
       } else if(gridMode===2){
+        // 黄金螺旋
+        diagEl.style.width="0px"; diagEl2.style.width="0px";
+        diagEl.style.background="rgba(84,200,247,0)";
+        diagEl2.style.background="rgba(84,200,247,0)";
+        guides.classList.remove("on");
+        var gs=document.getElementById("goldenSpiral");
+        if(gs){
+          gs.style.display="block";
+          // 绘制黄金螺旋路径
+          var sp=document.getElementById("spiralPath");
+          if(sp){
+            // 斐波那契螺旋近似
+            sp.setAttribute("d","M61.8,0 A61.8,61.8 0 0,1 0,61.8 A38.2,38.2 0 0,1 38.2,100 A23.6,23.6 0 0,1 61.8,76.4 A14.6,14.6 0 0,1 76.4,61.8 A9,9 0 0,1 67.4,52.8");
+          }
+        }
+      } else if(gridMode===3){
         // 全关
         diagEl.style.width="0px"; diagEl2.style.width="0px";
         diagEl.style.background="rgba(84,200,247,0)";
         diagEl2.style.background="rgba(84,200,247,0)";
+        var gs2=document.getElementById("goldenSpiral");
+        if(gs2) gs2.style.display="none";
       } else {
         // 三分线+黄金点
         diagEl.style.width="0px"; diagEl2.style.width="0px";
         diagEl.style.background="rgba(84,200,247,.6)";
         diagEl2.style.background="rgba(84,200,247,.6)";
         guides.classList.add("on");
+        var gs0=document.getElementById("goldenSpiral");
+        if(gs0) gs0.style.display="none";
       }
-      var labels=["三分线 · 黄金点","对角线","引导线已关闭"];
+      var labels=["三分线 · 黄金点","对角线","黄金螺旋","引导线已关闭"];
       toastMsg(labels[gridMode]);
       setStatus("引导线模式："+labels[gridMode], "done");
     }
     if(btnGrid){
       btnGrid.addEventListener("click",function(){
-        setGridMode((gridMode+1)%3);
+        setGridMode((gridMode+1)%4);
       });
     }
 
@@ -2688,7 +2882,7 @@
             "<p><b>想重拍 / 换照片？</b> 点「<span class='hl'>清除</span>」清空画布，再从相册上传新照片或重新选示例。</p>"+
             "<p><b>滤镜不生效？</b> 底部滤镜条向左/右滑动可看到全部 26 款。</p>"},
       {t:"⑫ 版本信息", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/></svg>",
-       html:"<p><b>当前版本：v1.8.0</b>（2026-09-05）</p>"+
+       html:"<p><b>当前版本：v1.9.0</b>（2026-09-05）</p>"+
             "<p><b>设计师：</b><span class='brand' style='-webkit-background-clip:text;background-clip:text;color:transparent;background-image:linear-gradient(135deg,#E9A23B,#f6d48e);font-style:italic;font-weight:700;font-family:STKaiti,KaiTi,serif;font-size:14px;'>· 洋洋 ·</span></p>"+
             "<p><b>v1.6.1 Bug 修复：</b>①修复 Doka 拍照时变焦不生效（applyZoom 未读参数）；②修复 Doka 拍照后裁切可能未生效（等待图片加载完成再生成成品）；③修复拍照预览半成品闪烁（先隐藏再显示成品）；④<b>修复人像分析不生效的严重 bug</b>（planFromAnalysis 未读取 state.aiData 的人像字段，Doka 模式 AI 检测后重新生成 plan）；⑤showShot 滤镜名空值保护。</p>"+
             "<p><b>v1.6.0 人像大版本：</b>①<b>人像面部黄金分割点</b>——AI检测到人后显示面部对焦框，提示把脸移到三分点；②<b>人像专属滤镜×3</b>（人像暖/人像冷/人像黑白），AI推荐时优先；③<b>头顶留白+视线方向检测</b>——提示头顶留白过多/人物偏左往右移机位；④<b>极简模式</b>——顶栏⚡按钮一键切换，只留快门+AI构图+滤镜；⑤<b>拍完直接显示成品</b>——Doka模式拍完自动应用裁切+滤镜+变焦，全屏显示成品，底部只留保存/重拍/分享。</p>"+
