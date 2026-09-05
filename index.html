@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v1.9.0 · 实时取景</title>
+<title>AI 构图助手 Pro v1.9.1 · 实时取景</title>
 <meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
@@ -514,7 +514,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.9.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.9.1</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -544,10 +544,10 @@
       <div class="diag" id="diagEl2"></div>
       <svg id="goldenSpiral" viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:none;z-index:4;">
         <path id="spiralPath" d="" fill="none" stroke="rgba(255,180,84,0.6)" stroke-width="0.3"/>
-        <rect x="0" y="0" width="61.8" height="61.8" fill="none" stroke="rgba(255,180,84,0.3)" stroke-width="0.2"/>
-        <rect x="61.8" y="0" width="38.2" height="38.2" fill="none" stroke="rgba(255,180,84,0.3)" stroke-width="0.2"/>
-        <rect x="61.8" y="38.2" width="23.6" height="23.6" fill="none" stroke="rgba(255,180,84,0.3)" stroke-width="0.2"/>
-        <circle cx="61.8" cy="38.2" r="1.5" fill="rgba(255,180,84,0.8)"/>
+        <rect x="0" y="0" width="100" height="61.8" fill="none" stroke="rgba(255,180,84,0.25)" stroke-width="0.2"/>
+        <rect x="0" y="61.8" width="61.8" height="38.2" fill="none" stroke="rgba(255,180,84,0.25)" stroke-width="0.2"/>
+        <rect x="38.2" y="61.8" width="38.2" height="23.6" fill="none" stroke="rgba(255,180,84,0.25)" stroke-width="0.2"/>
+        <circle cx="61.8" cy="61.8" r="1.5" fill="rgba(255,180,84,0.9)"/>
       </svg>
       <div class="cropbox" id="cropEl"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div>
     </div>
@@ -852,7 +852,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v1.9.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v1.9.1 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v1.4.0 AI 真模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1390,23 +1390,41 @@
       if(old){ old.remove(); return; }
       var panel=document.createElement("div");
       panel.id="templatePanel";
-      panel.style.cssText="position:absolute;bottom:120px;left:50%;transform:translateX(-50%);z-index:55;background:rgba(10,12,14,0.95);border:1px solid rgba(255,180,84,0.3);border-radius:12px;padding:12px;display:flex;gap:8px;backdrop-filter:blur(10px);";
+      panel.style.cssText="position:absolute;bottom:0;left:0;right:0;z-index:70;background:rgba(10,12,14,0.97);border-top:1px solid rgba(255,180,84,0.3);padding:14px 12px 16px;backdrop-filter:blur(20px);";
+      var title=document.createElement("div");
+      title.style.cssText="color:#FFB454;font-size:13px;font-weight:600;margin-bottom:10px;text-align:center;";
+      title.textContent="选择构图模板";
+      panel.appendChild(title);
+      var grid=document.createElement("div");
+      grid.style.cssText="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;";
       COMP_TEMPLATES.forEach(function(t,i){
         var b=document.createElement("button");
-        b.style.cssText="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer;white-space:nowrap;";
-        b.textContent=t.name;
+        b.style.cssText="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:10px 4px;border-radius:10px;font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;";
+        b.innerHTML='<span style="font-size:18px;">'+["📸","👤","🧍","🚶","🏞️"][i]+'</span><span>'+t.name+'</span><span style="font-size:9px;color:#888;">'+t.ratio+'</span>';
         b.onclick=function(){
-          // 应用模板：设置变焦+滤镜+裁切比例提示
           setZoom(t.zoom);
           setFilter(t.filter);
           toastMsg(t.name+"："+t.desc);
           setStatus("已套用「"+t.name+"」模板 · "+t.ratio+" · "+t.zoom+"x","done");
           panel.remove();
         };
-        panel.appendChild(b);
+        grid.appendChild(b);
       });
+      panel.appendChild(grid);
+      var closeBtn=document.createElement("div");
+      closeBtn.style.cssText="text-align:center;color:#666;font-size:11px;margin-top:10px;";
+      closeBtn.textContent="点击外部或再次点模板按钮关闭";
+      panel.appendChild(closeBtn);
       document.querySelector(".stage").appendChild(panel);
-      setTimeout(function(){ if(panel.parentNode) panel.remove(); }, 8000);
+      // 点击面板外关闭
+      setTimeout(function(){
+        document.addEventListener("click",function close(e){
+          if(!panel.contains(e.target) && e.target.id!=="btnTemplate"){
+            panel.remove();
+            document.removeEventListener("click",close);
+          }
+        });
+      },100);
     }
     btnTemplate.addEventListener("click",showTemplatePanel);
     btnSample.addEventListener("click",function(e){
@@ -2777,8 +2795,9 @@
           // 绘制黄金螺旋路径
           var sp=document.getElementById("spiralPath");
           if(sp){
-            // 斐波那契螺旋近似
-            sp.setAttribute("d","M61.8,0 A61.8,61.8 0 0,1 0,61.8 A38.2,38.2 0 0,1 38.2,100 A23.6,23.6 0 0,1 61.8,76.4 A14.6,14.6 0 0,1 76.4,61.8 A9,9 0 0,1 67.4,52.8");
+            // 正确的黄金螺旋：从右上角开始，沿黄金矩形向内旋转
+            // 四分之一圆弧序列，半径按黄金比例递减
+            sp.setAttribute("d","M100,0 A100,100 0 0,1 0,100 A61.8,61.8 0 0,1 61.8,38.2 A38.2,38.2 0 0,1 100,76.4 A23.6,23.6 0 0,1 76.4,52.8 A14.6,14.6 0 0,1 61.8,67.4");
           }
         }
       } else if(gridMode===3){
@@ -2882,7 +2901,7 @@
             "<p><b>想重拍 / 换照片？</b> 点「<span class='hl'>清除</span>」清空画布，再从相册上传新照片或重新选示例。</p>"+
             "<p><b>滤镜不生效？</b> 底部滤镜条向左/右滑动可看到全部 26 款。</p>"},
       {t:"⑫ 版本信息", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/></svg>",
-       html:"<p><b>当前版本：v1.9.0</b>（2026-09-05）</p>"+
+       html:"<p><b>当前版本：v1.9.1</b>（2026-09-05）</p>"+
             "<p><b>设计师：</b><span class='brand' style='-webkit-background-clip:text;background-clip:text;color:transparent;background-image:linear-gradient(135deg,#E9A23B,#f6d48e);font-style:italic;font-weight:700;font-family:STKaiti,KaiTi,serif;font-size:14px;'>· 洋洋 ·</span></p>"+
             "<p><b>v1.6.1 Bug 修复：</b>①修复 Doka 拍照时变焦不生效（applyZoom 未读参数）；②修复 Doka 拍照后裁切可能未生效（等待图片加载完成再生成成品）；③修复拍照预览半成品闪烁（先隐藏再显示成品）；④<b>修复人像分析不生效的严重 bug</b>（planFromAnalysis 未读取 state.aiData 的人像字段，Doka 模式 AI 检测后重新生成 plan）；⑤showShot 滤镜名空值保护。</p>"+
             "<p><b>v1.6.0 人像大版本：</b>①<b>人像面部黄金分割点</b>——AI检测到人后显示面部对焦框，提示把脸移到三分点；②<b>人像专属滤镜×3</b>（人像暖/人像冷/人像黑白），AI推荐时优先；③<b>头顶留白+视线方向检测</b>——提示头顶留白过多/人物偏左往右移机位；④<b>极简模式</b>——顶栏⚡按钮一键切换，只留快门+AI构图+滤镜；⑤<b>拍完直接显示成品</b>——Doka模式拍完自动应用裁切+滤镜+变焦，全屏显示成品，底部只留保存/重拍/分享。</p>"+
