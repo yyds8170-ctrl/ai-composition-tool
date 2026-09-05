@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v2.0.3 · 实时取景</title>
+<title>AI 构图助手 Pro v2.0.4 · 实时取景</title>
 <meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
@@ -514,7 +514,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v2.0.3</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v2.0.4</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -552,7 +552,7 @@
           <rect x="61.8" y="38.2" width="14.6" height="14.6" fill="none" stroke="rgba(255,180,84,0.2)" stroke-width="0.3"/>
         </g>
         <!-- 真正的对数螺线（黄金螺旋） -->
-        <path id="spiralPath" d="M100.0,-0.0 L84.3,-2.4 L69.5,-1.4 L56.2,2.5 L44.8,8.7 L35.6,16.7 L28.8,25.8 L24.4,35.5 L22.3,45.3 L22.4,54.6 L24.3,63.1 L27.8,70.5 L32.5,76.6 L38.0,81.2 L43.9,84.3 L50.0,86.0 L55.8,86.3 L61.2,85.4 L66.0,83.5 L70.0,80.8 L73.1,77.5 L75.3,73.9 L76.6,70.1 L77.0,66.5 L76.6,63.0 L75.6,59.9 L74.0,57.3 L72.1,55.3 L69.9,53.8 L67.6,52.8 L65.3,52.4 L63.1,52.6 L61.1,53.1 L59.5,54.0 L58.1,55.1 L57.1,56.4 L56.4,57.8 L56.1,59.3 L56.0,60.6 L56.3,61.9 L56.8,63.0 L57.5,63.9 L58.2,64.6 L59.1,65.1 L60.0,65.3 L60.9,65.4 L61.7,65.3 L62.4,65.0 L63.0,64.6 L63.4,64.1 L63.7,63.6 L63.9,63.1 L64.0,62.5 L64.0,62.0 L63.8,61.6 L63.6,61.2 L63.3,60.9 L63.0,60.6 L62.7,60.5 L62.3,60.4 L62.0,60.4 L61.7,60.5 L61.5,60.6 L61.3,60.8 L61.1,61.0 L61.0,61.2 L61.0,61.4 L61.0,61.6 L61.0,61.8 L61.1,62.0 L61.2,62.1 L61.3,62.2 L61.4,62.3 L61.5,62.3 L61.7,62.3 L61.8,62.3 L61.9,62.3 L62.0,62.2 L62.0,62.1 L62.1,62.1 L62.1,62.0" fill="none" stroke="rgba(255,180,84,0.7)" stroke-width="0.5" stroke-linejoin="round"/>
+        <path id="spiralPath" d="M100,0 A100,100 0 0,1 0,100 A61.8,61.8 0 0,1 61.8,38.2 A38.2,38.2 0 0,1 100,76.4 A23.6,23.6 0 0,1 76.4,52.8 A14.6,14.6 0 0,1 61.8,67.4 A9.0,9.0 0 0,1 70.8,61.8 A5.6,5.6 0 0,1 67.4,67.4 A3.4,3.4 0 0,1 69.5,65.3" fill="none" stroke="rgba(255,180,84,0.75)" stroke-width="0.4" stroke-linecap="round" stroke-linejoin="round"/> fill="none" stroke="rgba(255,180,84,0.7)" stroke-width="0.5" stroke-linejoin="round"/>
         <!-- 螺旋中心点（主体放置位置） -->
         <circle id="spiralCenter" cx="61.8" cy="61.8" r="1.5" fill="rgba(255,180,84,0.9)" stroke="rgba(255,255,255,0.8)" stroke-width="0.3"/>
         <circle cx="61.8" cy="61.8" r="3" fill="none" stroke="rgba(255,180,84,0.5)" stroke-width="0.3"/>
@@ -860,7 +860,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v2.0.3 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v2.0.4 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -2915,7 +2915,7 @@
             "<p><b>想重拍 / 换照片？</b> 点「<span class='hl'>清除</span>」清空画布，再从相册上传新照片或重新选示例。</p>"+
             "<p><b>滤镜不生效？</b> 底部滤镜条向左/右滑动可看到全部 26 款。</p>"},
       {t:"⑫ 版本信息", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/></svg>",
-       html:"<p><b>当前版本：v2.0.3</b>（2026-09-05）</p>"+
+       html:"<p><b>当前版本：v2.0.4</b>（2026-09-05）</p>"+
             "<p><b>设计师：</b><span class='brand' style='-webkit-background-clip:text;background-clip:text;color:transparent;background-image:linear-gradient(135deg,#E9A23B,#f6d48e);font-style:italic;font-weight:700;font-family:STKaiti,KaiTi,serif;font-size:14px;'>· 洋洋 ·</span></p>"+
             "<p><b>v1.6.1 Bug 修复：</b>①修复 Doka 拍照时变焦不生效（applyZoom 未读参数）；②修复 Doka 拍照后裁切可能未生效（等待图片加载完成再生成成品）；③修复拍照预览半成品闪烁（先隐藏再显示成品）；④<b>修复人像分析不生效的严重 bug</b>（planFromAnalysis 未读取 state.aiData 的人像字段，Doka 模式 AI 检测后重新生成 plan）；⑤showShot 滤镜名空值保护。</p>"+
             "<p><b>v1.6.0 人像大版本：</b>①<b>人像面部黄金分割点</b>——AI检测到人后显示面部对焦框，提示把脸移到三分点；②<b>人像专属滤镜×3</b>（人像暖/人像冷/人像黑白），AI推荐时优先；③<b>头顶留白+视线方向检测</b>——提示头顶留白过多/人物偏左往右移机位；④<b>极简模式</b>——顶栏⚡按钮一键切换，只留快门+AI构图+滤镜；⑤<b>拍完直接显示成品</b>——Doka模式拍完自动应用裁切+滤镜+变焦，全屏显示成品，底部只留保存/重拍/分享。</p>"+
@@ -3100,7 +3100,7 @@
     function renderAiDetect(preds, el){
       if(!preds||!preds.length) return;
       // v1.9.2: 过滤低置信度结果，按面积排序选主要主体
-      var valid=preds.filter(function(p){ return p.score>=0.45; });
+      var valid=preds.filter(function(p){ return p.score>=0.35; });
       if(!valid.length) return;
       // 按面积排序，选最大的作为主要主体
       valid.sort(function(a,b){ return (b.bbox[2]*b.bbox[3])-(a.bbox[2]*a.bbox[3]); });
@@ -3115,7 +3115,7 @@
           state.aiData.subject=cnLabel(t.class);
           // v1.9.2: 人像检测优化——只有足够大的 person 才识别人像
           var personHeight=t.bbox[3]/ih; // person 占画面高度比例
-          var isBigPerson = (t.class==="person" && personHeight>=0.20 && t.score>=0.5);
+          var isBigPerson = (t.class==="person" && personHeight>=0.15 && t.score>=0.4);
           if(isBigPerson){
             state.aiData.isPerson=true;
             state.aiData.faceX=Math.max(0,Math.min(1,(t.bbox[0]+t.bbox[2]/2)/iw));
@@ -4092,11 +4092,20 @@
       blurCtx.globalCompositeOperation="source-over";
     }
     var blurRAF=null;
+    var lastBlurDetect=0;
     function startBlurLoop(){
       if(blurRAF) return;
+      // v2.0.4: 开启背景虚化时立即触发一次 AI 检测
+      if(state.aiModelEnabled && aiModelState==="ready"){ runAIDetection(); }
       function loop(){
         if(!state.blurOn){ blurRAF=null; if(blurCanvas) blurCanvas.style.display="none"; return; }
         applyBlurFrame();
+        // v2.0.4: 每 600ms 自动检测一次人体（节流，避免卡顿）
+        var now=Date.now();
+        if(now-lastBlurDetect>600 && state.aiModelEnabled && aiModelState==="ready"){
+          lastBlurDetect=now;
+          runAIDetection();
+        }
         blurRAF=requestAnimationFrame(loop);
       }
       if(blurCanvas) blurCanvas.style.display="block";
