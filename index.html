@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v2.0.0 · 实时取景</title>
+<title>AI 构图助手 Pro v2.0.1 · 实时取景</title>
 <meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
@@ -514,7 +514,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v2.0.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v2.0.1</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -852,7 +852,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v2.0.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v2.0.1 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -2908,7 +2908,7 @@
             "<p><b>想重拍 / 换照片？</b> 点「<span class='hl'>清除</span>」清空画布，再从相册上传新照片或重新选示例。</p>"+
             "<p><b>滤镜不生效？</b> 底部滤镜条向左/右滑动可看到全部 26 款。</p>"},
       {t:"⑫ 版本信息", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/></svg>",
-       html:"<p><b>当前版本：v2.0.0</b>（2026-09-05）</p>"+
+       html:"<p><b>当前版本：v2.0.1</b>（2026-09-05）</p>"+
             "<p><b>设计师：</b><span class='brand' style='-webkit-background-clip:text;background-clip:text;color:transparent;background-image:linear-gradient(135deg,#E9A23B,#f6d48e);font-style:italic;font-weight:700;font-family:STKaiti,KaiTi,serif;font-size:14px;'>· 洋洋 ·</span></p>"+
             "<p><b>v1.6.1 Bug 修复：</b>①修复 Doka 拍照时变焦不生效（applyZoom 未读参数）；②修复 Doka 拍照后裁切可能未生效（等待图片加载完成再生成成品）；③修复拍照预览半成品闪烁（先隐藏再显示成品）；④<b>修复人像分析不生效的严重 bug</b>（planFromAnalysis 未读取 state.aiData 的人像字段，Doka 模式 AI 检测后重新生成 plan）；⑤showShot 滤镜名空值保护。</p>"+
             "<p><b>v1.6.0 人像大版本：</b>①<b>人像面部黄金分割点</b>——AI检测到人后显示面部对焦框，提示把脸移到三分点；②<b>人像专属滤镜×3</b>（人像暖/人像冷/人像黑白），AI推荐时优先；③<b>头顶留白+视线方向检测</b>——提示头顶留白过多/人物偏左往右移机位；④<b>极简模式</b>——顶栏⚡按钮一键切换，只留快门+AI构图+滤镜；⑤<b>拍完直接显示成品</b>——Doka模式拍完自动应用裁切+滤镜+变焦，全屏显示成品，底部只留保存/重拍/分享。</p>"+
@@ -4019,38 +4019,58 @@
     function applyBlurFrame(){
       if(!state.blurOn) return;
       var el = state.mode==="camera" ? videoCam : photoView;
-      if(!el || !el.videoWidth && !el.naturalWidth) return;
+      if(!el || (!el.videoWidth && !el.naturalWidth)) return;
       var vw=el.videoWidth||el.naturalWidth, vh=el.videoHeight||el.naturalHeight;
       if(!vw || !vh) return;
       if(blurCanvas.width!==vw){ blurCanvas.width=vw; blurCanvas.height=vh; }
       blurCtx.clearRect(0,0,vw,vh);
-      // 1. 绘制模糊层
-      var blurPx=Math.max(3,(8-state.blurAperture)*2.5);
+      // v2.0.1: 没检测到人时不显示虚化，避免整个画面都模糊
+      var hasPerson = state.aiData && state.aiData.isPerson && state.aiData.personLeft!==undefined && state.aiData.personBottom!==undefined;
+      if(!hasPerson){
+        if(blurCanvas) blurCanvas.style.display="none";
+        return;
+      }
+      if(blurCanvas) blurCanvas.style.display="block";
+      // 1. 绘制模糊层（更精确的光圈换算）
+      var blurPx=Math.max(4,(8.5-state.blurAperture)*3);
       blurCtx.filter="blur("+blurPx+"px)";
       blurCtx.drawImage(el,0,0,vw,vh);
       blurCtx.filter="none";
       // 2. 用人体检测框挖洞（显示清晰的人物）
-      if(state.aiData && state.aiData.isPerson && state.aiData.personLeft!==undefined){
-        var px=state.aiData.personLeft*vw;
-        var py=state.aiData.headTop*vh;
-        var pw=(state.aiData.personRight-state.aiData.personLeft)*vw;
-        var ph=(state.aiData.personBottom-state.aiData.headTop)*vh;
-        // 扩大一点框，避免边缘生硬
-        var pad=pw*0.15;
-        px=Math.max(0,px-pad); py=Math.max(0,py-pad);
-        pw=Math.min(vw-px,pw+pad*2); ph=Math.min(vh-py,ph+pad*2);
-        // 用椭圆渐变挖洞，边缘过渡自然
-        blurCtx.globalCompositeOperation="destination-out";
-        var grad=blurCtx.createRadialGradient(px+pw/2,py+ph/2,Math.min(pw,ph)*0.3, px+pw/2,py+ph/2,Math.max(pw,ph)*0.7);
-        grad.addColorStop(0,"rgba(0,0,0,1)");
-        grad.addColorStop(0.7,"rgba(0,0,0,0.8)");
-        grad.addColorStop(1,"rgba(0,0,0,0)");
-        blurCtx.fillStyle=grad;
-        blurCtx.beginPath();
-        blurCtx.ellipse(px+pw/2,py+ph/2,pw/2,ph/2,0,0,Math.PI*2);
-        blurCtx.fill();
-        blurCtx.globalCompositeOperation="source-over";
-      }
+      var px=state.aiData.personLeft*vw;
+      var py=state.aiData.headTop*vh;
+      var pw=(state.aiData.personRight-state.aiData.personLeft)*vw;
+      var ph=(state.aiData.personBottom-state.aiData.headTop)*vh;
+      // v2.0.1: 大幅扩大挖洞范围，确保人物完全清晰（左右30%，上下25%）
+      var padX=pw*0.30, padY=ph*0.25;
+      var cx=px+pw/2, cy=py+ph/2;
+      var rw=Math.min(vw, pw+padX*2)/2;
+      var rh=Math.min(vh, ph+padY*2)/2;
+      var rx=Math.max(0,cx-rw), ry=Math.max(0,cy-rh);
+      rw=Math.min(vw-rx, rw*2); rh=Math.min(vh-ry, rh*2);
+      // v2.0.1: 用更宽的径向渐变挖洞，过渡更自然
+      blurCtx.globalCompositeOperation="destination-out";
+      var grad=blurCtx.createRadialGradient(cx,cy,Math.min(rw,rh)*0.15, cx,cy,Math.max(rw,rh)*1.0);
+      grad.addColorStop(0,"rgba(0,0,0,1)");
+      grad.addColorStop(0.5,"rgba(0,0,0,0.95)");
+      grad.addColorStop(0.8,"rgba(0,0,0,0.6)");
+      grad.addColorStop(1,"rgba(0,0,0,0)");
+      blurCtx.fillStyle=grad;
+      // 用圆角矩形挖洞，更符合人体形状
+      var r=Math.min(rw,rh)*0.2;
+      blurCtx.beginPath();
+      blurCtx.moveTo(rx+r,ry);
+      blurCtx.lineTo(rx+rw-r,ry);
+      blurCtx.quadraticCurveTo(rx+rw,ry,rx+rw,ry+r);
+      blurCtx.lineTo(rx+rw,ry+rh-r);
+      blurCtx.quadraticCurveTo(rx+rw,ry+rh,rx+rw-r,ry+rh);
+      blurCtx.lineTo(rx+r,ry+rh);
+      blurCtx.quadraticCurveTo(rx,ry+rh,rx,ry+rh-r);
+      blurCtx.lineTo(rx,ry+r);
+      blurCtx.quadraticCurveTo(rx,ry,rx+r,ry);
+      blurCtx.closePath();
+      blurCtx.fill();
+      blurCtx.globalCompositeOperation="source-over";
     }
     var blurRAF=null;
     function startBlurLoop(){
@@ -4077,8 +4097,21 @@
         btnBlur.style.color="var(--cyan)";
         showBlurControl();
         startBlurLoop();
-        setStatus("背景虚化已开启 f/"+state.blurAperture.toFixed(1)+" · 人物保持清晰","done");
-        toastMsg("背景虚化已开启，人物保持清晰");
+        // v2.0.1: 检查是否检测到人
+        var hasP = state.aiData && state.aiData.isPerson;
+        if(hasP){
+          setStatus("背景虚化已开启 f/"+state.blurAperture.toFixed(1)+" · 人物保持清晰","done");
+          toastMsg("背景虚化已开启，人物保持清晰");
+        } else {
+          setStatus("背景虚化已开启 · 正在检测人体…","");
+          toastMsg("已开启，检测到人物后自动虚化背景");
+          // 2秒后如果还没检测到人，提示
+          setTimeout(function(){
+            if(state.blurOn && !(state.aiData && state.aiData.isPerson)){
+              setStatus("未检测到人物 · 请确保人物在画面中且占比足够大","err");
+            }
+          },2000);
+        }
       }
     });
     function showBlurControl(){
