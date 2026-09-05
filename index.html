@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v1.6.0 · 实时取景</title>
+<title>AI 构图助手 Pro v1.6.1 · 实时取景</title>
 <meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
@@ -479,7 +479,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.6.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.6.1</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnMinimal" title="极简模式">⚡</button>
@@ -769,7 +769,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v1.6.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v1.6.1 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v1.4.0 AI 真模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1469,21 +1469,23 @@
       }
       notes.push(plan.exp);
       // 3.5 v1.6.0: 人像专项分析（头顶留白 + 视线方向 + 面部黄金分割点）
-      if(a.isPerson){
+      // 修复：人像字段可能在 state.aiData 中（runAIDetection 设置），优先读取
+      var personData = (state.aiData && state.aiData.isPerson) ? state.aiData : a;
+      if(personData.isPerson){
         plan.isPerson=true;
         // 头顶留白检测
-        if(a.headTop<0.04){ notes.push("⚠ 头顶留白过多，建议往上移机位"); }
-        else if(a.headTop>0.18){ notes.push("⚠ 头顶太贴边，建议往下移一点"); }
+        if(personData.headTop<0.04){ notes.push("⚠ 头顶留白过多，建议往上移机位"); }
+        else if(personData.headTop>0.18){ notes.push("⚠ 头顶太贴边，建议往下移一点"); }
         else { notes.push("✓ 头顶留白适中"); }
         // 视线方向（人物在左侧→视线多向左，建议往左移机位；右侧同理）
-        if(a.personLeft<0.25){ notes.push("👀 人物偏左，建议往左移机位，视线方向多留空间"); plan.faceTip="left"; }
-        else if(a.personRight>0.75){ notes.push("👀 人物偏右，建议往右移机位，视线方向多留空间"); plan.faceTip="right"; }
+        if(personData.personLeft<0.25){ notes.push("👀 人物偏左，建议往左移机位，视线方向多留空间"); plan.faceTip="left"; }
+        else if(personData.personRight>0.75){ notes.push("👀 人物偏右，建议往右移机位，视线方向多留空间"); plan.faceTip="right"; }
         else { plan.faceTip="center"; }
         // 面部黄金分割点提示
-        if(a.faceX<0.3){ notes.push("🎯 面部偏左，建议把脸移到右侧三分点"); }
-        else if(a.faceX>0.7){ notes.push("🎯 面部偏右，建议把脸移到左侧三分点"); }
-        else if(a.faceY<0.2){ notes.push("🎯 面部偏上，建议下移一点到上三分线"); }
-        else if(a.faceY>0.45){ notes.push("🎯 面部偏下，建议上移一点到上三分线"); }
+        if(personData.faceX<0.3){ notes.push("🎯 面部偏左，建议把脸移到右侧三分点"); }
+        else if(personData.faceX>0.7){ notes.push("🎯 面部偏右，建议把脸移到左侧三分点"); }
+        else if(personData.faceY<0.2){ notes.push("🎯 面部偏上，建议下移一点到上三分线"); }
+        else if(personData.faceY>0.45){ notes.push("🎯 面部偏下，建议上移一点到上三分线"); }
         else { notes.push("🎯 面部位于黄金分割点，构图佳"); }
         // 人像焦段建议：2x 避免广角变形
         plan.z=Math.max(plan.z, 1.8);
@@ -1497,7 +1499,7 @@
         plan.f="classic"; plan.filters=["FClassic · 冷峻线条","FCC · 电影感","黑白 · 影调"];
         plan.conf=87;
       } else if(a.sat<0.38){
-        if(a.isPerson){
+        if(personData.isPerson){
           plan.f = warm? "portrait-warm":"portrait-cool";
           plan.filters = warm? ["人像暖 · 优化肤色","Portra400 · 暖调人像","人像黑白 · 质感"] : ["人像冷 · 清透肤色","自然 · 忠实还原","人像黑白 · 质感"];
         } else {
@@ -2116,7 +2118,7 @@
       shotImg.onload=function(){
         var chips=[];
         chips.push('<span class="chip">变焦 '+state.zoom.toFixed(1)+'x</span>');
-        chips.push('<span class="chip">'+FILTERS[state.filter].name+'</span>');
+        chips.push('<span class="chip">'+(FILTERS[state.filter]?FILTERS[state.filter].name:'原图')+'</span>');
         chips.push('<span class="chip">'+(state.plan?RULES[state.plan.rule].cn:"自由构图")+'</span>');
         shotCapChips.innerHTML=chips.join("");
         shotCapText.textContent=state.plan?(state.plan.desc||""):"";
@@ -2460,8 +2462,9 @@
             "<p><b>想重拍 / 换照片？</b> 点「<span class='hl'>清除</span>」清空画布，再从相册上传新照片或重新选示例。</p>"+
             "<p><b>滤镜不生效？</b> 底部滤镜条向左/右滑动可看到全部 26 款。</p>"},
       {t:"⑫ 版本信息", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/></svg>",
-       html:"<p><b>当前版本：v1.6.0</b>（2026-09-05）</p>"+
+       html:"<p><b>当前版本：v1.6.1</b>（2026-09-05）</p>"+
             "<p><b>设计师：</b><span class='brand' style='-webkit-background-clip:text;background-clip:text;color:transparent;background-image:linear-gradient(135deg,#E9A23B,#f6d48e);font-style:italic;font-weight:700;font-family:STKaiti,KaiTi,serif;font-size:14px;'>· 洋洋 ·</span></p>"+
+            "<p><b>v1.6.1 Bug 修复：</b>①修复 Doka 拍照时变焦不生效（applyZoom 未读参数）；②修复 Doka 拍照后裁切可能未生效（等待图片加载完成再生成成品）；③修复拍照预览半成品闪烁（先隐藏再显示成品）；④<b>修复人像分析不生效的严重 bug</b>（planFromAnalysis 未读取 state.aiData 的人像字段，Doka 模式 AI 检测后重新生成 plan）；⑤showShot 滤镜名空值保护。</p>"+
             "<p><b>v1.6.0 人像大版本：</b>①<b>人像面部黄金分割点</b>——AI检测到人后显示面部对焦框，提示把脸移到三分点；②<b>人像专属滤镜×3</b>（人像暖/人像冷/人像黑白），AI推荐时优先；③<b>头顶留白+视线方向检测</b>——提示头顶留白过多/人物偏左往右移机位；④<b>极简模式</b>——顶栏⚡按钮一键切换，只留快门+AI构图+滤镜；⑤<b>拍完直接显示成品</b>——Doka模式拍完自动应用裁切+滤镜+变焦，全屏显示成品，底部只留保存/重拍/分享。</p>"+
             "<p><b>v1.5.6 界面精简：</b>去掉 AI 构图模式下独立的十字准星（避免与光线提示重叠、界面杂乱），改为主体检测标签（如「键盘 68%」）变<b>绿色边框</b>表示 AI 已锁定主体，更简洁直观。</p>"+
             "<p><b>v1.5.5 修复：</b>修复 AI 构图裁切框显示为「彩色渐变实心矩形」的问题——改用 box-shadow 双层方案（2px青色边框+9999px暗化遮罩），彻底兼容移动端浏览器；裁切框内画面完全透明可见。</p>"+
@@ -2635,6 +2638,31 @@
       });
       // 画面检测框
       drawAiBox(preds[0], el);
+      // v1.6.1: Doka 模式下，AI 检测完成后重新生成 plan（使人像分析生效）
+      if(state.dokaMode && state.aiData){
+        try{
+          var dims=currentSrcDims(el);
+          var a2=analyzePixels(el,dims);
+          if(a2){
+            // 合并 AI 检测结果到 a2
+            a2.isPerson=state.aiData.isPerson;
+            a2.faceX=state.aiData.faceX;
+            a2.faceY=state.aiData.faceY;
+            a2.headTop=state.aiData.headTop;
+            a2.personLeft=state.aiData.personLeft;
+            a2.personRight=state.aiData.personRight;
+            a2.subject=state.aiData.subject;
+            var plan2=planFromAnalysis(a2);
+            if(plan2){
+              state.plan=plan2; state.dokaPlan=plan2;
+              showDokaCrop(plan2);
+              showDokaCrosshair(plan2);
+              showDokaFilters(plan2);
+              showDokaZoom(plan2);
+            }
+          }
+        }catch(e){ console.warn("Doka plan 更新失败:",e); }
+      }
     }
     function renderAiModelStatus(mode){
       // mode: "loading" | "on" | "off"
@@ -2922,37 +2950,50 @@
     btnShoot.addEventListener("click",function(){
       if(state.dokaMode && state.dokaPlan){
         var p=state.dokaPlan;
-        // 延迟到拍照完成后应用所有效果，然后显示成品
+        // 先隐藏预览（避免半成品闪烁），等成品生成后再显示
+        shotOverlay.classList.remove("show");
+        // 延迟到拍照完成后应用所有效果
         setTimeout(function(){
           if(state.dokaPlan){
             // 应用滤镜
             if(p.f && p.f!=="clear"){ applyFilter(p.f); }
             // 应用变焦
-            if(p.z && p.z>1.05){ zoomRange.value=p.z; applyZoom(p.z); }
-            // 应用裁切
-            if(p.crop){ applyCropFromPlan(p.crop); }
-            // 把成品（photoView）绘制到 canvas，生成最终图片
-            setTimeout(function(){
-              if(photoView.naturalWidth){
-                var c=document.createElement("canvas");
-                c.width=photoView.naturalWidth; c.height=photoView.naturalHeight;
-                var ctx=c.getContext("2d");
-                ctx.filter = FILTERS[state.filter] ? FILTERS[state.filter].css : "none";
-                ctx.drawImage(photoView,0,0);
-                var finalUrl=c.toDataURL("image/jpeg",0.92);
-                state.lastShotURL=finalUrl;
-                showShot(finalUrl);
-                // Doka 模式下只显示保存/重拍/分享
-                shotOverlay.classList.add("doka-shot");
-              }
-              toastMsg("AI 构图成品已生成：裁切+滤镜+变焦");
-            },200);
+            if(p.z && p.z>1.05){ zoomRange.value=p.z; state.zoom=p.z; applyZoom(); }
+            // 应用裁切，完成后生成成品
+            if(p.crop){
+              applyCropFromPlan(p.crop);
+              // 等待裁切后的图片加载完成
+              var checkReady=setInterval(function(){
+                if(photoView.naturalWidth && photoView.complete){
+                  clearInterval(checkReady);
+                  generateDokaFinal();
+                }
+              },50);
+              // 超时保护：最多等 2 秒
+              setTimeout(function(){ if(checkReady){ clearInterval(checkReady); generateDokaFinal(); } },2000);
+            } else {
+              generateDokaFinal();
+            }
           }
         },600);
       } else {
         shotOverlay.classList.remove("doka-shot");
       }
     },true);
+    function generateDokaFinal(){
+      if(photoView.naturalWidth){
+        var c=document.createElement("canvas");
+        c.width=photoView.naturalWidth; c.height=photoView.naturalHeight;
+        var ctx=c.getContext("2d");
+        ctx.filter = FILTERS[state.filter] ? FILTERS[state.filter].css : "none";
+        ctx.drawImage(photoView,0,0);
+        var finalUrl=c.toDataURL("image/jpeg",0.92);
+        state.lastShotURL=finalUrl;
+        showShot(finalUrl);
+        shotOverlay.classList.add("doka-shot");
+        toastMsg("AI 构图成品已生成：裁切+滤镜+变焦");
+      }
+    }
 
     function applyCropFromPlan(crop){
       // crop: [左%,上%,右%,下%]
