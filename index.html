@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v1.6.1 · 实时取景</title>
+<title>AI 构图助手 Pro v1.7.0 · 实时取景</title>
 <meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
@@ -473,17 +473,54 @@
   .shot-overlay.doka-shot #btnShotClose, .shot-overlay.doka-shot #btnShotKeep{display:none!important;}
   .shot-overlay.doka-shot .shot-actions{justify-content:center;gap:12px;}
   .shot-overlay.doka-shot .shot-actions .btn{flex:0 1 auto;min-width:100px;}
-</style>
+
+    /* ===== v1.7.0 人像美颜面板 ===== */
+    .beauty-panel{position:absolute;left:0;right:0;bottom:0;background:rgba(15,18,22,.96);backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,.08);padding:14px 16px 20px;z-index:60;transform:translateY(100%);transition:transform .3s ease;}
+    .beauty-panel.show{transform:translateY(0);}
+    .beauty-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+    .beauty-head .t{font-size:14px;font-weight:600;color:#fff;}
+    .beauty-head .close{font-size:18px;color:#8a929d;cursor:pointer;padding:4px 8px;}
+    .beauty-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+    .beauty-row .label{width:50px;font-size:12px;color:#aab2bd;flex-shrink:0;}
+    .beauty-row .val{width:36px;font-size:12px;color:var(--amber);text-align:right;font-family:JetBrains Mono,monospace;flex-shrink:0;}
+    .beauty-row input[type=range]{flex:1;-webkit-appearance:none;height:4px;border-radius:2px;background:rgba(255,255,255,.15);outline:none;}
+    .beauty-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--amber);cursor:pointer;box-shadow:0 0 8px rgba(255,180,84,.5);}
+    /* ===== v1.7.0 定时倒计时 ===== */
+    .timer-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:80;pointer-events:none;}
+    .timer-count{font-size:120px;font-weight:700;color:#fff;text-shadow:0 0 40px rgba(0,0,0,.8);animation:timerPulse 1s ease-in-out infinite;}
+    @keyframes timerPulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.2);opacity:.7;}}
+    /* ===== v1.7.0 连拍指示 ===== */
+    .burst-indicator{position:absolute;top:16px;left:50%;transform:translateX(-50%);background:rgba(239,107,107,.9);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;z-index:70;display:none;}
+    .burst-indicator.show{display:block;animation:burstPulse .5s ease-in-out infinite;}
+    @keyframes burstPulse{0%,100%{opacity:1;}50%{opacity:.6;}}
+    /* ===== v1.7.0 背景虚化 ===== */
+    .blur-control{display:flex;align-items:center;gap:8px;padding:6px 12px;background:rgba(15,18,22,.85);border-radius:20px;border:1px solid rgba(255,255,255,.1);}
+    .blur-control .label{font-size:11px;color:#aab2bd;white-space:nowrap;}
+    .blur-control .fval{font-size:11px;color:var(--cyan);font-family:JetBrains Mono,monospace;width:36px;text-align:center;}
+    .blur-control input[type=range]{width:80px;-webkit-appearance:none;height:3px;border-radius:2px;background:rgba(255,255,255,.15);outline:none;}
+    .blur-control input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--cyan);cursor:pointer;}
+    /* ===== v1.7.0 实时提示气泡 ===== */
+    .live-tip{position:absolute;top:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);color:#fff;padding:8px 16px;border-radius:20px;font-size:13px;z-index:55;white-space:nowrap;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);transition:opacity .3s;}
+    .live-tip.hide{opacity:0;}
+    /* ===== v1.7.0 AI 分析后一键成品高亮 ===== */
+    .ai-btn.highlight{animation:btnGlow 1.5s ease-in-out infinite;}
+    @keyframes btnGlow{0%,100%{box-shadow:0 0 0 0 rgba(255,180,84,.5);}50%{box-shadow:0 0 20px 4px rgba(255,180,84,.4);}}
+    .ai-apply-tip{text-align:center;font-size:11px;color:var(--amber);margin-bottom:8px;animation:tipBlink 1.5s ease-in-out infinite;}
+    @keyframes tipBlink{0%,100%{opacity:1;}50%{opacity:.5;}}
+
+  </style>
 </head>
 <body>
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.6.1</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v1.7.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
-    <button class="minimal-toggle" id="btnMinimal" title="极简模式">⚡</button>
-  </div>
+    <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
+      <button class="minimal-toggle" id="btnBlur" title="背景虚化">💫</button>
+      <button class="minimal-toggle" id="btnMinimal" title="极简模式">⚡</button>
+    </div>
 
   <!-- ===== 取景器 ===== -->
   <div class="stage" id="stage">
@@ -520,6 +557,12 @@
       </div>
       <div class="doka-face-box" id="dokaFaceBox" style="display:none;"></div>
       <div class="doka-guide" id="dokaGuide"></div>
+      <!-- v1.7.0: 定时倒计时 -->
+      <div class="timer-overlay" id="timerOverlay" style="display:none;"><div class="timer-count" id="timerCount">3</div></div>
+      <!-- v1.7.0: 连拍指示 -->
+      <div class="burst-indicator" id="burstIndicator">连拍中…</div>
+      <!-- v1.7.0: 实时提示气泡 -->
+      <div class="live-tip hide" id="liveTip"></div>
     </div>
     <div class="hist" id="histBox"><span class="hist-cap">亮度直方图</span><canvas id="histCanvas" width="140" height="36"></canvas></div>
     <div class="level" id="levelBox">
@@ -558,8 +601,36 @@
       </div>
       <div class="ai-body" id="aiBody"></div>
       <div class="ai-foot">
-        <button class="ai-btn" id="aiApply"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg>一键成品（智能裁切 + 滤镜 + 变焦）</button>
+        <div class="ai-apply-tip" id="aiApplyTip">👆 点下方按钮自动应用裁切+滤镜+变焦</div>
+        <button class="ai-btn highlight" id="aiApply"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg>一键成品（智能裁切 + 滤镜 + 变焦）</button>
         <button class="ai-btn ghost" id="aiCropNow">按构图框智能裁切</button>
+      </div>
+    </div>
+    <!-- v1.7.0: 人像美颜面板 -->
+    <div class="beauty-panel" id="beautyPanel">
+      <div class="beauty-head">
+        <span class="t">✨ 人像美颜（自然风格）</span>
+        <span class="close" id="beautyClose">✕</span>
+      </div>
+      <div class="beauty-row">
+        <span class="label">磨皮</span>
+        <input type="range" id="beautySmooth" min="0" max="100" value="0">
+        <span class="val" id="beautySmoothVal">0</span>
+      </div>
+      <div class="beauty-row">
+        <span class="label">美白</span>
+        <input type="range" id="beautyWhiten" min="0" max="100" value="0">
+        <span class="val" id="beautyWhitenVal">0</span>
+      </div>
+      <div class="beauty-row">
+        <span class="label">瘦脸</span>
+        <input type="range" id="beautySlim" min="0" max="100" value="0">
+        <span class="val" id="beautySlimVal">0</span>
+      </div>
+      <div class="beauty-row">
+        <span class="label">红润</span>
+        <input type="range" id="beautyBlush" min="0" max="100" value="0">
+        <span class="val" id="beautyBlushVal">0</span>
       </div>
     </div>
 
@@ -675,6 +746,7 @@
     </div>
     <!-- v1.2.0: 成品操作栏 -->
     <div class="act-row">
+      <button class="btn act" id="btnBeauty" title="人像美颜：磨皮/美白/瘦脸/红润"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 1 7 7c0 2.5-1.3 4.7-3.2 6L15 17H9l-.8-2C6.3 13.7 5 11.5 5 9a7 7 0 0 1 7-7z"/><path d="M9 19h6M10 22h4"/></svg>美颜</button>
       <button class="btn act" id="btnTone" title="专业调色 / 品牌水印 / 导出尺寸设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z"/><circle cx="12" cy="12" r="4"/><path d="M12 8v8M8 12h8" opacity=".6"/></svg>调色</button>
       <button class="btn act" id="btnUndo" disabled title="撤销上一步操作（滤镜/变焦/裁切/清除）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-4"/></svg>撤销</button>
       <button class="btn act pri" id="btnExport" disabled title="导出当前成品图（含滤镜/变焦/裁切）为高清 PNG"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>导出</button>
@@ -769,7 +841,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v1.6.1 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v1.7.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v1.4.0 AI 真模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -807,6 +879,13 @@
         aiRuleTag=$("aiRuleTag"), aiConfTxt=$("aiConfTxt"), aiConfBar=$("aiConfBar"), aiCropNow=$("aiCropNow"),
         shotOverlay=$("shotOverlay"), shotImg=$("shotImg"), shotCapChips=$("shotCapChips"), shotCapText=$("shotCapText"),
         btnShotClose=$("btnShotClose"), btnShotAgain=$("btnShotAgain"), btnShotSave=$("btnShotSave"), btnShotShare=$("btnShotShare"), btnShotKeep=$("btnShotKeep"),
+        // v1.7.0
+        btnBeauty=$("btnBeauty"), beautyPanel=$("beautyPanel"), beautyClose=$("beautyClose"),
+        beautySmooth=$("beautySmooth"), beautyWhiten=$("beautyWhiten"), beautySlim=$("beautySlim"), beautyBlush=$("beautyBlush"),
+        beautySmoothVal=$("beautySmoothVal"), beautyWhitenVal=$("beautyWhitenVal"), beautySlimVal=$("beautySlimVal"), beautyBlushVal=$("beautyBlushVal"),
+        btnTimer=$("btnTimer"), timerOverlay=$("timerOverlay"), timerCount=$("timerCount"),
+        btnBlur=$("btnBlur"), burstIndicator=$("burstIndicator"), liveTip=$("liveTip"),
+        aiApplyTip=$("aiApplyTip"),
         filterBar=$("filterBar"), btnSample=$("btnSample"), sampleStrip=$("sampleStrip"),
         btnRules=$("btnRules"), ruleSheet=$("ruleSheet"), ruleBody=$("ruleBody"), ruleClose=$("ruleClose"),
         btnGrid=$("btnGrid"),
@@ -835,6 +914,12 @@
       filter:"clear",
       strength:100,
       tone:{exposure:0,contrast:0,saturation:0,temp:0},
+      // v1.7.0
+      beauty:{smooth:0,whiten:0,slim:0,blush:0},
+      timer:0, timerInterval:null,
+      blurOn:false, blurAperture:2.8,
+      burstMode:false, burstCount:0, burstShots:[],
+      liveFaceTracking:false, lightDirection:null,
       wm:{on:false,pos:"right",opacity:50},
       expSize:"orig",
       expFormat:"png",
@@ -956,7 +1041,12 @@
     }
     function applyZoom(){
       var el = state.mode==="camera" ? videoCam : photoView;
-      el.style.transform="scale("+state.zoom+")";
+      var slimScale = (state.beauty && state.beauty.slim>0) ? (1 - state.beauty.slim*0.0012) : 1;
+      if(slimScale<1){
+        el.style.transform="scaleX("+slimScale+") scale("+state.zoom+")";
+      } else {
+        el.style.transform="scale("+state.zoom+")";
+      }
       if(baseLayer.style.display!=="none") baseLayer.style.transform="scale("+state.zoom+")";
       zoomVal.textContent=state.zoom.toFixed(1)+"x";
       var p=((state.zoom-1)/4)*100;
@@ -1079,6 +1169,7 @@
       strengthRow.style.display = (f==="clear") ? "none" : "flex";
       applyStrength();
       applyTone();
+      applyBeauty(); // v1.7.0: 叠加美颜
     }
     filterBar.addEventListener("click",function(e){
       var b=e.target.closest(".filter-pill"); if(!b) return;
@@ -1645,7 +1736,10 @@
         card.innerHTML=html;
         aiBody.appendChild(card);
         setTimeout(function(){ card.classList.add("show"); }, 100);
-      })();
+      
+
+
+  })();
       // v1.2.0: 构图建议（基于光学数据）
       (function(){
         var suggs=buildSuggestions(plan, state.aiData);
@@ -2091,8 +2185,17 @@
       },true);
     })();
     btnShoot.addEventListener("click",function(){
+      if(state.burstMode) return;
       var el=currentEl();
       if(!el){ setStatus("没有可拍摄的画面", "err"); return; }
+      // v1.7.0: 定时拍照
+      if(state.timer>0){
+        startTimerCountdown(function(){ doShoot(el); });
+        return;
+      }
+      doShoot(el);
+    });
+    function doShoot(el){
       // 拍照前关闭实时取景辅助，避免 HUD 叠加在拍照预览上
       if(state.liveMode){ stopLive(); }
       try{
@@ -2103,7 +2206,12 @@
         var ow=Math.round(cw), oh=Math.round(ch);
         canvas.width=ow; canvas.height=oh;
         var ctx=canvas.getContext("2d");
-        ctx.filter = FILTERS[state.filter] ? FILTERS[state.filter].css : "none";
+        var _exportFilter = FILTERS[state.filter] ? FILTERS[state.filter].css : "";
+          var _b=state.beauty;
+          if(_b.smooth>0) _exportFilter += " blur("+(_b.smooth*0.03)+"px)";
+          if(_b.whiten>0) _exportFilter += " brightness("+(1+_b.whiten*0.002)+") saturate("+(1-_b.whiten*0.0015)+")";
+          if(_b.blush>0) _exportFilter += " sepia("+(_b.blush*0.0015)+") hue-rotate(-"+(_b.blush*0.08)+"deg)";
+          ctx.filter = _exportFilter.trim() || "none";
         ctx.drawImage(el,sx,sy,cw,ch,0,0,ow,oh);
         var url=canvas.toDataURL("image/jpeg",0.92);
         state.lastShotURL=url;
@@ -2112,7 +2220,7 @@
         console.error(err);
         setStatus("拍照失败："+(err.name==="SecurityError"?"跨域受限，请用相册上传自己的照片":"请重试"), "err");
       }
-    });
+    }
     function showShot(url){
       shotImg.src=url;
       shotImg.onload=function(){
@@ -2331,6 +2439,12 @@
       // 重置所有状态
       state.zoom=1; state.filter="clear"; state.plan=null; state.analyzed=false;
       state.sourceKind=""; state.sourceName=""; state.cropResult=null; state.origURL=null;
+      // v1.7.0
+      state.beauty={smooth:0,whiten:0,slim:0,blush:0};
+      state.timer=0; state.timerInterval=null;
+      state.blurOn=false; state.blurAperture=2.8;
+      state.burstMode=false; state.burstCount=0; state.burstShots=[];
+      state.liveFaceTracking=false; state.lightDirection=null;
       state.displayRect=null;
       // 关闭浮层与覆盖层
       closeAi(); resetGuides(); removeAiBox();
@@ -2462,7 +2576,7 @@
             "<p><b>想重拍 / 换照片？</b> 点「<span class='hl'>清除</span>」清空画布，再从相册上传新照片或重新选示例。</p>"+
             "<p><b>滤镜不生效？</b> 底部滤镜条向左/右滑动可看到全部 26 款。</p>"},
       {t:"⑫ 版本信息", svg:"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z'/></svg>",
-       html:"<p><b>当前版本：v1.6.1</b>（2026-09-05）</p>"+
+       html:"<p><b>当前版本：v1.7.0</b>（2026-09-05）</p>"+
             "<p><b>设计师：</b><span class='brand' style='-webkit-background-clip:text;background-clip:text;color:transparent;background-image:linear-gradient(135deg,#E9A23B,#f6d48e);font-style:italic;font-weight:700;font-family:STKaiti,KaiTi,serif;font-size:14px;'>· 洋洋 ·</span></p>"+
             "<p><b>v1.6.1 Bug 修复：</b>①修复 Doka 拍照时变焦不生效（applyZoom 未读参数）；②修复 Doka 拍照后裁切可能未生效（等待图片加载完成再生成成品）；③修复拍照预览半成品闪烁（先隐藏再显示成品）；④<b>修复人像分析不生效的严重 bug</b>（planFromAnalysis 未读取 state.aiData 的人像字段，Doka 模式 AI 检测后重新生成 plan）；⑤showShot 滤镜名空值保护。</p>"+
             "<p><b>v1.6.0 人像大版本：</b>①<b>人像面部黄金分割点</b>——AI检测到人后显示面部对焦框，提示把脸移到三分点；②<b>人像专属滤镜×3</b>（人像暖/人像冷/人像黑白），AI推荐时优先；③<b>头顶留白+视线方向检测</b>——提示头顶留白过多/人物偏左往右移机位；④<b>极简模式</b>——顶栏⚡按钮一键切换，只留快门+AI构图+滤镜；⑤<b>拍完直接显示成品</b>——Doka模式拍完自动应用裁切+滤镜+变焦，全屏显示成品，底部只留保存/重拍/分享。</p>"+
@@ -2638,6 +2752,19 @@
       });
       // 画面检测框
       drawAiBox(preds[0], el);
+      // v1.7.0: 实时人脸跟踪提示（仅实时取景模式下）
+      if(state.liveMode && preds[0].class==="person"){
+        var faceX=state.aiData.faceX;
+        var tip="";
+        if(faceX<0.3) tip="👉 把脸移到右侧三分点";
+        else if(faceX>0.7) tip="👈 把脸移到左侧三分点";
+        else if(state.aiData.headTop<0.04) tip="⬆ 头顶留白过多，上移机位";
+        else if(state.aiData.headTop>0.18) tip="⬇ 头顶太贴边，下移机位";
+        else tip="✓ 面部构图佳，可以拍了";
+        showLiveTip(tip);
+      } else if(state.liveMode){
+        hideLiveTip();
+      }
       // v1.6.1: Doka 模式下，AI 检测完成后重新生成 plan（使人像分析生效）
       if(state.dokaMode && state.aiData){
         try{
@@ -3272,8 +3399,242 @@
         state.displayRect=getCoverRect(photoView.naturalWidth, photoView.naturalHeight);
       }
     });
+      /* ===================== v1.7.0 人像美颜 ===================== */
+    function applyBeauty(){
+      var el = state.mode==="camera" ? videoCam : photoView;
+      var b=state.beauty;
+      // 磨皮：通过模糊模拟（轻度）
+      var smooth = b.smooth>0 ? "blur("+(b.smooth*0.03)+"px) " : "";
+      // 美白：亮度+饱和度降低
+      var whiten = b.whiten>0 ? "brightness("+(1+b.whiten*0.002)+") saturate("+(1-b.whiten*0.0015)+") " : "";
+      // 红润：暖色偏移
+      var blush = b.blush>0 ? "sepia("+(b.blush*0.0015)+") hue-rotate(-"+(b.blush*0.08)+"deg) " : "";
+      var beautyFilter = (smooth+whiten+blush).trim();
+      // 叠加滤镜效果
+      var baseFilter = (FILTERS[state.filter] ? FILTERS[state.filter].css : "");
+      if(beautyFilter && baseFilter && baseFilter!=="none"){
+        el.style.filter = baseFilter + " " + beautyFilter;
+      } else if(beautyFilter){
+        el.style.filter = beautyFilter;
+      } else if(baseFilter){
+        el.style.filter = baseFilter;
+      } else {
+        el.style.filter = "none";
+      }
+      // 瘦脸通过 transform scaleX 模拟（轻度）
+      var slimScale = 1 - b.slim*0.0012;
+      if(b.slim>0){
+        el.style.transform = "scaleX("+slimScale+") scale("+state.zoom+")";
+      } else {
+        el.style.transform = "scale("+state.zoom+")";
+      }
+    }
+    btnBeauty.addEventListener("click",function(){ beautyPanel.classList.toggle("show"); });
+    beautyClose.addEventListener("click",function(){ beautyPanel.classList.remove("show"); });
+    function bindBeauty(input, valEl, key){
+      input.addEventListener("input",function(){
+        state.beauty[key]=parseInt(input.value);
+        valEl.textContent=input.value;
+        applyBeauty();
+      });
+    }
+    bindBeauty(beautySmooth, beautySmoothVal, "smooth");
+    bindBeauty(beautyWhiten, beautyWhitenVal, "whiten");
+    bindBeauty(beautySlim, beautySlimVal, "slim");
+    bindBeauty(beautyBlush, beautyBlushVal, "blush");
+
+    /* ===================== v1.7.0 定时拍照 ===================== */
+    var timerOptions=[0,3,5,10];
+    var timerIdx=0;
+    btnTimer.addEventListener("click",function(){
+      timerIdx=(timerIdx+1)%timerOptions.length;
+      state.timer=timerOptions[timerIdx];
+      if(state.timer>0){
+        btnTimer.style.color="var(--amber)";
+        toastMsg("定时拍照："+state.timer+"秒");
+      } else {
+        btnTimer.style.color="";
+        toastMsg("定时拍照已关闭");
+      }
+    });
+    function startTimerCountdown(callback){
+      if(state.timer<=0){ callback(); return; }
+      var count=state.timer;
+      timerOverlay.style.display="flex";
+      timerCount.textContent=count;
+      state.timerInterval=setInterval(function(){
+        count--;
+        if(count>0){
+          timerCount.textContent=count;
+        } else {
+          clearInterval(state.timerInterval);
+          state.timerInterval=null;
+          timerOverlay.style.display="none";
+          callback();
+        }
+      },1000);
+    }
+
+    /* ===================== v1.7.0 连拍选优 ===================== */
+    var burstTimer=null;
+    btnShoot.addEventListener("pointerdown",function(e){
+      // 长按 500ms 进入连拍模式
+      state.burstMode=false; state.burstCount=0; state.burstShots=[];
+      burstTimer=setTimeout(function(){
+        state.burstMode=true;
+        burstIndicator.classList.add("show");
+        startBurst();
+      },500);
+    });
+    btnShoot.addEventListener("pointerup",function(){
+      if(burstTimer){ clearTimeout(burstTimer); burstTimer=null; }
+      if(state.burstMode){
+        stopBurst();
+      }
+    });
+    function startBurst(){
+      var burstInterval=setInterval(function(){
+        if(state.burstCount>=5 || !state.burstMode){ clearInterval(burstInterval); return; }
+        takeBurstShot();
+        state.burstCount++;
+      },300);
+    }
+    function takeBurstShot(){
+      var el=currentEl();
+      if(!el) return;
+      try{
+        var vw=el.videoWidth||el.naturalWidth, vh=el.videoHeight||el.naturalHeight;
+        var z=state.zoom;
+        var cw=vw/z, ch=vh/z, sx=(vw-cw)/2, sy=(vh-ch)/2;
+        var canvas=document.createElement("canvas");
+        canvas.width=Math.round(cw); canvas.height=Math.round(ch);
+        var ctx=canvas.getContext("2d");
+        ctx.filter = FILTERS[state.filter] ? FILTERS[state.filter].css : "none";
+        ctx.drawImage(el,sx,sy,cw,ch,0,0,canvas.width,canvas.height);
+        state.burstShots.push(canvas.toDataURL("image/jpeg",0.85));
+      }catch(e){}
+    }
+    function stopBurst(){
+      state.burstMode=false;
+      burstIndicator.classList.remove("show");
+      if(state.burstShots.length>0){
+        // 简单选优：选中间一张（连拍中最稳定的通常是中间）
+        var bestIdx=Math.floor(state.burstShots.length/2);
+        var bestUrl=state.burstShots[bestIdx];
+        state.lastShotURL=bestUrl;
+        showShot(bestUrl);
+        toastMsg("连拍"+state.burstShots.length+"张，已选第"+(bestIdx+1)+"张（最稳定）");
+        state.burstShots=[];
+      }
+    }
+
+    /* ===================== v1.7.0 音量键拍照 ===================== */
+    document.addEventListener("keydown",function(e){
+      // 音量键在移动端通常映射为 ArrowUp/ArrowDown 或特殊键
+      if(e.key==="ArrowUp" || e.key==="ArrowDown" || e.key==="VolumeUp" || e.key==="VolumeDown"){
+        e.preventDefault();
+        if(!state.analyzing){ btnShoot.click(); }
+      }
+    });
+
+    /* ===================== v1.7.0 背景虚化 ===================== */
+    btnBlur.addEventListener("click",function(){
+      state.blurOn=!state.blurOn;
+      if(state.blurOn){
+        btnBlur.style.color="var(--cyan)";
+        showBlurControl();
+        toastMsg("背景虚化已开启 f/"+state.blurAperture.toFixed(1));
+      } else {
+        btnBlur.style.color="";
+        hideBlurControl();
+        applyBlur();
+        toastMsg("背景虚化已关闭");
+      }
+    });
+    function showBlurControl(){
+      // 在顶栏下方显示虚化控制条
+      var existing=document.getElementById("blurControlBar");
+      if(existing) existing.remove();
+      var bar=document.createElement("div");
+      bar.id="blurControlBar";
+      bar.className="blur-control";
+      bar.style.cssText="position:absolute;top:48px;right:12px;z-index:50;";
+      bar.innerHTML='<span class="label">虚化</span><input type="range" id="blurRange" min="1.4" max="8" step="0.2" value="'+state.blurAperture+'"><span class="fval" id="blurFVal">f/'+state.blurAperture.toFixed(1)+'</span>';
+      document.querySelector(".stage").appendChild(bar);
+      var range=bar.querySelector("#blurRange");
+      var fval=bar.querySelector("#blurFVal");
+      range.addEventListener("input",function(){
+        state.blurAperture=parseFloat(range.value);
+        fval.textContent="f/"+state.blurAperture.toFixed(1);
+        applyBlur();
+      });
+    }
+    function hideBlurControl(){
+      var bar=document.getElementById("blurControlBar");
+      if(bar) bar.remove();
+    }
+    function applyBlur(){
+      var el = state.mode==="camera" ? videoCam : photoView;
+      if(state.blurOn){
+        // 光圈越小（f/1.4）虚化越强
+        var blurPx=Math.max(0,(8-state.blurAperture)*1.5);
+        el.style.filter=(el.style.filter&&el.style.filter!=="none"?el.style.filter+" ":"")+"blur("+blurPx+"px)";
+      } else {
+        // 移除 blur
+        if(el.style.filter){
+          el.style.filter=el.style.filter.replace(/blur\([^)]+\)\s*/g,"").trim()||"none";
+        }
+      }
+    }
+
+    /* ===================== v1.7.0 实时提示 ===================== */
+    var liveTipTimer=null;
+    function showLiveTip(msg, duration){
+      liveTip.textContent=msg;
+      liveTip.classList.remove("hide");
+      if(liveTipTimer) clearTimeout(liveTipTimer);
+      if(duration){
+        liveTipTimer=setTimeout(function(){ liveTip.classList.add("hide"); },duration);
+      }
+    }
+    function hideLiveTip(){ liveTip.classList.add("hide"); }
+
+    /* ===================== v1.7.0 光线方向检测 ===================== */
+    function detectLightDirection(imgData, w, h){
+      // 分析左右两半的亮度差
+      var leftBright=0, rightBright=0, leftCount=0, rightCount=0;
+      for(var y=0;y<h;y+=4){
+        for(var x=0;x<w;x+=4){
+          var idx=(y*w+x)*4;
+          var lum=imgData[idx]*0.299+imgData[idx+1]*0.587+imgData[idx+2]*0.114;
+          if(x<w/2){ leftBright+=lum; leftCount++; }
+          else { rightBright+=lum; rightCount++; }
+        }
+      }
+      leftBright/=leftCount; rightBright/=rightCount;
+      var diff=leftBright-rightBright;
+      if(Math.abs(diff)<15) return "center";
+      return diff>0 ? "left" : "right";
+    }
+
+    /* ===================== v1.7.0 AI 分析体验优化 ===================== */
+    // 一键成品按钮在分析后高亮 3 秒
+    var _origPresent2=presentAnalysis;
+    presentAnalysis=function(plan){
+      _origPresent2(plan);
+      if(aiApply){
+        aiApply.classList.add("highlight");
+        if(aiApplyTip) aiApplyTip.style.display="block";
+        setTimeout(function(){
+          aiApply.classList.remove("highlight");
+          if(aiApplyTip) aiApplyTip.style.display="none";
+        },4000);
+      }
+    };
+
+
   }catch(e){ console.error(e); }
 })();
-</script>
+  </script>
 </body>
 </html>
