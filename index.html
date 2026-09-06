@@ -1612,8 +1612,9 @@
       var thirdY = Math.abs(a.cy-0.333) < Math.abs(a.cy-0.667) ? 0.333 : 0.667;
       scores.thirds = Math.max(0, 1 - (Math.abs(a.cx-thirdX)+Math.abs(a.cy-thirdY))*2.5);
       
-      // 对称评分
-      scores.sym = a.sym;
+      // 对称评分（v3.0.1: 人像降低对称构图权重）
+      var isPersonForScore = state.aiData && state.aiData.isPerson;
+      scores.sym = isPersonForScore ? a.sym * 0.3 : a.sym;
       
       // 对角线评分
       scores.diag = a.diagStrength;
@@ -1718,6 +1719,15 @@
         if(croppedFaceY > 0.85) cropBottom = Math.max(0, cropBottom - 0.05);
       }
       
+      // v3.0.1: 判断是否真的需要裁切
+      var totalCrop = cropLeft + cropRight + cropTop + cropBottom;
+      var needCrop = totalCrop > 0.08; // 总裁切超过 8% 才裁切
+      if(!needCrop || isCloseUp){
+        // v3.0.1: 构图已经很好或人像特写，不裁切
+        cropLeft = cropRight = cropTop = cropBottom = 0;
+        plan.noCrop = true;
+      }
+      
       plan.crop=[
         Math.round(Math.max(0,cropLeft)*100),
         Math.round(Math.max(0,cropTop)*100),
@@ -1740,7 +1750,8 @@
       if(isPerson){
         plan.filters=["人像暖 · 优化肤色","人像冷 · 清透通透","人像黑白 · 高对比"];
         plan.f = a.wb>0 ? "portrait-warm" : "portrait-cool";
-        plan.z = Math.max(plan.z, 1.8); // 人像至少1.8x避免广角变形
+        // v3.0.1: 仅相机模式推荐变焦，导入照片不做数字放大
+        if(state.mode!=="camera"){ plan.z = 1.0; }
         plan.subject="人像";
       } else if(a.mean < 60){
         // 夜景/暗光
@@ -1785,10 +1796,14 @@
         plan.desc = "检测到人像，推荐三分法构图（匹配度"+plan.conf+"%）。" +
           "将人物面部放在"+faceSide+"侧黄金分割点，头顶留白约 1/5，" +
           "推荐"+plan.z.toFixed(1)+"x焦段，"+(FILTERS[plan.f]?FILTERS[plan.f].name:"自然")+"滤镜。";
+      } else if(plan.noCrop){
+        plan.desc = "检测到"+plan.subject+"，构图已很合理，建议保持原尺寸不裁切。" +
+          "推荐"+(FILTERS[plan.f]?FILTERS[plan.f].name:"自然")+"滤镜优化画面。";
       } else {
         plan.desc = "检测到"+plan.subject+"，推荐"+ruleNames[bestRule]+"构图（匹配度"+plan.conf+"%）。" +
           "裁切后主体将位于"+(bestRule==="thirds"?"黄金分割点":"画面中心")+"，" +
-          "推荐"+plan.z.toFixed(1)+"x焦段，"+(FILTERS[plan.f]?FILTERS[plan.f].name:"自然")+"滤镜。";
+          (state.mode==="camera"?"推荐"+plan.z.toFixed(1)+"x焦段，":"") +
+          (FILTERS[plan.f]?FILTERS[plan.f].name:"自然")+"滤镜。";
       }
       
       // ===== 6. 曝光诊断 =====
@@ -2008,8 +2023,13 @@
                     clearInterval(_check);
                     setZoom(p.z||1);
                     setFilter(p.f||"clear");
-                    setStatus("已自动应用：裁切+滤镜+变焦 · "+(_scores?_scores.grade+"级 "+_scores.total+"分":""), "done");
-                    toastMsg("已自动应用：智能裁切 + "+(FILTERS[p.f]?FILTERS[p.f].name:"原图")+" + "+(p.z||1).toFixed(1)+"x");
+                    if(p.noCrop){
+                      setStatus("已自动应用：滤镜优化（构图已很合理，未裁切）· "+(_scores?_scores.grade+"级 "+_scores.total+"分":""), "done");
+                      toastMsg("已应用"+(FILTERS[p.f]?FILTERS[p.f].name:"原图")+"滤镜，构图保持原样");
+                    } else {
+                      setStatus("已自动应用：裁切+滤镜+变焦 · "+(_scores?_scores.grade+"级 "+_scores.total+"分":""), "done");
+                      toastMsg("已自动应用：智能裁切 + "+(FILTERS[p.f]?FILTERS[p.f].name:"原图")+" + "+(p.z||1).toFixed(1)+"x");
+                    }
                   }
                 },50);
                 setTimeout(function(){ if(_check){ clearInterval(_check); setZoom(p.z||1); setFilter(p.f||"clear"); setStatus("已自动应用：裁切+滤镜+变焦", "done"); } },2000);
@@ -2155,6 +2175,8 @@
     // v1.3.2: 一键应用 = 完整成品（按 AI 推荐框直接裁切 + 滤镜 + 变焦）
     function applyPlanCrop(){
       var p=state.plan; if(!p) return false;
+      // v3.0.1: 如果标记为不需要裁切，直接返回 true（只应用滤镜）
+      if(p.noCrop){ return true; }
       var el=currentEl(); if(!el) return false;
       var dims=currentSrcDims(el);
       var cp=p.crop||[12,10,14,14];
@@ -2180,8 +2202,13 @@
       state.plan=p; state.analyzed=true;   // 保留 AI 结果，可继续智能裁切微调
       setZoom(p.z||1);
       setFilter(p.f||"clear");
-      setStatus("已一键应用：智能裁切 + 滤镜 + 变焦", "done");
-      toastMsg("已应用智能裁切 + "+FILTERS[p.f].name+" + "+(p.z||1).toFixed(1)+"x，可继续「按构图框智能裁切」微调");
+      if(p.noCrop){
+        setStatus("已应用：滤镜优化（构图已很合理，未裁切）", "done");
+        toastMsg("已应用"+FILTERS[p.f].name+"滤镜，构图保持原样");
+      } else {
+        setStatus("已一键应用：智能裁切 + 滤镜 + 变焦", "done");
+        toastMsg("已应用智能裁切 + "+FILTERS[p.f].name+" + "+(p.z||1).toFixed(1)+"x，可继续「按构图框智能裁切」微调");
+      }
       aiPanel.classList.remove("open");
     });
     aiCropNow.addEventListener("click",function(){
