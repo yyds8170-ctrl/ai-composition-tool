@@ -1611,6 +1611,11 @@
         sceneType = "street"; // 高对比+偏暗=街景
       }
       plan.sceneType = sceneType;
+      // v3.1.0: 保险机制——如果 isPerson 为 true，强制人像场景
+      if(isPerson && sceneType!=="portrait" && sceneType!=="portrait_close"){
+        sceneType = a.bodyRatio > 0.3 ? "portrait_close" : "portrait";
+        plan.sceneType = sceneType;
+      }
       
       // ===== 1. 多维度构图评分 =====
       var scores={
@@ -1640,10 +1645,14 @@
       var isPerson = state.aiData && state.aiData.isPerson;
       // 人像场景下，三分法权重提升 30%，中心构图权重降低 50%
       if(isPerson){
-        scores.thirds = Math.min(1, scores.thirds * 1.5); // v3.1.0: 人像三分法权重提升50%
-        scores.center = scores.center * 0.3; // v3.1.0: 中心构图降低70%
-        scores.sym = scores.sym * 0.2; // v3.1.0: 对称构图降低80%
-        scores.diag = scores.diag * 0.6; // v3.1.0: 对角线降低40%
+        scores.thirds = Math.min(1, scores.thirds * 1.8); // v3.1.0: 人像三分法权重提升80%
+        scores.center = scores.center * 0.2; // v3.1.0: 中心构图降低80%
+        scores.sym = 0; // v3.1.0: 人像完全不推荐对称构图
+        scores.diag = scores.diag * 0.5; // v3.1.0: 对角线降低50%
+        if(sceneType==="portrait_close"){
+          scores.center = scores.center * 1.5; // 特写可以居中
+          scores.diag = 0; // 特写不推荐对角线
+        }
       }
       // 选最高分的构图法则
       var bestRule="thirds", bestScore=scores.thirds;
