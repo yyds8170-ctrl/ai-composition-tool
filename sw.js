@@ -1,11 +1,18 @@
-/* AI 构图助手 · Service Worker v1.7.1 —— 离线缓存，让应用像原生 App 一样秒开 */
-const CACHE = 'ai-compose-v401';
+/* AI 构图助手 · Service Worker v4.1.0 —— 离线缓存，让应用像原生 App 一样秒开 */
+const CACHE = 'ai-compose-v410';
 const CORE = [
   './',
   './index.html',
   './manifest.webmanifest',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  // v4.1: 模型本地化——把Coco-SSD模型文件加入缓存清单，弱网/离线也能加载模型
+  './model/model.json',
+  './model/group1-shard1of5',
+  './model/group1-shard2of5',
+  './model/group1-shard3of5',
+  './model/group1-shard4of5',
+  './model/group1-shard5of5'
 ];
 
 self.addEventListener('install', (e) => {
