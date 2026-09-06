@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v3.1.1 · 实时取景</title>
+<title>AI 构图助手 Pro v3.1.2 · 实时取景</title>
 <meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
@@ -25,7 +25,7 @@
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{background:var(--bg);color:var(--text);height:100%;font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;}
-  body{display:flex;flex-direction:column;height:100dvh;overflow:hidden;}
+  body{display:flex;flex-direction:column;min-height:100dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;}
   button{font-family:inherit;}
   /* ===================== 顶栏 ===================== */
   .topbar{display:flex;align-items:center;gap:10px;padding:12px 14px 8px;flex-shrink:0;}
@@ -42,7 +42,7 @@
   .cam-badge.err{color:var(--red);border-color:rgba(239,107,107,.3);}
   .cam-badge.err .st{background:var(--red);}
   /* ===================== 取景器 ===================== */
-  .stage{flex:1 1 auto;position:relative;margin:4px 12px;border-radius:18px;overflow:hidden;background:#000;border:1px solid var(--line);min-height:200px;}
+  .stage{flex:0 0 auto;position:relative;margin:4px 12px;border-radius:18px;overflow:hidden;background:#000;border:1px solid var(--line);min-height:180px;max-height:38vh;aspect-ratio:4/3;}
   .stage-inner{position:absolute;inset:0;overflow:hidden;}
   #cmpBase{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;transform-origin:center center;}
   .faint{transition:opacity .15s;}
@@ -285,8 +285,8 @@
   .gal-item .del{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;border:none;background:rgba(0,0,0,.6);color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
   .gal-empty{grid-column:1/-1;text-align:center;color:var(--dim);font-size:12px;padding:40px 0;line-height:1.8;}
   /* ===================== 控制区 ===================== */
-  .controls{flex-shrink:0;padding:10px 12px calc(12px + var(--safe-b));display:flex;flex-direction:column;gap:9px;background:var(--bg);position:relative;z-index:20;}
-  .ctrl-row{display:flex;gap:7px;align-items:center;}
+  .controls{flex-shrink:0;padding:10px 12px calc(12px + var(--safe-b));display:flex;flex-direction:column;gap:9px;background:var(--bg);position:relative;z-index:20;touch-action:pan-y;}
+  .ctrl-row{touch-action:pan-y;display:flex;gap:7px;align-items:center;}
   .btn{min-height:46px;padding:0 13px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--text);font-size:12.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;flex-shrink:0;}
   .btn svg{width:15px;height:15px;flex-shrink:0;}
   .btn:active{transform:scale(.97);}
@@ -369,8 +369,8 @@
   .filter-pill.active{color:var(--text);border-color:var(--amber);background:var(--panel2);}
   .filter-pill.active .sw{border-color:var(--amber);}
   /* 副操作行 */
-  .sec-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;position:relative;z-index:20;}
-    .act-row{display:flex;gap:8px;align-items:center;margin-top:2px;}
+  .sec-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;position:relative;z-index:20;touch-action:pan-y;}
+    .act-row{touch-action:pan-y;display:flex;gap:8px;align-items:center;margin-top:2px;}
     .btn.act{flex:1 1 0;min-width:0;min-height:46px;background:linear-gradient(180deg,#2a2f36,#1e2228);border:1px solid rgba(255,255,255,.12);color:#e8eaed;font-size:13px;font-weight:600;}
     .btn.act:hover{background:linear-gradient(180deg,#333942,#252a31);border-color:rgba(255,255,255,.2);}
   .btn.act.pri{background:linear-gradient(180deg,var(--amber),#d98a1f);color:#16100A;border:none;font-weight:700;}
@@ -515,7 +515,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v3.1.1</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v3.1.2</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -649,7 +649,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg><span class="b-txt">相册</span>
         <input type="file" id="fileInput" accept="image/*" style="display:none">
       </label>
-      <button class="btn" id="btnEnhance"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v3.1.12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1M18.4 5.6l-2.1 2.1M7.8 16.2l-2.1 2.1"/><circle cx="12" cy="12" r="3"/></svg><span class="b-txt">美化</span></button>
+      <button class="btn" id="btnEnhance"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v3.1.22v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1M18.4 5.6l-2.1 2.1M7.8 16.2l-2.1 2.1"/><circle cx="12" cy="12" r="3"/></svg><span class="b-txt">美化</span></button>
       <button class="btn" id="btnTemplate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg><span class="b-txt">模板</span></button>
       <button class="btn" id="btnSample"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 15l5-5 4 4 3-3 6 6"/></svg><span class="b-txt">示例</span></button>
     </div>
@@ -847,7 +847,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v3.1.1 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v3.1.2 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1205,7 +1205,7 @@
     zoomRange.addEventListener("input",function(){
       if(!zoomSlid){ pushUndo(); zoomSlid=true; }
       state.zoom=parseFloat(zoomRange.value);
-      // v3.1.1: 用 requestAnimationFrame 节流，避免拖动卡顿
+      // v3.1.2: 用 requestAnimationFrame 节流，避免拖动卡顿
       if(zoomRaf) cancelAnimationFrame(zoomRaf);
       zoomRaf=requestAnimationFrame(function(){ applyZoom(); });
     });
@@ -1594,11 +1594,11 @@
       }
     }
     function planFromAnalysis(a){
-      // v3.1.1 智能构图引擎：场景分类 + 多维度评分 + 动态裁切 + 精准推荐
+      // v3.1.2 智能构图引擎：场景分类 + 多维度评分 + 动态裁切 + 精准推荐
       var plan={subject:"画面主体",diag:[20,30,75,70],crop:[10,8,10,8],z:1.4,f:"natural",filters:[],conf:85,desc:"",exp:""};
       var notes=[];
       
-      // v3.1.1: 基于光学数据的场景分类
+      // v3.1.2: 基于光学数据的场景分类
       var isPerson = (state.aiData && state.aiData.isPerson) || a.isPerson;
       var sceneType = "general";
       if(isPerson){
@@ -1611,7 +1611,7 @@
         sceneType = "street"; // 高对比+偏暗=街景
       }
       plan.sceneType = sceneType;
-      // v3.1.1: 保险机制——如果 isPerson 为 true，强制人像场景
+      // v3.1.2: 保险机制——如果 isPerson 为 true，强制人像场景
       if(isPerson && sceneType!=="portrait" && sceneType!=="portrait_close"){
         sceneType = a.bodyRatio > 0.3 ? "portrait_close" : "portrait";
         plan.sceneType = sceneType;
@@ -1631,7 +1631,7 @@
       var thirdY = Math.abs(a.cy-0.333) < Math.abs(a.cy-0.667) ? 0.333 : 0.667;
       scores.thirds = Math.max(0, 1 - (Math.abs(a.cx-thirdX)+Math.abs(a.cy-thirdY))*2.5);
       
-      // 对称评分（v3.1.1: 人像降低对称构图权重）
+      // 对称评分（v3.1.2: 人像降低对称构图权重）
       var isPersonForScore = state.aiData && state.aiData.isPerson;
       scores.sym = isPersonForScore ? a.sym * 0.3 : a.sym;
       
@@ -1641,14 +1641,14 @@
       // 中心构图评分
       scores.center = Math.max(0, 1 - (Math.abs(a.cx-0.5)+Math.abs(a.cy-0.5))*2);
       
-      // v3.1.1: 优化构图评分逻辑——人像优先三分法，中心构图仅在特写/极简场景推荐
+      // v3.1.2: 优化构图评分逻辑——人像优先三分法，中心构图仅在特写/极简场景推荐
       var isPerson = state.aiData && state.aiData.isPerson;
       // 人像场景下，三分法权重提升 30%，中心构图权重降低 50%
       if(isPerson){
-        scores.thirds = Math.min(1, scores.thirds * 1.8); // v3.1.1: 人像三分法权重提升80%
-        scores.center = scores.center * 0.2; // v3.1.1: 中心构图降低80%
-        scores.sym = 0; // v3.1.1: 人像完全不推荐对称构图
-        scores.diag = scores.diag * 0.5; // v3.1.1: 对角线降低50%
+        scores.thirds = Math.min(1, scores.thirds * 1.8); // v3.1.2: 人像三分法权重提升80%
+        scores.center = scores.center * 0.2; // v3.1.2: 中心构图降低80%
+        scores.sym = 0; // v3.1.2: 人像完全不推荐对称构图
+        scores.diag = scores.diag * 0.5; // v3.1.2: 对角线降低50%
         if(sceneType==="portrait_close"){
           scores.center = scores.center * 1.5; // 特写可以居中
           scores.diag = 0; // 特写不推荐对角线
@@ -1663,27 +1663,27 @@
       plan.rule=bestRule;
       plan.conf=Math.round(70+bestScore*25);
       
-      // ===== 2. 动态裁切框计算（v3.1.1 核心优化：人像优先保证人脸完整） =====
+      // ===== 2. 动态裁切框计算（v3.1.2 核心优化：人像优先保证人脸完整） =====
       var cropLeft=0, cropRight=0, cropTop=0, cropBottom=0;
-      var maxCrop=0.10; // v3.1.1最终: 最大裁切10%，优先保持画面完整性
+      var maxCrop=0.10; // v3.1.2最终: 最大裁切10%，优先保持画面完整性
       
-      // v3.1.1: 检测是否有人脸，有人脸时优先保证人脸完整
+      // v3.1.2: 检测是否有人脸，有人脸时优先保证人脸完整
       var hasFace = state.aiData && state.aiData.faceAvailable && state.aiData.faceX!==undefined;
       var faceX = hasFace ? state.aiData.faceX : a.cx;
       var faceY = hasFace ? state.aiData.faceY : a.cy;
       
-      // v3.1.1: 人像特写判断（人脸占比大）
+      // v3.1.2: 人像特写判断（人脸占比大）
       var isCloseUp = hasFace && a.bodyRatio > 0.3;
       
       if(isCloseUp){
-        // v3.1.1: 人像特写——居中裁切，保证人脸完整，头顶留白合适
+        // v3.1.2: 人像特写——居中裁切，保证人脸完整，头顶留白合适
         bestRule = "center"; // 特写强制居中，不推荐对角线
         cropLeft = cropRight = 0.04;
         cropTop = Math.max(0.02, faceY - 0.35); // 头顶留白约 15%
         cropBottom = Math.max(0.02, 0.85 - faceY); // 下巴下方留白
         plan.subject = "人像特写";
       } else if(hasFace){
-        // v3.1.1最终: 人像非特写——保守裁切，优先保持画面完整
+        // v3.1.2最终: 人像非特写——保守裁切，优先保持画面完整
         bestRule = "thirds"; // 人像优先三分法
         // 人像+风景场景：只做小幅裁切去边，不大幅移动主体
         cropLeft = cropRight = 0.03; // 左右各裁 3% 去边
@@ -1721,7 +1721,7 @@
         cropTop = cropBottom = 0.05;
       }
       
-      // v3.1.1最终: 安全检查——裁切后主体/人脸不能太靠边
+      // v3.1.2最终: 安全检查——裁切后主体/人脸不能太靠边
       var checkX = hasFace ? faceX : a.cx;
       var checkY = hasFace ? faceY : a.cy;
       var croppedX = (checkX - cropLeft) / Math.max(0.01, 1 - cropLeft - cropRight);
@@ -1738,11 +1738,11 @@
         cropLeft *= scale; cropRight *= scale; cropTop *= scale; cropBottom *= scale;
       }
       
-      // v3.1.1: 判断是否真的需要裁切
+      // v3.1.2: 判断是否真的需要裁切
       var totalCrop = cropLeft + cropRight + cropTop + cropBottom;
-      var needCrop = totalCrop > 0.12; // v3.1.1最终: 总裁切超过 12% 才裁切，小幅偏差不裁切
+      var needCrop = totalCrop > 0.12; // v3.1.2最终: 总裁切超过 12% 才裁切，小幅偏差不裁切
       if(!needCrop || isCloseUp){
-        // v3.1.1: 构图已经很好或人像特写，不裁切
+        // v3.1.2: 构图已经很好或人像特写，不裁切
         cropLeft = cropRight = cropTop = cropBottom = 0;
         plan.noCrop = true;
       }
@@ -1763,16 +1763,16 @@
         plan.z = 1.0 + (0.3-a.bodyRatio)*1.5;
         plan.z = Math.max(1.0, Math.min(2.5, plan.z));
       }
-      // v3.1.1: 导入照片强制不数字变焦
+      // v3.1.2: 导入照片强制不数字变焦
       if(state.mode!=="camera"){ plan.z = 1.0; }
       
       // ===== 4. 精准滤镜推荐 =====
       var isPerson = (state.aiData && state.aiData.isPerson) || a.isPerson;
       if(isPerson){
         plan.filters=["人像暖 · 优化肤色","自然 · 清新通透","FClassic · 胶片质感"];
-        // v3.1.1最终: 人像优先自然/暖调，不推荐重彩
+        // v3.1.2最终: 人像优先自然/暖调，不推荐重彩
         plan.f = a.wb>0 ? "portrait-warm" : "natural";
-        // v3.1.1: 仅相机模式推荐变焦，导入照片不做数字放大
+        // v3.1.2: 仅相机模式推荐变焦，导入照片不做数字放大
         if(state.mode!=="camera"){ plan.z = 1.0; }
         plan.subject="人像";
       } else if(a.mean < 60){
@@ -1808,7 +1808,7 @@
       
       // ===== 5. 构图描述 =====
       var ruleNames={thirds:"三分法",sym:"对称构图",diag:"对角线构图",center:"中心构图",golden:"黄金螺旋"};
-      // v3.1.1: 人像场景给出更专业的构图建议
+      // v3.1.2: 人像场景给出更专业的构图建议
       if(isCloseUp){
         plan.desc = "检测到人像特写，推荐居中构图（匹配度"+plan.conf+"%）。" +
           "保持面部完整，头顶留白适中，推荐原尺寸不裁切，" +
@@ -2087,7 +2087,7 @@
         ctx.fillStyle="rgba(0,0,0,.34)";
         ctx.fillRect(0,0,W,H);
         ctx.clearRect(cx,cy,cw,ch);
-        // 2) 叠加三分构图辅助线（v3.1.1最终: 让用户直观看到评分依据）
+        // 2) 叠加三分构图辅助线（v3.1.2最终: 让用户直观看到评分依据）
         ctx.strokeStyle="rgba(255,255,255,.35)"; ctx.lineWidth=Math.max(1,Math.round(W/200));
         ctx.setLineDash([Math.max(4,W/60), Math.max(4,W/60)]);
         // 垂直三分线
@@ -2148,7 +2148,7 @@
 
 
   })();
-      // v3.1.1最终: 画面缺陷提示（客观指出问题）
+      // v3.1.2最终: 画面缺陷提示（客观指出问题）
       (function(){
         var flaws=detectFlaws(state.aiData);
         if(flaws && flaws.length){
@@ -2220,7 +2220,7 @@
     // v1.3.2: 一键应用 = 完整成品（按 AI 推荐框直接裁切 + 滤镜 + 变焦）
     function applyPlanCrop(){
       var p=state.plan; if(!p) return false;
-      // v3.1.1: 如果标记为不需要裁切，直接返回 true（只应用滤镜）
+      // v3.1.2: 如果标记为不需要裁切，直接返回 true（只应用滤镜）
       if(p.noCrop){ return true; }
       var el=currentEl(); if(!el) return false;
       var dims=currentSrcDims(el);
@@ -2612,7 +2612,7 @@
         if(moved){ e.stopImmediatePropagation(); moved=false; return; }
       },true);
     })();
-    // v3.1.1: 双击快门按钮重置位置
+    // v3.1.2: 双击快门按钮重置位置
     var shootLastTap=0;
     btnShoot.addEventListener("dblclick",function(){
       btnShoot.style.left=""; btnShoot.style.top="";
@@ -2951,9 +2951,9 @@
       toastMsg(labels[gridMode]);
       setStatus("引导线模式："+labels[gridMode], "done");
     }
-    // v3.1.1 修复：引导线按钮事件绑定
+    // v3.1.2 修复：引导线按钮事件绑定
     btnGrid.addEventListener("click",function(){ setGridMode((gridMode+1)%3); });
-    // v3.1.1 修复：定义 HELP_SECTIONS
+    // v3.1.2 修复：定义 HELP_SECTIONS
     var HELP_SECTIONS=[
       {t:"快速开始",svg:"🚀 ",html:'<p>1. 导入照片或实时取景</p><p>2. 点击 AI 分析</p><p>3. 一键应用或手动调整</p><p>4. 导出保存</p>'},
       {t:"AI 分析",svg:"🤖 ",html:'<p>Coco-SSD 本地模型，识别 80 类物体</p><p>自动场景分类：人像/风景/建筑/街景/美食</p><p>智能构图推荐+滤镜推荐+裁切建议</p>'},
@@ -2973,7 +2973,7 @@
     btnHelp.addEventListener("click",openHelp);
     helpClose.addEventListener("click",function(){ helpSheet.classList.remove("show"); });
 
-    /* ===== v3.1.1 修复：构图法则事件绑定 ===== */
+    /* ===== v3.1.2 修复：构图法则事件绑定 ===== */
     function openRules(){
       var html="";
       var keys=Object.keys(RULES);
@@ -3066,7 +3066,7 @@
         chain=chain.then(function(){ return cocoSsd.load({modelUrl:AI_MODEL_URL}); });
         chain.then(function(m){ aiModel=m; aiModelState="ready"; resolve(true); })
              .catch(function(e){ console.warn("AI 模型加载失败，使用基础分析:", e); aiModelState="fail"; resolve(false); });
-      // v3.1.1: 15秒超时
+      // v3.1.2: 15秒超时
       setTimeout(function(){ if(aiModelState==="loading"){ aiModelState="fail"; resolve(false); } },15000);
       });
     }
@@ -3188,7 +3188,7 @@
       if(scene){
         sceneHtml='<div class="dt-row scene" style="margin-top:4px;padding-top:6px;border-top:1px dashed rgba(70,140,220,.25);"><b>📷 场景识别：'+scene+'</b><br><span style="opacity:.85;font-weight:400;">'+(SCENE_TIP[scene]||"已按该场景推荐构图法则。")+'</span></div>';
       }
-      card.innerHTML='<div class="db-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3.1.14v3M2 12h3m14 0h3M4.9 4.9l2.1 2.1m9.9 9.9l2.1 2.1M19.1 4.9L17 7m-9.9 9.9L5 19.1"/></svg>AI 视觉识别</div>'+
+      card.innerHTML='<div class="db-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3.1.24v3M2 12h3m14 0h3M4.9 4.9l2.1 2.1m9.9 9.9l2.1 2.1M19.1 4.9L17 7m-9.9 9.9L5 19.1"/></svg>AI 视觉识别</div>'+
         '<div class="dt-row">识别到 '+preds.length+' 个主体：'+names+'</div>'+
         '<div class="dt-row dim">已用主体「'+cnLabel(preds[0].class)+'」更新构图评分（位置 / 占比 / 建议）</div>'+
         sceneHtml;
@@ -3270,7 +3270,7 @@
           if(token!==state.analyzeToken) return;
           if(!preds||!preds.length){ return; }
           renderAiDetect(preds, elSnap);
-          // v3.1.1: 模型检测完成后，重新生成构图方案（确保 isPerson 生效）
+          // v3.1.2: 模型检测完成后，重新生成构图方案（确保 isPerson 生效）
           setTimeout(function(){
             if(token!==state.analyzeToken || !state.aiData) return;
             var dims=currentSrcDims(elSnap);
@@ -3386,7 +3386,7 @@
         if(faceModelState==="loading"){ resolve(false); return; }
         if(location.protocol==="file:" || location.protocol==="null"){ faceModelState="fail"; updateFaceUI(); resolve(false); return; }
         faceModelState="loading"; updateFaceUI();
-        // v3.1.1: 10秒超时，避免卡死
+        // v3.1.2: 10秒超时，避免卡死
         var faceTimeout=setTimeout(function(){ faceModelState="fail"; updateFaceUI(); resolve(false); },10000);
         loadScript(FACE_DET_URL).then(function(){
           clearTimeout(faceTimeout);
@@ -3467,7 +3467,7 @@
         if(poseModelState==="loading"){ resolve(false); return; }
         if(location.protocol==="file:" || location.protocol==="null"){ poseModelState="fail"; updatePoseUI(); resolve(false); return; }
         poseModelState="loading"; updatePoseUI();
-        // v3.1.1: 10秒超时
+        // v3.1.2: 10秒超时
         var poseTimeout=setTimeout(function(){ poseModelState="fail"; updatePoseUI(); resolve(false); },10000);
         loadScript(POSE_URL).then(function(){
           clearTimeout(poseTimeout);
@@ -3647,7 +3647,7 @@
           // 显示变焦建议
           showDokaZoom(plan);
           setStatus("构图已锁定 · 可直接拍照，拍完即成品","done");
-          // v3.1.1: AI 分析时主动加载模型并等待，确保 isPerson 生效
+          // v3.1.2: AI 分析时主动加载模型并等待，确保 isPerson 生效
           if(state.aiModelEnabled){
             if(aiModelState==="ready"){ runAIDetection(); }
             else if(aiModelState==="idle" || aiModelState==="fail"){
@@ -4014,7 +4014,7 @@
     });
 
     function detectFlaws(a){
-      // v3.1.1最终: 客观检测画面缺陷
+      // v3.1.2最终: 客观检测画面缺陷
       var flaws=[];
       if(!a) return flaws;
       // 过曝
