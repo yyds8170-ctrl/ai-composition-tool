@@ -407,7 +407,7 @@
   .f-aurora{filter:saturate(1.24) contrast(1.06) brightness(1.03) hue-rotate(18deg) sepia(.06);}
   .f-silver{filter:grayscale(1) contrast(1.3) brightness(.97);}
   /* toast */
-  .help-sheet{position:fixed;left:0;right:0;bottom:0;top:0;background:var(--bg);z-index:60;display:none;flex-direction:column;padding:14px 16px calc(16px + var(--safe-b));overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .help-sheet{position:fixed;left:0;right:0;bottom:0;top:0;background:var(--bg);z-index:100;display:none;flex-direction:column;padding:14px 16px calc(16px + var(--safe-b));overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;}
   .help-sheet.show{display:flex;animation:sheetUp .25s ease;}
   @keyframes sheetUp{from{transform:translateY(24px);opacity:0;}to{transform:none;opacity:1;}}
   .help-body{flex:1;overflow-y:auto;margin-top:10px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch;}
@@ -2953,7 +2953,14 @@
     }
     // v3.1.0 修复：引导线按钮事件绑定
     btnGrid.addEventListener("click",function(){ setGridMode((gridMode+1)%3); });
-function openHelp(){
+    // v3.1.0 修复：定义 HELP_SECTIONS
+    var HELP_SECTIONS=[
+      {t:"快速开始",svg:"🚀 ",html:'<p>1. 导入照片或实时取景</p><p>2. 点击 AI 分析</p><p>3. 一键应用或手动调整</p><p>4. 导出保存</p>'},
+      {t:"AI 分析",svg:"🤖 ",html:'<p>Coco-SSD 本地模型，识别 80 类物体</p><p>自动场景分类：人像/风景/建筑/街景/美食</p><p>智能构图推荐+滤镜推荐+裁切建议</p>'},
+      {t:"模型管理",svg:"🧠 ",html:'<p>物体检测：Coco-SSD（18MB）</p><p>人脸检测：MediaPipe</p><p>姿态检测：MediaPipe Pose</p><p>首次加载需 5-10 秒</p>'},
+      {t:"常见问题",svg:"❓ ",html:'<p>Q: 模型加载失败？A: 检查网络或点重新加载</p><p>Q: 导入照片无变焦？A: 导入照片不做数字变焦</p><p>Q: 背景虚化没效果？A: 需开启AI模型并检测到人物</p>'}
+    ];
+    function openHelp(){
       helpBody.innerHTML="";
       HELP_SECTIONS.forEach(function(s){
         var d=document.createElement("div");
