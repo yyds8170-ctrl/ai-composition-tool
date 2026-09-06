@@ -303,7 +303,8 @@
   /* 悬浮拍摄按钮 */
   .shoot-fab{position:fixed;right:16px;bottom:150px;width:64px;height:64px;border-radius:50%;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
     background:radial-gradient(circle at 32% 28%,#FFC97A,#E08A2C 70%);border:3px solid rgba(255,255,255,.85);
-    color:#1b1208;display:flex;align-items:center;justify-content:center;z-index:40;
+    color:#1b1208;display:flex;align-items:center;justify-content:center;z-index:15;
+    will-change:transform;
     box-shadow:0 6px 22px rgba(255,170,60,.45),0 2px 6px rgba(0,0,0,.35);cursor:pointer;
     transition:transform .12s,box-shadow .2s;}
   .shoot-fab svg{width:26px;height:26px;}
@@ -316,7 +317,7 @@
   .zoom-wrap{display:flex;align-items:center;gap:9px;flex:1;}
   .zoom-wrap .lbl{font-size:10.5px;color:var(--sub);white-space:nowrap;min-width:40px;text-align:right;line-height:1.2;}
   .zoom-wrap .lbl b{color:var(--amber);font-size:13px;font-family:'JetBrains Mono',monospace;}
-  .zoom-range{flex:1;appearance:none;height:26px;background:transparent;cursor:pointer;}
+  .zoom-range{flex:1;appearance:none;height:26px;background:transparent;cursor:pointer;touch-action:pan-y;will-change:value;}
   .zoom-range::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(90deg,var(--amber) var(--p,20%),var(--line) var(--p,20%));}
   .zoom-range::-webkit-slider-thumb{appearance:none;width:21px;height:21px;border-radius:50%;background:#fff;margin-top:-8.5px;box-shadow:0 1px 7px rgba(0,0,0,.5);border:2.5px solid var(--amber);}
   .zoom-range::-moz-range-track{height:4px;border-radius:2px;background:var(--line);}
@@ -368,7 +369,7 @@
   .filter-pill.active{color:var(--text);border-color:var(--amber);background:var(--panel2);}
   .filter-pill.active .sw{border-color:var(--amber);}
   /* 副操作行 */
-  .sec-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+  .sec-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;position:relative;z-index:20;}
     .act-row{display:flex;gap:8px;align-items:center;margin-top:2px;}
     .btn.act{flex:1 1 0;min-width:0;min-height:46px;background:linear-gradient(180deg,#2a2f36,#1e2228);border:1px solid rgba(255,255,255,.12);color:#e8eaed;font-size:13px;font-weight:600;}
     .btn.act:hover{background:linear-gradient(180deg,#333942,#252a31);border-color:rgba(255,255,255,.2);}
@@ -1061,6 +1062,7 @@
     }
     function applyZoom(){
       var el = state.mode==="camera" ? videoCam : photoView;
+      if(!el) return;
       var slimScale = (state.beauty && state.beauty.slim>0) ? (1 - state.beauty.slim*0.0012) : 1;
       if(slimScale<1){
         el.style.transform="scaleX("+slimScale+") scale("+state.zoom+")";
@@ -1635,18 +1637,47 @@
       plan.rule=bestRule;
       plan.conf=Math.round(70+bestScore*25);
       
-      // ===== 2. 动态裁切框计算（核心优化） =====
-      // 目标：把主体放到裁切后的黄金分割点上
-      var subW=a.bodyRatio, subH=a.bodyRatio; // 主体占比近似
-      var targetX = bestRule==="thirds" ? (a.cx<0.5?0.382:0.618) : 0.5;
-      var targetY = bestRule==="thirds" ? (a.cy<0.5?0.382:0.618) : 0.5;
-      
-      // 计算裁切边距，使主体移到目标位置
+      // ===== 2. 动态裁切框计算（v3.0.1 核心优化：人像优先保证人脸完整） =====
       var cropLeft=0, cropRight=0, cropTop=0, cropBottom=0;
-      var maxCrop=0.35; // 最大裁切35%
+      var maxCrop=0.25; // 最大裁切25%（v3.0.1: 降低，避免裁掉人脸）
       
-      if(bestRule==="thirds"){
-        // 水平方向：让主体对齐三分点
+      // v3.0.1: 检测是否有人脸，有人脸时优先保证人脸完整
+      var hasFace = state.aiData && state.aiData.faceAvailable && state.aiData.faceX!==undefined;
+      var faceX = hasFace ? state.aiData.faceX : a.cx;
+      var faceY = hasFace ? state.aiData.faceY : a.cy;
+      
+      // v3.0.1: 人像特写判断（人脸占比大）
+      var isCloseUp = hasFace && a.bodyRatio > 0.3;
+      
+      if(isCloseUp){
+        // v3.0.1: 人像特写——居中裁切，保证人脸完整，头顶留白合适
+        bestRule = "center"; // 特写强制居中，不推荐对角线
+        cropLeft = cropRight = 0.04;
+        cropTop = Math.max(0.02, faceY - 0.35); // 头顶留白约 15%
+        cropBottom = Math.max(0.02, 0.85 - faceY); // 下巴下方留白
+        plan.subject = "人像特写";
+      } else if(hasFace){
+        // v3.0.1: 人像非特写——三分法，保证人脸在三分点且完整
+        bestRule = "thirds"; // 人像优先三分法
+        var targetX = faceX < 0.5 ? 0.382 : 0.618;
+        var targetY = 0.382; // 人脸放在上三分线
+        
+        // 水平方向：让人脸对齐三分点，但不裁掉人脸
+        if(faceX < 0.4){
+          cropLeft = Math.min(maxCrop*0.8, Math.max(0, (targetX-faceX)*0.6));
+          cropRight = Math.min(maxCrop*0.5, cropLeft*0.6);
+        } else if(faceX > 0.6){
+          cropRight = Math.min(maxCrop*0.8, Math.max(0, (faceX-targetX)*0.6));
+          cropLeft = Math.min(maxCrop*0.5, cropRight*0.6);
+        } else {
+          cropLeft = cropRight = 0.05;
+        }
+        // 垂直方向：头顶留白 10-20%，不裁掉头顶
+        cropTop = Math.max(0.02, Math.min(0.15, faceY - 0.15));
+        cropBottom = Math.min(maxCrop*0.6, 0.85 - faceY);
+        plan.subject = "人像";
+      } else if(bestRule==="thirds"){
+        // 非人像：原三分法逻辑
         if(a.cx < 0.4){
           cropLeft = Math.min(maxCrop, (0.382-a.cx)*0.8);
           cropRight = Math.min(maxCrop*0.6, cropLeft*0.7);
@@ -1656,7 +1687,6 @@
         } else {
           cropLeft = cropRight = 0.06;
         }
-        // 垂直方向
         if(a.cy < 0.4){
           cropTop = Math.min(maxCrop*0.8, (0.382-a.cy)*0.7);
           cropBottom = Math.min(maxCrop*0.5, cropTop*0.6);
@@ -1667,24 +1697,32 @@
           cropTop = cropBottom = 0.05;
         }
       } else if(bestRule==="sym"){
-        // 对称构图：居中裁切，左右对称
         cropLeft = cropRight = 0.08;
         cropTop = cropBottom = 0.06;
       } else if(bestRule==="diag"){
-        // 对角线：保留更多画面空间
         cropLeft = cropRight = 0.05;
         cropTop = cropBottom = 0.04;
       } else {
-        // 中心：小幅裁切去边
         cropLeft = cropRight = 0.07;
         cropTop = cropBottom = 0.05;
       }
       
+      // v3.0.1: 安全检查——裁切后必须包含人脸
+      if(hasFace){
+        var croppedFaceX = (faceX - cropLeft) / (1 - cropLeft - cropRight);
+        var croppedFaceY = (faceY - cropTop) / (1 - cropTop - cropBottom);
+        // 如果人脸被裁到边缘，减少裁切
+        if(croppedFaceX < 0.08) cropLeft = Math.max(0, cropLeft - 0.05);
+        if(croppedFaceX > 0.92) cropRight = Math.max(0, cropRight - 0.05);
+        if(croppedFaceY < 0.05) cropTop = Math.max(0, cropTop - 0.05);
+        if(croppedFaceY > 0.85) cropBottom = Math.max(0, cropBottom - 0.05);
+      }
+      
       plan.crop=[
-        Math.round(cropLeft*100),
-        Math.round(cropTop*100),
-        Math.round(cropRight*100),
-        Math.round(cropBottom*100)
+        Math.round(Math.max(0,cropLeft)*100),
+        Math.round(Math.max(0,cropTop)*100),
+        Math.round(Math.max(0,cropRight)*100),
+        Math.round(Math.max(0,cropBottom)*100)
       ];
       
       // ===== 3. 智能变焦推荐 =====
@@ -1738,7 +1776,11 @@
       // ===== 5. 构图描述 =====
       var ruleNames={thirds:"三分法",sym:"对称构图",diag:"对角线构图",center:"中心构图",golden:"黄金螺旋"};
       // v3.0.1: 人像场景给出更专业的构图建议
-      if(isPerson && bestRule==="thirds"){
+      if(isCloseUp){
+        plan.desc = "检测到人像特写，推荐居中构图（匹配度"+plan.conf+"%）。" +
+          "保持面部完整，头顶留白适中，推荐原尺寸不裁切，" +
+          (FILTERS[plan.f]?FILTERS[plan.f].name:"自然")+"滤镜优化肤色。";
+      } else if(isPerson && bestRule==="thirds"){
         var faceSide = state.aiData.faceX < 0.5 ? "右" : "左";
         plan.desc = "检测到人像，推荐三分法构图（匹配度"+plan.conf+"%）。" +
           "将人物面部放在"+faceSide+"侧黄金分割点，头顶留白约 1/5，" +
@@ -2498,6 +2540,14 @@
         if(moved){ e.stopImmediatePropagation(); moved=false; return; }
       },true);
     })();
+    // v3.0.1: 双击快门按钮重置位置
+    var shootLastTap=0;
+    btnShoot.addEventListener("dblclick",function(){
+      btnShoot.style.left=""; btnShoot.style.top="";
+      btnShoot.style.right="16px"; btnShoot.style.bottom="150px";
+      try{ localStorage.removeItem("shootFabPos"); }catch(e){}
+      toastMsg("快门按钮已重置位置");
+    });
     btnShoot.addEventListener("click",function(){
       if(state.burstMode) return;
       var el=currentEl();
@@ -2639,11 +2689,13 @@
       e.preventDefault();
       try{ cmpHandle.setPointerCapture(e.pointerId); }catch(_e){}
     });
+    var cmpRaf=null;
     cmpHandle.addEventListener("pointermove",function(e){
       if(!cmpDrag) return;
       var r=stage.getBoundingClientRect();
       cmpX=Math.max(4,Math.min(96,((e.clientX-r.left)/r.width)*100));
-      updateCmp();
+      if(cmpRaf) cancelAnimationFrame(cmpRaf);
+      cmpRaf=requestAnimationFrame(function(){ updateCmp(); });
     });
     cmpHandle.addEventListener("pointerup",function(){ cmpDrag=false; });
     cmpHandle.addEventListener("pointercancel",function(){ cmpDrag=false; });
@@ -2827,6 +2879,8 @@
       toastMsg(labels[gridMode]);
       setStatus("引导线模式："+labels[gridMode], "done");
     }
+    // v3.0.1 修复：引导线按钮事件绑定
+    btnGrid.addEventListener("click",function(){ setGridMode((gridMode+1)%3); });
 function openHelp(){
       helpBody.innerHTML="";
       HELP_SECTIONS.forEach(function(s){
