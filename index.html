@@ -1640,7 +1640,7 @@
       
       // ===== 2. 动态裁切框计算（v3.0.1 核心优化：人像优先保证人脸完整） =====
       var cropLeft=0, cropRight=0, cropTop=0, cropBottom=0;
-      var maxCrop=0.25; // 最大裁切25%（v3.0.1: 降低，避免裁掉人脸）
+      var maxCrop=0.10; // v3.0.1最终: 最大裁切10%，优先保持画面完整性
       
       // v3.0.1: 检测是否有人脸，有人脸时优先保证人脸完整
       var hasFace = state.aiData && state.aiData.faceAvailable && state.aiData.faceX!==undefined;
@@ -1658,24 +1658,12 @@
         cropBottom = Math.max(0.02, 0.85 - faceY); // 下巴下方留白
         plan.subject = "人像特写";
       } else if(hasFace){
-        // v3.0.1: 人像非特写——三分法，保证人脸在三分点且完整
+        // v3.0.1最终: 人像非特写——保守裁切，优先保持画面完整
         bestRule = "thirds"; // 人像优先三分法
-        var targetX = faceX < 0.5 ? 0.382 : 0.618;
-        var targetY = 0.382; // 人脸放在上三分线
-        
-        // 水平方向：让人脸对齐三分点，但不裁掉人脸
-        if(faceX < 0.4){
-          cropLeft = Math.min(maxCrop*0.8, Math.max(0, (targetX-faceX)*0.6));
-          cropRight = Math.min(maxCrop*0.5, cropLeft*0.6);
-        } else if(faceX > 0.6){
-          cropRight = Math.min(maxCrop*0.8, Math.max(0, (faceX-targetX)*0.6));
-          cropLeft = Math.min(maxCrop*0.5, cropRight*0.6);
-        } else {
-          cropLeft = cropRight = 0.05;
-        }
-        // 垂直方向：头顶留白 10-20%，不裁掉头顶
-        cropTop = Math.max(0.02, Math.min(0.15, faceY - 0.15));
-        cropBottom = Math.min(maxCrop*0.6, 0.85 - faceY);
+        // 人像+风景场景：只做小幅裁切去边，不大幅移动主体
+        cropLeft = cropRight = 0.03; // 左右各裁 3% 去边
+        cropTop = Math.max(0.02, Math.min(0.08, faceY - 0.12)); // 头顶少量留白
+        cropBottom = 0.03; // 底部少量裁切
         plan.subject = "人像";
       } else if(bestRule==="thirds"){
         // 非人像：原三分法逻辑
@@ -1708,20 +1696,26 @@
         cropTop = cropBottom = 0.05;
       }
       
-      // v3.0.1: 安全检查——裁切后必须包含人脸
-      if(hasFace){
-        var croppedFaceX = (faceX - cropLeft) / (1 - cropLeft - cropRight);
-        var croppedFaceY = (faceY - cropTop) / (1 - cropTop - cropBottom);
-        // 如果人脸被裁到边缘，减少裁切
-        if(croppedFaceX < 0.08) cropLeft = Math.max(0, cropLeft - 0.05);
-        if(croppedFaceX > 0.92) cropRight = Math.max(0, cropRight - 0.05);
-        if(croppedFaceY < 0.05) cropTop = Math.max(0, cropTop - 0.05);
-        if(croppedFaceY > 0.85) cropBottom = Math.max(0, cropBottom - 0.05);
+      // v3.0.1最终: 安全检查——裁切后主体/人脸不能太靠边
+      var checkX = hasFace ? faceX : a.cx;
+      var checkY = hasFace ? faceY : a.cy;
+      var croppedX = (checkX - cropLeft) / Math.max(0.01, 1 - cropLeft - cropRight);
+      var croppedY = (checkY - cropTop) / Math.max(0.01, 1 - cropTop - cropBottom);
+      // 主体必须在画面 15%-85% 范围内，不能太靠边
+      if(croppedX < 0.15){ cropLeft = Math.max(0, cropLeft - (0.15 - croppedX) * 0.5); }
+      if(croppedX > 0.85){ cropRight = Math.max(0, cropRight - (croppedX - 0.85) * 0.5); }
+      if(croppedY < 0.1){ cropTop = Math.max(0, cropTop - (0.1 - croppedY) * 0.5); }
+      if(croppedY > 0.85){ cropBottom = Math.max(0, cropBottom - (croppedY - 0.85) * 0.5); }
+      // 最终限制：总裁切不超过 30%
+      var totalCrop = cropLeft + cropRight + cropTop + cropBottom;
+      if(totalCrop > 0.3){
+        var scale = 0.3 / totalCrop;
+        cropLeft *= scale; cropRight *= scale; cropTop *= scale; cropBottom *= scale;
       }
       
       // v3.0.1: 判断是否真的需要裁切
       var totalCrop = cropLeft + cropRight + cropTop + cropBottom;
-      var needCrop = totalCrop > 0.08; // 总裁切超过 8% 才裁切
+      var needCrop = totalCrop > 0.12; // v3.0.1最终: 总裁切超过 12% 才裁切，小幅偏差不裁切
       if(!needCrop || isCloseUp){
         // v3.0.1: 构图已经很好或人像特写，不裁切
         cropLeft = cropRight = cropTop = cropBottom = 0;
@@ -1748,8 +1742,9 @@
       // ===== 4. 精准滤镜推荐 =====
       var isPerson = (state.aiData && state.aiData.isPerson) || a.isPerson;
       if(isPerson){
-        plan.filters=["人像暖 · 优化肤色","人像冷 · 清透通透","人像黑白 · 高对比"];
-        plan.f = a.wb>0 ? "portrait-warm" : "portrait-cool";
+        plan.filters=["人像暖 · 优化肤色","自然 · 清新通透","FClassic · 胶片质感"];
+        // v3.0.1最终: 人像优先自然/暖调，不推荐重彩
+        plan.f = a.wb>0 ? "portrait-warm" : "natural";
         // v3.0.1: 仅相机模式推荐变焦，导入照片不做数字放大
         if(state.mode!=="camera"){ plan.z = 1.0; }
         plan.subject="人像";
