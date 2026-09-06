@@ -3234,6 +3234,28 @@ function openHelp(){
           if(token!==state.analyzeToken) return;
           if(!preds||!preds.length){ return; }
           renderAiDetect(preds, elSnap);
+          // v3.0.1: 模型检测完成后，重新生成构图方案（确保 isPerson 生效）
+          setTimeout(function(){
+            if(token!==state.analyzeToken || !state.aiData) return;
+            var dims=currentSrcDims(elSnap);
+            var a2=analyzePixels(elSnap,dims);
+            if(a2){
+              a2.isPerson=state.aiData.isPerson;
+              a2.faceX=state.aiData.faceX;
+              a2.faceY=state.aiData.faceY;
+              a2.faceAvailable=state.aiData.faceAvailable;
+              var newPlan=planFromAnalysis(a2);
+              if(newPlan){
+                state.plan=newPlan;
+                // 更新 UI 显示
+                var rule=RULES[newPlan.rule]||RULES.thirds;
+                aiRuleTag.textContent=rule.cn+" · "+newPlan.conf+"%";
+                aiConfTxt.textContent="匹配度 "+newPlan.conf+"%";
+                aiConfBar.style.width=newPlan.conf+"%";
+                drawAiPreview(newPlan);
+              }
+            }
+          }, 300);
           // v2.0.0: 同时运行人脸检测
           if(faceEnabled && faceModelState==="ready"){ detectFace(elSnap); }
           // v3.0.0: 同时运行姿态检测（更精准的人体定位）
