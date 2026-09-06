@@ -262,7 +262,7 @@
   .shot-actions .sec{background:var(--panel2);color:var(--text);border:1px solid var(--line2);}
   .shot-actions .pri{background:linear-gradient(135deg,#FFB454,#E0902F);color:#16100A;font-weight:700;}
   /* ===================== 法则百科 ===================== */
-  .rule-sheet{position:fixed;inset:0;z-index:25;background:rgba(6,8,10,.96);backdrop-filter:blur(6px);display:none;flex-direction:column;}
+  .rule-sheet{position:fixed;inset:0;z-index:25;background:rgba(6,8,10,.96);backdrop-filter:blur(6px);display:none;flex-direction:column;overflow:hidden;}
   .rule-sheet.show{display:flex;}
   .rule-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);flex-shrink:0;}
   .rule-head b{font-size:15px;font-weight:700;}
@@ -3294,6 +3294,18 @@ function openHelp(){
         toastMsg("开始重新加载 AI 模型…");
         tryLoadModel(true);
       });
+    faceReload.addEventListener("click",function(){
+      if(!window.faceDetection){ toastMsg("人脸检测模型未初始化"); return; }
+      toastMsg("正在重新加载人脸检测模型…");
+      try{ window.faceDetection.close(); }catch(e){}
+      setTimeout(function(){ initFaceDetection(); }, 500);
+    });
+    poseReload.addEventListener("click",function(){
+      if(!window.poseDetection){ toastMsg("姿态检测模型未初始化"); return; }
+      toastMsg("正在重新加载姿态检测模型…");
+      try{ window.poseDetection.close(); }catch(e){}
+      setTimeout(function(){ initPoseDetection(); }, 500);
+    });
       updateModelUI();
       // v2.0.2: 页面初始化时如果开关打开，自动加载 Coco-SSD（不依赖进入实时模式）
       if(state.aiModelEnabled && aiModelState==="idle"){
