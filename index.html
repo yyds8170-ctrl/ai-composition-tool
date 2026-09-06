@@ -2060,7 +2060,17 @@
         ctx.fillStyle="rgba(0,0,0,.34)";
         ctx.fillRect(0,0,W,H);
         ctx.clearRect(cx,cy,cw,ch);
-        // 2) 在对角线上叠加高亮（先暗化画布再画线，保证线在最上层）
+        // 2) 叠加三分构图辅助线（v3.0.1最终: 让用户直观看到评分依据）
+        ctx.strokeStyle="rgba(255,255,255,.35)"; ctx.lineWidth=Math.max(1,Math.round(W/200));
+        ctx.setLineDash([Math.max(4,W/60), Math.max(4,W/60)]);
+        // 垂直三分线
+        ctx.beginPath(); ctx.moveTo(W/3,0); ctx.lineTo(W/3,H); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(2*W/3,0); ctx.lineTo(2*W/3,H); ctx.stroke();
+        // 水平三分线
+        ctx.beginPath(); ctx.moveTo(0,H/3); ctx.lineTo(W,H/3); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0,2*H/3); ctx.lineTo(W,2*H/3); ctx.stroke();
+        ctx.setLineDash([]);
+        // 3) 在对角线上叠加高亮（先暗化画布再画线，保证线在最上层）
         var p1=plan.diag, p2=[p1[0]+(p1[0]>55?-28:40), p1[1]+(p1[1]>55?-24:26)];
         p2[0]=Math.max(2,Math.min(98,p2[0])); p2[1]=Math.max(2,Math.min(98,p2[1]));
         ctx.strokeStyle="rgba(84,200,247,.95)"; ctx.lineWidth=Math.max(4,Math.round(W/60));
@@ -2068,7 +2078,7 @@
         ctx.beginPath();
         ctx.moveTo(p1[0]/100*W,p1[1]/100*H); ctx.lineTo(p2[0]/100*W,p2[1]/100*H);
         ctx.stroke();
-        // 3) 裁切框描边（最上层）
+        // 4) 裁切框描边（最上层）
         ctx.strokeStyle="rgba(255,180,84,.95)"; ctx.lineWidth=Math.max(4,Math.round(W/70));
         ctx.strokeRect(cx,cy,cw,ch);
         pvImg.src=c.toDataURL("image/jpeg",0.9);
@@ -2111,6 +2121,19 @@
 
 
   })();
+      // v3.0.1最终: 画面缺陷提示（客观指出问题）
+      (function(){
+        var flaws=detectFlaws(state.aiData);
+        if(flaws && flaws.length){
+          var fcard=document.createElement("div");
+          fcard.className="ai-suggest";
+          var fh='<div class="db-head" style="color:#EF6B6B;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>画面不足</div>';
+          flaws.forEach(function(t){ fh+='<div class="sg-row"><span class="sg-b" style="color:#EF6B6B;">!</span><span>'+t+'</span></div>'; });
+          fcard.innerHTML=fh;
+          aiBody.appendChild(fcard);
+          setTimeout(function(){ fcard.classList.add("show"); }, 60);
+        }
+      })();
       // v1.2.0: 构图建议（基于光学数据）
       (function(){
         var suggs=buildSuggestions(plan, state.aiData);
@@ -3907,6 +3930,24 @@ function openHelp(){
       img.src=d;
     });
 
+    function detectFlaws(a){
+      // v3.0.1最终: 客观检测画面缺陷
+      var flaws=[];
+      if(!a) return flaws;
+      // 过曝
+      if(a.highClip > 0.08) flaws.push("画面存在过曝区域（高光占比"+(a.highClip*100).toFixed(0)+"%），建议降低曝光或使用HDR");
+      // 死黑
+      if(a.shadowClip > 0.25) flaws.push("暗部死黑较严重（阴影占比"+(a.shadowClip*100).toFixed(0)+"%），建议补光或提亮阴影");
+      // 主体太靠边
+      if(a.cx < 0.15 || a.cx > 0.85) flaws.push("主体过于靠边，建议向画面中心移动");
+      // 主体太小
+      if(a.bodyRatio < 0.08) flaws.push("主体在画面中占比过小，建议拉近或靠近主体拍摄");
+      // 低光
+      if(a.mean < 50) flaws.push("整体偏暗（亮度"+Math.round(a.mean)+"/255），建议增加光源或提高ISO");
+      // 饱和度异常
+      if(a.sat > 0.5) flaws.push("饱和度偏高，色彩可能过于浓烈");
+      return flaws;
+    }
     function buildSuggestions(plan, a){
       if(!a) return [];
       var s=[];
