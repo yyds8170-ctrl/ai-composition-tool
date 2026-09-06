@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v3.1.2 · 实时取景</title>
+<title>AI 构图助手 Pro v3.2.0 · 实时取景</title>
 <meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
@@ -515,7 +515,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v3.1.2</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v3.2.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -649,7 +649,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg><span class="b-txt">相册</span>
         <input type="file" id="fileInput" accept="image/*" style="display:none">
       </label>
-      <button class="btn" id="btnEnhance"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v3.1.22v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1M18.4 5.6l-2.1 2.1M7.8 16.2l-2.1 2.1"/><circle cx="12" cy="12" r="3"/></svg><span class="b-txt">美化</span></button>
+      <button class="btn" id="btnEnhance"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1M18.4 5.6l-2.1 2.1M7.8 16.2l-2.1 2.1"/><circle cx="12" cy="12" r="3"/></svg><span class="b-txt">美化</span></button>
       <button class="btn" id="btnTemplate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg><span class="b-txt">模板</span></button>
       <button class="btn" id="btnSample"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 15l5-5 4 4 3-3 6 6"/></svg><span class="b-txt">示例</span></button>
     </div>
@@ -847,7 +847,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v3.1.2 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v3.2.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1205,7 +1205,7 @@
     zoomRange.addEventListener("input",function(){
       if(!zoomSlid){ pushUndo(); zoomSlid=true; }
       state.zoom=parseFloat(zoomRange.value);
-      // v3.1.2: 用 requestAnimationFrame 节流，避免拖动卡顿
+      // v3.2.0: 用 requestAnimationFrame 节流，避免拖动卡顿
       if(zoomRaf) cancelAnimationFrame(zoomRaf);
       zoomRaf=requestAnimationFrame(function(){ applyZoom(); });
     });
@@ -1479,9 +1479,9 @@
 
     /* ===================== 真实像素分析 ===================== */
     function analyzePixels(el, dims){
-      // V4 增强引擎：降采样 96x64，输出亮度/曝光/色彩/对称/线条/主体等多维特征
+      // v3.2.0 增强引擎：降采样 192x128 + Sobel边缘对称度，输出亮度/曝光/色彩/对称/线条/主体等多维特征
       try{
-        var w=96, h=64;
+        var w=192, h=128;
         var c=document.createElement("canvas");
         c.width=w; c.height=h;
         var ctx=c.getContext("2d",{willReadFrequently:true});
@@ -1504,16 +1504,33 @@
         highClip=highClip/(w*h);
         shadowClip=shadowClip/(w*h);
         var rmean=rsum/(w*h), gmean=gsum/(w*h), bmean=bsum/(w*h);
-        // 高光质心（前10%亮）
-        var thres=[]; for(var j=0;j<w*h;j++) thres.push(lum[j]);
-        thres.sort(function(a,b){return b-a;});
-        var t=thres[Math.floor(thres.length*0.10)]||128;
+        // v3.2.0: 局部对比度显著性检测（替换高光质心，避免白色衣服/天空冒充主体）
+        var saliency=new Float32Array(w*h);
+        var radius=4;
+        for(var py=radius;py<h-radius;py++){
+          for(var px=radius;px<w-radius;px++){
+            var sidx=py*w+px;
+            var center=lum[sidx];
+            var surround=0,scnt=0;
+            for(var sdy=-radius;sdy<=radius;sdy++){
+              for(var sdx=-radius;sdx<=radius;sdx++){
+                if(sdx===0&&sdy===0) continue;
+                surround+=lum[(py+sdy)*w+(px+sdx)]; scnt++;
+              }
+            }
+            surround/=scnt;
+            saliency[sidx]=Math.abs(center-surround);
+          }
+        }
+        var salArr=[]; for(var sj=0;sj<w*h;sj++) salArr.push(saliency[sj]);
+        salArr.sort(function(a,b){return b-a;});
+        var salT=salArr[Math.floor(salArr.length*0.15)]||10;
         var sx=0,sy=0,sc=0;
-        for(var k=0;k<w*h;k++){
-          if(lum[k]>=t){ sx+=(k%w); sy+=Math.floor(k/w); sc++; }
+        for(var sk=0;sk<w*h;sk++){
+          if(saliency[sk]>=salT){ sx+=(sk%w); sy+=Math.floor(sk/w); sc++; }
         }
         var cx=sc?sx/sc/w:0.5, cy=sc?sy/sc/h:0.5;
-        var bodyRatio=sc/(w*h); // 主体(高光区)占比
+        var bodyRatio=sc/(w*h); // 显著性区域占比（不再恒等于10%）
         // 亮度均值/对比
         var mean=0; for(var m=0;m<w*h;m++) mean+=lum[m]; mean/=w*h;
         var varr=0; for(var n=0;n<w*h;n++) varr+=(lum[n]-mean)*(lum[n]-mean); varr/=w*h;
@@ -1559,15 +1576,55 @@
         }
         var dMain=diagBandScore(1,1), dAnti=diagBandScore(1,-1);
         var diagStrength=Math.max(dMain,dAnti);
-        // 左右对称度
-        var sym=0;
-        for(var r1=0;r1<h;r1++){
-          for(var x1=0;x1<w/2;x1++){
-            var d=Math.abs(lum[r1*w+x1]-lum[r1*w+(w-1-x1)]);
-            sym+=d;
+        // v3.2.0: Sobel 边缘方向对称度（比亮度差更准确，不受模糊影响）
+        var gx=new Float32Array(w*h), gy=new Float32Array(w*h);
+        for(var sy=1;sy<h-1;sy++){
+          for(var sx=1;sx<w-1;sx++){
+            var idx=sy*w+sx;
+            gx[idx]=lum[idx-w-1]-lum[idx-w+1]+2*(lum[idx-1]-lum[idx+1])+lum[idx+w-1]-lum[idx+w+1];
+            gy[idx]=lum[idx-w-1]+2*lum[idx-w]+lum[idx-w+1]-lum[idx+w-1]-2*lum[idx+w]-lum[idx+w+1];
           }
         }
-        sym=1-Math.min(1,sym/(w*h*255/2));
+        var sym=0, symCnt=0;
+        for(var r1=1;r1<h-1;r1++){
+          for(var x1=1;x1<w/2;x1++){
+            var iL=r1*w+x1, iR=r1*w+(w-1-x1);
+            var magL=Math.sqrt(gx[iL]*gx[iL]+gy[iL]*gy[iL]);
+            var magR=Math.sqrt(gx[iR]*gx[iR]+gy[iR]*gy[iR]);
+            if(magL>8 && magR>8){ // 只比较边缘像素
+              // 梯度方向相似度（镜像后方向应该相反）
+              var dot=gx[iL]*(-gx[iR])+gy[iL]*gy[iR];
+              var cosSim=dot/(magL*magR);
+              sym+=Math.max(0,cosSim);
+              symCnt++;
+            }
+          }
+        }
+        sym=symCnt>0 ? sym/symCnt : 0; // 0~1，边缘方向越一致对称度越高
+        // v3.2.0: 清晰度（梯度方差，拉普拉斯算子的近似）
+        var gradMean=0, gradVar=0;
+        for(var gi=0;gi<w*h;gi++){
+          var gm=Math.sqrt(gx[gi]*gx[gi]+gy[gi]*gy[gi]);
+          gradMean+=gm;
+        }
+        gradMean/=(w*h);
+        for(var gj=0;gj<w*h;gj++){
+          var gm2=Math.sqrt(gx[gj]*gx[gj]+gy[gj]*gy[gj]);
+          gradVar+=(gm2-gradMean)*(gm2-gradMean);
+        }
+        gradVar/=(w*h);
+        var sharpness=Math.min(100, gradVar/8); // 归一化到0-100
+        
+        // v3.2.0: 动态范围利用率（直方图非零bin占比）
+        var histBins=new Uint32Array(16);
+        for(var hi=0;hi<w*h;hi++){
+          var bin=Math.min(15, Math.floor(lum[hi]/16));
+          histBins[bin]++;
+        }
+        var nonZeroBins=0;
+        for(var hb=0;hb<16;hb++){ if(histBins[hb]>w*h*0.005) nonZeroBins++; }
+        var dynamicRange=nonZeroBins/16; // 0-1
+        
         // 色温指数: >0 偏暖, <0 偏冷
         var wb=(rmean-bmean)/255;
         // 三分点匹配度：主体质心到最近三分点(0.333/0.667)的归一化距离
@@ -1587,18 +1644,19 @@
           sym:sym,sat:sat,
           highClip:highClip,shadowClip:shadowClip,
           wb:wb, bodyRatio:bodyRatio,
-          thirdFit:thirdFit, diagStrength:diagStrength
+          thirdFit:thirdFit, diagStrength:diagStrength,
+          sharpness:sharpness, dynamicRange:dynamicRange
         };
       }catch(err){
         return null;
       }
     }
     function planFromAnalysis(a){
-      // v3.1.2 智能构图引擎：场景分类 + 多维度评分 + 动态裁切 + 精准推荐
+      // v3.2.0 智能构图引擎：场景分类 + 多维度评分 + 动态裁切 + 精准推荐
       var plan={subject:"画面主体",diag:[20,30,75,70],crop:[10,8,10,8],z:1.4,f:"natural",filters:[],conf:85,desc:"",exp:""};
       var notes=[];
       
-      // v3.1.2: 基于光学数据的场景分类
+      // v3.2.0: 基于光学数据的场景分类
       var isPerson = (state.aiData && state.aiData.isPerson) || a.isPerson;
       var sceneType = "general";
       if(isPerson){
@@ -1611,7 +1669,7 @@
         sceneType = "street"; // 高对比+偏暗=街景
       }
       plan.sceneType = sceneType;
-      // v3.1.2: 保险机制——如果 isPerson 为 true，强制人像场景
+      // v3.2.0: 保险机制——如果 isPerson 为 true，强制人像场景
       if(isPerson && sceneType!=="portrait" && sceneType!=="portrait_close"){
         sceneType = a.bodyRatio > 0.3 ? "portrait_close" : "portrait";
         plan.sceneType = sceneType;
@@ -1631,7 +1689,7 @@
       var thirdY = Math.abs(a.cy-0.333) < Math.abs(a.cy-0.667) ? 0.333 : 0.667;
       scores.thirds = Math.max(0, 1 - (Math.abs(a.cx-thirdX)+Math.abs(a.cy-thirdY))*2.5);
       
-      // 对称评分（v3.1.2: 人像降低对称构图权重）
+      // 对称评分（v3.2.0: 人像降低对称构图权重）
       var isPersonForScore = state.aiData && state.aiData.isPerson;
       scores.sym = isPersonForScore ? a.sym * 0.3 : a.sym;
       
@@ -1641,14 +1699,14 @@
       // 中心构图评分
       scores.center = Math.max(0, 1 - (Math.abs(a.cx-0.5)+Math.abs(a.cy-0.5))*2);
       
-      // v3.1.2: 优化构图评分逻辑——人像优先三分法，中心构图仅在特写/极简场景推荐
+      // v3.2.0: 优化构图评分逻辑——人像优先三分法，中心构图仅在特写/极简场景推荐
       var isPerson = state.aiData && state.aiData.isPerson;
       // 人像场景下，三分法权重提升 30%，中心构图权重降低 50%
       if(isPerson){
-        scores.thirds = Math.min(1, scores.thirds * 1.8); // v3.1.2: 人像三分法权重提升80%
-        scores.center = scores.center * 0.2; // v3.1.2: 中心构图降低80%
-        scores.sym = 0; // v3.1.2: 人像完全不推荐对称构图
-        scores.diag = scores.diag * 0.5; // v3.1.2: 对角线降低50%
+        scores.thirds = Math.min(1, scores.thirds * 1.8); // v3.2.0: 人像三分法权重提升80%
+        scores.center = scores.center * 0.2; // v3.2.0: 中心构图降低80%
+        scores.sym = 0; // v3.2.0: 人像完全不推荐对称构图
+        scores.diag = scores.diag * 0.5; // v3.2.0: 对角线降低50%
         if(sceneType==="portrait_close"){
           scores.center = scores.center * 1.5; // 特写可以居中
           scores.diag = 0; // 特写不推荐对角线
@@ -1663,27 +1721,27 @@
       plan.rule=bestRule;
       plan.conf=Math.round(70+bestScore*25);
       
-      // ===== 2. 动态裁切框计算（v3.1.2 核心优化：人像优先保证人脸完整） =====
+      // ===== 2. 动态裁切框计算（v3.2.0 核心优化：人像优先保证人脸完整） =====
       var cropLeft=0, cropRight=0, cropTop=0, cropBottom=0;
-      var maxCrop=0.10; // v3.1.2最终: 最大裁切10%，优先保持画面完整性
+      var maxCrop=0.10; // v3.2.0最终: 最大裁切10%，优先保持画面完整性
       
-      // v3.1.2: 检测是否有人脸，有人脸时优先保证人脸完整
+      // v3.2.0: 检测是否有人脸，有人脸时优先保证人脸完整
       var hasFace = state.aiData && state.aiData.faceAvailable && state.aiData.faceX!==undefined;
       var faceX = hasFace ? state.aiData.faceX : a.cx;
       var faceY = hasFace ? state.aiData.faceY : a.cy;
       
-      // v3.1.2: 人像特写判断（人脸占比大）
+      // v3.2.0: 人像特写判断（人脸占比大）
       var isCloseUp = hasFace && a.bodyRatio > 0.3;
       
       if(isCloseUp){
-        // v3.1.2: 人像特写——居中裁切，保证人脸完整，头顶留白合适
+        // v3.2.0: 人像特写——居中裁切，保证人脸完整，头顶留白合适
         bestRule = "center"; // 特写强制居中，不推荐对角线
         cropLeft = cropRight = 0.04;
         cropTop = Math.max(0.02, faceY - 0.35); // 头顶留白约 15%
         cropBottom = Math.max(0.02, 0.85 - faceY); // 下巴下方留白
         plan.subject = "人像特写";
       } else if(hasFace){
-        // v3.1.2最终: 人像非特写——保守裁切，优先保持画面完整
+        // v3.2.0最终: 人像非特写——保守裁切，优先保持画面完整
         bestRule = "thirds"; // 人像优先三分法
         // 人像+风景场景：只做小幅裁切去边，不大幅移动主体
         cropLeft = cropRight = 0.03; // 左右各裁 3% 去边
@@ -1721,7 +1779,7 @@
         cropTop = cropBottom = 0.05;
       }
       
-      // v3.1.2最终: 安全检查——裁切后主体/人脸不能太靠边
+      // v3.2.0最终: 安全检查——裁切后主体/人脸不能太靠边
       var checkX = hasFace ? faceX : a.cx;
       var checkY = hasFace ? faceY : a.cy;
       var croppedX = (checkX - cropLeft) / Math.max(0.01, 1 - cropLeft - cropRight);
@@ -1738,11 +1796,11 @@
         cropLeft *= scale; cropRight *= scale; cropTop *= scale; cropBottom *= scale;
       }
       
-      // v3.1.2: 判断是否真的需要裁切
+      // v3.2.0: 判断是否真的需要裁切
       var totalCrop = cropLeft + cropRight + cropTop + cropBottom;
-      var needCrop = totalCrop > 0.12; // v3.1.2最终: 总裁切超过 12% 才裁切，小幅偏差不裁切
+      var needCrop = totalCrop > 0.12; // v3.2.0最终: 总裁切超过 12% 才裁切，小幅偏差不裁切
       if(!needCrop || isCloseUp){
-        // v3.1.2: 构图已经很好或人像特写，不裁切
+        // v3.2.0: 构图已经很好或人像特写，不裁切
         cropLeft = cropRight = cropTop = cropBottom = 0;
         plan.noCrop = true;
       }
@@ -1763,16 +1821,16 @@
         plan.z = 1.0 + (0.3-a.bodyRatio)*1.5;
         plan.z = Math.max(1.0, Math.min(2.5, plan.z));
       }
-      // v3.1.2: 导入照片强制不数字变焦
+      // v3.2.0: 导入照片强制不数字变焦
       if(state.mode!=="camera"){ plan.z = 1.0; }
       
       // ===== 4. 精准滤镜推荐 =====
       var isPerson = (state.aiData && state.aiData.isPerson) || a.isPerson;
       if(isPerson){
         plan.filters=["人像暖 · 优化肤色","自然 · 清新通透","FClassic · 胶片质感"];
-        // v3.1.2最终: 人像优先自然/暖调，不推荐重彩
+        // v3.2.0最终: 人像优先自然/暖调，不推荐重彩
         plan.f = a.wb>0 ? "portrait-warm" : "natural";
-        // v3.1.2: 仅相机模式推荐变焦，导入照片不做数字放大
+        // v3.2.0: 仅相机模式推荐变焦，导入照片不做数字放大
         if(state.mode!=="camera"){ plan.z = 1.0; }
         plan.subject="人像";
       } else if(a.mean < 60){
@@ -1808,7 +1866,7 @@
       
       // ===== 5. 构图描述 =====
       var ruleNames={thirds:"三分法",sym:"对称构图",diag:"对角线构图",center:"中心构图",golden:"黄金螺旋"};
-      // v3.1.2: 人像场景给出更专业的构图建议
+      // v3.2.0: 人像场景给出更专业的构图建议
       if(isCloseUp){
         plan.desc = "检测到人像特写，推荐居中构图（匹配度"+plan.conf+"%）。" +
           "保持面部完整，头顶留白适中，推荐原尺寸不裁切，" +
@@ -2087,7 +2145,7 @@
         ctx.fillStyle="rgba(0,0,0,.34)";
         ctx.fillRect(0,0,W,H);
         ctx.clearRect(cx,cy,cw,ch);
-        // 2) 叠加三分构图辅助线（v3.1.2最终: 让用户直观看到评分依据）
+        // 2) 叠加三分构图辅助线（v3.2.0最终: 让用户直观看到评分依据）
         ctx.strokeStyle="rgba(255,255,255,.35)"; ctx.lineWidth=Math.max(1,Math.round(W/200));
         ctx.setLineDash([Math.max(4,W/60), Math.max(4,W/60)]);
         // 垂直三分线
@@ -2148,7 +2206,7 @@
 
 
   })();
-      // v3.1.2最终: 画面缺陷提示（客观指出问题）
+      // v3.2.0最终: 画面缺陷提示（客观指出问题）
       (function(){
         var flaws=detectFlaws(state.aiData);
         if(flaws && flaws.length){
@@ -2220,7 +2278,7 @@
     // v1.3.2: 一键应用 = 完整成品（按 AI 推荐框直接裁切 + 滤镜 + 变焦）
     function applyPlanCrop(){
       var p=state.plan; if(!p) return false;
-      // v3.1.2: 如果标记为不需要裁切，直接返回 true（只应用滤镜）
+      // v3.2.0: 如果标记为不需要裁切，直接返回 true（只应用滤镜）
       if(p.noCrop){ return true; }
       var el=currentEl(); if(!el) return false;
       var dims=currentSrcDims(el);
@@ -2612,7 +2670,7 @@
         if(moved){ e.stopImmediatePropagation(); moved=false; return; }
       },true);
     })();
-    // v3.1.2: 双击快门按钮重置位置
+    // v3.2.0: 双击快门按钮重置位置
     var shootLastTap=0;
     btnShoot.addEventListener("dblclick",function(){
       btnShoot.style.left=""; btnShoot.style.top="";
@@ -2951,9 +3009,9 @@
       toastMsg(labels[gridMode]);
       setStatus("引导线模式："+labels[gridMode], "done");
     }
-    // v3.1.2 修复：引导线按钮事件绑定
+    // v3.2.0 修复：引导线按钮事件绑定
     btnGrid.addEventListener("click",function(){ setGridMode((gridMode+1)%3); });
-    // v3.1.2 修复：定义 HELP_SECTIONS
+    // v3.2.0 修复：定义 HELP_SECTIONS
     var HELP_SECTIONS=[
       {t:"快速开始",svg:"🚀 ",html:'<p>1. 导入照片或实时取景</p><p>2. 点击 AI 分析</p><p>3. 一键应用或手动调整</p><p>4. 导出保存</p>'},
       {t:"AI 分析",svg:"🤖 ",html:'<p>Coco-SSD 本地模型，识别 80 类物体</p><p>自动场景分类：人像/风景/建筑/街景/美食</p><p>智能构图推荐+滤镜推荐+裁切建议</p>'},
@@ -2973,7 +3031,7 @@
     btnHelp.addEventListener("click",openHelp);
     helpClose.addEventListener("click",function(){ helpSheet.classList.remove("show"); });
 
-    /* ===== v3.1.2 修复：构图法则事件绑定 ===== */
+    /* ===== v3.2.0 修复：构图法则事件绑定 ===== */
     function openRules(){
       var html="";
       var keys=Object.keys(RULES);
@@ -3066,7 +3124,7 @@
         chain=chain.then(function(){ return cocoSsd.load({modelUrl:AI_MODEL_URL}); });
         chain.then(function(m){ aiModel=m; aiModelState="ready"; resolve(true); })
              .catch(function(e){ console.warn("AI 模型加载失败，使用基础分析:", e); aiModelState="fail"; resolve(false); });
-      // v3.1.2: 15秒超时
+      // v3.2.0: 15秒超时
       setTimeout(function(){ if(aiModelState==="loading"){ aiModelState="fail"; resolve(false); } },15000);
       });
     }
@@ -3154,6 +3212,8 @@
       if(state.aiData && el){
         var iw=el.naturalWidth||el.videoWidth, ih=el.naturalHeight||el.videoHeight;
         if(iw&&ih){
+          // v3.2.0: 保存所有检测到的类别，用于场景分类
+          state.aiData.detectedClasses = valid.map(function(p){ return p.class; });
           var t=valid[0];
           state.aiData.cx=Math.max(0,Math.min(1,(t.bbox[0]+t.bbox[2]/2)/iw));
           state.aiData.cy=Math.max(0,Math.min(1,(t.bbox[1]+t.bbox[3]/2)/ih));
@@ -3188,7 +3248,7 @@
       if(scene){
         sceneHtml='<div class="dt-row scene" style="margin-top:4px;padding-top:6px;border-top:1px dashed rgba(70,140,220,.25);"><b>📷 场景识别：'+scene+'</b><br><span style="opacity:.85;font-weight:400;">'+(SCENE_TIP[scene]||"已按该场景推荐构图法则。")+'</span></div>';
       }
-      card.innerHTML='<div class="db-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3.1.24v3M2 12h3m14 0h3M4.9 4.9l2.1 2.1m9.9 9.9l2.1 2.1M19.1 4.9L17 7m-9.9 9.9L5 19.1"/></svg>AI 视觉识别</div>'+
+      card.innerHTML='<div class="db-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9l2.1 2.1m9.9 9.9l2.1 2.1M19.1 4.9L17 7m-9.9 9.9L5 19.1"/></svg>AI 视觉识别</div>'+
         '<div class="dt-row">识别到 '+preds.length+' 个主体：'+names+'</div>'+
         '<div class="dt-row dim">已用主体「'+cnLabel(preds[0].class)+'」更新构图评分（位置 / 占比 / 建议）</div>'+
         sceneHtml;
@@ -3270,7 +3330,7 @@
           if(token!==state.analyzeToken) return;
           if(!preds||!preds.length){ return; }
           renderAiDetect(preds, elSnap);
-          // v3.1.2: 模型检测完成后，重新生成构图方案（确保 isPerson 生效）
+          // v3.2.0: 模型检测完成后，重新生成构图方案（确保 isPerson 生效）
           setTimeout(function(){
             if(token!==state.analyzeToken || !state.aiData) return;
             var dims=currentSrcDims(elSnap);
@@ -3353,16 +3413,20 @@
         tryLoadModel(true);
       });
     faceReload.addEventListener("click",function(){
-      if(!window.faceDetection){ toastMsg("人脸检测模型未初始化"); return; }
+      // v3.2.0: 修复死代码，调用正确的重载函数
+      faceModelState="idle"; faceModel=null; updateFaceUI();
       toastMsg("正在重新加载人脸检测模型…");
-      try{ window.faceDetection.close(); }catch(e){}
-      setTimeout(function(){ initFaceDetection(); }, 500);
+      loadFaceModel(true).then(function(ok){
+        toastMsg(ok?"人脸检测模型加载成功":"人脸检测模型加载失败，请检查网络");
+      });
     });
     poseReload.addEventListener("click",function(){
-      if(!window.poseDetection){ toastMsg("姿态检测模型未初始化"); return; }
+      // v3.2.0: 修复死代码，调用正确的重载函数
+      poseModelState="idle"; poseModel=null; updatePoseUI();
       toastMsg("正在重新加载姿态检测模型…");
-      try{ window.poseDetection.close(); }catch(e){}
-      setTimeout(function(){ initPoseDetection(); }, 500);
+      loadPoseModel(true).then(function(ok){
+        toastMsg(ok?"姿态检测模型加载成功":"姿态检测模型加载失败，请检查网络");
+      });
     });
       updateModelUI();
       // v2.0.2: 页面初始化时如果开关打开，自动加载 Coco-SSD（不依赖进入实时模式）
@@ -3386,7 +3450,7 @@
         if(faceModelState==="loading"){ resolve(false); return; }
         if(location.protocol==="file:" || location.protocol==="null"){ faceModelState="fail"; updateFaceUI(); resolve(false); return; }
         faceModelState="loading"; updateFaceUI();
-        // v3.1.2: 10秒超时，避免卡死
+        // v3.2.0: 10秒超时，避免卡死
         var faceTimeout=setTimeout(function(){ faceModelState="fail"; updateFaceUI(); resolve(false); },10000);
         loadScript(FACE_DET_URL).then(function(){
           clearTimeout(faceTimeout);
@@ -3467,7 +3531,7 @@
         if(poseModelState==="loading"){ resolve(false); return; }
         if(location.protocol==="file:" || location.protocol==="null"){ poseModelState="fail"; updatePoseUI(); resolve(false); return; }
         poseModelState="loading"; updatePoseUI();
-        // v3.1.2: 10秒超时
+        // v3.2.0: 10秒超时
         var poseTimeout=setTimeout(function(){ poseModelState="fail"; updatePoseUI(); resolve(false); },10000);
         loadScript(POSE_URL).then(function(){
           clearTimeout(poseTimeout);
@@ -3647,7 +3711,7 @@
           // 显示变焦建议
           showDokaZoom(plan);
           setStatus("构图已锁定 · 可直接拍照，拍完即成品","done");
-          // v3.1.2: AI 分析时主动加载模型并等待，确保 isPerson 生效
+          // v3.2.0: AI 分析时主动加载模型并等待，确保 isPerson 生效
           if(state.aiModelEnabled){
             if(aiModelState==="ready"){ runAIDetection(); }
             else if(aiModelState==="idle" || aiModelState==="fail"){
@@ -4014,7 +4078,7 @@
     });
 
     function detectFlaws(a){
-      // v3.1.2最终: 客观检测画面缺陷
+      // v3.2.0最终: 客观检测画面缺陷
       var flaws=[];
       if(!a) return flaws;
       // 过曝
