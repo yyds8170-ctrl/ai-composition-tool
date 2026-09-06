@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v3.0.0 · 实时取景</title>
+<title>AI 构图助手 Pro v3.0.1 · 实时取景</title>
 <meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
@@ -514,7 +514,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v3.0.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v3.0.1</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -846,7 +846,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v3.0.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v3.0.1 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1198,9 +1198,16 @@
       var f=FILTERS[b.dataset.f];
       toastMsg("滤镜："+f.name+" · "+f.desc);
     });
-    var zoomSlid=false;
+    var zoomSlid=false, zoomRaf=null;
     zoomRange.addEventListener("pointerdown",function(){ zoomSlid=false; });
-    zoomRange.addEventListener("input",function(){ if(!zoomSlid){ pushUndo(); zoomSlid=true; } state.zoom=parseFloat(zoomRange.value); applyZoom(); });
+    zoomRange.addEventListener("input",function(){
+      if(!zoomSlid){ pushUndo(); zoomSlid=true; }
+      state.zoom=parseFloat(zoomRange.value);
+      // v3.0.1: 用 requestAnimationFrame 节流，避免拖动卡顿
+      if(zoomRaf) cancelAnimationFrame(zoomRaf);
+      zoomRaf=requestAnimationFrame(function(){ applyZoom(); });
+    });
+    zoomRange.addEventListener("pointerup",function(){ zoomSlid=false; });
     var strengthSlid=false;
     strengthRange.addEventListener("pointerdown",function(){ strengthSlid=false; });
     strengthRange.addEventListener("input",function(){
@@ -1612,11 +1619,19 @@
       // 中心构图评分
       scores.center = Math.max(0, 1 - (Math.abs(a.cx-0.5)+Math.abs(a.cy-0.5))*2);
       
+      // v3.0.1: 优化构图评分逻辑——人像优先三分法，中心构图仅在特写/极简场景推荐
+      var isPerson = state.aiData && state.aiData.isPerson;
+      // 人像场景下，三分法权重提升 30%，中心构图权重降低 50%
+      if(isPerson){
+        scores.thirds = Math.min(1, scores.thirds * 1.3);
+        scores.center = scores.center * 0.5;
+      }
       // 选最高分的构图法则
       var bestRule="thirds", bestScore=scores.thirds;
-      if(scores.sym>bestScore && a.sym>0.65){ bestRule="sym"; bestScore=scores.sym; }
-      if(scores.diag>bestScore && a.diagStrength>0.25){ bestRule="diag"; bestScore=scores.diag; }
-      if(scores.center>bestScore && a.sym>0.5){ bestRule="center"; bestScore=scores.center; }
+      if(scores.sym>bestScore && a.sym>0.7 && !isPerson){ bestRule="sym"; bestScore=scores.sym; }
+      if(scores.diag>bestScore && a.diagStrength>0.3){ bestRule="diag"; bestScore=scores.diag; }
+      // 中心构图仅在非人像且高度对称时推荐
+      if(scores.center>bestScore && a.sym>0.75 && !isPerson){ bestRule="center"; bestScore=scores.center; }
       plan.rule=bestRule;
       plan.conf=Math.round(70+bestScore*25);
       
@@ -1722,9 +1737,17 @@
       
       // ===== 5. 构图描述 =====
       var ruleNames={thirds:"三分法",sym:"对称构图",diag:"对角线构图",center:"中心构图",golden:"黄金螺旋"};
-      plan.desc = "检测到"+plan.subject+"，推荐"+ruleNames[bestRule]+"构图（匹配度"+plan.conf+"%）。" +
-        "裁切后主体将位于"+(bestRule==="thirds"?"黄金分割点":"画面中心")+"，" +
-        "推荐"+plan.z.toFixed(1)+"x焦段，"+(FILTERS[plan.f]?FILTERS[plan.f].name:"自然")+"滤镜。";
+      // v3.0.1: 人像场景给出更专业的构图建议
+      if(isPerson && bestRule==="thirds"){
+        var faceSide = state.aiData.faceX < 0.5 ? "右" : "左";
+        plan.desc = "检测到人像，推荐三分法构图（匹配度"+plan.conf+"%）。" +
+          "将人物面部放在"+faceSide+"侧黄金分割点，头顶留白约 1/5，" +
+          "推荐"+plan.z.toFixed(1)+"x焦段，"+(FILTERS[plan.f]?FILTERS[plan.f].name:"自然")+"滤镜。";
+      } else {
+        plan.desc = "检测到"+plan.subject+"，推荐"+ruleNames[bestRule]+"构图（匹配度"+plan.conf+"%）。" +
+          "裁切后主体将位于"+(bestRule==="thirds"?"黄金分割点":"画面中心")+"，" +
+          "推荐"+plan.z.toFixed(1)+"x焦段，"+(FILTERS[plan.f]?FILTERS[plan.f].name:"自然")+"滤镜。";
+      }
       
       // ===== 6. 曝光诊断 =====
       if(a.highClip>0.06){
@@ -2816,6 +2839,22 @@ function openHelp(){
     }
     btnHelp.addEventListener("click",openHelp);
     helpClose.addEventListener("click",function(){ helpSheet.classList.remove("show"); });
+
+    /* ===== v3.0.1 修复：构图法则事件绑定 ===== */
+    function openRules(){
+      var html="";
+      var keys=Object.keys(RULES);
+      for(var i=0;i<keys.length;i++){
+        var k=keys[i], r=RULES[k];
+        html+='<div class="rule-card"><div class="rule-name">'+r.name+'</div>'+
+              '<div class="rule-desc">'+r.zh+'</div>'+
+              '<div class="rule-use">适用：'+r.use+'</div></div>';
+      }
+      ruleBody.innerHTML=html;
+      ruleSheet.classList.add("show");
+    }
+    btnRules.addEventListener("click",openRules);
+    ruleClose.addEventListener("click",function(){ ruleSheet.classList.remove("show"); });
 
     /* ===================== v1.3.0: 真 AI 视觉识别（本地 Coco-SSD，懒加载+自动降级） ===================== */
     var aiModelState="idle", aiModel=null, aiDetectEl=null;
