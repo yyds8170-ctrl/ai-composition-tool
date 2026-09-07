@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v4.3.0 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v4.3.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、28 款滤镜、Doka 模式、构图法则百科">
+<title>AI 构图助手 Pro v4.4.0 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v4.4.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -1004,7 +1004,8 @@
       silver:{name:"银盐",css:"grayscale(1) contrast(1.3) brightness(0.97)",desc:"硬朗银盐黑白，层次分明"},
       "portrait-warm":{name:"人像暖",css:"sepia(0.18) saturate(1.18) brightness(1.05) contrast(0.97) hue-rotate(-3deg)",desc:"优化肤色，暖调通透，室内/黄昏人像"},
       "portrait-cool":{name:"人像冷",css:"saturate(0.95) brightness(1.06) contrast(1.02) sepia(0.03) hue-rotate(6deg)",desc:"清透冷白肤色，户外/阴天人像"},
-      "portrait-mono":{name:"人像黑白",css:"grayscale(1) contrast(1.22) brightness(1.02)",desc:"高对比黑白，保留皮肤纹理，人像质感"}
+      "portrait-mono":{name:"人像黑白",css:"grayscale(1) contrast(1.22) brightness(1.02)",desc:"高对比黑白，保留皮肤纹理，人像质感"},
+  night:{name:"暗夜提亮",css:"brightness(1.12) saturate(0.9) contrast(1.05) hue-rotate(4deg)",desc:"暗部提亮，冷调清透，适合夜景"} // v4.4: 补 night 键（Qwen：plan.f="night" 但 FILTERS 无此键 → 一键成品 TypeError 崩溃）
     };
 
     var RULES={
@@ -1412,7 +1413,7 @@
             }
             off+=segLen+2; continue;
           }
-          if(marker===0xFFD8||(marker>=0xFFD0&&marker<=0xFFD9)){ off+=2; continue; }
+          if(marker===0xFFD8||(marker>=0xFFD0&&marker<=0xFFD8)){ off+=2; continue; } // v4.4: 排除0xFFD9，否则 break 永不生效（豆包NEW-v3-03）
           if(marker===0xFFDA||marker===0xFFD9) break;
           var l2=dv.getUint16(off+2,false);
           off+=l2+2;
@@ -1892,8 +1893,8 @@
         // v4.3: 特写判据改用 bbox 高度占比（面积占比被宽松框撑到91-95%，半身/环境人像被误判特写强制居中）
         var closeUpRatio = (a.bodyH!==undefined) ? a.bodyH : a.bodyRatio;
         sceneType = closeUpRatio > 0.72 ? "portrait_close" : "portrait";
-      } else if(a.sym > 0.30 && a.contrast > 50){
-        sceneType = "architecture"; // 高对称+高对比=建筑
+      } else if(!(a.detectedClasses && a.detectedClasses.indexOf("boat")>=0) && a.sym > 0.30 && a.contrast > 50){
+        sceneType = "architecture"; // 高对称+高对比=建筑；v4.4: boat 检出（湖泊/水面）跳过建筑判定（豆包实测 lake→architecture 误判）
       } else if(a.bodyRatio < 0.15 && ((a.rowGap > 40 && a.sat > 0.2) || (a.mean > 100 && a.sat > 0.3) || (a.sat > 0.32 && a.mean > 55 && a.contrast < 80))){ // v4.3: 风景判定三通道——锐利地平线(rowGap>40)、明亮高饱和(mean>100)、渐变山林/沙滩(小主体+高饱和+中亮度)，实测渐变地平线 rowGap 仅10-13
         sceneType = "landscape"; // 明亮+高饱和+小主体=风景
       } else if(a.contrast > 70 && a.mean < 80){
@@ -1917,7 +1918,7 @@
         var bestSc=null, bestScN=0;
         for(var sk3 in seenSc){ if(seenSc[sk3]>bestScN){ bestScN=seenSc[sk3]; bestSc=sk3; } }
         if(bestSc==="animal"||bestSc==="food"){ sceneType=bestSc; }
-        else if(bestSc==="waterscape"&&sceneType==="landscape"){ sceneType="waterscape"; }
+        else if(bestSc==="waterscape"&&(sceneType==="landscape"||sceneType==="architecture")){ sceneType="waterscape"; } // v4.4: 覆盖 architecture（豆包：湖泊倒影被误判建筑）
         else if(bestSc==="street"&&sceneType==="general"){ sceneType="street"; }
         // v4.3: 餐桌弱先验——碗/杯/酒杯/餐桌/餐具等检出且色彩饱和时归美食场景
         var foodWeak=["bowl","cup","wine glass","dining table","fork","knife","spoon","sandwich","hot dog","cake","donut","pizza"];
@@ -2314,7 +2315,7 @@
       colorScore=Math.min(100,Math.max(0,colorScore));
       // 4. 清晰度分（0-100）
       // v4.0: 接入真实sharpness（对数归一化），不再用contrast冒充
-      var sharpScore = (a.sharpness !== undefined) ? Math.min(100,Math.max(58, a.sharpness)) : Math.min(100,Math.max(58, contrast*1.3 + 15));
+      var sharpScore = (a.sharpness !== undefined) ? Math.min(100,Math.max(48, a.sharpness)) : Math.min(100,Math.max(48, contrast*1.3 + 15)); // v4.4: 保底58→48（豆包：模糊照保底虚高，清晰/模糊区分度不足）
       scores.composition=Math.round(compScore);
       scores.light=Math.round(lightScore);
       scores.color=Math.round(colorScore);
@@ -2691,10 +2692,10 @@
       setFilter(p.f||"clear");
       if(p.noCrop){
         setStatus("已应用：滤镜优化（构图已很合理，未裁切）", "done");
-        toastMsg("已应用"+FILTERS[p.f].name+"滤镜，构图保持原样");
+        toastMsg("已应用"+(FILTERS[p.f]||FILTERS.natural).name+"滤镜，构图保持原样"); // v4.4: night 兜底
       } else {
         setStatus("已一键应用：智能裁切 + 滤镜 + 变焦", "done");
-        toastMsg("已应用智能裁切 + "+FILTERS[p.f].name+" + "+(p.z||1).toFixed(1)+"x，可继续「按构图框智能裁切」微调");
+        toastMsg("已应用智能裁切 + "+(FILTERS[p.f]||FILTERS.natural).name+" + "+(p.z||1).toFixed(1)+"x，可继续「按构图框智能裁切」微调"); // v4.4: night 兜底
       }
       aiPanel.classList.remove("open");
     });
@@ -3610,7 +3611,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       setTimeout(function(){ if(aiModelState==="loading"){ aiModelState="fail"; resolve(false); updateModelUI(); scheduleModelRetry(); } },70000); // v4.2.1: 超时70s（下载+双通道重试），失败自动退避重试
       });
     }
-    var COCO_CN={person:"人物",bicycle:"自行车",car:"汽车",motorcycle:"摩托车",airplane:"飞机",bus:"公交车",train:"火车",truck:"卡车",boat:"船","traffic light":"红绿灯","fire hydrant":"消防栓","stop sign":"停车牌","parking meter":"停车计费器",bench:"长椅",bird:"鸟",cat:"猫",dog:"狗",horse:"马",sheep:"羊",cow:"牛",elephant:"大象",bear:"熊",zebra:"斑马",giraffe:"长颈鹿",backpack:"背包",umbrella:"雨伞",handbag:"手提包",tie:"领带",suitcase:"行李箱",frisbee:"飞盘",skis:"滑雪板",snowboard:"滑雪板","sports ball":"球",kite:"风筝",baseball_bat:"棒球棒",baseball_glove:"棒球手套",skateboard:"滑板",surfboard:"冲浪板",tennis_racket:"网球拍",bottle:"瓶子",wine_glass:"酒杯",cup:"杯子",fork:"叉子",knife:"刀",spoon:"勺子",bowl:"碗",banana:"香蕉",apple:"苹果",sandwich:"三明治",orange:"橙子",broccoli:"西兰花",carrot:"胡萝卜",hot_dog:"热狗",pizza:"披萨",donut:"甜甜圈",cake:"蛋糕",chair:"椅子",couch:"沙发","potted plant":"盆栽",bed:"床","dining table":"餐桌",toilet:"马桶",tv:"电视",laptop:"笔记本电脑",mouse:"鼠标",remote:"遥控器",keyboard:"键盘","cell phone":"手机",microwave:"微波炉",oven:"烤箱",toaster:"烤面包机",sink:"水槽",refrigerator:"冰箱",book:"书本",clock:"时钟",vase:"花瓶",scissors:"剪刀",teddy_bear:"泰迪熊","hair drier":"吹风机",toothbrush:"牙刷"};
+    var COCO_CN={person:"人物",bicycle:"自行车",car:"汽车",motorcycle:"摩托车",airplane:"飞机",bus:"公交车",train:"火车",truck:"卡车",boat:"船","traffic light":"红绿灯","fire hydrant":"消防栓","stop sign":"停车牌","parking meter":"停车计费器",bench:"长椅",bird:"鸟",cat:"猫",dog:"狗",horse:"马",sheep:"羊",cow:"牛",elephant:"大象",bear:"熊",zebra:"斑马",giraffe:"长颈鹿",backpack:"背包",umbrella:"雨伞",handbag:"手提包",tie:"领带",suitcase:"行李箱",frisbee:"飞盘",skis:"滑雪板",snowboard:"滑雪板","sports ball":"球",kite:"风筝","baseball bat":"棒球棒","baseball glove":"棒球手套",skateboard:"滑板",surfboard:"冲浪板","tennis racket":"网球拍",bottle:"瓶子","wine glass":"酒杯",cup:"杯子",fork:"叉子",knife:"刀",spoon:"勺子",bowl:"碗",banana:"香蕉",apple:"苹果",sandwich:"三明治",orange:"橙子",broccoli:"西兰花",carrot:"胡萝卜","hot dog":"热狗",pizza:"披萨",donut:"甜甜圈",cake:"蛋糕",chair:"椅子",couch:"沙发","potted plant":"盆栽",bed:"床","dining table":"餐桌",toilet:"马桶",tv:"电视",laptop:"笔记本电脑",mouse:"鼠标",remote:"遥控器",keyboard:"键盘","cell phone":"手机",microwave:"微波炉",oven:"烤箱",toaster:"烤面包机",sink:"水槽",refrigerator:"冰箱",book:"书本",clock:"时钟",vase:"花瓶",scissors:"剪刀","teddy bear":"泰迪熊","hair drier":"吹风机",toothbrush:"牙刷"} // v4.4: 6个下划线键改空格（豆包：COCO-SSD输出空格类名，中文标签永久失效）;
     function cnLabel(c){ return COCO_CN[c]||c; }
     function removeAiBox(){ if(aiDetectEl&&aiDetectEl.parentNode){ aiDetectEl.parentNode.removeChild(aiDetectEl); } aiDetectEl=null; }
     function drawAiBox(top, el){
@@ -3635,12 +3636,12 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       airplane:"交通·航空", train:"交通·轨道", boat:"水景", "traffic light":"城市", "stop sign":"城市", bench:"公园",
       backpack:"人物配饰", handbag:"人物配饰", suitcase:"旅行", umbrella:"人物配饰", tie:"人物配饰",
       frisbee:"户外运动", "sports ball":"户外运动", skateboard:"户外运动", surfboard:"户外运动", snowboard:"户外运动", skis:"户外运动",
-      kite:"户外", "baseball glove":"户外运动", "baseball bat":"户外运动", "tennis racket":"户外运动", "ski": "户外运动",
+      kite:"户外", "baseball glove":"户外运动", "baseball bat":"户外运动", "tennis racket":"户外运动",
       vase:"静物·器皿", clock:"室内·器物", oven:"室内·厨房", toaster:"室内·厨房", refrigerator:"室内·厨房", microwave:"室内·厨房",
       "wine glass":"静物·酒", pizza:"美食", sandwich:"美食", "hot dog":"美食", donut:"美食", cake:"美食",
       banana:"美食·水果", apple:"美食·水果", orange:"美食·水果", broccoli:"美食·蔬菜", carrot:"美食·蔬菜",
-      "fire hydrant":"城市", "parking meter":"城市", truck:"街景·车辆"
-    };
+      "fire hydrant":"城市", "parking meter":"城市"
+    }; // v4.4: 删除重复 truck 键（Qwen/豆包）
     var SCENE_TIP={
       "人像/街拍":"人物眼睛尽量落在上三分线交叉点，背景留白增加呼吸感；想显瘦可侧身、机位稍高。",
       "街景·车辆":"利用道路/建筑线条做引导线，主体放侧三分位，透视纵深更强。",
