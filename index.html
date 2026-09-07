@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v4.4.0 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v4.4.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科">
+<title>AI 构图助手 Pro v4.4.1 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v4.4.1 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -311,7 +311,7 @@
   /* 悬浮拍摄按钮 */
   .shoot-fab{position:fixed;right:16px;bottom:150px;width:64px;height:64px;border-radius:50%;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
     background:radial-gradient(circle at 32% 28%,#FFC97A,#E08A2C 70%);border:3px solid rgba(255,255,255,.85);
-    color:#1b1208;display:flex;align-items:center;justify-content:center;z-index:15;
+    color:#1b1208;display:flex;align-items:center;justify-content:center;z-index:22; /* v4.4.1: 快门被 .controls(z20) 盖住 15→22（用户实测 bug） */
     will-change:transform;
     box-shadow:0 6px 22px rgba(255,170,60,.45),0 2px 6px rgba(0,0,0,.35);cursor:pointer;
     transition:transform .12s,box-shadow .2s;}
@@ -523,7 +523,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v4.3.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v4.4.1</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -860,7 +860,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v4.3.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v4.4.1 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1895,8 +1895,8 @@
         sceneType = closeUpRatio > 0.72 ? "portrait_close" : "portrait";
       } else if(!(a.detectedClasses && a.detectedClasses.indexOf("boat")>=0) && a.sym > 0.30 && a.contrast > 50){
         sceneType = "architecture"; // 高对称+高对比=建筑；v4.4: boat 检出（湖泊/水面）跳过建筑判定（豆包实测 lake→architecture 误判）
-      } else if(a.bodyRatio < 0.15 && ((a.rowGap > 40 && a.sat > 0.2) || (a.mean > 100 && a.sat > 0.3) || (a.sat > 0.32 && a.mean > 55 && a.contrast < 80))){ // v4.3: 风景判定三通道——锐利地平线(rowGap>40)、明亮高饱和(mean>100)、渐变山林/沙滩(小主体+高饱和+中亮度)，实测渐变地平线 rowGap 仅10-13
-        sceneType = "landscape"; // 明亮+高饱和+小主体=风景
+      } else if(a.bodyRatio < 0.15 && ((a.rowGap > 40 && a.sat > 0.2) || (a.mean > 100 && a.sat > 0.3) || (a.sat > 0.32 && a.mean > 55 && a.contrast < 80) || (a.rowGap > 30 && a.sat > 0.15 && a.mean < 100 && !(a.detectedClasses && (a.detectedClasses.indexOf("person")>=0 || a.detectedClasses.indexOf("cat")>=0 || a.detectedClasses.indexOf("dog")>=0 || a.detectedClasses.indexOf("bowl")>=0 || a.detectedClasses.indexOf("cup")>=0 || a.detectedClasses.indexOf("dining table")>=0 || a.detectedClasses.indexOf("fork")>=0 || a.detectedClasses.indexOf("knife")>=0))))){ // v4.3: 风景判定三通道——锐利地平线(rowGap>40)、明亮高饱和(mean>100)、渐变山林/沙滩(小主体+高饱和+中亮度)，实测渐变地平线 rowGap 仅10-13
+        sceneType = "landscape"; // 明亮+高饱和+小主体=风景；v4.4 P1-2: 第四通道——低饱和暗调(阴天/雪景/水墨)rowGap>30&&sat>0.15&&mean<100且无人物/宠物/餐具检测
       } else if(a.contrast > 70 && a.mean < 80){
         sceneType = "street"; // 高对比+偏暗=街景
       }
@@ -1962,6 +1962,9 @@
       // 对称评分（v4.0.1: 人像降低对称构图权重）
       var isPersonForScore = state.aiData && state.aiData.isPerson;
       scores.sym = isPersonForScore ? a.sym * 0.3 : a.sym;
+      // v4.4: P1-1 强对称加权（真实倒影/建筑 sym 仅 0.26-0.45，原始分被 center(0.9+)永远压过→对称0推荐，三家报告共识）
+      if(!isPersonForScore && a.sym>0.3){ scores.sym = Math.min(1, a.sym*2.2); }
+      if(!isPersonForScore && a.sym>0.42){ scores.sym = Math.min(1, scores.sym*1.3+0.15); } // 架构/完美倒影必触发
       
       // 对角线评分
       scores.diag = a.diagStrength;
@@ -1982,7 +1985,7 @@
         var td=Math.abs(a.cx-tF[tfi])+Math.abs(a.cy-tF[tfj]);
         if(td<bestTD) bestTD=td;
       }}
-      scores.golden = (bestGD < 0.22 && bestGD + 0.03 < bestTD) ? Math.max(0, 1 - bestGD*2.5) : 0;
+      scores.golden = (bestGD < 0.24 && bestGD + 0.03 < bestTD) ? Math.max(0, 1 - bestGD*2.5) : 0; // v4.4 P1-3: 0.22→0.24（豆包图集0触发折中）
       
       // v4.0: 复用上方含肤色兜底的 isPerson，不再重复声明（修复变量遮蔽）
       // 人像场景下，三分法权重提升 30%，中心构图权重降低 50%
@@ -3964,6 +3967,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             faceModel=new FaceDetection({locateFile:function(file){ return "https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/"+file; }});
             faceModel.setOptions({model:"short", minDetectionConfidence:0.6});
             faceModel.onResults(function(results){
+              // v4.4 P2-2: 探针结果隔离——1x1 探针帧不污染 aiData（探针 send 会写 faceAvailable=false）
+              if(state.aiData && state.aiData._probeGuard){ delete state.aiData._probeGuard; return; }
               // v4.3: 空指针保护（豆包BUG-02：state.aiData 未初始化时回调抛错）
               if(!state.aiData){ state.aiData={}; }
               if(results.detections && results.detections.length>0){
@@ -3989,6 +3994,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             try{
               var pc=document.createElement("canvas"); pc.width=1; pc.height=1;
               var pctx=pc.getContext("2d"); if(pctx){ pctx.fillStyle="#808080"; pctx.fillRect(0,0,1,1); }
+              if(state.aiData){ state.aiData._probeGuard=true; } // v4.4 P2-2: 探针帧标记，onResults 拦截
               faceModel.send({image:pc}).then(function(){
                 if(!probeDone){ probeDone=true; clearTimeout(probeT); faceModelState="ready"; updateFaceUI(); toastMsg("人脸检测模型加载成功"); resolve(true); }
               }).catch(function(){
@@ -4241,10 +4247,13 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         }catch(err){ console.error("Doka分析异常:",err); state.analyzing=false; }
       }, 1200);
     }
-    function showDokaCrop(plan){
+    function showDokaCrop(plan, _tries){
+      _tries=_tries||0;
       dokaOverlay.style.display="block";
       var w=stage.clientWidth, h=stage.clientHeight;
-      if(w<10||h<10){ setTimeout(function(){ showDokaCrop(plan); },100); return; }
+      if(w<10||h<10){ // v4.4 P2-1: 重试上限3次后降级报错（豆包BUG-06）
+        if(_tries<3){ setTimeout(function(){ showDokaCrop(plan,_tries+1); },100); } else { setStatus("智能裁切框渲染失败，请重试","err"); dokaOverlay.style.display="none"; }
+        return; }
       var c=plan.crop; // [左%,上%,右%,下%]
       var cl=Math.min(40,Math.max(2,c[0])), ct=Math.min(40,Math.max(2,c[1]));
       var cr=Math.min(40,Math.max(2,c[2])), cb=Math.min(40,Math.max(2,c[3]));
