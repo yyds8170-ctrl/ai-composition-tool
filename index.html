@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v4.2.0 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v4.2.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、18 款滤镜、Doka 模式、构图法则百科">>
+<title>AI 构图助手 Pro v4.2.1 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v4.2.1 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、18 款滤镜、Doka 模式、构图法则百科">>
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -522,7 +522,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v4.2.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v4.2.1</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -859,7 +859,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v4.2.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v4.2.1 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -2358,19 +2358,17 @@
               setStatus("自动应用失败，请手动点一键成品", "err");
             }
           }
-          runAIDetection(function(finalPlan){ autoApplyPlan(finalPlan); });
-          // v4.1: 5秒兜底——模型加载超时/失败时用首次plan应用
-          // v4.2: 模型仍在加载时延后兜底，避免"5s兜底抢先应用首次plan → 模型回调被_autoApplied丢弃"的竞态（Qwen复测）
-          setTimeout(function(){
-            if(typeof aiModelState!=="undefined" && aiModelState==="loading"){
-              var _retry=setInterval(function(){
-                if(aiModelState==="ready"||aiModelState==="fail"){ clearInterval(_retry); autoApplyPlan(null); }
-              },300);
-              setTimeout(function(){ clearInterval(_retry); autoApplyPlan(null); }, 12000);
-            } else {
-              autoApplyPlan(null);
-            }
-          }, 5000);
+          // v4.2.1: 兜底重构——onDone 是唯一自动应用时机（模型失败也会 onDone(null) 用像素plan）
+
+          // 原5s兜底在模型ready时无条件抢先autoApplyPlan(null)，把模型回调plan2丢弃（模型卡✓却显示像素结果的根因）
+
+          // 现改为20s防挂起兜底：onDone已触发则不再重复应用；模型检测通常3-10s内完成，不会抢先
+
+          var _fbDone=false;
+
+          runAIDetection(function(finalPlan){ _fbDone=true; autoApplyPlan(finalPlan); });
+
+          setTimeout(function(){ if(!_fbDone){ _fbDone=true; autoApplyPlan(null); } }, 20000);
         }catch(err){
           console.error("AI 分析异常:", err);
           state.analyzing=false;
@@ -3333,7 +3331,9 @@
     var AI_COCO_URL="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js";
     var AI_TFJS_URL2="https://unpkg.com/@tensorflow/tfjs@4.22.0/dist/tf.min.js";
     var AI_COCO_URL2="https://unpkg.com/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js";
-    var AI_MODEL_URL="model/model.json";
+    // v4.2.1: 模型双通道——主 jsdelivr CDN（国内快，缓存后约秒级）+ 备 GitHub Pages 同源直连
+var AI_MODEL_URL="https://cdn.jsdelivr.net/gh/yyds8170-ctrl/ai-composition-tool@main/model/model.json";
+var AI_MODEL_URL_FALLBACK="model/model.json";
     // v2.0.0: MediaPipe Face Detection（精准人脸检测）
     var FACE_DET_URL="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js";
     var faceModelState="idle", faceModel=null, faceEnabled=true;
@@ -3393,31 +3393,102 @@
       loop();
     }
     function loadScript(src){ return new Promise(function(res,rej){ var s=document.createElement("script"); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
-    function loadAIModel(){
+    /* ===================== v4.2.1 模型加载根治：进度显示 + 自动重试 ===================== */
+var _modelDLBytes=0, _modelDLTotal=0, _modelDLPct=0;
+var _modelRetries=0, _modelRetryTimer=null;
+// 模型文件清单（jsdelivr 主通道目录 + 同源 fallback 目录）
+var _MODEL_FILES=["model.json","group1-shard1of5","group1-shard2of5","group1-shard3of5","group1-shard4of5","group1-shard5of5"];
+function updateModelProgress(pct){
+  _modelDLPct=pct;
+  var t="🤖 <b>真 AI 模型下载中 "+(pct>0?pct+"%":"…")+"</b>（约 18MB，首次下载稍慢；下载完成后自动用 AI 精确分析）";
+  // 更新 AI 面板里的 loading 卡片
+  var card=aiBody&&aiBody.querySelector(".model-status");
+  if(card&&card.className.indexOf("on")<0&&card.className.indexOf("off")<0){
+    card.innerHTML='<div class="dt-row">'+t+'</div>';
+  }
+  if(mpBadge) mpBadge.textContent=pct>0?("下载中 "+pct+"%"):"下载中…";
+  if(lhModel) lhModel.innerHTML='<span class="dot2"></span>🤖 模型下载中 '+(pct>0?pct+"%":"…");
+}
+// 带进度地预取模型文件：HTTP 缓存热身后 coco-ssd 加载走缓存秒级完成；jsdelivr 失败自动切同源
+function prefetchModelFiles(){
+  _modelDLBytes=0;
+  var baseMain=AI_MODEL_URL.replace("model.json","");
+  var baseFb=AI_MODEL_URL_FALLBACK.replace("model.json","");
+  var total=18656655; // 6 文件合计字节（model.json 527315 + 5 shard 18129344）
+  _modelDLTotal=total;
+  return Promise.all(_MODEL_FILES.map(function(f){
+    var tryUrl=function(u){
+      return fetch(u,{cache:"force-cache"}).then(function(r){
+        if(!r.ok||!r.body) throw new Error("bad "+u);
+        var len=parseInt(r.headers.get("content-length")||"0")||0;
+        var reader=r.body.getReader();
+        return new Promise(function(res){
+          (function pump(){
+            reader.read().then(function(x){
+              if(x.done){ res(); return; }
+              _modelDLBytes+=x.value.length;
+              updateModelProgress(Math.min(99,Math.round(_modelDLBytes/total*100)));
+              pump();
+            }).catch(function(){ res(); });
+          })();
+        });
+      });
+    };
+    return tryUrl(baseMain+f).catch(function(){ return tryUrl(baseFb+f); }).catch(function(){});
+  })).then(function(){ updateModelProgress(100); });
+}
+// 指数退避自动重试（5s/15s/40s/90s，最多4次；成功后重置）
+function scheduleModelRetry(){
+  if(!state.aiModelEnabled||aiModelState==="ready") return;
+  if(_modelRetries>=4){ _modelRetries=0; return; }
+  var delays=[5000,15000,40000,90000];
+  var d=delays[Math.min(_modelRetries,delays.length-1)];
+  _modelRetries++;
+  if(_modelRetryTimer) clearTimeout(_modelRetryTimer);
+  _modelRetryTimer=setTimeout(function(){
+    if(aiModelState==="ready"||!state.aiModelEnabled) return;
+    aiModelState="idle";
+    if(_modelDLPct>0) toastMsg("网络波动，正在自动重试模型下载（第"+_modelRetries+"次）…","");
+    loadAIModel().then(function(ok){
+      if(ok){ _modelRetries=0; updateModelUI(); toastMsg("🤖 真 AI 模型加载成功（自动重试）"); }
+    });
+  },d);
+}
+function loadAIModel(){
       return new Promise(function(resolve){
         if(aiModelState==="ready"){ resolve(true); return; }
         // v4.2: 加载中重复调用→轮询等待结果（原逻辑直接resolve(false)，用户"模型下载中再点分析"反而立刻失败）
         if(aiModelState==="loading"){
+          // v4.2.1: 等待上限 16s→70s（与主加载超时一致，下载中持续等待，不再中途放弃）
           var _wt=0;
           var wInt=setInterval(function(){
             _wt+=200;
             if(aiModelState==="ready"){ clearInterval(wInt); resolve(true); }
-            else if(aiModelState==="fail"||_wt>16000){ clearInterval(wInt); resolve(false); }
+            else if(aiModelState==="fail"||_wt>70000){ clearInterval(wInt); resolve(false); }
           },200);
           return;
         }
-        if(aiModelState!=="idle"){ resolve(false); return; }
+        if(aiModelState==="fail"){ aiModelState="idle"; } // v4.2.1: 模型加载失败后允许下次分析重试（此前整次会话永久降级）
+if(aiModelState!=="idle"){ resolve(false); return; }
         // file:// 离线打开时无法加载模型文件，直接降级（避免 CORS 报错）
         if(location.protocol==="file:" || location.protocol==="null"){ aiModelState="fail"; resolve(false); return; }
         aiModelState="loading";
         var chain=Promise.resolve();
+        // v4.2.1: 先带进度预取模型文件（进度显示 + 缓存热身）；失败不阻塞（后续 coco-ssd 会再试）
+        chain=chain.then(function(){ updateModelProgress(0); return prefetchModelFiles().catch(function(e){ console.warn("模型预取失败，coco-ssd将自行加载:",e); }); });
         chain=chain.then(function(){ if(typeof tf==="undefined") return loadScript(AI_TFJS_URL).catch(function(){ return loadScript(AI_TFJS_URL2); }); });
         chain=chain.then(function(){ if(typeof cocoSsd==="undefined") return loadScript(AI_COCO_URL).catch(function(){ return loadScript(AI_COCO_URL2); }); });
-        chain=chain.then(function(){ return cocoSsd.load({modelUrl:AI_MODEL_URL}); });
-        chain.then(function(m){ aiModel=m; aiModelState="ready"; resolve(true); })
-             .catch(function(e){ console.warn("AI 模型加载失败，使用基础分析:", e); aiModelState="fail"; resolve(false); });
+        chain=chain.then(function(){
+          // v4.2.1: 主 jsdelivr CDN 失败 → 自动切换 GitHub Pages 同源重试
+          return cocoSsd.load({modelUrl:AI_MODEL_URL}).catch(function(e1){
+            console.warn("模型CDN加载失败，切换同源重试:", e1);
+            return cocoSsd.load({modelUrl:AI_MODEL_URL_FALLBACK});
+          });
+        });
+        chain.then(function(m){ aiModel=m; aiModelState="ready"; _modelRetries=0; resolve(true); updateModelUI(); })
+             .catch(function(e){ console.warn("AI 模型加载失败，使用基础分析:", e); aiModelState="fail"; resolve(false); updateModelUI(); scheduleModelRetry(); });
       // v4.0.1: 15秒超时
-      setTimeout(function(){ if(aiModelState==="loading"){ aiModelState="fail"; resolve(false); } },15000);
+      setTimeout(function(){ if(aiModelState==="loading"){ aiModelState="fail"; resolve(false); updateModelUI(); scheduleModelRetry(); } },70000); // v4.2.1: 超时70s（下载+双通道重试），失败自动退避重试
       });
     }
     var COCO_CN={person:"人物",bicycle:"自行车",car:"汽车",motorcycle:"摩托车",airplane:"飞机",bus:"公交车",train:"火车",truck:"卡车",boat:"船",traffic_light:"红绿灯",fire_hydrant:"消防栓",stop_sign:"停车牌",parking_meter:"停车计费器",bench:"长椅",bird:"鸟",cat:"猫",dog:"狗",horse:"马",sheep:"羊",cow:"牛",elephant:"大象",bear:"熊",zebra:"斑马",giraffe:"长颈鹿",backpack:"背包",umbrella:"雨伞",handbag:"手提包",tie:"领带",suitcase:"行李箱",frisbee:"飞盘",skis:"滑雪板",snowboard:"滑雪板",sports_ball:"球",kite:"风筝",baseball_bat:"棒球棒",baseball_glove:"棒球手套",skateboard:"滑板",surfboard:"冲浪板",tennis_racket:"网球拍",bottle:"瓶子",wine_glass:"酒杯",cup:"杯子",fork:"叉子",knife:"刀",spoon:"勺子",bowl:"碗",banana:"香蕉",apple:"苹果",sandwich:"三明治",orange:"橙子",broccoli:"西兰花",carrot:"胡萝卜",hot_dog:"热狗",pizza:"披萨",donut:"甜甜圈",cake:"蛋糕",chair:"椅子",couch:"沙发",potted_plant:"盆栽",bed:"床",dining_table:"餐桌",toilet:"马桶",tv:"电视",laptop:"笔记本电脑",mouse:"鼠标",remote:"遥控器",keyboard:"键盘",cell_phone:"手机",microwave:"微波炉",oven:"烤箱",toaster:"烤面包机",sink:"水槽",refrigerator:"冰箱",book:"书本",clock:"时钟",vase:"花瓶",scissors:"剪刀",teddy_bear:"泰迪熊",hair_drier:"吹风机",toothbrush:"牙刷"};

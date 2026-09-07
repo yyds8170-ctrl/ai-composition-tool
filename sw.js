@@ -1,17 +1,36 @@
-/* AI 构图助手 · Service Worker v4.2.0 —— 离线缓存，让应用像原生 App 一样秒开 */
-const CACHE = 'ai-compose-v420';
+/* AI 构图助手 · Service Worker v4.2.1 —— 离线缓存，让应用像原生 App 一样秒开 */
+const CACHE = 'ai-compose-v421';
 const CORE = [
   './',
   './index.html',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png'
-  // v4.2: 模型文件改 runtime cache-first（模型为不可变资源，离线可用；不再预缓存18MB，避免install超时）
+];
+// v4.2.1: 模型文件后台预缓存（不阻塞install，失败自动忽略）——首次打开即开始后台下载，
+// 下载完成后离线/弱网加载秒开；配合 fetch 的 cache-first 静态资源分支双保险
+const MODEL_FILES = [
+  './model/model.json',
+  './model/group1-shard1of5',
+  './model/group1-shard2of5',
+  './model/group1-shard3of5',
+  './model/group1-shard4of5',
+  './model/group1-shard5of5'
 ];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE).then((c) => c.addAll(CORE)).catch(() => {})
+  );
+  // v4.2.1: 模型后台预缓存——全部失败也不影响 install/activate（allSettled 吞错）
+  e.waitUntil(
+    caches.open(CACHE).then((c) =>
+      Promise.allSettled(MODEL_FILES.map((f) =>
+        fetch(f, { cache: 'force-cache' }).then((r) => {
+          if (r && r.ok) return c.put(f, r.clone());
+        }).catch(() => {})
+      ))
+    ).catch(() => {})
   );
   self.skipWaiting();
 });
