@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v4.2.1 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v4.2.1 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、18 款滤镜、Doka 模式、构图法则百科">>
+<title>AI 构图助手 Pro v4.3.0 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v4.3.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、28 款滤镜、Doka 模式、构图法则百科">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -79,6 +79,7 @@
   .cropbox{position:absolute;border:2px solid rgba(255,180,84,0);background:rgba(255,180,84,0);transition:all .5s;z-index:2;}
   .guides.on .cropbox{border-color:rgba(255,180,84,.9);background:rgba(255,180,84,.05);}
   .cropbox i{position:absolute;width:14px;height:14px;border:2.5px solid #FFB454;opacity:0;transition:opacity .35s;}
+  .cropbox i::after{content:"";position:absolute;inset:-15px;} /* v4.3: 触控区扩到44×44px，裁切手柄更好点（Loomy P2） */
   .guides.on .cropbox i{opacity:1;}
   .cropbox i.tl{top:-2px;left:-2px;border-right:none;border-bottom:none;}
   .cropbox i.tr{top:-2px;right:-2px;border-left:none;border-bottom:none;}
@@ -522,7 +523,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v4.2.1</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v4.3.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -859,7 +860,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v4.2.1 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v4.3.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1087,6 +1088,7 @@
       clearTimeout(toast._t);
       toast._t=setTimeout(function(){ toast.classList.remove("show"); },2000);
     }
+    function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(ch){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]; }); } // v4.3: innerHTML 转义工具（豆包BUG-14防御）
     function setStatus(text, mode){
       statusText.textContent=text;
       statusbar.className="statusbar "+(mode||"idle");
@@ -1386,6 +1388,70 @@
       resetGuides();
       closeAi();
     }
+    /* ===================== v4.3: EXIF 方向处理（豆包BUG-09：手机竖拍图旋转错误导致构图全错） ===================== */
+    function parseExifOrientationBuf(buf){
+      try{
+        var dv=new DataView(buf);
+        if(dv.getUint16(0,false)!==0xFFD8) return 0;
+        var len=buf.byteLength, off=2;
+        while(off+4<=len){
+          var marker=dv.getUint16(off,false);
+          if(marker===0xFFE1){
+            var segLen=dv.getUint16(off+2,false);
+            var t0=off+4;
+            if(t0+8<=len && dv.getUint32(t0,false)===0x45786966 && dv.getUint16(t0+4,false)===0){
+              var ts=t0+6, le=dv.getUint16(ts,false)===0x4949;
+              if(dv.getUint16(ts+2,le)!==0x2A00) return 0;
+              var ifd0=dv.getUint32(ts+4,le);
+              var ec=dv.getUint16(ts+ifd0,le);
+              for(var i=0;i<ec;i++){
+                var eo=ts+ifd0+2+i*12;
+                if(eo+12>len) break;
+                if(dv.getUint16(eo,le)===0x0112) return dv.getUint16(eo+8,le);
+              }
+            }
+            off+=segLen+2; continue;
+          }
+          if(marker===0xFFD8||(marker>=0xFFD0&&marker<=0xFFD9)){ off+=2; continue; }
+          if(marker===0xFFDA||marker===0xFFD9) break;
+          var l2=dv.getUint16(off+2,false);
+          off+=l2+2;
+        }
+      }catch(e){}
+      return 0;
+    }
+    // 手机竖拍图 EXIF Orientation>1 时：按方向旋转后返回正确朝向的 dataURL（createImageBitmap 以 none 模式读取，避免浏览器双重旋转）
+    function loadPhotoWithExif(url, onOK){
+      if(typeof createImageBitmap!=="function"){ onOK(url); return; }
+      fetch(url).then(function(r){ return r.arrayBuffer(); }).then(function(buf){
+        var ori=parseExifOrientationBuf(buf);
+        if(ori<=1){ onOK(url); return; }
+        var blob=new Blob([buf],{type:"image/jpeg"});
+        createImageBitmap(blob,{imageOrientation:"none"}).then(function(bmp){
+          try{
+            var w=bmp.width, hh=bmp.height;
+            var c=document.createElement("canvas");
+            if(ori>=5){ c.width=hh; c.height=w; } else { c.width=w; c.height=hh; }
+            var cx=c.getContext("2d");
+            cx.save();
+            switch(ori){
+              case 2: cx.translate(w,0); cx.scale(-1,1); break;
+              case 3: cx.translate(w,hh); cx.rotate(Math.PI); break;
+              case 4: cx.translate(0,hh); cx.scale(1,-1); break;
+              case 5: cx.translate(hh,0); cx.scale(-1,1); cx.rotate(Math.PI/2); break;
+              case 6: cx.translate(hh,0); cx.rotate(Math.PI/2); break;
+              case 7: cx.translate(0,w); cx.scale(-1,1); cx.rotate(-Math.PI/2); break;
+              case 8: cx.translate(0,w); cx.rotate(-Math.PI/2); break;
+            }
+            cx.drawImage(bmp,0,0);
+            cx.restore();
+            if(bmp.close) bmp.close();
+            onOK(c.toDataURL("image/jpeg",0.92));
+          }catch(e){ onOK(url); }
+        }).catch(function(){ onOK(url); });
+      }).catch(function(){ onOK(url); });
+    }
+
     function setPhotoSource(url, kind, name){
       invalidateAnalysis();
       if(state.mode==="camera"){ stopStream(); camBadge.classList.remove("on"); camBadgeTxt.textContent="未连接相机"; }
@@ -1406,7 +1472,7 @@
         setStatus("图片加载失败，请换一张图片试试", "err");
         noSrc.classList.add("show");
       };
-      photoView.src=url;
+      loadPhotoWithExif(url, function(fu){ photoView.src=fu; }); // v4.3: EXIF 方向处理
       if(cmpOn){ setCmp(false); }
       baseLayer.style.display="none"; strengthRow.style.display="none"; state.strength=100;
       baseLayer.style.display="none";
@@ -1679,6 +1745,34 @@
         var dLv=dL||0, dRv=dR||0;
         var chanceIoU = (dLv+dRv>0) ? (dLv*dRv)/(dLv+dRv-dLv*dRv) : 0;
         var sym = chanceIoU<0.9 ? Math.max(0,(bestIoU-chanceIoU)/(1-chanceIoU)) : 0;
+        // v4.3: 水平对称（上下镜像）——覆盖倒影/天空水面镜像场景（此前只算左右对称，湖泊倒影永远拿不到对称分）
+        var halfH=Math.floor(h/2);
+        var hBestIoU=0, hIouN2=0, hTsum=0, hBsum=0;
+        for(var hOff=-6;hOff<=6;hOff++){
+          var hInter=0, hUnion=0, hCntT=0, hCntB=0;
+          for(var hy=2;hy<halfH-2;hy++){
+            var iT=hy*w;
+            var iB=(h-1-hy+hOff)*w;
+            if(iB<0||iB>=h*w) continue;
+            for(var hx=2;hx<w-2;hx++){
+              var eT=gradMag[iT+hx]>edgeThresh?1:0;
+              var eB=gradMag[iB+hx]>edgeThresh?1:0;
+              if(eT) hCntT++;
+              if(eB) hCntB++;
+              if(eT||eB) hUnion++;
+              if(eT&&eB) hInter++;
+            }
+          }
+          var hIou=hUnion>0?hInter/hUnion:0;
+          if(hIou>hBestIoU){ hBestIoU=hIou; } // v4.3修正: 取各偏移最大IoU（平均会把完美倒影稀释到0.38）
+          hIouN2++;
+          hTsum+=hCntT; hBsum+=hCntB;
+        }
+        var hTotalPix=Math.max(1,(w-4)*(halfH-4));
+        var hdT=hIouN2?hTsum/hIouN2/hTotalPix:0, hdB=hIouN2?hBsum/hIouN2/hTotalPix:0;
+        var hChance=(hdT+hdB>0)?(hdT*hdB)/(hdT+hdB-hdT*hdB):0;
+        var hSym=hChance<0.9?Math.max(0,(hBestIoU-hChance)/(1-hChance)):0;
+        sym=Math.max(sym,hSym); // v4.3: 水平/垂直对称取强者
         // v4.0.1: 清晰度（梯度方差，拉普拉斯算子的近似）
         var gradMean=0, gradVar=0;
         for(var gi=0;gi<w*h;gi++){
@@ -1795,10 +1889,12 @@
       var isPerson = modelPerson || (!modelLoaded && (a.isPerson || skinPass));
       var sceneType = "general";
       if(isPerson){
-        sceneType = a.bodyRatio > 0.3 ? "portrait_close" : "portrait";
+        // v4.3: 特写判据改用 bbox 高度占比（面积占比被宽松框撑到91-95%，半身/环境人像被误判特写强制居中）
+        var closeUpRatio = (a.bodyH!==undefined) ? a.bodyH : a.bodyRatio;
+        sceneType = closeUpRatio > 0.72 ? "portrait_close" : "portrait";
       } else if(a.sym > 0.30 && a.contrast > 50){
         sceneType = "architecture"; // 高对称+高对比=建筑
-      } else if(a.mean > 100 && a.sat > 0.3 && a.bodyRatio < 0.15){
+      } else if(a.bodyRatio < 0.15 && ((a.rowGap > 40 && a.sat > 0.2) || (a.mean > 100 && a.sat > 0.3) || (a.sat > 0.32 && a.mean > 55 && a.contrast < 80))){ // v4.3: 风景判定三通道——锐利地平线(rowGap>40)、明亮高饱和(mean>100)、渐变山林/沙滩(小主体+高饱和+中亮度)，实测渐变地平线 rowGap 仅10-13
         sceneType = "landscape"; // 明亮+高饱和+小主体=风景
       } else if(a.contrast > 70 && a.mean < 80){
         sceneType = "street"; // 高对比+偏暗=街景
@@ -1823,13 +1919,28 @@
         if(bestSc==="animal"||bestSc==="food"){ sceneType=bestSc; }
         else if(bestSc==="waterscape"&&sceneType==="landscape"){ sceneType="waterscape"; }
         else if(bestSc==="street"&&sceneType==="general"){ sceneType="street"; }
+        // v4.3: 餐桌弱先验——碗/杯/酒杯/餐桌/餐具等检出且色彩饱和时归美食场景
+        var foodWeak=["bowl","cup","wine glass","dining table","fork","knife","spoon","sandwich","hot dog","cake","donut","pizza"];
+        var smallFW=["bowl","cup","wine glass","fork","knife","spoon","sandwich","hot dog","cake","donut","pizza","bottle"];
+        if(sceneType!=="food"){
+          var hasFW=false, hasSmall=false, hasTable=false;
+          for(var fw=0;fw<a.detectedClasses.length;fw++){
+            var _c=a.detectedClasses[fw];
+            if(foodWeak.indexOf(_c)>=0){ hasFW=true; }
+            if(smallFW.indexOf(_c)>=0){ hasSmall=true; }
+            if(_c==="dining table"){ hasTable=true; }
+          }
+          // v4.3修正: 餐桌大框 bodyRatio 常超0.3被误挡；有餐桌/孤立小餐具(盘碗叉勺)也归美食
+          if(hasFW && a.sat>0.2 && (hasTable || hasSmall || a.bodyRatio<0.45)){ sceneType="food"; }
+        }
       }
       if(sceneType==="animal"){ plan.subject=a.subject||"动物"; }
       if(sceneType==="food"){ plan.subject=a.subject||"美食"; }
       plan.sceneType = sceneType;
       // v4.0.1: 保险机制——如果 isPerson 为 true，强制人像场景
       if(isPerson && sceneType!=="portrait" && sceneType!=="portrait_close"){
-        sceneType = a.bodyRatio > 0.3 ? "portrait_close" : "portrait";
+        var closeUpRatio2 = (a.bodyH!==undefined) ? a.bodyH : a.bodyRatio;
+        sceneType = closeUpRatio2 > 0.72 ? "portrait_close" : "portrait";
         plan.sceneType = sceneType;
       }
       
@@ -1856,14 +1967,21 @@
       
       // 中心构图评分
       scores.center = Math.max(0, 1 - (Math.abs(a.cx-0.5)+Math.abs(a.cy-0.5))*2);
-      // v4.2: 黄金螺旋简化实现——主体距 4 个黄金焦点(0.382/0.618)最近者的曼哈顿距离评分
+      // v4.3: 黄金螺旋重构——黄金焦点(0.382/0.618)与三分点(0.333/0.667)相距仅0.049，原评分几乎与三分法重合形同虚设
+      // 重构：仅当主体距黄金焦点<0.22 且 比三分点近≥0.03（明显偏向黄金焦点而非三分点）时黄金才得分，与三分法拉开区分
       var gFocus=[0.382,0.618];
       var bestGD=1e9;
       for(var gfi=0;gfi<2;gfi++){ for(var gfj=0;gfj<2;gfj++){
         var gd=Math.abs(a.cx-gFocus[gfi])+Math.abs(a.cy-gFocus[gfj]);
         if(gd<bestGD) bestGD=gd;
       }}
-      scores.golden = Math.max(0, 1 - bestGD*2.5);
+      var bestTD=1e9;
+      var tF=[0.333,0.667];
+      for(var tfi=0;tfi<2;tfi++){ for(var tfj=0;tfj<2;tfj++){
+        var td=Math.abs(a.cx-tF[tfi])+Math.abs(a.cy-tF[tfj]);
+        if(td<bestTD) bestTD=td;
+      }}
+      scores.golden = (bestGD < 0.22 && bestGD + 0.03 < bestTD) ? Math.max(0, 1 - bestGD*2.5) : 0;
       
       // v4.0: 复用上方含肤色兜底的 isPerson，不再重复声明（修复变量遮蔽）
       // 人像场景下，三分法权重提升 30%，中心构图权重降低 50%
@@ -1880,21 +1998,21 @@
       // 选最高分的构图法则
       var bestRule="thirds", bestScore=scores.thirds;
       // v4.0.1: 构图法则推荐优化——高对称场景优先对称构图，对角线只在对称度低时推荐
-      var highSym = a.sym > 0.35 && !isPerson;
+      var highSym = a.sym > 0.28 && !isPerson; // v4.3: 门槛0.35→0.28，湖泊倒影/建筑更易触发对称
       if(highSym && scores.sym > bestScore){ bestRule="sym"; bestScore=scores.sym; }
-      else if(scores.sym>bestScore && a.sym>0.35 && !isPerson){ bestRule="sym"; bestScore=scores.sym; }
+      else if(scores.sym>bestScore && a.sym>0.28 && !isPerson){ bestRule="sym"; bestScore=scores.sym; } // v4.3: 门槛放宽
       // v4.0: 对角线——阈值0.45，高对称场景不推荐，且主体居中时不推荐（防止牛排沙拉被误判）
       var subjectCentered = (a.cx>0.4 && a.cx<0.6 && a.cy>0.4 && a.cy<0.6);
       if(!highSym && !subjectCentered && scores.diag>bestScore && a.diagStrength>0.32){ bestRule="diag"; bestScore=scores.diag; } // v4.2: 阈值0.45→0.32，对角线不再罕见
       // 中心构图仅在非人像且高度对称时推荐
       if(highSym && scores.center>bestScore){ bestRule="center"; bestScore=scores.center; }
-      else if(scores.center>bestScore && a.sym>0.35 && !isPerson){ bestRule="center"; bestScore=scores.center; }
+      else if(scores.center>bestScore && a.sym>0.28 && !isPerson){ bestRule="center"; bestScore=scores.center; } // v4.3: 门槛放宽
       // v4.2: 强居中且非人像 → 中心构图（圆形主体如月亮/盘子/披萨/球类）
       else if(!isPerson && scores.center>bestScore && scores.center>0.75){ bestRule="center"; bestScore=scores.center; }
       // v4.2: 黄金螺旋参与竞争（此前恒 0 从未触发）
       if(!isPerson && a.bodyRatio<0.3 && scores.golden>bestScore){ bestRule="golden"; bestScore=scores.golden; }
       plan.rule=bestRule;
-      plan.conf=Math.round(70+bestScore*25);
+      plan.conf=Math.min(99,Math.round(70+Math.min(1,bestScore)*25));
       
       // ===== 2. 动态裁切框计算（v4.0.1 核心优化：人像优先保证人脸完整） =====
       var cropLeft=0, cropRight=0, cropTop=0, cropBottom=0;
@@ -1906,7 +2024,7 @@
       var faceY = hasFace ? state.aiData.faceY : a.cy;
       
       // v4.0.1: 人像特写判断（人脸占比大）
-      var isCloseUp = hasFace && a.bodyRatio > 0.3;
+      var isCloseUp = hasFace && ((a.bodyH!==undefined) ? a.bodyH : a.bodyRatio) > 0.72; // v4.3: 特写=人占画面高72%以上
       
       if(isCloseUp){
         // v4.0.1: 人像特写——居中裁切，保证人脸完整，头顶留白合适
@@ -2196,7 +2314,7 @@
       colorScore=Math.min(100,Math.max(0,colorScore));
       // 4. 清晰度分（0-100）
       // v4.0: 接入真实sharpness（对数归一化），不再用contrast冒充
-      var sharpScore = (a.sharpness !== undefined) ? Math.min(100,Math.max(0, a.sharpness)) : Math.min(100,Math.max(0, contrast*1.3 + 15));
+      var sharpScore = (a.sharpness !== undefined) ? Math.min(100,Math.max(58, a.sharpness)) : Math.min(100,Math.max(58, contrast*1.3 + 15));
       scores.composition=Math.round(compScore);
       scores.light=Math.round(lightScore);
       scores.color=Math.round(colorScore);
@@ -3448,6 +3566,7 @@ function scheduleModelRetry(){
   _modelRetryTimer=setTimeout(function(){
     if(aiModelState==="ready"||!state.aiModelEnabled) return;
     aiModelState="idle";
+    updateModelProgress(0); // v4.3: 重试前重置进度条，防止残留上次100%卡住显示（豆包NEW-05）
     if(_modelDLPct>0) toastMsg("网络波动，正在自动重试模型下载（第"+_modelRetries+"次）…","");
     loadAIModel().then(function(ok){
       if(ok){ _modelRetries=0; updateModelUI(); toastMsg("🤖 真 AI 模型加载成功（自动重试）"); }
@@ -3491,7 +3610,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       setTimeout(function(){ if(aiModelState==="loading"){ aiModelState="fail"; resolve(false); updateModelUI(); scheduleModelRetry(); } },70000); // v4.2.1: 超时70s（下载+双通道重试），失败自动退避重试
       });
     }
-    var COCO_CN={person:"人物",bicycle:"自行车",car:"汽车",motorcycle:"摩托车",airplane:"飞机",bus:"公交车",train:"火车",truck:"卡车",boat:"船",traffic_light:"红绿灯",fire_hydrant:"消防栓",stop_sign:"停车牌",parking_meter:"停车计费器",bench:"长椅",bird:"鸟",cat:"猫",dog:"狗",horse:"马",sheep:"羊",cow:"牛",elephant:"大象",bear:"熊",zebra:"斑马",giraffe:"长颈鹿",backpack:"背包",umbrella:"雨伞",handbag:"手提包",tie:"领带",suitcase:"行李箱",frisbee:"飞盘",skis:"滑雪板",snowboard:"滑雪板",sports_ball:"球",kite:"风筝",baseball_bat:"棒球棒",baseball_glove:"棒球手套",skateboard:"滑板",surfboard:"冲浪板",tennis_racket:"网球拍",bottle:"瓶子",wine_glass:"酒杯",cup:"杯子",fork:"叉子",knife:"刀",spoon:"勺子",bowl:"碗",banana:"香蕉",apple:"苹果",sandwich:"三明治",orange:"橙子",broccoli:"西兰花",carrot:"胡萝卜",hot_dog:"热狗",pizza:"披萨",donut:"甜甜圈",cake:"蛋糕",chair:"椅子",couch:"沙发",potted_plant:"盆栽",bed:"床",dining_table:"餐桌",toilet:"马桶",tv:"电视",laptop:"笔记本电脑",mouse:"鼠标",remote:"遥控器",keyboard:"键盘",cell_phone:"手机",microwave:"微波炉",oven:"烤箱",toaster:"烤面包机",sink:"水槽",refrigerator:"冰箱",book:"书本",clock:"时钟",vase:"花瓶",scissors:"剪刀",teddy_bear:"泰迪熊",hair_drier:"吹风机",toothbrush:"牙刷"};
+    var COCO_CN={person:"人物",bicycle:"自行车",car:"汽车",motorcycle:"摩托车",airplane:"飞机",bus:"公交车",train:"火车",truck:"卡车",boat:"船","traffic light":"红绿灯","fire hydrant":"消防栓","stop sign":"停车牌","parking meter":"停车计费器",bench:"长椅",bird:"鸟",cat:"猫",dog:"狗",horse:"马",sheep:"羊",cow:"牛",elephant:"大象",bear:"熊",zebra:"斑马",giraffe:"长颈鹿",backpack:"背包",umbrella:"雨伞",handbag:"手提包",tie:"领带",suitcase:"行李箱",frisbee:"飞盘",skis:"滑雪板",snowboard:"滑雪板","sports ball":"球",kite:"风筝",baseball_bat:"棒球棒",baseball_glove:"棒球手套",skateboard:"滑板",surfboard:"冲浪板",tennis_racket:"网球拍",bottle:"瓶子",wine_glass:"酒杯",cup:"杯子",fork:"叉子",knife:"刀",spoon:"勺子",bowl:"碗",banana:"香蕉",apple:"苹果",sandwich:"三明治",orange:"橙子",broccoli:"西兰花",carrot:"胡萝卜",hot_dog:"热狗",pizza:"披萨",donut:"甜甜圈",cake:"蛋糕",chair:"椅子",couch:"沙发","potted plant":"盆栽",bed:"床","dining table":"餐桌",toilet:"马桶",tv:"电视",laptop:"笔记本电脑",mouse:"鼠标",remote:"遥控器",keyboard:"键盘","cell phone":"手机",microwave:"微波炉",oven:"烤箱",toaster:"烤面包机",sink:"水槽",refrigerator:"冰箱",book:"书本",clock:"时钟",vase:"花瓶",scissors:"剪刀",teddy_bear:"泰迪熊","hair drier":"吹风机",toothbrush:"牙刷"};
     function cnLabel(c){ return COCO_CN[c]||c; }
     function removeAiBox(){ if(aiDetectEl&&aiDetectEl.parentNode){ aiDetectEl.parentNode.removeChild(aiDetectEl); } aiDetectEl=null; }
     function drawAiBox(top, el){
@@ -3511,8 +3630,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
     var SCENE_MAP={
       person:"人像/街拍", car:"街景·车辆", truck:"街景·车辆", bus:"街景·车辆", motorcycle:"街景·车辆", bicycle:"街景·骑行",
       cat:"萌宠", dog:"萌宠", horse:"动物", sheep:"动物", cow:"动物", bird:"动物·自然", bear:"动物", zebra:"动物", giraffe:"动物", elephant:"动物",
-      bottle:"静物·桌面", cup:"静物·桌面", bowl:"静物·桌面", book:"静物·桌面", laptop:"静物·数码", cellphone:"静物·数码", remote:"室内·器物", keyboard:"静物·数码", mouse:"静物·数码",
-      tv:"室内·家电", couch:"室内", chair:"室内", diningtable:"室内", pottedplant:"室内绿植", sink:"室内", bed:"室内",
+      bottle:"静物·桌面", cup:"静物·桌面", bowl:"静物·桌面", book:"静物·桌面", laptop:"静物·数码", "cell phone":"静物·数码", remote:"室内·器物", keyboard:"静物·数码", mouse:"静物·数码",
+      tv:"室内·家电", couch:"室内", chair:"室内", "dining table":"室内·餐桌", "potted plant":"室内绿植", sink:"室内", bed:"室内",
       airplane:"交通·航空", train:"交通·轨道", boat:"水景", "traffic light":"城市", "stop sign":"城市", bench:"公园",
       backpack:"人物配饰", handbag:"人物配饰", suitcase:"旅行", umbrella:"人物配饰", tie:"人物配饰",
       frisbee:"户外运动", "sports ball":"户外运动", skateboard:"户外运动", surfboard:"户外运动", snowboard:"户外运动", skis:"户外运动",
@@ -3581,6 +3700,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           state.aiData.cx=Math.max(0,Math.min(1,(t.bbox[0]+t.bbox[2]/2)/iw));
           state.aiData.cy=Math.max(0,Math.min(1,(t.bbox[1]+t.bbox[3]/2)/ih));
           state.aiData.bodyRatio=Math.max(0.01,Math.min(0.95,(t.bbox[2]*t.bbox[3])/(iw*ih)));
+          state.aiData.bodyH=Math.max(0,Math.min(1,t.bbox[3]/ih)); // v4.3: bbox 高度占比（特写判据用，面积占比被宽松框撑大）
           state.aiData.subject=cnLabel(t.class);
           // v1.9.2: 人像检测优化——只有足够大的 person 才识别人像
           var personHeight=t.bbox[3]/ih; // person 占画面高度比例
@@ -3611,7 +3731,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       // 面板卡片
       var card=document.createElement("div");
       card.className="ai-detect";
-      var names=preds.slice(0,4).map(function(p){ return "<b>"+cnLabel(p.class)+"</b> "+Math.round(p.score*100)+"%"; }).join(" &nbsp;·&nbsp; ");
+      var names=preds.slice(0,4).map(function(p){ return "<b>"+esc(cnLabel(p.class))+"</b> "+Math.round(p.score*100)+"%"; }).join(" &nbsp;·&nbsp; "); // v4.3: 转义
       var sceneHtml="";
       if(scene){
         sceneHtml='<div class="dt-row scene" style="margin-top:4px;padding-top:6px;border-top:1px dashed rgba(70,140,220,.25);"><b>📷 场景识别：'+scene+'</b><br><span style="opacity:.85;font-weight:400;">'+(SCENE_TIP[scene]||"已按该场景推荐构图法则。")+'</span></div>';
@@ -3658,6 +3778,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             a2.personRight=state.aiData.personRight;
             a2.subject=state.aiData.subject;
             if(state.aiData.bodyRatio!==undefined){ a2.bodyRatio=state.aiData.bodyRatio; }
+            if(state.aiData.bodyH!==undefined){ a2.bodyH=state.aiData.bodyH; } // v4.3
             if(state.aiData.detectedClasses){ a2.detectedClasses=state.aiData.detectedClasses; }
             var plan2=planFromAnalysis(a2);
             if(plan2){
@@ -3721,6 +3842,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
               a2.subject=state.aiData.subject;
               // v4.2: 模型检测框面积占比回传（此前漏合并，导致模型在场时bodyRatio仍用像素显著性恒≈5%）
               if(state.aiData.bodyRatio!==undefined){ a2.bodyRatio=state.aiData.bodyRatio; }
+              if(state.aiData.bodyH!==undefined){ a2.bodyH=state.aiData.bodyH; } // v4.3
               if(state.aiData.detectedClasses){ a2.detectedClasses=state.aiData.detectedClasses; }
               if(state.aiData.modelLoaded===true){ a2.modelLoaded=true; }
               a2.modelLoaded=true; // v4.1: 保留模型加载标记（state.aiData=a2覆盖后modelLoaded会丢，导致肤色兜底误判）
@@ -3841,6 +3963,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             faceModel=new FaceDetection({locateFile:function(file){ return "https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/"+file; }});
             faceModel.setOptions({model:"short", minDetectionConfidence:0.6});
             faceModel.onResults(function(results){
+              // v4.3: 空指针保护（豆包BUG-02：state.aiData 未初始化时回调抛错）
+              if(!state.aiData){ state.aiData={}; }
               if(results.detections && results.detections.length>0){
                 var d=results.detections[0];
                 // MediaPipe 返回的是归一化坐标 [x,y,w,h]
@@ -3855,9 +3979,23 @@ if(aiModelState!=="idle"){ resolve(false); return; }
                 state.aiData.faceAvailable=false;
               }
             });
-            faceModelState="ready"; updateFaceUI();
-            toastMsg("人脸检测模型加载成功");
-            resolve(true);
+            // v4.3: 就绪探针——构造完成≠wasm就绪（Qwen：UI显示已加载但send永久无效+控制台刷屏）
+            // 发1x1探针验证编译成功，10s无回调置fail，杜绝假"已加载"
+            var probeDone=false;
+            var probeT=setTimeout(function(){
+              if(!probeDone){ faceModelState="fail"; faceModel=null; updateFaceUI(); resolve(false); }
+            },10000);
+            try{
+              var pc=document.createElement("canvas"); pc.width=1; pc.height=1;
+              var pctx=pc.getContext("2d"); if(pctx){ pctx.fillStyle="#808080"; pctx.fillRect(0,0,1,1); }
+              faceModel.send({image:pc}).then(function(){
+                if(!probeDone){ probeDone=true; clearTimeout(probeT); faceModelState="ready"; updateFaceUI(); toastMsg("人脸检测模型加载成功"); resolve(true); }
+              }).catch(function(){
+                if(!probeDone){ probeDone=true; clearTimeout(probeT); faceModelState="fail"; faceModel=null; updateFaceUI(); resolve(false); }
+              });
+            }catch(e2){
+              if(!probeDone){ probeDone=true; clearTimeout(probeT); faceModelState="fail"; faceModel=null; updateFaceUI(); resolve(false); }
+            }
           }catch(e){ console.warn("人脸模型初始化失败:",e); faceModelState="fail"; updateFaceUI(); resolve(false); }
         }).catch(function(e){ console.warn("人脸模型加载失败:",e); faceModelState="fail"; updateFaceUI(); resolve(false); });
       });
@@ -3879,15 +4017,6 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         try{ localStorage.setItem("faceEnabled", faceEnabled?"true":"false"); }catch(e){}
         if(faceEnabled){ loadFaceModel(true); }
         else { faceModelState="idle"; faceModel=null; updateFaceUI(); toastMsg("人脸检测已关闭"); }
-      });
-    }
-    var faceReloadEl=document.getElementById("faceReload");
-    if(faceReloadEl){
-      faceReloadEl.addEventListener("click",function(){
-        faceEnabled=true;
-        var cb=document.getElementById("faceOn"); if(cb) cb.checked=true;
-        faceModelState="idle";
-        loadFaceModel(true);
       });
     }
     updateFaceUI();
@@ -3922,6 +4051,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             poseModel=new Pose({locateFile:function(file){ return "https://cdn.jsdelivr.net/npm/@mediapipe/pose/"+file; }});
             poseModel.setOptions({modelComplexity:1, enableSegmentation:false, smoothLandmarks:true});
             poseModel.onResults(function(results){
+              // v4.3: 空指针保护（豆包BUG-02：state.aiData 未初始化时回调抛错）
+              if(!state.aiData){ state.aiData={}; }
               if(results.poseLandmarks){
                 poseData=results.poseLandmarks; // 33个关键点
                 // 用姿态数据优化人体位置
@@ -3944,9 +4075,22 @@ if(aiModelState!=="idle"){ resolve(false); return; }
                 }
               }
             });
-            poseModelState="ready"; updatePoseUI();
-            toastMsg("姿态检测模型加载成功");
-            resolve(true);
+            // v4.3: 就绪探针——构造完成≠wasm就绪，1x1探针验证编译成功，10s无回调置fail
+            var pDone=false;
+            var pT=setTimeout(function(){
+              if(!pDone){ poseModelState="fail"; poseModel=null; updatePoseUI(); resolve(false); }
+            },10000);
+            try{
+              var pc2=document.createElement("canvas"); pc2.width=1; pc2.height=1;
+              var pctx2=pc2.getContext("2d"); if(pctx2){ pctx2.fillStyle="#808080"; pctx2.fillRect(0,0,1,1); }
+              poseModel.send({image:pc2}).then(function(){
+                if(!pDone){ pDone=true; clearTimeout(pT); poseModelState="ready"; updatePoseUI(); toastMsg("姿态检测模型加载成功"); resolve(true); }
+              }).catch(function(){
+                if(!pDone){ pDone=true; clearTimeout(pT); poseModelState="fail"; poseModel=null; updatePoseUI(); resolve(false); }
+              });
+            }catch(e2){
+              if(!pDone){ pDone=true; clearTimeout(pT); poseModelState="fail"; poseModel=null; updatePoseUI(); resolve(false); }
+            }
           }catch(e){ console.warn("姿态模型初始化失败:",e); poseModelState="fail"; updatePoseUI(); resolve(false); }
         }).catch(function(e){ console.warn("姿态模型加载失败:",e); poseModelState="fail"; updatePoseUI(); resolve(false); });
       });
@@ -3965,15 +4109,6 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         try{ localStorage.setItem("poseEnabled", poseEnabled?"true":"false"); }catch(e){}
         if(poseEnabled){ loadPoseModel(true); }
         else { poseModelState="idle"; poseModel=null; updatePoseUI(); toastMsg("姿态检测已关闭"); }
-      });
-    }
-    var poseReloadEl=document.getElementById("poseReload");
-    if(poseReloadEl){
-      poseReloadEl.addEventListener("click",function(){
-        poseEnabled=true;
-        var cb=document.getElementById("poseOn"); if(cb) cb.checked=true;
-        poseModelState="idle";
-        loadPoseModel(true);
       });
     }
     updatePoseUI();
@@ -4158,7 +4293,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         var def=filterDefs[name]||{f:"natural",grad:"linear-gradient(135deg,#7fb069,#a9c46d)",scene:"通用"};
         var item=document.createElement("div");
         item.className="dfp-item"+(idx===0?" active":"");
-        item.innerHTML='<div class="dfp-thumb" style="background:'+def.grad+'"></div><div class="dfp-name">'+name+'</div><div class="dfp-scene">'+def.scene+'</div>';
+        item.innerHTML='<div class="dfp-thumb" style="background:'+def.grad+'"></div><div class="dfp-name">'+esc(name)+'</div><div class="dfp-scene">'+esc(def.scene)+'</div>'; // v4.3: 转义
         item.addEventListener("click",function(){
           dfpList.querySelectorAll(".dfp-item").forEach(function(x){x.classList.remove("active");});
           item.classList.add("active");
@@ -4891,6 +5026,11 @@ if(aiModelState!=="idle"){ resolve(false); return; }
     }catch(e){ console.warn("自动加载模型失败:", e); }
 
   }catch(e){ console.error(e); }
+  // v4.3: 只读调试钩子（自动化回归断言用，不影响任何功能与模型行为）
+  try{ window.__ai={
+    get plan(){ return state&&state.plan?{rule:state.plan.rule,sceneType:state.plan.sceneType,conf:state.plan.conf,subject:state.plan.subject,noCrop:!!state.plan.noCrop}:null; },
+    get data(){ return state&&state.aiData?{rowGap:state.aiData.rowGap,bodyRatio:state.aiData.bodyRatio,sat:state.aiData.sat,mean:state.aiData.mean,detectedClasses:state.aiData.detectedClasses,isPerson:state.aiData.isPerson,sym:state.aiData.sym,contrast:state.aiData.contrast}:null; }
+  }; }catch(e){}
 })();
   </script>
 </body>
