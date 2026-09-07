@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>AI 构图助手 Pro v4.1.0 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v1.1.0：相机实时取景、AI 构图分析、26 款胶片滤镜、智能裁切、构图法则百科，全部本地运行不联网">
+<title>AI 构图助手 Pro v4.2.0 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v4.2.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、18 款滤镜、Doka 模式、构图法则百科">>
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -522,7 +522,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v4.1.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v4.2.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -859,7 +859,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v4.1.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v4.2.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1308,6 +1308,7 @@
         camBadge.classList.add("on"); camBadge.classList.remove("err");
         camBadgeTxt.textContent="相机已连接";
         state.analyzed=false; state.plan=null;
+        clearAiData(); // v4.2: 切相机清空旧分析结果
         resetGuides(); closeAi();
         state.sourceKind="camera";
         state.sourceName="实时取景";
@@ -1359,6 +1360,7 @@
       img.src=url;
     }
     fileInput.addEventListener("change",function(){
+      clearAiData(); // v4.2: 用户换图清空旧分析结果
       var f=fileInput.files && fileInput.files[0];
       if(!f) return;
       preprocessUploadFile(f, function(res){
@@ -1416,6 +1418,7 @@
 
     /* ===================== 示例 ===================== */
     function loadSample(s){
+      clearAiData(); // v4.2: 切换示例图清空旧分析结果
       sampleStrip.querySelectorAll(".s-chip").forEach(function(c){ c.classList.toggle("active", c.dataset.id===s.id); });
       setPhotoSource(s.url,"sample",s.name);
       state.plan=s.plan;
@@ -1572,7 +1575,7 @@
         salMean/=(w*h);
         for(var sv=0;sv<w*h;sv++) salVar+=(saliency[sv]-salMean)*(saliency[sv]-salMean);
         salVar/=(w*h);
-        var salT=salMean+2*Math.sqrt(salVar);
+        var salT=salMean+1.5*Math.sqrt(salVar); // v4.2: 2σ→1.5σ，让弱网bodyRatio有区分度（2σ下恒≈5%）
         if(salT<5) salT=5; // 防止全图均匀时阈值过低
         var sx=0,sy=0,sc=0;
         for(var sk=0;sk<w*h;sk++){
@@ -1637,16 +1640,17 @@
         // v4.1: 边缘二值图镜像IoU + 机会校正（扣除随机重叠基线）
         // v4.0.1的IoU直接比较二值边缘镜像重叠率，高纹理图（街景/披萨）左右半图边缘密度都高，随机重叠率天然偏高
         // 导致"高纹理即对称"误判。修复：计算同密度随机分布期望IoU，取校正后差值
-        // 边缘阈值自适应：梯度幅值中位数×2（高纹理细碎边缘被滤出，保留结构边缘）
+        // 边缘阈值自适应：梯度幅值中位数×1.5（v4.2: 保结构边缘，高纹理细碎边缘被滤出）
         var halfW=Math.floor(w/2);
         // 计算梯度幅值数组用于中位数
         var gradMag=new Float32Array(w*h);
         for(var smi=0;smi<w*h;smi++){ gradMag[smi]=Math.sqrt(gx[smi]*gx[smi]+gy[smi]*gy[smi]); }
         var magSorted=Array.prototype.slice.call(gradMag).sort(function(a,b){return a-b;});
-        var edgeThresh=Math.max(12, magSorted[Math.floor(magSorted.length*0.75)]*2); // 自适应：75分位×2，下限12
-        var bestIoU=0;
-        // 允许±2像素的水平偏移，取最大IoU
-        for(var off=-2;off<=2;off++){
+        // v4.2: 边缘阈值改"中位数×1.5"（v4.1 的 75分位×2 把结构边缘连纹理一起滤掉，导致对称信号全线归零）
+        var edgeThresh=Math.max(10, magSorted[Math.floor(magSorted.length*0.5)]*1.5);
+        // v4.2: 偏移搜索 ±2px 扩到 ±6px，IoU 取 13 个偏移的校正均值（抗局部错位，抑制"恰好对齐"虚高）
+        var iouSum=0, iouN=0, cntLsum=0, cntRsum=0;
+        for(var off=-6;off<=6;off++){
           var inter=0, union=0;
           var cntL=0, cntR=0;
           for(var ey=2;ey<h-2;ey++){
@@ -1663,13 +1667,13 @@
             }
           }
           var iou = union>0 ? inter/union : 0;
-          if(iou>bestIoU){
-            bestIoU=iou;
-            // 记录该偏移下的左右边缘密度（用于机会校正）
-            var totalPix=Math.max(1,(h-4)*(halfW-4));
-            var dL=cntL/totalPix, dR=cntR/totalPix;
-          }
+          iouSum+=iou; iouN++;
+          cntLsum+=cntL; cntRsum+=cntR;
         }
+        var bestIoU=iouN>0?iouSum/iouN:0;
+        // 平均边缘密度（用于机会校正）
+        var totalPix=Math.max(1,(h-4)*(halfW-4));
+        var dL=cntLsum/iouN/totalPix, dR=cntRsum/iouN/totalPix;
         // 机会校正：随机重叠期望IoU ≈ dL*dR/(dL+dR-dL*dR)（Jaccard随机基线）
         // 校正后sym = (iou - chance) / (1 - chance)，高纹理无对称结构时自然回落
         var dLv=dL||0, dRv=dR||0;
@@ -1792,13 +1796,36 @@
       var sceneType = "general";
       if(isPerson){
         sceneType = a.bodyRatio > 0.3 ? "portrait_close" : "portrait";
-      } else if(a.sym > 0.55 && a.contrast > 50){
+      } else if(a.sym > 0.30 && a.contrast > 50){
         sceneType = "architecture"; // 高对称+高对比=建筑
       } else if(a.mean > 100 && a.sat > 0.3 && a.bodyRatio < 0.15){
         sceneType = "landscape"; // 明亮+高饱和+小主体=风景
       } else if(a.contrast > 70 && a.mean < 80){
         sceneType = "street"; // 高对比+偏暗=街景
       }
+      // v4.2: 模型检测结果参与场景决策（此前 SCENE_MAP 仅用于面板展示，食物/动物图落不到专属场景）
+      if(!isPerson && a.detectedClasses && a.detectedClasses.length){
+        var seenSc={};
+        for(var di=0;di<a.detectedClasses.length;di++){
+          var scKey=a.detectedClasses[di];
+          var scv=SCENE_MAP[scKey];
+          if(!scv) continue;
+          if(scv.indexOf("萌宠")===0||scv.indexOf("动物")===0){ scv="animal"; }
+          else if(scv.indexOf("美食")===0){ scv="food"; }
+          else if(scv.indexOf("街景")===0){ scv="street"; }
+          else if(scv.indexOf("水景")===0){ scv="waterscape"; }
+          else if(scv.indexOf("城市")===0){ scv="city"; }
+          else { scv="general"; }
+          seenSc[scv]=(seenSc[scv]||0)+1;
+        }
+        var bestSc=null, bestScN=0;
+        for(var sk3 in seenSc){ if(seenSc[sk3]>bestScN){ bestScN=seenSc[sk3]; bestSc=sk3; } }
+        if(bestSc==="animal"||bestSc==="food"){ sceneType=bestSc; }
+        else if(bestSc==="waterscape"&&sceneType==="landscape"){ sceneType="waterscape"; }
+        else if(bestSc==="street"&&sceneType==="general"){ sceneType="street"; }
+      }
+      if(sceneType==="animal"){ plan.subject=a.subject||"动物"; }
+      if(sceneType==="food"){ plan.subject=a.subject||"美食"; }
       plan.sceneType = sceneType;
       // v4.0.1: 保险机制——如果 isPerson 为 true，强制人像场景
       if(isPerson && sceneType!=="portrait" && sceneType!=="portrait_close"){
@@ -1829,11 +1856,19 @@
       
       // 中心构图评分
       scores.center = Math.max(0, 1 - (Math.abs(a.cx-0.5)+Math.abs(a.cy-0.5))*2);
+      // v4.2: 黄金螺旋简化实现——主体距 4 个黄金焦点(0.382/0.618)最近者的曼哈顿距离评分
+      var gFocus=[0.382,0.618];
+      var bestGD=1e9;
+      for(var gfi=0;gfi<2;gfi++){ for(var gfj=0;gfj<2;gfj++){
+        var gd=Math.abs(a.cx-gFocus[gfi])+Math.abs(a.cy-gFocus[gfj]);
+        if(gd<bestGD) bestGD=gd;
+      }}
+      scores.golden = Math.max(0, 1 - bestGD*2.5);
       
       // v4.0: 复用上方含肤色兜底的 isPerson，不再重复声明（修复变量遮蔽）
       // 人像场景下，三分法权重提升 30%，中心构图权重降低 50%
       if(isPerson){
-        scores.thirds = Math.min(1, scores.thirds * 1.8); // v4.0.1: 人像三分法权重提升80%
+        scores.thirds = Math.min(1, scores.thirds * 1.3); // v4.2: 人像三分法权重80%→30%（避免三分法复读机）
         scores.center = scores.center * 0.2; // v4.0.1: 中心构图降低80%
         scores.sym = 0; // v4.0.1: 人像完全不推荐对称构图
         scores.diag = scores.diag * 0.5; // v4.0.1: 对角线降低50%
@@ -1845,15 +1880,19 @@
       // 选最高分的构图法则
       var bestRule="thirds", bestScore=scores.thirds;
       // v4.0.1: 构图法则推荐优化——高对称场景优先对称构图，对角线只在对称度低时推荐
-      var highSym = a.sym > 0.6 && !isPerson;
+      var highSym = a.sym > 0.35 && !isPerson;
       if(highSym && scores.sym > bestScore){ bestRule="sym"; bestScore=scores.sym; }
-      else if(scores.sym>bestScore && a.sym>0.5 && !isPerson){ bestRule="sym"; bestScore=scores.sym; }
+      else if(scores.sym>bestScore && a.sym>0.35 && !isPerson){ bestRule="sym"; bestScore=scores.sym; }
       // v4.0: 对角线——阈值0.45，高对称场景不推荐，且主体居中时不推荐（防止牛排沙拉被误判）
       var subjectCentered = (a.cx>0.4 && a.cx<0.6 && a.cy>0.4 && a.cy<0.6);
-      if(!highSym && !subjectCentered && scores.diag>bestScore && a.diagStrength>0.45){ bestRule="diag"; bestScore=scores.diag; }
+      if(!highSym && !subjectCentered && scores.diag>bestScore && a.diagStrength>0.32){ bestRule="diag"; bestScore=scores.diag; } // v4.2: 阈值0.45→0.32，对角线不再罕见
       // 中心构图仅在非人像且高度对称时推荐
       if(highSym && scores.center>bestScore){ bestRule="center"; bestScore=scores.center; }
-      else if(scores.center>bestScore && a.sym>0.5 && !isPerson){ bestRule="center"; bestScore=scores.center; }
+      else if(scores.center>bestScore && a.sym>0.35 && !isPerson){ bestRule="center"; bestScore=scores.center; }
+      // v4.2: 强居中且非人像 → 中心构图（圆形主体如月亮/盘子/披萨/球类）
+      else if(!isPerson && scores.center>bestScore && scores.center>0.75){ bestRule="center"; bestScore=scores.center; }
+      // v4.2: 黄金螺旋参与竞争（此前恒 0 从未触发）
+      if(!isPerson && a.bodyRatio<0.3 && scores.golden>bestScore){ bestRule="golden"; bestScore=scores.golden; }
       plan.rule=bestRule;
       plan.conf=Math.round(70+bestScore*25);
       
@@ -1969,6 +2008,21 @@
         // v4.0.1: 仅相机模式推荐变焦，导入照片不做数字放大
         if(state.mode!=="camera"){ plan.z = 1.0; }
         plan.subject="人像";
+      } else if(a.sat < 0.05){
+        // v4.2: 黑白/极低饱和影像只推黑白类滤镜（豆包建议，避免黑白照被推荐彩色滤镜）
+        plan.filters=["黑白 · 经典","FClassic · 冷峻低饱和","胶片 · 颗粒感"];
+        plan.f = "mono";
+        plan.subject="黑白影像";
+      } else if(sceneType==="food"){
+        // v4.2: 美食场景——增食欲
+        plan.filters=["鲜艳 · 增强色彩","暖调 · 强化氛围","自然 · 忠实还原"];
+        plan.f = a.sat>0.35 ? "vivid" : "warm";
+        plan.subject=a.subject||"美食";
+      } else if(sceneType==="animal"){
+        // v4.2: 动物场景——自然真实+毛发质感
+        plan.filters=["自然 · 忠实还原","鲜艳 · 增强色彩","清透 · 冷白"];
+        plan.f = a.sat>0.35 ? "vivid" : "natural";
+        plan.subject=a.subject||"动物";
       } else if(a.mean < 60){
         // 夜景/暗光
         plan.filters=["暗夜 · 提升暗部","胶片 · 颗粒感","FClassic · 冷峻"];
@@ -2002,13 +2056,17 @@
       
       // ===== 5. 构图描述 =====
       var ruleNames={thirds:"三分法",sym:"对称构图",diag:"对角线构图",center:"中心构图",golden:"黄金螺旋"};
+      // v4.2: 新场景的中文名（面板展示用）
       // v4.0.1: 人像场景给出更专业的构图建议
       if(isCloseUp){
         plan.desc = "检测到人像特写，推荐居中构图（匹配度"+plan.conf+"%）。" +
           "保持面部完整，头顶留白适中，推荐原尺寸不裁切，" +
           (FILTERS[plan.f]?FILTERS[plan.f].name:"自然")+"滤镜优化肤色。";
       } else if(isPerson && bestRule==="thirds"){
-        var faceSide = state.aiData.faceX < 0.5 ? "右" : "左";
+        // v4.2: faceX 弱网时 undefined 会导致永远"左"，用肤色质心/主体质心兜底
+        var _faceX = (state.aiData && state.aiData.faceX!==undefined) ? state.aiData.faceX
+                   : (a.skinCx!==undefined ? a.skinCx : a.cx);
+        var faceSide = _faceX < 0.5 ? "右" : "左";
         plan.desc = "检测到人像，推荐三分法构图（匹配度"+plan.conf+"%）。" +
           "将人物面部放在"+faceSide+"侧黄金分割点，头顶留白约 1/5，" +
           "推荐"+plan.z.toFixed(1)+"x焦段，"+(FILTERS[plan.f]?FILTERS[plan.f].name:"自然")+"滤镜。";
@@ -2034,7 +2092,19 @@
       
       // ===== 7. 人像专项分析（专业人像摄影法则） =====
       var personData = (state.aiData && state.aiData.isPerson) ? state.aiData : a;
-      if(personData.isPerson && personData.faceAvailable!==false){
+      // v4.2: 弱网肤色兜底判定为人像时，用肤色质心补齐人脸字段，让人像专项建议不再缺失
+      if(personData && !personData.isPerson && (a.isPersonLikely || a.isPerson) && a.skinCx!==undefined){
+        personData = {
+          isPerson:true,
+          faceX: a.skinCx, faceY: a.skinCy,
+          headTop: Math.max(0, a.skinCy-0.08),
+          personLeft: Math.max(0, a.skinCx-0.08),
+          personRight: Math.min(1, a.skinCx+0.08),
+          personBottom: 0.92,
+          faceAvailable: true
+        };
+      }
+      if(personData && personData.isPerson && personData.faceAvailable!==false){
         plan.isPerson=true;
         // 头顶留白：专业人像建议 5-10%
         // v4.0.1: 修复头顶留白判断颠倒——headTop越小说明越贴边（留白少）
@@ -2083,7 +2153,7 @@
       // 1. 构图分（0-100）
       var compScore=60;
       if(a.thirdFit>0.6) compScore+=20;
-      else if(a.sym>0.5) compScore+=15;
+      else if(a.sym>0.35) compScore+=15;
       else if(a.diagStrength>0.5) compScore+=18;
       else compScore+=8;
       if(subjX>0.25 && subjX<0.75 && subjY>0.2 && subjY<0.8) compScore+=15;
@@ -2180,12 +2250,12 @@
         var imgData=ctx.getImageData(0,0,c.width,c.height);
         var d=imgData.data;
         // 自动曝光：目标亮度 128
-        var exposure=128/(a.brightness||128);
+        var exposure=128/(a.mean!==undefined?a.mean:(a.brightness||128)); // v4.2: a.brightness不存在，改a.mean
         exposure=Math.max(0.7,Math.min(1.4,exposure));
         // 自动对比度
         var contrast=1+((a.contrast<40)?0.15:(a.contrast>70?-0.1:0));
         // 自动饱和度
-        var satFactor=1+((a.saturation<30)?0.15:(a.saturation>70?-0.1:0));
+        var satFactor=1+((a.sat!==undefined)?((a.sat<0.15)?0.15:(a.sat>0.5?-0.1:0)):0); // v4.2: a.saturation不存在且量纲错误，改a.sat(0-1)
         for(var i=0;i<d.length;i+=4){
           var r=d[i],g=d[i+1],b=d[i+2];
           // 曝光
@@ -2290,7 +2360,17 @@
           }
           runAIDetection(function(finalPlan){ autoApplyPlan(finalPlan); });
           // v4.1: 5秒兜底——模型加载超时/失败时用首次plan应用
-          setTimeout(function(){ autoApplyPlan(null); }, 5000);
+          // v4.2: 模型仍在加载时延后兜底，避免"5s兜底抢先应用首次plan → 模型回调被_autoApplied丢弃"的竞态（Qwen复测）
+          setTimeout(function(){
+            if(typeof aiModelState!=="undefined" && aiModelState==="loading"){
+              var _retry=setInterval(function(){
+                if(aiModelState==="ready"||aiModelState==="fail"){ clearInterval(_retry); autoApplyPlan(null); }
+              },300);
+              setTimeout(function(){ clearInterval(_retry); autoApplyPlan(null); }, 12000);
+            } else {
+              autoApplyPlan(null);
+            }
+          }, 5000);
         }catch(err){
           console.error("AI 分析异常:", err);
           state.analyzing=false;
@@ -2350,6 +2430,19 @@
       aiConfTxt.textContent="匹配度 "+plan.conf+"%";
       aiConfBar.style.width=plan.conf+"%";
       aiBody.innerHTML="";
+      // v4.2: 清空后重建模型/检测状态卡（presentAnalysis 重渲染会把模型卡一起清掉，用户看不到模型加载状态）
+      try{
+        if(typeof aiModelState!=="undefined" && (aiModelState==="ready"||aiModelState==="loading")){
+          renderAiModelStatus(aiModelState==="ready"?"on":"loading");
+        }
+        if(state.aiData && state.aiData.detectedClasses && state.aiData.detectedClasses.length){
+          var _detCard=document.createElement("div");
+          _detCard.className="ai-detect model-status on";
+          _detCard.innerHTML='<div class="dt-row">🎯 主体识别：'+state.aiData.detectedClasses.slice(0,3).join("、")+'（本地真 AI 模型）</div>';
+          aiBody.insertBefore(_detCard, aiBody.firstChild);
+          setTimeout(function(){ _detCard.classList.add("show"); }, 60);
+        }
+      }catch(e){}
       // V5: 专业光学数据面板
       (function(){
         var a=state.aiData; if(!a) return;
@@ -2364,7 +2457,7 @@
           ["高光", f2(a.highClip), "过曝区域", a.highClip>0.06?"⚠ 注意过曝":"正常"],
           ["阴影", f2(a.shadowClip), "死黑区域", a.shadowClip>0.20?"⚠ 暗部死黑":"正常"],
           ["主体位置", a.cx<0.38?"偏左":(a.cx>0.62?"偏右":"居中"), "X:"+(a.cx*100).toFixed(0)+"% Y:"+(a.cy*100).toFixed(0)+"%", "主体占比 "+f2(a.bodyRatio)],
-          ["对称度", f2(a.sym), "左右对称评分", a.sym>0.45?"高对称":(a.sym<0.25?"低对称":"中")],
+          ["对称度", f2(a.sym), "左右对称评分", a.sym>0.35?"高对称":(a.sym<0.15?"低对称":"中")],
           ["对角线", f2(a.diagStrength), "光影引导强度", a.diagStrength>0.5?"强引导":(a.diagStrength>0.2?"中":"弱")],
           ["三分匹配", f2(a.thirdFit), "主体距分割线", a.thirdFit>0.78?"高契合":(a.thirdFit>0.5?"中契合":"低契合")]
         ];
@@ -2476,6 +2569,8 @@
       var ok=applyPlanCrop();
       if(!ok){ setStatus("智能裁切失败，请重试", "err"); return; }
       state.plan=p; state.analyzed=true;   // 保留 AI 结果，可继续智能裁切微调
+      // v4.2: 已应用的裁切区域清零——旧plan的crop还是原始值，重复"一键应用"会反复裁同一区域（豆包BUG-12）
+      if(p.crop){ p.crop=[0,0,0,0]; p.noCrop=true; }
       setZoom(p.z||1);
       setFilter(p.f||"clear");
       if(p.noCrop){
@@ -2493,6 +2588,16 @@
     });
     aiClose.addEventListener("click",closeAi);
     function closeAi(){ aiPanel.classList.remove("open"); }
+    // v4.2: 用户主动换图时清空分析数据（防止残留旧结果误导）；自动应用路径不清（保留结果可继续微调）
+    function clearAiData(){
+      if(aiRuleTag) aiRuleTag.textContent="";
+      if(aiConfTxt) aiConfTxt.textContent="匹配度 --";
+      if(aiConfBar) aiConfBar.style.width="0%";
+      if(aiBody) aiBody.innerHTML="";
+      state.aiData=null;
+      state.plan=null;
+      state.analyzed=false;
+    }
 
     /* ===================== 直方图 ===================== */
     btnHist.addEventListener("click",function(){
@@ -2853,6 +2958,8 @@
     });
     btnShoot.addEventListener("click",function(){
       if(state.burstMode) return;
+      // v4.2: Doka 模式由专用快门入口（L4072）拍照，此处跳过，避免一次点击触发两条拍照路径（豆包复测）
+      if(state.dokaMode && state.dokaPlan){ return; }
       var el=currentEl();
       if(!el){ setStatus("没有可拍摄的画面", "err"); return; }
       // v1.7.0: 定时拍照
@@ -3289,6 +3396,16 @@
     function loadAIModel(){
       return new Promise(function(resolve){
         if(aiModelState==="ready"){ resolve(true); return; }
+        // v4.2: 加载中重复调用→轮询等待结果（原逻辑直接resolve(false)，用户"模型下载中再点分析"反而立刻失败）
+        if(aiModelState==="loading"){
+          var _wt=0;
+          var wInt=setInterval(function(){
+            _wt+=200;
+            if(aiModelState==="ready"){ clearInterval(wInt); resolve(true); }
+            else if(aiModelState==="fail"||_wt>16000){ clearInterval(wInt); resolve(false); }
+          },200);
+          return;
+        }
         if(aiModelState!=="idle"){ resolve(false); return; }
         // file:// 离线打开时无法加载模型文件，直接降级（避免 CORS 报错）
         if(location.protocol==="file:" || location.protocol==="null"){ aiModelState="fail"; resolve(false); return; }
@@ -3396,7 +3513,12 @@
           state.aiData.subject=cnLabel(t.class);
           // v1.9.2: 人像检测优化——只有足够大的 person 才识别人像
           var personHeight=t.bbox[3]/ih; // person 占画面高度比例
-          var isBigPerson = (t.class==="person" && personHeight>=0.08 && t.score>=0.3);
+          // v4.2: 低置信 person 二次校验——同帧检测到猫/狗等宠物且 person 置信度<0.75 时视为误检（Qwen实测猫被0.65误判person）
+          var hasPet = valid.some(function(p){
+            var sm=SCENE_MAP[p.class]; return sm && (sm.indexOf("萌宠")===0||sm.indexOf("动物")===0);
+          });
+          var isBigPerson = (t.class==="person" && personHeight>=0.04 && t.score>=0.3); // v4.2: 0.08→0.04 修复远景人像漏检（人物占画面高度≥4%即识别人像）
+          if(isBigPerson && hasPet && t.score<0.75){ isBigPerson=false; }
           if(isBigPerson){
             state.aiData.isPerson=true;
             state.aiData.faceX=Math.max(0,Math.min(1,(t.bbox[0]+t.bbox[2]/2)/iw));
@@ -3464,6 +3586,8 @@
             a2.personLeft=state.aiData.personLeft;
             a2.personRight=state.aiData.personRight;
             a2.subject=state.aiData.subject;
+            if(state.aiData.bodyRatio!==undefined){ a2.bodyRatio=state.aiData.bodyRatio; }
+            if(state.aiData.detectedClasses){ a2.detectedClasses=state.aiData.detectedClasses; }
             var plan2=planFromAnalysis(a2);
             if(plan2){
               state.plan=plan2; state.dokaPlan=plan2;
@@ -3524,6 +3648,10 @@
               a2.faceY=state.aiData.faceY;
               a2.faceAvailable=state.aiData.faceAvailable;
               a2.subject=state.aiData.subject;
+              // v4.2: 模型检测框面积占比回传（此前漏合并，导致模型在场时bodyRatio仍用像素显著性恒≈5%）
+              if(state.aiData.bodyRatio!==undefined){ a2.bodyRatio=state.aiData.bodyRatio; }
+              if(state.aiData.detectedClasses){ a2.detectedClasses=state.aiData.detectedClasses; }
+              if(state.aiData.modelLoaded===true){ a2.modelLoaded=true; }
               a2.modelLoaded=true; // v4.1: 保留模型加载标记（state.aiData=a2覆盖后modelLoaded会丢，导致肤色兜底误判）
               state.aiData=a2; // v4.1: 同步aiData，保证数据面板/评分一致
               var newPlan=planFromAnalysis(a2);
@@ -4295,7 +4423,7 @@
           else { s.push("主体占比较小（约 "+(a.bodyRatio*100).toFixed(0)+"%），画面留白较多，构图时可稍作拉近。"); }
         }
       else if(a.bodyRatio>0.72) s.push("主体占比偏大（约 "+(a.bodyRatio*100).toFixed(0)+"%），画面略满，可适当后退留出呼吸空间。");
-      if(a.sym<0.40) s.push("左右对称度偏低（"+(a.sym*100).toFixed(0)+"%），若为建筑或倒影题材，可调机位居中增强秩序感。");
+      if(a.sym<0.15) s.push("左右对称度偏低（"+(a.sym*100).toFixed(0)+"%），若为建筑或倒影题材，可调机位居中增强秩序感。");
       // v4.0: 对角线建议只在最终法则不是居中/对称时显示（避免泰姬陵判居中却建议对角线的矛盾）
       var finalRule = (state.plan && state.plan.rule) ? state.plan.rule : "thirds";
       // v4.1: 对角线建议与最终法则一致——只有法则是对角线时才强调，否则弱化为中性观察
@@ -4437,9 +4565,11 @@
         stopBurst();
       }
     });
+    var _burstInt=null; // v4.2: 连拍定时器提升为模块级，stopBurst 才能清除（原局部变量泄漏）
     function startBurst(){
-      var burstInterval=setInterval(function(){
-        if(state.burstCount>=5 || !state.burstMode){ clearInterval(burstInterval); return; }
+      if(_burstInt) clearInterval(_burstInt);
+      _burstInt=setInterval(function(){
+        if(state.burstCount>=5 || !state.burstMode){ if(_burstInt){ clearInterval(_burstInt); _burstInt=null; } return; } // v4.2: 修正残留旧变量名（原 burstInterval 未定义致连拍 ReferenceError）
         takeBurstShot();
         state.burstCount++;
       },300);
@@ -4460,6 +4590,7 @@
       }catch(e){}
     }
     function stopBurst(){
+      if(_burstInt){ clearInterval(_burstInt); _burstInt=null; } // v4.2: 清除连拍定时器（此前泄漏）
       state.burstMode=false;
       burstIndicator.classList.remove("show");
       if(state.burstShots.length>0){

@@ -1,7 +1,7 @@
 {
   "name": "AI 构图助手",
   "short_name": "构图助手",
-  "description": "AI 构图助手 Pro v1.7.1 · 专业取景器：实时取景辅助、AI 构图分析、26 款滤镜、智能裁切、导出分享、构图法则百科",
+  "description": "AI 构图助手 Pro v4.2.0 · 专业取景器：AI 构图分析（Coco-SSD 本地模型）、智能裁切、18 款滤镜、变焦/特写、Doka 模式、构图法则百科",
   "id": "/ai-composition-tool/",
   "start_url": "./index.html",
   "scope": "./",
@@ -24,5 +24,5 @@
       "purpose": "any maskable"
     }
   ],
-  "version": "4.1.0"
+  "version": "4.2.0"
 }
