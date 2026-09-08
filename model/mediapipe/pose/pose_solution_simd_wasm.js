@@ -1,0 +1,1 @@
+Couldn't find the requested file /pose_solution_simd_wasm.js in @mediapipe/pose.

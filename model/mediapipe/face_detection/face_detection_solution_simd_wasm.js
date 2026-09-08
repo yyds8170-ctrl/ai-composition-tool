@@ -1,0 +1,1 @@
+Couldn't find the requested file /face_detection_solution_simd_wasm.js in @mediapipe/face_detection.

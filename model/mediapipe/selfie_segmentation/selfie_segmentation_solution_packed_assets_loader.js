@@ -1,0 +1,1 @@
+Couldn't find the requested file /selfie_segmentation_solution_packed_assets_loader.js in @mediapipe/selfie_segmentation.
