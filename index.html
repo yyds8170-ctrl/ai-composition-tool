@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v4.6.0 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v4.6.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科">
+<title>AI 构图助手 Pro v4.7.0 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v4.7.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -523,7 +523,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v4.6.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v4.7.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -861,7 +861,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v4.6.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v4.7.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -886,7 +886,23 @@
       </div>
       <div class="mp-desc">MediaPipe Pose，检测 33 个人体关节点（头/肩/肘/手/髋/膝/脚），用于精准人像构图、姿态引导、背景虚化人体轮廓，约 5MB。</div>
     </div>
-    <div class="help-body" id="helpBody"></div>
+    <!-- v4.7.0 云端分析引擎（Cephalon VLM · qwen3.5-flash）：Key 只存 localStorage，绝不写入代码/仓库 -->
+    <div style="height:8px;"></div>
+    <div class="mp-head" style="font-size:13px;">☁️ 云端分析引擎 <span class="mp-badge idle" id="cloudBadge">未启用</span></div>
+    <div class="mp-row">
+      <label class="mp-sw"><input type="checkbox" id="cloudOn"><span class="mp-sl"></span>启用云端 VLM 构图分析</label>
+    </div>
+    <div class="mp-desc">联网时通过安全代理调用大模型"看懂"画面（场景/主体/构图），比本地像素算法更准；未填口令或断网时自动回退本地引擎。启用后照片会经代理发送至云端分析。模型固定 qwen3.5-flash，API Key 已内置在代理服务端，无需填写。</div>
+    <div style="height:6px;"></div>
+    <div class="mp-row" style="flex-wrap:wrap;gap:6px;">
+      <input type="text" id="cloudBase" value="https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com" placeholder="代理 Base URL" style="flex:1 1 100%;padding:7px 10px;border-radius:8px;border:1px solid rgba(0,0,0,.14);background:#fff;font-size:12px;color:#1A1B1C;min-width:0;box-sizing:border-box;">
+    </div>
+    <div class="mp-row" style="flex-wrap:wrap;gap:6px;">
+      <input type="password" id="cloudKey" placeholder="访问口令（X-App-Token，仅保存在本机）" style="flex:1 1 100%;padding:7px 10px;border-radius:8px;border:1px solid rgba(0,0,0,.14);background:#fff;font-size:12px;color:#1A1B1C;min-width:0;box-sizing:border-box;">
+    </div>
+    <div class="mp-desc" style="line-height:1.7;">代理模式下你和朋友都<b>无需注册 Cephalon 账号、无需自带 API Key</b>：真实 Key 只保存在作者的安全代理服务端，不会进入本页代码；只需向作者获取「代理地址」和「访问口令」填入上方即可，照片经代理转发至云端分析。</div>
+  </div>
+  <div class="help-body" id="helpBody"></div>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -934,6 +950,7 @@
         btnLive=$("btnLive"), liveHUD=$("liveHUD"), lhLight=$("lhLight"), lhLevel=$("lhLevel"),
         lhTip=$("lhTip"), lhModel=$("lhModel"), lhSubject=$("lhSubject"),
         modelPanel=$("modelPanel"), mpBadge=$("mpBadge"), mpOn=$("mpOn"), mpReload=$("mpReload"),
+        cloudBadge=$("cloudBadge"), cloudOn=$("cloudOn"), cloudBase=$("cloudBase"), cloudKey=$("cloudKey"),
         btnCmp=$("btnCmp"), cmpBase=$("cmpBase"), cmpUI=$("cmpUI"), cmpLine=$("cmpLine"), cmpHandle=$("cmpHandle"),
         baseLayer=$("baseLayer"), strengthRow=$("strengthRow"), strengthRange=$("strengthRange"), strengthVal=$("strengthVal"),
         toast=$("toast"),
@@ -972,7 +989,17 @@
       origURL:null,
       analyzeToken:0,
       aiModelEnabled: (function(){ try{ var v=localStorage.getItem("aiModelEnabled"); return v===null?true:v==="1"; }catch(e){ return true; } })(),
-      liveMode:false
+      liveMode:false,
+      // v4.7.0 云端分析引擎（经 SCF 代理转发 Cephalon VLM · qwen3.5-flash）：口令/Base 仅存 localStorage，绝不写入代码
+      cloud:{
+        on:(function(){ try{ return localStorage.getItem("aiComposeCloudOn")==="1"; }catch(e){ return false; } })(),
+        base:(function(){ try{ var dft="https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com"; var v=localStorage.getItem("aiComposeCloudBase");
+          // v4.7.0 一次性迁移：旧版"自带 Key 直连"残留的 cephalon.cloud 直连地址会被浏览器按 Origin 拦截(403)，统一重置为安全代理地址
+          if(!v||/cephalon\.cloud/i.test(v)){ try{ localStorage.setItem("aiComposeCloudBase",dft); }catch(e){} return dft; }
+          return v; }catch(e){ return "https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com"; } })(),
+        model:"qwen3.5-flash",
+        key:(function(){ try{ return localStorage.getItem("aiComposeCloudKey")||""; }catch(e){ return ""; } })()
+      }
     };
 
     /* ===================== 数据 ===================== */
@@ -1513,6 +1540,9 @@
     function closeSampleStrip(){ sampleStrip.classList.remove("show"); }
     sampleStrip.addEventListener("click",function(e){
       var c=e.target.closest(".s-chip"); if(!c) return;
+      // v4.7.0 P2: 重选当前已加载的同一张示例图直接收起，不重新加载——
+      // 避免图片 onload 内 invalidateAnalysis 恰好作废在途分析导致卡在"分析中"空面板，也避免重复压入撤销栈
+      if(c.classList.contains("active")){ closeSampleStrip(); return; }
       var s=SAMPLES.filter(function(x){return x.id===c.dataset.id;})[0];
       if(s){ pushUndo(); loadSample(s); closeSampleStrip(); }
     });
@@ -2501,7 +2531,13 @@
       // v4.1: 移除3.2s固定延时——特征计算<100ms，改为1200ms最短动画过渡（实时取景体验提升一倍以上）
       setTimeout(function(){
         // 期间已切换画面/清除，作废本次分析
-        if(token!==state.analyzeToken){ state.analyzing=false; btnAnalyze.disabled=false; stage.classList.remove("scanning"); return; }
+        if(token!==state.analyzeToken){
+          var _hasNewerAnalysis=state.analyzing; // 新一次 runAnalysis 启动时会置 true；invalidateAnalysis 换图作废时为 false
+          state.analyzing=false; btnAnalyze.disabled=false; stage.classList.remove("scanning");
+          // v4.7.0 P2: 被换图作废且无新分析接续时，清空"分析中…"残留文本，避免面板闪退/卡在分析中（顶部状态由换图流程自行设置，这里不覆盖）
+          if(!_hasNewerAnalysis){ try{ aiRuleTag.textContent="待分析"; aiConfTxt.textContent="匹配度 --"; aiConfBar.style.width="0%"; aiBody.innerHTML=""; }catch(e){} }
+          return;
+        }
         try{
           var plan, a;
           // v4.1: 示例图AI分析强制走真实算法（预设仅用于加载时的初始引导文案）
@@ -2566,10 +2602,12 @@
           // 现改为20s防挂起兜底：onDone已触发则不再重复应用；模型检测通常3-10s内完成，不会抢先
 
           var _fbDone=false;
+          var _cloudActiveNow=!!(state.cloud && state.cloud.on && state.cloud.key);
 
           runAIDetection(function(finalPlan){ _fbDone=true; autoApplyPlan(finalPlan); });
 
-          setTimeout(function(){ if(!_fbDone){ _fbDone=true; autoApplyPlan(null); } }, 20000);
+          // v4.7.0: 云端 VLM 成功响应 p90≈23s（最慢23.5s），云端模式兜底放宽到 30s（25s云端窗口+回退本地精判）；纯本地仍 20s，绝不卡死
+          setTimeout(function(){ if(!_fbDone){ _fbDone=true; autoApplyPlan(null); } }, _cloudActiveNow?30000:20000);
         }catch(err){
           console.error("AI 分析异常:", err);
           state.analyzing=false;
@@ -2631,10 +2669,11 @@
       aiBody.innerHTML="";
       // v4.2: 清空后重建模型/检测状态卡（presentAnalysis 重渲染会把模型卡一起清掉，用户看不到模型加载状态）
       try{
-        if(typeof aiModelState!=="undefined" && (aiModelState==="ready"||aiModelState==="loading")){
+        // v4.7.0: 云端 VLM 结果不插入本地模型状态卡/本地检测卡（云端模式跳过本地模型，避免"下载中/本地真AI模型"误导）
+        if(!plan.cloud && typeof aiModelState!=="undefined" && (aiModelState==="ready"||aiModelState==="loading")){
           renderAiModelStatus(aiModelState==="ready"?"on":"loading");
         }
-        if(state.aiData && state.aiData.detectedClasses && state.aiData.detectedClasses.length){
+        if(!plan.cloud && state.aiData && state.aiData.detectedClasses && state.aiData.detectedClasses.length){
           var _detCard=document.createElement("div");
           _detCard.className="ai-detect model-status on";
           _detCard.innerHTML='<div class="dt-row">🎯 主体识别：'+state.aiData.detectedClasses.slice(0,3).join("、")+'（本地真 AI 模型）</div>';
@@ -2649,6 +2688,15 @@
         _off.innerHTML='<div class="dt-row">⚠️ 模型未加载 · 当前为像素初判（联网后重试 AI 分析可精确识别）</div>';
         aiBody.insertBefore(_off, aiBody.firstChild);
         setTimeout(function(){ _off.classList.add("show"); }, 60);
+      }
+      // v4.7.0 云端 VLM 分析标记卡
+      if(plan.cloud){
+        var _cd=document.createElement("div");
+        _cd.className="ai-suggest";
+        var _cs=plan.sceneType||"general";
+        _cd.innerHTML='<div class="dt-row">☁️ 云端 VLM 分析（'+state.cloud.model+'）· 场景：'+_cs+'</div>';
+        aiBody.insertBefore(_cd, aiBody.firstChild);
+        setTimeout(function(){ _cd.classList.add("show"); }, 60);
       }
       // V5: 专业光学数据面板
       (function(){
@@ -3418,9 +3466,17 @@
         });
       });
     }
+    // v4.7.0 P2: 打开任一全屏 sheet（帮助/法则/画廊）前，收起底部美颜面板与构图模板浮层，防止低层级面板从全屏卡片间隙穿透
+    function collapseFloatingPanels(){
+      try{
+        if(typeof beautyPanel!=="undefined"&&beautyPanel) beautyPanel.classList.remove("show");
+        var tp=document.getElementById("templatePanel"); if(tp) tp.remove();
+      }catch(e){}
+    }
     btnGallery.addEventListener("click",function(){ // v4.5 P2: 面板单例
       if(helpSheet.classList.contains("show")) helpSheet.classList.remove("show");
       if(ruleSheet.classList.contains("show")) ruleSheet.classList.remove("show");
+      collapseFloatingPanels();
       renderGallery(); gallery.classList.add("show");
     });
     galClose.addEventListener("click",function(){ gallery.classList.remove("show"); });
@@ -3525,6 +3581,7 @@
       // v4.5 P2: 面板单例——开帮助先关规则/画廊（GLM问题D）
       if(ruleSheet.classList.contains("show")) ruleSheet.classList.remove("show");
       if(gallery.classList.contains("show")) gallery.classList.remove("show");
+      collapseFloatingPanels(); // v4.7.0 P2: 同步收起底部美颜/模板浮层
       helpSheet.classList.add("show");
     }
     btnHelp.addEventListener("click",openHelp);
@@ -3544,6 +3601,7 @@
       // v4.5 P2: 面板单例
       if(helpSheet.classList.contains("show")) helpSheet.classList.remove("show");
       if(gallery.classList.contains("show")) gallery.classList.remove("show");
+      collapseFloatingPanels(); // v4.7.0 P2: 同步收起底部美颜/模板浮层
       ruleSheet.classList.add("show");
     }
     btnRules.addEventListener("click",openRules);
@@ -3949,6 +4007,20 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       if(!el){ if(onDone) onDone(null); return; }
       var token=state.analyzeToken;
       var elSnap=el;
+      // v4.7.0 云端分支：开启云端且已填口令时走云端 VLM（经 SCF 代理，跳过本地 18MB 模型预加载）；
+      // 云端失败/超时/解析失败时自动回退本地模型精判（而非仅用粗糙像素初判），保证"本地效果不变差"
+      if(state.cloud && state.cloud.on && state.cloud.key){
+        runCloudAnalysis(elSnap, function(cloudPlan){
+          if(token!==state.analyzeToken){ return; } // 期间已换图/重分析，丢弃本次回调
+          if(cloudPlan){ if(onDone) onDone(cloudPlan); }
+          else { runLocalAIDetection(elSnap, token, onDone); }
+        });
+        return;
+      }
+      runLocalAIDetection(elSnap, token, onDone);
+    }
+    // v4.7.0: 本地 COCO/MediaPipe 模型精判（纯本地模式与云端失败回退共用同一条路径）
+    function runLocalAIDetection(elSnap, token, onDone){
       if(!state.aiModelEnabled){ renderAiModelStatus("off"); if(onDone) onDone(null); return; }
       loadAIModel().then(function(ok){
         if(!ok){
@@ -4070,9 +4142,182 @@ if(aiModelState!=="idle"){ resolve(false); return; }
     });
       updateModelUI();
       // v2.0.2: 页面初始化时如果开关打开，自动加载 Coco-SSD（不依赖进入实时模式）
-      if(state.aiModelEnabled && aiModelState==="idle"){
+      // v4.7.0: 云端已启用且已填口令时跳过本地 18MB 模型预加载（云端失败回退时再按需现场加载，省流量）
+      if(state.aiModelEnabled && aiModelState==="idle" && !(state.cloud&&state.cloud.on&&state.cloud.key)){
         setTimeout(function(){ tryLoadModel(false); }, 800);
       }
+    }
+
+    /* ===================== v4.7.0 云端分析引擎（Cephalon VLM · qwen3.5-flash） =====================
+       Key/Base 仅存 localStorage，绝不写入源码/仓库；云端失败自动回退本地（onDone(null)）。
+       照片会压缩到长边 1024 后发送至云端，用于构图分析。 */
+    function updateCloudUI(){
+      if(!cloudOn) return;
+      cloudOn.checked=!!state.cloud.on;
+      if(cloudBase){ cloudBase.value=state.cloud.base||"https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com"; }
+      if(cloudKey){ cloudKey.value=state.cloud.key||""; }
+      if(cloudBadge){
+        var txt=!state.cloud.on?"未启用":(!state.cloud.key?"已启用 · 未填口令":"已启用 · "+state.cloud.model);
+        var cls=!state.cloud.on?"idle":(!state.cloud.key?"loading":"ready");
+        cloudBadge.textContent=txt; cloudBadge.className="mp-badge "+cls;
+      }
+    }
+    function initCloudUI(){
+      if(cloudOn) cloudOn.addEventListener("change",function(){
+        state.cloud.on=cloudOn.checked;
+        try{ localStorage.setItem("aiComposeCloudOn", state.cloud.on?"1":"0"); }catch(e){}
+        updateCloudUI();
+        // v4.7.0: 关闭云端切回本地时，若本地模型尚未加载则补加载；开启云端时不卸载已加载模型，避免重复下载
+        if(!state.cloud.on && state.aiModelEnabled && (typeof aiModelState==="undefined"||aiModelState==="idle") && typeof tryLoadModel==="function"){
+          try{ tryLoadModel(false); }catch(e){}
+        }
+        toastMsg(state.cloud.on?"已启用云端分析引擎（"+state.cloud.model+"）":"已切换回本地分析引擎");
+      });
+      if(cloudBase) cloudBase.addEventListener("change",function(){
+        var v=(cloudBase.value||"").trim();
+        // v4.7.0: 拦截 cephalon.cloud 官方直连地址（浏览器带 Origin 必被 403），自动纠正为安全代理
+        if(/cephalon\.cloud/i.test(v)){
+          v="https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com";
+          cloudBase.value=v;
+          toastMsg("Cephalon 官方地址无法在浏览器直连（会被拦截），已改回安全代理地址");
+        }
+        state.cloud.base=v||"https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com";
+        try{ localStorage.setItem("aiComposeCloudBase", state.cloud.base); }catch(e){}
+      });
+      if(cloudKey) cloudKey.addEventListener("change",function(){
+        state.cloud.key=(cloudKey.value||"").trim();
+        try{ localStorage.setItem("aiComposeCloudKey", state.cloud.key); }catch(e){}
+        updateCloudUI();
+      });
+      updateCloudUI();
+    }
+    function runCloudAnalysis(el, onDone){
+      // 云端 VLM 构图分析（经 SCF 代理转发至 Cephalon /chat/completions）；失败或超时 → onDone(null) 回退本地首判
+      // 代理模式：API Key 内置在服务端环境变量，前端只需访问口令（X-App-Token），避免 Key 泄露
+      if(!el || !onDone) return;
+      var token=state.analyzeToken;
+      var base=state.cloud.base.replace(/\/+$/,"");
+      var appToken=state.cloud.key, model=state.cloud.model||"qwen3.5-flash";
+      if(!appToken || !base){ if(onDone) onDone(null); return; }
+      var vw=el.videoWidth||el.naturalWidth||640, vh=el.videoHeight||el.naturalHeight||480;
+      var scale=Math.min(1, 1024/Math.max(vw,vh));
+      var c=document.createElement("canvas");
+      c.width=Math.max(2,Math.round(vw*scale)); c.height=Math.max(2,Math.round(vh*scale));
+      try{ c.getContext("2d").drawImage(el,0,0,c.width,c.height); }catch(e){ if(onDone) onDone(null); return; }
+      var dataUrl;
+      try{ dataUrl=c.toDataURL("image/jpeg",0.8); }catch(e){ if(onDone) onDone(null); return; }
+      var prompt=[
+        "你是专业摄影构图师。只输出一个 JSON 对象，不要任何其他文字、不要 markdown 代码块。",
+        "分析这张照片并给出以下字段：",
+        "1. scene 场景，只从 [portrait,landscape,food,architecture,street,animal,waterscape,general] 选一个：",
+        "portrait=人物为主体；landscape=山/天空/陆地等自然风景；waterscape=水面/海浪/河流/倒影为主体或占画面三分之一以上；food=食物饮品；architecture=单体或建筑群外观为主体且无明显街道纵深；street=存在道路/街巷纵深或沿街行进场景；animal=动物为主体；general=其他。",
+        "2. rule 构图法则，只从 [thirds,sym,center,golden,diag] 选一个：thirds=三分法，sym=左右或上下对称，center=居中突出，golden=主体落在黄金分割点，diag=画面存在明显对角线或引导线。",
+        "3. conf 契合度，0-100 整数，严格分档：法则与画面完美契合 90-98，基本契合 75-89，勉强适用 60-74，不契合低于 60，不要全部给高分。",
+        "4. subjectBox 主体包围框 [x,y,w,h]，必须是四个 0-100 的百分比整数（相对画面宽高的比例，严禁输出像素坐标、严禁任何数值大于100），x、y 为主体左上角百分比，w、h 为主体宽高百分比，紧贴真实主体、不要过大；例如主体居中约占一半画面时输出 [25,28,50,48]。",
+        "5. fillPct 主体面积占整个画面百分比的整数估算，范围 1-95。",
+        "6. subject 一句话中文主体描述。",
+        "7. advice 一句话中文构图或裁切建议。",
+        "输出格式：{\"scene\":\"...\",\"rule\":\"...\",\"conf\":80,\"subjectBox\":[x,y,w,h],\"fillPct\":25,\"subject\":\"...\",\"advice\":\"...\"}"
+      ].join("\n");
+      var body={ model:model, messages:[{ role:"user", content:[
+        {type:"text", text:prompt},
+        {type:"image_url", image_url:{ url:dataUrl }}
+      ]}], temperature:0.2, max_tokens:300 };
+      // v4.7.0: 新云端请求发起前中止上一个仍在飞行的请求（连点分析/快速换图不堆积请求；旧请求 token 已过期会自行丢弃）
+      if(state._cloudAbort){ try{ state._cloudAbort.abort(); }catch(e){} state._cloudAbort=null; }
+      var ctrl=(typeof AbortController!=="undefined")?new AbortController():null;
+      state._cloudAbort=ctrl;
+      // v4.7.0: 云端超时28s（25张实测p90=23.9s，25s会误杀约8%的25-28s临界慢响应；外层runAnalysis云端兜底30s仍为最后保险）
+      var timer=setTimeout(function(){ if(ctrl) ctrl.abort(); }, 28000);
+      fetch(base+"/chat/completions", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json", "X-App-Token":appToken },
+        body:JSON.stringify(body),
+        signal: ctrl?ctrl.signal:undefined
+      }).then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); }).then(function(res){
+        clearTimeout(timer);
+        if(token!==state.analyzeToken) return;
+        if(!res.ok){
+          var em=res.j&&res.j.error&&res.j.error.message?String(res.j.error.message).slice(0,80):("HTTP "+res.ok);
+          console.warn("云端分析拒绝:", em);
+          if(onDone) onDone(null); return;
+        }
+        var txt=res.j && res.j.choices && res.j.choices[0] && res.j.choices[0].message && res.j.choices[0].message.content;
+        if(!txt){ if(onDone) onDone(null); return; }
+        var obj=null;
+        try{ var mm=txt.match(/\{[\s\S]*\}/); if(mm) obj=JSON.parse(mm[0]); }catch(e){}
+        if(!obj || !obj.rule){ if(onDone) onDone(null); return; }
+        var ruleKey=String(obj.rule||"thirds").toLowerCase();
+        if(!RULES[ruleKey]) ruleKey="thirds";
+        var sceneKey=String(obj.scene||"general").toLowerCase();
+        if(["portrait","landscape","food","architecture","street","animal","waterscape","general"].indexOf(sceneKey)<0) sceneKey="general";
+        var conf=Math.max(40,Math.min(98,parseInt(obj.conf,10)||80));
+        // v4.7.0: 解析 VLM 主体包围框（严格校验，非法则 boxOk=false 回退固定模板）
+        var boxOk=false,bx=0,by=0,bw=0,bh=0;
+        try{
+          if(Array.isArray(obj.subjectBox)&&obj.subjectBox.length===4){
+            var n4=obj.subjectBox.map(function(v){return Math.round(Number(v));});
+            if(n4.every(function(v){return isFinite(v);})){
+              bx=Math.max(0,Math.min(99,n4[0])); by=Math.max(0,Math.min(99,n4[1]));
+              bw=Math.max(2,Math.min(100-bx,n4[2])); bh=Math.max(2,Math.min(100-by,n4[3]));
+              boxOk=(bw>=2&&bh>=2&&(bx+bw)<=100&&(by+bh)<=100);
+            }
+          }
+        }catch(e){ boxOk=false; }
+        // v4.7.0: 优先按真实主体框+法则生成裁切 [left,top,right,bottom]；主体框非法时回退场景模板
+        var crop;
+        if(boxOk){
+          var isPort=sceneKey==="portrait";
+          var cx=bx+bw/2, cy=by+bh/2;
+          var cw=Math.min(100,Math.max(bw/(isPort?0.82:0.62),bw+8));
+          var ch=Math.min(100,Math.max(bh/(isPort?0.82:0.66),bh+8));
+          var tx=0.5,ty=0.5;
+          if(ruleKey==="thirds"||ruleKey==="golden"||ruleKey==="diag"){ tx=cx<50?1/3:2/3; ty=cy<50?0.38:0.55; }
+          var L=Math.max(0,Math.min(100-cw,cx-tx*cw));
+          var T=Math.max(0,Math.min(100-ch,cy-ty*ch));
+          crop=[Math.round(L),Math.round(T),Math.round(100-L-cw),Math.round(100-T-ch)];
+          crop=crop.map(function(v){return Math.max(0,Math.min(40,v));});
+        }else{
+          crop=[10,8,10,8];
+          if(sceneKey==="portrait"){ crop=[6,12,6,12]; }
+          if(ruleKey==="center"){ crop=[18,14,18,14]; }
+          if(ruleKey==="golden"){ crop=[14,10,14,10]; }
+        }
+        // v4.7.0: 按主体占比推荐变焦（主体越小越放大，钳制 1.0-2.0），非法回退 1.3
+        var z=1.3;
+        var fp=parseInt(obj.fillPct,10);
+        if(isFinite(fp)&&fp>0&&fp<=95){
+          var tgtFill=sceneKey==="portrait"?0.55:0.42;
+          z=Math.max(1.0,Math.min(2.0,Math.sqrt(tgtFill/(fp/100))));
+          z=Math.round(z*10)/10;
+        }
+        var plan={
+          subject:obj.subject||"画面主体",
+          rule:ruleKey,
+          diag:(ruleKey==="diag")?[24,30,76,70]:[20,30,75,70],
+          crop:crop,
+          z:z,
+          f:"natural",
+          filters:["自然 · 忠实还原"],
+          conf:conf,
+          desc:(obj.advice||(RULES[ruleKey]?RULES[ruleKey].zh:"已分析画面"))+"（云端 VLM · "+model+"）",
+          exp:RULES[ruleKey]?RULES[ruleKey].zh:"",
+          sceneType:sceneKey,
+          cloud:true
+        };
+        if(state.aiData){ state.aiData.cloudScene=sceneKey; state.aiData.cloudModel=model; }
+        // v4.7.0 P0修复：云端成功必须回写 state.plan 并 presentAnalysis 刷新结果面板（含云端标记卡），
+        // 否则面板停留在本地像素初判、用户感知不到云端生效；同时保证后续自动裁切统一使用云端 plan
+        state.plan=plan;
+        state.analyzed=true;
+        try{ presentAnalysis(plan); }catch(e){ console.warn("云端结果渲染异常:",e); }
+        if(onDone) onDone(plan);
+      }).catch(function(e){
+        clearTimeout(timer);
+        if(token!==state.analyzeToken) return;
+        console.warn("云端分析失败，回退本地:", String(e&&e.message?e.message:e).slice(0,60));
+        if(onDone) onDone(null);
+      });
     }
 
     /* ===================== v2.0.0: MediaPipe Face Detection 精准人脸检测 ===================== */
@@ -4622,6 +4867,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
     var _origStopStream=stopStream;
     stopStream=function(){ stopLive(); return _origStopStream(); };
     initModelUI();
+    if(typeof initCloudUI==="function") initCloudUI(); // v4.7.0 云端分析引擎
 
     /* ===================== v1.2.0: 撤销 / 导出 / 分享 / 构图建议 ===================== */
     var btnUndo=$("btnUndo"), btnExport=$("btnExport"), btnShare=$("btnShare");
@@ -5169,7 +5415,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
     // v2.0.2: 页面加载完成后自动初始化模型 UI 并加载模型（确保不依赖进入实时模式）
     try{
       if(typeof initModelUI==="function") initModelUI();
-      if(state.aiModelEnabled && aiModelState==="idle"){
+      // v4.7.0: 云端已启用且已填口令时跳过本地模型自动预加载（省 18MB 流量；云端失败回退时按需加载）
+      if(state.aiModelEnabled && aiModelState==="idle" && !(state.cloud&&state.cloud.on&&state.cloud.key)){
         setTimeout(function(){ tryLoadModel(false); }, 1000);
       }
     }catch(e){ console.warn("自动加载模型失败:", e); }
