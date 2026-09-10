@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v4.7.0 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v4.7.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
+<title>AI 构图助手 Pro v4.7.1 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v4.7.1 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -117,7 +117,7 @@
   .no-src p{font-size:12px;color:var(--sub);line-height:1.75;}
   .no-src .hint{font-size:11px;color:var(--dim);}
   /* AI 面板 */
-  .ai-panel{position:absolute;right:0;top:0;bottom:0;width:min(86%,310px);background:rgba(13,16,20,.96);backdrop-filter:blur(8px);border-left:1px solid var(--line);z-index:8;transform:translateX(102%);transition:transform .3s cubic-bezier(.22,.8,.3,1);padding:16px 15px;overflow-y:auto;display:flex;flex-direction:column;}
+  .ai-panel{position:fixed;right:0;top:0;bottom:0;width:min(88%,340px);background:rgba(13,16,20,.96);backdrop-filter:blur(8px);border-left:1px solid var(--line);z-index:30;transform:translateX(102%);transition:transform .3s cubic-bezier(.22,.8,.3,1);padding:16px 15px;overflow-y:auto;display:flex;flex-direction:column;}
   .ai-panel.open{transform:translateX(0);}
   .ai-head{display:flex;align-items:center;gap:9px;margin-bottom:14px;flex-shrink:0;}
   .ai-head .bar{width:4px;height:16px;background:linear-gradient(var(--amber),var(--amber-d));border-radius:2px;}
@@ -309,7 +309,9 @@
   .ai-row .btn svg{width:16px;height:16px;}
   .main-row .btn .b-txt{font-size:11.5px;}
   /* 悬浮拍摄按钮 */
-  .shoot-fab{position:fixed;right:16px;bottom:150px;width:64px;height:64px;border-radius:50%;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
+  /* v4.7.0黑屏修复: 作品/分享按钮需高于拍摄键(z22),避免被悬浮键遮挡点击 */
+  #btnGallery,#btnShare{position:relative;z-index:23;}
+  .shoot-fab{position:fixed;right:16px;bottom:70px;width:64px;height:64px;border-radius:50%;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
     background:radial-gradient(circle at 32% 28%,#FFC97A,#E08A2C 70%);border:3px solid rgba(255,255,255,.85);
     color:#1b1208;display:flex;align-items:center;justify-content:center;z-index:22; /* v4.4.1: 快门被 .controls(z20) 盖住 15→22（用户实测 bug） */
     will-change:transform;
@@ -484,7 +486,7 @@
   .shot-overlay.doka-shot .shot-actions .btn{flex:0 1 auto;min-width:100px;}
 
     /* ===== v1.7.0 人像美颜面板 ===== */
-    .beauty-panel{position:absolute;left:0;right:0;bottom:0;background:rgba(15,18,22,.96);backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,.08);padding:14px 16px 20px;z-index:60;transform:translateY(100%);transition:transform .3s ease;}
+    .beauty-panel{position:fixed;left:0;right:0;bottom:0;background:rgba(15,18,22,.96);backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,.08);padding:14px 16px 20px;z-index:60;transform:translateY(100%);transition:transform .3s ease;}
     .beauty-panel.show{transform:translateY(0);}
     .beauty-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
     .beauty-head .t{font-size:14px;font-weight:600;color:#fff;}
@@ -861,7 +863,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v4.7.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v4.7.1 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1424,14 +1426,15 @@
       var g=gcd(w,h)||1;
       el.textContent=w+"×"+h+" · "+(w/g)+":"+(h/g);
     }
-    function invalidateAnalysis(){
+    function invalidateAnalysis(keepPanel){
       state.analyzing=false;
       state.analyzeToken++;
       state.plan=null; state.analyzed=false;
       btnAnalyze.disabled=false;
       stage.classList.remove("scanning");
       resetGuides();
-      closeAi();
+      // v4.7.1: 自动 AI 裁切（keepPanel=true）保留分析面板；其余路径收起
+      if(!keepPanel) closeAi();
     }
     /* ===================== v4.3: EXIF 方向处理（豆包BUG-09：手机竖拍图旋转错误导致构图全错） ===================== */
     function parseExifOrientationBuf(buf){
@@ -1497,8 +1500,8 @@
       }).catch(function(){ onOK(url); });
     }
 
-    function setPhotoSource(url, kind, name){
-      invalidateAnalysis();
+    function setPhotoSource(url, kind, name, keepPanel){
+      invalidateAnalysis(keepPanel);
       if(state.mode==="camera"){ stopStream(); camBadge.classList.remove("on"); camBadgeTxt.textContent="未连接相机"; }
       state.mode="photo";
       state.sourceKind=kind;
@@ -1521,7 +1524,8 @@
       if(cmpOn){ setCmp(false); }
       baseLayer.style.display="none"; strengthRow.style.display="none"; state.strength=100;
       baseLayer.style.display="none";
-      resetGuides(); closeAi(); removeAiBox();
+      // v4.7.1: 自动 AI 裁切（keepPanel=true）保留分析面板，让用户看到完整分析结果；手动换图/手动成品才收起
+      resetGuides(); if(!keepPanel) closeAi(); removeAiBox();
       setZoom(1); setFilter("clear");
       updateActBtns();
       setStatus("已载入「"+name+"」· 点击「AI 分析」", "idle");
@@ -2552,10 +2556,16 @@
           }
           state.plan=plan;
           state.analyzed=true;
-          state.analyzing=false;
-          stage.classList.remove("scanning");
-          btnAnalyze.disabled=false;
-          drawGuides(plan);
+          // v4.7.1: 云端模式不抢跑——本地像素初判只做后台数据，按钮保持禁用、面板显示"云端分析中"，
+          // 避免用户看到本地初判误以为分析完成、随后云端结果又自动裁切（"分析好了又裁切一遍"）
+          if(state.cloud && state.cloud.on && state.cloud.key){
+            plan.cloudPending=true;
+          }else{
+            state.analyzing=false;
+            stage.classList.remove("scanning");
+            btnAnalyze.disabled=false;
+            drawGuides(plan);
+          }
           presentAnalysis(plan);
           // v1.3.0: 异步真 AI 视觉识别（加载失败自动静默，不影响基础分析）
           // v1.3.0: 异步真 AI 视觉识别（加载失败自动静默，不影响基础分析）
@@ -2569,7 +2579,10 @@
             _autoApplied=true;
             var p=finalPlan||plan;
             if(!p) return;
-            var ok=applyPlanCrop();
+            // v4.7.1: 云端超时/失败兜底（finalPlan 为空）时，把本地像素初判刷新成正式结果（去掉 pending 标记），
+            // 避免用户看到"已自动应用"但面板还停在"云端分析中"等待卡
+            if(p.cloudPending){ try{ delete p.cloudPending; presentAnalysis(p); }catch(e){} }
+            var ok=applyPlanCrop(true); // v4.7.1: 自动分析路径保留面板显示完整结果
             if(ok){
               state.plan=p; state.analyzed=true;
               // v4.1: 滤镜自动应用限制——仅中性增强滤镜（natural）自动套用
@@ -2604,10 +2617,21 @@
           var _fbDone=false;
           var _cloudActiveNow=!!(state.cloud && state.cloud.on && state.cloud.key);
 
-          runAIDetection(function(finalPlan){ _fbDone=true; autoApplyPlan(finalPlan); });
+          runAIDetection(function(finalPlan){
+            _fbDone=true;
+            // v4.7.1: 云端模式分析完成（云端成功/失败回退本地模型）统一恢复按钮与扫描态
+            if(_cloudActiveNow){ state.analyzing=false; stage.classList.remove("scanning"); btnAnalyze.disabled=false; }
+            autoApplyPlan(finalPlan);
+          });
 
           // v4.7.0: 云端 VLM 成功响应 p90≈23s（最慢23.5s），云端模式兜底放宽到 30s（25s云端窗口+回退本地精判）；纯本地仍 20s，绝不卡死
-          setTimeout(function(){ if(!_fbDone){ _fbDone=true; autoApplyPlan(null); } }, _cloudActiveNow?30000:20000);
+          setTimeout(function(){
+            if(!_fbDone){
+              _fbDone=true;
+              if(_cloudActiveNow){ state.analyzing=false; stage.classList.remove("scanning"); btnAnalyze.disabled=false; }
+              autoApplyPlan(null);
+            }
+          }, _cloudActiveNow?30000:20000);
         }catch(err){
           console.error("AI 分析异常:", err);
           state.analyzing=false;
@@ -2662,6 +2686,23 @@
     }
     function presentAnalysis(plan){
       var rule=RULES[plan.rule]||RULES.thirds;
+      // v4.7.1: 云端等待态——本地像素初判不渲染误导性结果，只显示"云端分析中"进度卡
+      if(plan && plan.cloudPending){
+        aiRuleTag.textContent="云端分析中…";
+        aiConfTxt.textContent="等待云端 VLM";
+        aiConfBar.style.width="12%";
+        aiBody.innerHTML="";
+        var _w=document.createElement("div");
+        _w.className="ai-suggest";
+        _w.style.margin="10px";
+        var _m=state.cloud&&state.cloud.model?state.cloud.model:"qwen3.5-flash";
+        _w.innerHTML='<div class="db-head" style="color:#7FB5FF;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19a4.5 4.5 0 1 0 0-9h-1.8A7 7 0 1 0 4 14.9"/><path d="M12 12v6"/><path d="M9 15l3 3 3-3"/></svg>&nbsp;☁️ 云端 VLM 构图分析中…</div>'
+          +'<div class="sg-row"><span class="sg-b" style="color:#7FB5FF;">✦</span>正在调用云端视觉大模型（'+_m+'）读懂画面，约需 15-30 秒</div>'
+          +'<div class="sg-row"><span class="sg-b" style="color:#7FB5FF;">✦</span>将识别画面场景 / 主体 / 构图法则，分析完成后自动应用并刷新结果</div>'
+          +'<div class="sg-row"><span class="sg-b" style="color:#7FB5FF;">✦</span>云端不可用时会自动回退本地模型，不会卡死</div>';
+        aiBody.appendChild(_w);
+        return;
+      }
       aiRuleTag.textContent=rule.cn+" · "+plan.conf+"%";
       drawAiPreview(plan);
       aiConfTxt.textContent="匹配度 "+plan.conf+"%";
@@ -2693,7 +2734,9 @@
       if(plan.cloud){
         var _cd=document.createElement("div");
         _cd.className="ai-suggest";
-        var _cs=plan.sceneType||"general";
+        // v4.7.1: 场景英文键映射中文展示
+        var _sceneNames={portrait:"人物",landscape:"风景",food:"美食",architecture:"建筑",street:"街景",animal:"动物",waterscape:"水面",general:"综合"};
+        var _cs=(_sceneNames[plan.sceneType]||plan.sceneType||"综合");
         _cd.innerHTML='<div class="dt-row">☁️ 云端 VLM 分析（'+state.cloud.model+'）· 场景：'+_cs+'</div>';
         aiBody.insertBefore(_cd, aiBody.firstChild);
         setTimeout(function(){ _cd.classList.add("show"); }, 60);
@@ -2797,7 +2840,7 @@
       }catch(e){}
     }
     // v1.3.2: 一键应用 = 完整成品（按 AI 推荐框直接裁切 + 滤镜 + 变焦）
-    function applyPlanCrop(){
+    function applyPlanCrop(keepOpen){
       var p=state.plan; if(!p) return false;
       // v4.0.1: 如果标记为不需要裁切，直接返回 true（只应用滤镜）
       if(p.noCrop){ return true; }
@@ -2815,14 +2858,15 @@
       var url=c.toDataURL("image/jpeg",0.92);
       pushUndo();
       // v4.6 P1-2: kind="crop" 不覆盖真原图（Hy4 BUG-03：原 kind="upload" 使 setPhotoSource 里 kind!=="crop" 覆盖 state.origURL，AI 裁切后原图永久丢失）
-      setPhotoSource(url,"crop","AI智能裁切");
+      // v4.7.1: keepOpen=true（自动分析路径）保留分析面板显示结果；手动"一键成品"不传（收起面板，保持原交互）
+      setPhotoSource(url,"crop","AI智能裁切",keepOpen);
       state.cropResult=url;
       return true;
     }
     aiApply.addEventListener("click",function(){
       if(!state.analyzed || !state.plan) return;
       var p=state.plan;
-      var ok=applyPlanCrop();
+      var ok=applyPlanCrop(); // 手动"一键成品"保持原交互：裁切后收起面板
       if(!ok){ setStatus("智能裁切失败，请重试", "err"); return; }
       state.plan=p; state.analyzed=true;   // 保留 AI 结果，可继续智能裁切微调
       // v4.2: 已应用的裁切区域清零——旧plan的crop还是原始值，重复"一键应用"会反复裁同一区域（豆包BUG-12）
@@ -4207,22 +4251,24 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       var dataUrl;
       try{ dataUrl=c.toDataURL("image/jpeg",0.8); }catch(e){ if(onDone) onDone(null); return; }
       var prompt=[
-        "你是专业摄影构图师。只输出一个 JSON 对象，不要任何其他文字、不要 markdown 代码块。",
-        "分析这张照片并给出以下字段：",
-        "1. scene 场景，只从 [portrait,landscape,food,architecture,street,animal,waterscape,general] 选一个：",
-        "portrait=人物为主体；landscape=山/天空/陆地等自然风景；waterscape=水面/海浪/河流/倒影为主体或占画面三分之一以上；food=食物饮品；architecture=单体或建筑群外观为主体且无明显街道纵深；street=存在道路/街巷纵深或沿街行进场景；animal=动物为主体；general=其他。",
-        "2. rule 构图法则，只从 [thirds,sym,center,golden,diag] 选一个：thirds=三分法，sym=左右或上下对称，center=居中突出，golden=主体落在黄金分割点，diag=画面存在明显对角线或引导线。",
-        "3. conf 契合度，0-100 整数，严格分档：法则与画面完美契合 90-98，基本契合 75-89，勉强适用 60-74，不契合低于 60，不要全部给高分。",
-        "4. subjectBox 主体包围框 [x,y,w,h]，必须是四个 0-100 的百分比整数（相对画面宽高的比例，严禁输出像素坐标、严禁任何数值大于100），x、y 为主体左上角百分比，w、h 为主体宽高百分比，紧贴真实主体、不要过大；例如主体居中约占一半画面时输出 [25,28,50,48]。",
+        "你是专业摄影构图师，基于照片的真实像素做构图诊断。只输出一个 JSON 对象，不要任何其他文字、不要 markdown 代码块。",
+        "第一件事：先如实观察画面里实际有什么（人物/食物/建筑/动物/风景/物品等）。如果画面是布料、衣物、复杂纹理、模糊或难以辨认的内容，subject 如实写你看到的实际物体；确实看不清就写\"画面主体\"。严禁把衣物/纹理/静物臆测成风景、建筑或水面。",
+        "字段定义：",
+        "1. scene 场景，从 [portrait,landscape,food,architecture,street,animal,waterscape,general] 选一个：",
+        "portrait=人物为主体；landscape=山/天空/陆地等自然风景；waterscape=水面/海浪/河流/倒影为主体或占画面三分之一以上；food=食物饮品；architecture=单体或建筑群外观为主体且无明显街道纵深；street=存在道路/街巷纵深或沿街行进场景；animal=动物为主体；general=其他或不确定。",
+        "2. rule 构图法则，从 [thirds,golden,diag,lead,sym,center,frame,mini] 选一个：",
+        "thirds=主体在三分线或其交点附近；golden=主体落在黄金分割点附近；diag=画面存在明显对角线或斜线引导；lead=道路/栏杆/轨道等连续线条把视线引向主体；sym=左右或上下明显对称；center=主体居中突出；frame=门框/窗洞/拱形等前景框架包围主体；mini=大面积留白衬托小主体。",
+        "3. conf 契合度，0-100 整数，严格分档：法则与画面完美契合 90-98，基本契合 75-89，勉强适用 60-74，不契合低于 60。不要全部给高分，真实评价画面。",
+        "4. subjectBox 主体包围框 [x,y,w,h]，四个 0-100 的百分比整数（相对画面宽高的比例，严禁像素坐标、严禁任何数值大于100）：x,y 为主体左上角百分比，w,h 为主体宽高百分比，紧贴真实主体、不要过大；例如主体居中约占一半画面时输出 [25,28,50,48]。",
         "5. fillPct 主体面积占整个画面百分比的整数估算，范围 1-95。",
-        "6. subject 一句话中文主体描述。",
-        "7. advice 一句话中文构图或裁切建议。",
-        "输出格式：{\"scene\":\"...\",\"rule\":\"...\",\"conf\":80,\"subjectBox\":[x,y,w,h],\"fillPct\":25,\"subject\":\"...\",\"advice\":\"...\"}"
+        "6. subject 一句话中文如实描述画面主体（基于真实像素，例如\"一位身穿波点纱裙站在水边的女性\"，不要只写\"画面主体\"除非完全看不清）。",
+        "7. advice 一句话中文裁切/构图建议：先点出画面实际情况（主体位置/留白/多余区域），再给出可执行的裁切或构图建议；必须基于 subjectBox，严禁建议裁掉主体。",
+        "输出格式（严格 JSON，键名与上面一致）：{\"scene\":\"portrait\",\"rule\":\"thirds\",\"conf\":88,\"subjectBox\":[30,20,40,60],\"fillPct\":28,\"subject\":\"一位站在水边的女性，身着波点纱裙\",\"advice\":\"主体在画面左侧，建议裁去右侧约10%多余空间，让主体落在左三分线，重心更稳\"}"
       ].join("\n");
       var body={ model:model, messages:[{ role:"user", content:[
         {type:"text", text:prompt},
         {type:"image_url", image_url:{ url:dataUrl }}
-      ]}], temperature:0.2, max_tokens:300 };
+      ]}], temperature:0.2, max_tokens:500 };
       // v4.7.0: 新云端请求发起前中止上一个仍在飞行的请求（连点分析/快速换图不堆积请求；旧请求 token 已过期会自行丢弃）
       if(state._cloudAbort){ try{ state._cloudAbort.abort(); }catch(e){} state._cloudAbort=null; }
       var ctrl=(typeof AbortController!=="undefined")?new AbortController():null;
