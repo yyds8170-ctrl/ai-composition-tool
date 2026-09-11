@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v6.2.0 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v6.2.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
+<title>AI 构图助手 Pro v6.3.0 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v6.3.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -615,14 +615,16 @@
       <button class="ai-close" id="aiClose">×</button>
       <div class="ai-head"><span class="bar"></span><b>AI 构图分析</b><span class="rule-tag" id="aiRuleTag">三分法</span></div>
       <div class="ai-conf"><span id="aiConfTxt">匹配度 --</span><span class="bar"><i id="aiConfBar"></i></span></div>
-      <div class="ai-preview" id="aiPreview" style="display:none;">
-        <div class="pv-stage">
-          <img id="pvImg" alt="构图示意">
-          <div class="pv-guides" id="pvGuides"><i class="pv-diag" id="pvDiag"></i><i class="pv-crop" id="pvCrop"></i></div>
-          <span class="pv-tag">AI 构图示意</span>
+      <div class="ai-body" id="aiBody">
+        <!-- v6.3: 示意图移入滚动容器，随分析内容一起滚动（修复固定悬浮遮挡） -->
+        <div class="ai-preview" id="aiPreview" style="display:none;">
+          <div class="pv-stage">
+            <img id="pvImg" alt="构图示意">
+            <div class="pv-guides" id="pvGuides"><i class="pv-diag" id="pvDiag"></i><i class="pv-crop" id="pvCrop"></i></div>
+            <span class="pv-tag">AI 构图示意</span>
+          </div>
         </div>
       </div>
-      <div class="ai-body" id="aiBody"></div>
       <div class="ai-foot">
         <div class="ai-apply-tip" id="aiApplyTip">👆 点下方按钮自动应用裁切+滤镜+变焦</div>
         <button class="ai-btn highlight" id="aiApply"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg>一键成品（智能裁切 + 滤镜 + 变焦）</button>
@@ -894,7 +896,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v6.2.0";
+var APP_VER="v6.3.0";
 (function(){
   try{
     document.title=(document.title||"").replace(/v\d+\.\d+\.\d+/,APP_VER);
@@ -2531,7 +2533,9 @@ var APP_VER="v6.2.0";
       resetGuides(); closeAi();
       setStatus("AI 正在分析画面，请稳住手机…", "");
       aiPanel.classList.add("open");
+      _detachPreview();
       aiBody.innerHTML="";
+      _reattachPreview();
       aiRuleTag.textContent="分析中…";
       aiConfTxt.textContent="匹配度 分析中…";
       aiConfBar.style.width="0%";
@@ -2756,7 +2760,9 @@ var APP_VER="v6.2.0";
         aiRuleTag.textContent="云端分析中…";
         aiConfTxt.textContent="等待云端 VLM";
         aiConfBar.style.width="12%";
+        _detachPreview();
         aiBody.innerHTML="";
+        _reattachPreview();
         var _w=document.createElement("div");
         _w.className="ai-suggest";
         _w.style.margin="10px";
@@ -2773,7 +2779,9 @@ var APP_VER="v6.2.0";
       aiConfTxt.textContent="匹配度 "+plan.conf+"%"+(plan.conf<50?"（置信较低，建议手动微调）":(plan.conf<60?"（中等置信）":""));
       aiConfBar.style.width=plan.conf+"%";
       if(plan.conf<60){ aiConfBar.style.background="linear-gradient(90deg,#FAAD14,#F4B393)"; }
+      _detachPreview();
       aiBody.innerHTML="";
+      _reattachPreview();
       // v4.2: 清空后重建模型/检测状态卡（presentAnalysis 重渲染会把模型卡一起清掉，用户看不到模型加载状态）
       try{
         // v4.7.0: 云端 VLM 结果不插入本地模型状态卡/本地检测卡（云端模式跳过本地模型，避免"下载中/本地真AI模型"误导）
@@ -3013,11 +3021,18 @@ var APP_VER="v6.2.0";
     }
     function _hideCropPreview(){ try{ var cp=document.getElementById("cropPreview"); if(cp) cp.style.display="none"; }catch(e){} }
     // v4.2: 用户主动换图时清空分析数据（防止残留旧结果误导）；自动应用路径不清（保留结果可继续微调）
+    // v6.3: 示意图在滚动容器(aiBody)内——任何 innerHTML 清空前先摘出，清空后插回首位
+    function _detachPreview(){
+      try{ if(aiPreview && aiPreview.parentNode===aiBody){ aiBody.removeChild(aiPreview); } }catch(e){}
+    }
+    function _reattachPreview(){
+      try{ if(aiPreview && aiPreview.parentNode!==aiBody){ aiBody.insertBefore(aiPreview, aiBody.firstChild); } }catch(e){}
+    }
     function clearAiData(){
       if(aiRuleTag) aiRuleTag.textContent="";
       if(aiConfTxt) aiConfTxt.textContent="匹配度 --";
       if(aiConfBar) aiConfBar.style.width="0%";
-      if(aiBody) aiBody.innerHTML="";
+      if(aiBody){ _detachPreview(); aiBody.innerHTML=""; _reattachPreview(); }
       _hideCropPreview(); // v5.0: 清空分析数据时移除裁切预览
       state.aiData=null;
       state.plan=null;
@@ -4460,7 +4475,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         // v6.0: 单 32-bit 哈希→双种子键（碰撞空间 2^31→约 2^62），防"撞图套用别人裁切方案"
         var _h1=0,_h2=0;
         for(var _i=0;_i<hd.length;_i++){ var _c=hd.charCodeAt(_i); _h1=((_h1<<5)-_h1+_c)|0; _h2=((_h2<<7)-_h2+_c*31)|0; }
-        _ccKey="v620_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v6.0 引擎大改，旧 v514_ 缓存不复用
+        _ccKey="v630_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v6.0 引擎大改，旧 v514_ 缓存不复用
       }catch(e){ _ccKey=null; }
       if(_ccKey){
         try{
@@ -4699,16 +4714,25 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             B0B=Math.max(B0B, Math.min(100,(_faceBB[1]+_faceBB[3])*100+2));
           }
           var BL=B0L, BT=B0T, BR=B0R, BB=B0B;
+          var _trimK=0.65; // v6.3: 渐进式冗余裁剪系数（裁65%留35%环境过渡）
 
-          // ---- 3) 意图裁剪（设定式：直接收紧意图方向到主体附近留小边距；其余方向保持保护框）----
+          // ---- 3) 意图裁剪 v3（渐进式：只裁冗余的大部分、保留环境过渡，防过度裁切）----
+          // v6.3 根因修复：v5.1.1 设定式把保留区直接收到主体边缘+5%边距——主体占比小时
+          // 环境被系统性裁没（实测人像裁后仅剩原图~11%面积）。改为渐进式：裁剪量=冗余×0.65，
+          // 保留35%环境过渡；主体贴边时兜底保留最小环境，兼顾去冗余与不裁没。
           var _headPad=Sh*0.10, _footPad=Sh*0.05, _sidePad=Sw*0.05;
-          if(_ci==="crop_top"){ BT=Math.max(0,Sy-_headPad); }
-          else if(_ci==="crop_bottom"){ BB=Math.min(100,Sy+Sh+_footPad); }
-          else if(_ci==="crop_left"){ BL=Math.max(0,Sx-_sidePad); }
-          else if(_ci==="crop_right"){ BR=Math.min(100,Sx+Sw+_sidePad); }
-          else if(_ci==="crop_tb"){ BT=Math.max(0,Sy-_headPad); BB=Math.min(100,Sy+Sh+_footPad); }
-          else if(_ci==="crop_lr"){ BL=Math.max(0,Sx-_sidePad); BR=Math.min(100,Sx+Sw+_sidePad); }
+          if(_ci==="crop_top"){ BT=Math.max(0, Math.min(Sy-_headPad, Sy*_trimK)); }
+          else if(_ci==="crop_bottom"){ BB=Math.min(100, Math.max(Sy+Sh+_footPad, 100-(100-(Sy+Sh))*_trimK)); }
+          else if(_ci==="crop_left"){ BL=Math.max(0, Math.min(Sx-_sidePad, Sx*_trimK)); }
+          else if(_ci==="crop_right"){ BR=Math.min(100, Math.max(Sx+Sw+_sidePad, 100-(100-(Sx+Sw))*_trimK)); }
+          else if(_ci==="crop_tb"){ BT=Math.max(0, Math.min(Sy-_headPad, Sy*_trimK)); BB=Math.min(100, Math.max(Sy+Sh+_footPad, 100-(100-(Sy+Sh))*_trimK)); }
+          else if(_ci==="crop_lr"){ BL=Math.max(0, Math.min(Sx-_sidePad, Sx*_trimK)); BR=Math.min(100, Math.max(Sx+Sw+_sidePad, 100-(100-(Sx+Sw))*_trimK)); }
           else if(_ci==="trim"){ BL=B0L+Math.min(3,Sw*0.03); BT=B0T+Math.min(3,Sh*0.03); BR=B0R-Math.min(3,Sw*0.03); BB=B0B-Math.min(3,Sh*0.03); }
+          else if(_ci==="none" || _ci==="keep"){
+            // v6.3: none 语义=无需裁切——保持原图完整（历史版本按保护框裁到主体边缘，
+            // 模型判"无冗余"时反而裁掉大量环境，是反复被诟病的裁切问题来源之一）
+            return [0,0,0,0];
+          }
           // v5.1.1: VLM 冗余信任——bbox 顶/底贴边（检测框可能含装饰冗余）且意图裁顶部/底部时，
           // 至少裁掉一部分（上限 10%），避免"检测框占满→意图被无视→顶部完全不裁"的失真
           // v6.0: 顶部 10% 内有人脸时豁免强制裁顶，防特写/全身照被裁到头发、头顶
@@ -4813,13 +4837,34 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             }
           }
 
+          // ---- 5.8) v6.3 最小保留区硬约束（防过度裁切的最后防线）----
+          // 意图裁剪/比例守护/构图平移全部完成后，保留区面积不得低于原图阈值；
+          // 否则按中心等比扩展回阈值。人像更保守（环境是氛围），风景/建筑可略紧。
+          var _kW6=BR-BL, _kH6=BB-BT;
+          if(_kW6>4 && _kH6>4){
+            var _minKeep=isPort?0.55:0.45;
+            var _keepA=(_kW6/100)*(_kH6/100);
+            if(_keepA < _minKeep){
+              var _scale=Math.sqrt(_minKeep/Math.max(0.001,_keepA));
+              var _nW6=Math.min(100,_kW6*_scale), _nH6=Math.min(100,_kH6*_scale);
+              var _aL6=(_nW6-_kW6)/2, _aT6=(_nH6-_kH6)/2;
+              var _bL6=Math.max(0,BL-_aL6), _bR6=Math.min(100,BR+_aL6);
+              var _bT6=Math.max(0,BT-_aT6), _bB6=Math.min(100,BB+_aT6);
+              // 扩展被画布挡住时保证不缩回（只增不减）
+              if(_bR6-_bL6 < _kW6){ _bR6=Math.min(100,_bR6+(_kW6-(_bR6-_bL6))); }
+              if(_bB6-_bT6 < _kH6){ _bB6=Math.min(100,_bB6+(_kH6-(_bB6-_bT6))); }
+              BL=_bL6; BR=_bR6; BT=_bT6; BB=_bB6;
+            }
+          }
+
+
           // ---- 6) 转 cropBox（四边裁切百分比）clamp（v6.0 统一单边上限 50）----
-          var L4=Math.max(0,Math.min(50,Math.round(BL)));
-          var T4=Math.max(0,Math.min(50,Math.round(BT)));
-          var R4=Math.max(0,Math.min(50,Math.round(100-BR)));
-          var B4=Math.max(0,Math.min(50,Math.round(100-BB)));
+          var _maxSide=isPort?25:35; // v6.3: 单边裁切上限（人像25%/其他35%，防单侧裁没）
+          var L4=Math.max(0,Math.min(_maxSide,Math.round(BL)));
+          var T4=Math.max(0,Math.min(_maxSide,Math.round(BT)));
+          var R4=Math.max(0,Math.min(_maxSide,Math.round(100-BR)));
+          var B4=Math.max(0,Math.min(_maxSide,Math.round(100-BB)));
           var _sum=L4+T4+R4+B4;
-          // 温和守门：人像四边和≤46（更克制），其他≤58。超出时优先削减非意图方向的裁切量
           // 温和守门：力度分级（v5.1.1）——夜景/动物更保守（保氛围），风景/建筑可稍多；小主体可多裁、占满少裁
           var _cap=46;
           if(isPort){ _cap=46; }
@@ -4855,6 +4900,29 @@ if(aiModelState!=="idle"){ resolve(false); return; }
               L4=nL5; T4=nT5; R4=nR5; B4=nB5;
             }
           }
+          // ---- 6.5) v6.3 最终最小保留校验（cropBox 空间执行，防上游 clamp 破坏面积约束）----
+          // 最小保留（5.8 段）在 BL/BT 空间完成，但转 cropBox 后单边上限/守门缩放会把
+          // 保留区重新压小。此段在最终四边值上做面积校验：不足阈值则按比例缩减各边，
+          // 与守门 cap 一致方向（都防裁太多），只收紧不放开。
+          var _keepA2=(100-L4-R4)/100*(100-T4-B4)/100;
+          var _minKeep2=isPort?0.58:0.48;
+          if(_keepA2>0.001 && _keepA2<_minKeep2){
+            var _lo=0,_hi=1,_tar=_minKeep2;
+            for(var _it=0;_it<18;_it++){
+              var _mid=(_lo+_hi)/2;
+              var _aL=Math.round(L4*_mid), _aT=Math.round(T4*_mid), _aR=Math.round(R4*_mid), _aB=Math.round(B4*_mid);
+              var _aK=(100-_aL-_aR)/100*(100-_aT-_aB)/100;
+              if(_aK<_tar){ _hi=_mid; } else { _lo=_mid; }
+            }
+            var _m2=Math.max(0.35,(_lo+_hi)/2);
+            L4=Math.round(L4*_m2); T4=Math.round(T4*_m2); R4=Math.round(R4*_m2); B4=Math.round(B4*_m2);
+            var _sum2=L4+T4+R4+B4;
+            if(_sum2>_cap){ // 缩放后仍超 cap（极端窄画幅），再压一轮守门
+              var _s3=_cap/_sum2;
+              L4=Math.round(L4*_s3); T4=Math.round(T4*_s3); R4=Math.round(R4*_s3); B4=Math.round(B4*_s3);
+            }
+          }
+
           return [L4,T4,R4,B4];
         }
         // v5.1.0: 兜底链——本地 COCO 主体框（优先）→ VLM subjectBox → VLM subjectPos 语义 → 中心区域
@@ -4933,6 +5001,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
               if(_kk.indexOf("ai_cmp_cc_v514_")===0){ try{ localStorage.removeItem(_kk); }catch(e2){} continue; }
               if(_kk.indexOf("ai_cmp_cc_v600_")===0){ try{ localStorage.removeItem(_kk); }catch(e2){} continue; }
               if(_kk.indexOf("ai_cmp_cc_v610_")===0){ try{ localStorage.removeItem(_kk); }catch(e2){} continue; }
+              if(_kk.indexOf("ai_cmp_cc_v620_")===0){ try{ localStorage.removeItem(_kk); }catch(e2){} continue; }
               if(_kk.indexOf("ai_cmp_cc_")===0) _allCC.push(_kk);
             }
             if(_allCC.length>=60){
