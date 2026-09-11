@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v4.8.0 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v4.8.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
+<title>AI 构图助手 Pro v4.8.1 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v4.8.1 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -534,7 +534,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v4.8.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v4.8.1</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -2818,7 +2818,7 @@
         // v4.8.0: 云端 VLM 分析按 4 步流程展示：画面描述→构图分析→滤镜建议→裁切方案（先看懂画面再给方案）
         var _esc=function(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); };
         var _steps=[
-          {n:"① 画面描述",ic:"S",html:"<b>"+_esc(plan.desc||"云端正在描述画面…")+"</b>"},
+          {n:"① 画面描述",ic:"S",html:"<div style=\"color:var(--sub);font-size:11px;margin-bottom:3px;\">云端识别到的原始画面内容</div><b>"+_esc(plan.desc||"云端正在描述画面…")+"</b>"},
           {n:"② 构图分析",ic:"G",html:"<b>"+_esc(rule.cn)+"</b>（"+_esc(rule.zh)+"）"+(plan.issue?'<br><span style="color:#EF6B6B;">问题：'+_esc(plan.issue)+"</span>":"")},
           {n:"③ 滤镜建议",ic:"F",html:"<b>"+_esc((plan.filters&&plan.filters[0])||"自然")+"</b>"+((plan.filterAdvice&&plan.filters&&plan.filters[0]&&plan.filters[0].indexOf(plan.filterAdvice)<0)?'<br>推荐理由：'+_esc(plan.filterAdvice):"")},
           {n:"④ 裁切方案",ic:"A",html:"<b>"+_esc(plan.cropAdvice||"已按最优构图自动裁切")+"</b>"+(plan.z>1.05?"<br>· 变焦 <span style='font-family:JetBrains Mono,monospace'>"+plan.z.toFixed(1)+"x</span> 已自动放大":"")}
@@ -3345,7 +3345,8 @@
           }
         }catch(e){}
         shotCapChips.innerHTML=chips.join("");
-        shotCapText.textContent=state.plan?(state.plan.desc||""):"";
+        // v4.8.1: 结果卡描述明确标注"基于原图"——成品图经过裁切/滤镜/变焦，画面与原图不同，避免用户误以为分析描述与成品图不符
+        shotCapText.textContent=state.plan?("云端分析（基于原图）："+(state.plan.desc||"")):"";
         shotOverlay.classList.add("show");
       };
     }
@@ -4291,7 +4292,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         "8. conf：0-100 整数，严格打分：画面与该构图法则完美契合给90-98，基本契合75-89，勉强60-74，不契合低于60。不要全部打高分",
         "9. subjectBox：主体包围框，[x,y,w,h]，x/y是框左上角相对画面宽高的百分比，w/h是框的宽高百分比（0-100整数，框要完整框住主体）",
         "10. fillPct：主体占画面百分比，1-90 整数",
-        "先仔细看画面再回答。画面里没有的东西绝不编造；如果是布料/衣物/纹理/模糊影像，就如实写\"布料/纹理\"，严禁臆测成风景/建筑/水面"
+        "先仔细看画面再回答。画面里没有的东西绝不编造；对不确定的物体(背景/远处/模糊/纹理/装饰)必须用不确定表述：如\"疑似\"\"像\"\"类似编织纹理\"\"看不清楚\"，严禁用具体名词强行命名(如\"茅草屋顶\"\"松枝\"\"挂饰\")；布料/衣物/纹理就如实写\"布料/纹理\"，严禁臆测成风景/建筑/水面/屋顶"
       ].join("\n");      var body={ model:model, messages:[{ role:"user", content:[
         {type:"text", text:prompt},
         {type:"image_url", image_url:{ url:dataUrl }}
