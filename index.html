@@ -527,7 +527,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v4.8.1</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v5.1.4</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -893,6 +893,15 @@
   <div class="toast" id="toast"></div>
 
 <script>
+/* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
+var APP_VER="v5.1.4";
+(function(){
+  try{
+    document.title=(document.title||"").replace(/v\d+\.\d+\.\d+/,APP_VER);
+    var _bv=document.getElementById("brandVer");
+    if(_bv) _bv.textContent=APP_VER;
+  }catch(e){}
+})();
 (function(){
   // 注册 PWA Service Worker（独立 IIFE，不干扰主逻辑；需 HTTPS，file:// 自动跳过）
   if('serviceWorker' in navigator && location.protocol.indexOf('https')===0){
