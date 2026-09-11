@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v6.1.0 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v6.1.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
+<title>AI 构图助手 Pro v6.2.0 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v6.2.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -165,9 +165,9 @@
   .ai-history .h-t{color:var(--dim);flex:0 0 auto;width:78px;}
   .ai-history .h-r{color:var(--text);flex:1 1 auto;}
   .ai-history .h-c{color:var(--amber);font-weight:700;}
-    .ai-preview{position:relative;margin:2px 14px 10px;border-radius:12px;overflow:hidden;background:#000;border:1px solid var(--line2);}
-  .ai-preview .pv-stage{position:relative;width:100%;aspect-ratio:4/5;max-height:200px;overflow:hidden;}
-  .ai-preview .pv-stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+    .ai-preview{position:relative;margin:2px 14px 10px;border-radius:12px;overflow:hidden;background:#000;border:1px solid var(--line2);flex-shrink:0;}
+  .ai-preview .pv-stage{position:relative;width:100%;overflow:hidden;}
+  .ai-preview .pv-stage img{display:block;width:100%;height:auto;object-fit:contain;}
   .ai-preview .pv-guides{position:absolute;inset:0;pointer-events:none;}
   .ai-preview .pv-diag{position:absolute;height:2px;background:rgba(84,200,247,.9);transform-origin:0 0;}
   .ai-preview .pv-crop{position:absolute;border:1.5px solid rgba(255,180,84,.9);box-shadow:0 0 0 999px rgba(0,0,0,.32);}
@@ -894,7 +894,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v6.1.0";
+var APP_VER="v6.2.0";
 (function(){
   try{
     document.title=(document.title||"").replace(/v\d+\.\d+\.\d+/,APP_VER);
@@ -2692,6 +2692,31 @@ var APP_VER="v6.1.0";
         ctx.beginPath(); ctx.moveTo(0,H/3); ctx.lineTo(W,H/3); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(0,2*H/3); ctx.lineTo(W,2*H/3); ctx.stroke();
         ctx.setLineDash([]);
+        // 2.5) v6.2: 主体识别框（青色细框）——让用户直观看到"AI 认为主体在哪"
+        // 数据源：本地 analyzePixels 主体区域（_aiIntentCache.subjectBox，云端/本地引擎都写）
+        try{
+          var _sb=plan&&plan.aiIntent&&plan.aiIntent.subjectBox;
+          // v6.2 本地兜底：本地引擎 plan 无 aiIntent 时用像素主体坐标（cx/cy/bodyRatio）画框
+          if(!(_sb&&_sb.length===4&&_sb[2]>3&&_sb[3]>3) && state.aiData){
+            try{
+              var _adX=state.aiData, _cx=_adX.cx, _cy=_adX.cy;
+              if(typeof _cx==="number"&&typeof _cy==="number"){
+                var _bw2=(_adX.bodyRatio?Math.sqrt(_adX.bodyRatio)*100:35);
+                var _bh2=(_adX.bodyH?_adX.bodyH*100:(_bw2*(vh/vw)));
+                _bw2=Math.min(80,Math.max(15,_bw2)); _bh2=Math.min(90,Math.max(15,_bh2));
+                var _bx2=Math.max(0,_cx*100-_bw2/2), _by2=Math.max(0,_cy*100-_bh2/2);
+                _sb=[_bx2,_by2,Math.min(100-_bx2,_bw2),Math.min(100-_by2,_bh2)];
+              }
+            }catch(e){ _sb=null; }
+          }
+          if(_sb&&_sb.length===4&&(_sb[2]>3&&_sb[3]>3)){
+            ctx.strokeStyle="rgba(84,200,247,.85)";
+            ctx.lineWidth=Math.max(2,Math.round(W/120));
+            ctx.setLineDash([Math.max(3,W/90), Math.max(3,W/90)]);
+            ctx.strokeRect(_sb[0]/100*W,_sb[1]/100*H,_sb[2]/100*W,_sb[3]/100*H);
+            ctx.setLineDash([]);
+          }
+        }catch(e){}
         // 3) 在对角线上叠加高亮（先暗化画布再画线，保证线在最上层）
         var p1=plan.diag, p2=[p1[0]+(p1[0]>55?-28:40), p1[1]+(p1[1]>55?-24:26)];
         p2[0]=Math.max(2,Math.min(98,p2[0])); p2[1]=Math.max(2,Math.min(98,p2[1]));
@@ -2704,6 +2729,23 @@ var APP_VER="v6.1.0";
         ctx.strokeStyle="rgba(255,180,84,.95)"; ctx.lineWidth=Math.max(4,Math.round(W/70));
         ctx.strokeRect(cx,cy,cw,ch);
         pvImg.src=c.toDataURL("image/jpeg",0.9);
+        // v6.2: 构图示意完整显示——按原图比例动态设容器高度（原固定 4/5+cover 会裁切横图/方图）
+        try{
+          var _ps=pvImg.parentElement; if(_ps){
+            var _ar=vw/vh, _maxH=240, _w=_ps.clientWidth||300, _h=Math.round(_w/_ar);
+            if(_h>_maxH){ _h=_maxH; }
+            _ps.style.height=_h+"px"; _ps.style.maxHeight="none";
+            pvImg.style.height="100%";
+          }
+        }catch(e){}
+        // v6.2: 标签动态化——显示构图法 + 契合度（用户一眼看懂分析结论）
+        try{
+          var _pt=document.querySelector(".ai-preview .pv-tag");
+          if(_pt){
+            var _rn=RULES[plan.rule]?RULES[plan.rule].cn:"构图";
+            _pt.textContent="AI 构图示意 · "+_rn+" · 契合"+plan.conf+"%";
+          }
+        }catch(e){}
         aiPreview.style.display="block";
       }catch(e){ aiPreview.style.display="none"; }
     }
@@ -4418,7 +4460,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         // v6.0: 单 32-bit 哈希→双种子键（碰撞空间 2^31→约 2^62），防"撞图套用别人裁切方案"
         var _h1=0,_h2=0;
         for(var _i=0;_i<hd.length;_i++){ var _c=hd.charCodeAt(_i); _h1=((_h1<<5)-_h1+_c)|0; _h2=((_h2<<7)-_h2+_c*31)|0; }
-        _ccKey="v610_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v6.0 引擎大改，旧 v514_ 缓存不复用
+        _ccKey="v620_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v6.0 引擎大改，旧 v514_ 缓存不复用
       }catch(e){ _ccKey=null; }
       if(_ccKey){
         try{
@@ -4439,7 +4481,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         "你是专业摄影构图分析师。仔细看这张照片，用中文做专业分析。只输出一个严格 JSON 对象，不要任何多余文字。",
         "{\"scene\":\"...\",\"subject\":\"...\",\"desc\":\"...\",\"issue\":\"...\",\"rule\":\"...\",\"ruleReason\":\"...\",\"subjectPos\":\"...\",\"subjectSize\":\"...\",\"cropIntent\":\"...\",\"cropReason\":\"...\",\"keepOriginal\":false,\"filter\":\"...\",\"filterReason\":\"...\",\"conf\":80}",
         "字段要求：",
-        "1. scene：food/portrait/landscape/street/architecture/animal/waterscape/night/general 之一（美食/人像/风景/街拍/建筑/动物/水面/夜景/通用）。人物在画面里且是主体→portrait；整体偏暗且以灯光/夜色氛围为主的→night；夜晚但建筑是绝对主体的→architecture；人工建筑白天为主体的→architecture；水面倒影为视觉主体的→waterscape。",
+        "1. scene：food/portrait/landscape/street/architecture/animal/waterscape/night/general 之一（美食/人像/风景/街拍/建筑/动物/水面/夜景/通用）。画面出现明显人物（任何大小/数量/正侧背）→必须portrait；仅当人物很小且纯属风景点缀时才可landscape；整体偏暗且以灯光/夜色氛围为主的→night；夜晚但建筑是绝对主体的→architecture；人工建筑白天为主体的→architecture；水面倒影为视觉主体的→waterscape。",
         "2. subject：一句话中文描述画面主体（如\"一位穿白衬衫坐在窗边的女性\"）。",
         "3. desc：详细描述画面内容，至少80字：画面里有什么（主体/人物/物体）、各自在什么位置、光线方向与氛围、前景中景背景层次。",
         "4. issue：具体构图问题（如：顶部留白过多/主体偏左/前景杂物干扰/主体过小/地平线倾斜/画面杂乱）。没有问题就写\"无\"。",
@@ -4642,7 +4684,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           // VLM 意图（供展示层读取）
           var _ci=String(obj.cropIntent||"none").toLowerCase();
           var _intentName={crop_top:"裁顶部冗余",crop_bottom:"裁底部冗余",crop_left:"裁左侧冗余",crop_right:"裁右侧冗余",crop_tb:"裁上下冗余",crop_lr:"裁左右冗余",trim:"轻微收紧四边",none:"无需额外裁切"}[_ci]||"";
-          _aiIntentCache={ rule:ruleKey, subjectPos:_sp, cropIntent:_ci, intentName:_intentName, cropReason:obj.cropReason||"" };
+          _aiIntentCache={ rule:ruleKey, subjectPos:_sp, cropIntent:_ci, intentName:_intentName, cropReason:obj.cropReason||"", subjectBox:[Sx,Sy,Sw,Sh] };
 
           // ---- 2) 保护框 B0 = 主体 + 安全边距（硬约束：绝不可裁到主体）----
           var padL=Sw*0.08, padR=Sw*0.08, padT=Sh*0.08, padB=Sh*0.08;
@@ -4890,6 +4932,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
               if(!_kk) continue;
               if(_kk.indexOf("ai_cmp_cc_v514_")===0){ try{ localStorage.removeItem(_kk); }catch(e2){} continue; }
               if(_kk.indexOf("ai_cmp_cc_v600_")===0){ try{ localStorage.removeItem(_kk); }catch(e2){} continue; }
+              if(_kk.indexOf("ai_cmp_cc_v610_")===0){ try{ localStorage.removeItem(_kk); }catch(e2){} continue; }
               if(_kk.indexOf("ai_cmp_cc_")===0) _allCC.push(_kk);
             }
             if(_allCC.length>=60){
