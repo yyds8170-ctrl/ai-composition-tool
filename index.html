@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v5.1.4 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v5.1.4 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
+<title>AI 构图助手 Pro v6.1.0 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v6.1.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -527,7 +527,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v5.1.4</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v6.0.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -894,7 +894,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v5.1.4";
+var APP_VER="v6.1.0";
 (function(){
   try{
     document.title=(document.title||"").replace(/v\d+\.\d+\.\d+/,APP_VER);
@@ -1474,7 +1474,7 @@ var APP_VER="v5.1.4";
             cx.drawImage(bmp,0,0);
             cx.restore();
             if(bmp.close) bmp.close();
-            onOK(c.toDataURL("image/jpeg",0.92));
+            onOK(c.toDataURL("image/jpeg",0.95));
           }catch(e){ onOK(url); }
         }).catch(function(){ onOK(url); });
       }).catch(function(){ onOK(url); });
@@ -2207,6 +2207,18 @@ var APP_VER="v5.1.4";
         Math.round(Math.max(0,cropRight)*100),
         Math.round(Math.max(0,cropBottom)*100)
       ];
+      // v6.0: 本地确定性意图——无 VLM 时也按四边实际裁切量反推方向语义（供展示与后续统一引擎读取）
+      (function(){
+        var _vL=cropLeft,_vT=cropTop,_vR=cropRight,_vB=cropBottom;
+        var _vSum=_vL+_vT+_vR+_vB, _vMax=Math.max(_vL,_vT,_vR,_vB);
+        if(_vSum<0.015){ plan.cropIntent="none"; return; }
+        var _vH=_vL+_vR, _vV=_vT+_vB;
+        if(_vV>_vH*1.6 && _vT>0.01 && _vB>0.01){ plan.cropIntent="crop_tb"; return; }
+        if(_vH>_vV*1.6 && _vL>0.01 && _vR>0.01){ plan.cropIntent="crop_lr"; return; }
+        if(_vMax<0.03){ plan.cropIntent="trim"; return; }
+        var _map=["crop_left","crop_top","crop_right","crop_bottom"], _arr=[_vL,_vT,_vR,_vB];
+        plan.cropIntent=_map[_arr.indexOf(_vMax)];
+      })();
       
       // ===== 3. 智能变焦推荐 =====
       if(a.bodyRatio < 0.15){
@@ -2497,7 +2509,7 @@ var APP_VER="v5.1.4";
         }
         ctx.putImageData(imgData,0,0);
       }catch(e){ console.warn("美化失败",e); }
-      var url=c.toDataURL("image/jpeg",0.92);
+      var url=c.toDataURL("image/jpeg",0.95);
       pushUndo();
       setPhotoSource(url,"upload","一键美化");
       // v4.6 P2-4: 美化静默取消 AI 分析补提示（豆包 NEW-v5-05：setPhotoSource 内 invalidateAnalysis 无告知）
@@ -2633,7 +2645,13 @@ var APP_VER="v5.1.4";
             if(token!==state.analyzeToken) return;
             if(!_fbDone){
               _fbDone=true;
-              if(_cloudActiveNow){ state.analyzing=false; stage.classList.remove("scanning"); btnAnalyze.disabled=false; }
+              if(_cloudActiveNow){
+                // v6.0: 30s 兜底已应用本地像素初判，同步中止在途云端请求并打标记，
+                // 避免 35s abort 后 catch→onDone(null)→runLocalAIDetection 现场下载 18MB 模型
+                try{ if(state._cloudAbort){ state._cloudAbort.abort(); state._cloudAbort=null; } }catch(e){}
+                state._cloudKilled=true;
+                state.analyzing=false; stage.classList.remove("scanning"); btnAnalyze.disabled=false;
+              }
               autoApplyPlan(null);
             }
           }, _cloudActiveNow?30000:20000);
@@ -2737,11 +2755,20 @@ var APP_VER="v5.1.4";
         setTimeout(function(){ _off.classList.add("show"); }, 60);
       }
       // v4.7.0 云端 VLM 分析标记卡（v4.8.0 加强：醒目云端徽章，明确"这是云端分析的"）
-      if(plan.cloud){
+      if(plan.cloudSkipped){
+        // v6.0: 低信息图云端主动短路——明确告知用户为何没走云端（透明，不假装是云端结果）
+        var _sd=document.createElement("div");
+        _sd.className="ai-suggest cloud-badge";
+        _sd.innerHTML='<div class="cb-head"><span class="cb-cloud">⏭️</span><span class="cb-title">云端已智能跳过</span></div>'
+          +'<div class="cb-row" style="color:var(--sub);font-size:11px;">'+(plan.cloudSkipReason||"该图信息量过低，已用本地确定性分析，结果更稳定且不耗云端额度")+'</div>';
+        aiBody.insertBefore(_sd, aiBody.firstChild);
+        setTimeout(function(){ _sd.classList.add("show"); }, 60);
+      }
+      else if(plan.cloud){
         var _cd=document.createElement("div");
         _cd.className="ai-suggest cloud-badge";
         // v4.7.1: 场景英文键映射中文展示
-        var _sceneNames={portrait:"人物",landscape:"风景",food:"美食",architecture:"建筑",street:"街景",animal:"动物",waterscape:"水面",general:"综合"};
+        var _sceneNames={portrait:"人物",portrait_close:"人像特写",landscape:"风景",food:"美食",architecture:"建筑",street:"街景",night:"夜景",animal:"动物",waterscape:"水面",general:"综合"};
         var _cs=(_sceneNames[plan.sceneType]||plan.sceneType||"综合");
         _cd.innerHTML='<div class="cb-head"><span class="cb-cloud">☁️</span><span class="cb-title">云端 VLM 分析</span><span class="cb-model">'+state.cloud.model+'</span></div>'
           +'<div class="cb-row">场景：<b>'+_cs+'</b> · 构图：<b>'+rule.cn+'</b> · 契合 '+plan.conf+'% · 置信 <b style="color:'+(plan.confLevel==="高"?"#52C41A":(plan.confLevel==="中"?"#FAAD14":"#EF6B6B"))+'">'+(plan.confLevel||"中")+'</b></div>' 
@@ -2886,7 +2913,7 @@ var APP_VER="v5.1.4";
       var c=document.createElement("canvas");
       c.width=sw; c.height=sh;
       c.getContext("2d").drawImage(el,sx,sy,sw,sh,0,0,sw,sh);
-      var url=c.toDataURL("image/jpeg",0.92);
+      var url=c.toDataURL("image/jpeg",0.95);
       pushUndo();
       // v4.6 P1-2: kind="crop" 不覆盖真原图（Hy4 BUG-03：原 kind="upload" 使 setPhotoSource 里 kind!=="crop" 覆盖 state.origURL，AI 裁切后原图永久丢失）
       // v4.7.1: keepOpen=true（自动分析路径）保留分析面板显示结果；手动"一键成品"不传（收起面板，保持原交互）
@@ -2928,8 +2955,8 @@ var APP_VER="v5.1.4";
         if(!pl||pl.noCrop||!pl.crop){ cp.style.display="none"; return; }
         var cr=pl.crop; var sum=(cr[0]||0)+(cr[1]||0)+(cr[2]||0)+(cr[3]||0);
         if(sum<=0){ cp.style.display="none"; return; }
-        var L=Math.max(0,Math.min(45,cr[0]||0)), T=Math.max(0,Math.min(45,cr[1]||0));
-        var R=Math.max(0,Math.min(45,cr[2]||0)), B=Math.max(0,Math.min(45,cr[3]||0));
+        var L=Math.max(0,Math.min(50,cr[0]||0)), T=Math.max(0,Math.min(50,cr[1]||0));
+        var R=Math.max(0,Math.min(50,cr[2]||0)), B=Math.max(0,Math.min(50,cr[3]||0));
         var midH=Math.max(10,100-T-B), midW=Math.max(10,100-L-R);
         cp.style.display="block";
         var elT=document.getElementById("cpTop"), elB=document.getElementById("cpBottom");
@@ -3223,7 +3250,7 @@ var APP_VER="v5.1.4";
       var c=document.createElement("canvas");
       c.width=sw; c.height=sh;
       c.getContext("2d").drawImage(cropBg, sx,sy,sw,sh, 0,0,sw,sh);
-      var url=c.toDataURL("image/jpeg",0.92);
+      var url=c.toDataURL("image/jpeg",0.95);
       cropTool.classList.remove("show");
       cropState.active=false;
       // 替换当前画面
@@ -3343,7 +3370,7 @@ var APP_VER="v5.1.4";
         var _exportFilter = FILTERS[state.filter] ? FILTERS[state.filter].css : "";
         ctx.filter = _exportFilter.trim() || "none";
         ctx.drawImage(el,sx,sy,cw,ch,0,0,ow,oh);
-        var url=canvas.toDataURL("image/jpeg",0.92);
+        var url=canvas.toDataURL("image/jpeg",0.95);
         state.lastShotURL=url;
         showShot(url);
       }catch(err){
@@ -3507,7 +3534,9 @@ var APP_VER="v5.1.4";
             var cw=Math.round(w*sc), ch=Math.round(h*sc);
             var c=document.createElement("canvas");
             c.width=cw; c.height=ch;
-            c.getContext("2d").drawImage(img,0,0,cw,ch);
+            var _cx2d=c.getContext("2d"); // v6.0: 高质量重采样，缩略图/导出不再发糊
+            _cx2d.imageSmoothingEnabled=true; _cx2d.imageSmoothingQuality="high";
+            _cx2d.drawImage(img,0,0,cw,ch);
             resolve(c.toDataURL("image/jpeg",quality));
           };
           img.onerror=function(){ resolve(src); };
@@ -4320,7 +4349,16 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       // 云端 VLM 构图分析（经 SCF 代理转发至 Cephalon /chat/completions）；失败或超时 → onDone(null) 回退本地首判
       // 代理模式：API Key 内置在服务端环境变量，前端只需访问口令（X-App-Token），避免 Key 泄露
       if(!el || !onDone) return;
+      // v6.1: 熔断——连续 3 次云端失败后 5 分钟内直走本地（额度/体验保护）
+      try{
+        if(state.cloudTripUntil && Date.now()<state.cloudTripUntil){
+          if(onDone) onDone(null);
+          return;
+        }
+        state.cloudTripUntil=0;
+      }catch(e){}
       var _t0=Date.now(); // v5.0: 分析耗时统计
+      state._cloudKilled=false; // v6.0: 每次云端分析重置"被外层30s兜底主动取消"标记
       var token=state.analyzeToken;
       var base=state.cloud.base.replace(/\/+$/,"");
       var appToken=state.cloud.key, model=state.cloud.model||"qwen3.5-flash";
@@ -4343,6 +4381,27 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           if(_pa.vSym!==undefined) state.aiData.vSym=_pa.vSym;
         }
       }catch(e){}
+      // v6.0: 低信息图短路——纯色/大面积过曝/大面积死黑/无显著主体时，VLM 只能随机猜（浪费额度还易乱裁），
+      // 直接用本地像素分析出 plan（确定性、稳定、省额度）
+      try{
+        if(_pa && (
+          (typeof _pa.bodyRatio==="number" && _pa.bodyRatio<0.02 && (typeof _pa.dynamicRange==="number" && _pa.dynamicRange<0.12))
+          || (typeof _pa.highClip==="number" && _pa.highClip>0.6)
+          || (typeof _pa.shadowClip==="number" && _pa.shadowClip>0.6)
+        )){
+          var _lp=planFromAnalysis(state.aiData);
+          if(_lp){
+            _lp.cloudSkipped=true; _lp.cloudSkipReason="低信息图（纯色/过曝/死黑），已用本地确定性分析";
+            // v6.1: 短路同步 state.plan + 立即渲染面板（原缺失→applyPlanCrop 读到旧本地初判 plan、
+            // 面板停留在"云端分析中"等待卡，用户看不到"已智能跳过"提示）
+            state.plan=_lp;
+            state.analyzed=true;
+            try{ presentAnalysis(_lp); }catch(e){}
+            if(onDone) onDone(_lp);
+            return;
+          }
+        }
+      }catch(e){}
       var _t0=Date.now();
       var scale=Math.min(1, 1024/Math.max(vw,vh));
       var c=document.createElement("canvas");
@@ -4356,8 +4415,10 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         var hc=document.createElement("canvas"); hc.width=24; hc.height=24;
         hc.getContext("2d").drawImage(el,0,0,24,24);
         var hd=hc.toDataURL("image/jpeg",0.4);
-        var _h=0; for(var _i=0;_i<hd.length;_i++){ _h=((_h<<5)-_h+hd.charCodeAt(_i))|0; }
-        _ccKey="v514_"+Math.abs(_h); // v5.1.1: 缓存键升级（引擎 v2 结果，不命中旧算法缓存）
+        // v6.0: 单 32-bit 哈希→双种子键（碰撞空间 2^31→约 2^62），防"撞图套用别人裁切方案"
+        var _h1=0,_h2=0;
+        for(var _i=0;_i<hd.length;_i++){ var _c=hd.charCodeAt(_i); _h1=((_h1<<5)-_h1+_c)|0; _h2=((_h2<<7)-_h2+_c*31)|0; }
+        _ccKey="v610_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v6.0 引擎大改，旧 v514_ 缓存不复用
       }catch(e){ _ccKey=null; }
       if(_ccKey){
         try{
@@ -4380,7 +4441,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         "字段要求：",
         "1. scene：food/portrait/landscape/street/architecture/animal/waterscape/night/general 之一（美食/人像/风景/街拍/建筑/动物/水面/夜景/通用）。人物在画面里且是主体→portrait；整体偏暗且以灯光/夜色氛围为主的→night；夜晚但建筑是绝对主体的→architecture；人工建筑白天为主体的→architecture；水面倒影为视觉主体的→waterscape。",
         "2. subject：一句话中文描述画面主体（如\"一位穿白衬衫坐在窗边的女性\"）。",
-        "3. desc：详细描述画面内容，至少120字：画面里有什么（主体/人物/物体）、各自在什么位置、光线方向与氛围、前景中景背景层次。",
+        "3. desc：详细描述画面内容，至少80字：画面里有什么（主体/人物/物体）、各自在什么位置、光线方向与氛围、前景中景背景层次。",
         "4. issue：具体构图问题（如：顶部留白过多/主体偏左/前景杂物干扰/主体过小/地平线倾斜/画面杂乱）。没有问题就写\"无\"。",
         "5. rule：thirds/golden/diag/lead/sym/center/frame/mini 之一（thirds=三分法 golden=黄金分割 diag=对角线 lead=引导线 sym=对称 center=居中 frame=框架式 mini=留白/极简）。",
         "6. ruleReason：为什么用这个构图法？画面中什么线条/位置关系/结构支撑了它（一句话，如\"人物位于画面右侧，左侧水面留白自然形成三分线\"）。",
@@ -4392,29 +4453,64 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         "12. filter：自然/暖阳/冷调/黑白/浓郁/清新/电影感/莫兰迪/港风 之一，选最适合这张照片的风格。",
         "13. filterReason：为什么推荐这个滤镜（一句话）。",
         "14. conf：0-100 整数，严格打分：构图有明显问题且主体混乱给40-59；主体明确但构图一般给60-74；构图合理给75-85；构图优秀给90-98。人物类不超88。",
-        "严格要求：先仔细观察画面再回答；desc 必须120字以上且具体；只描述意图和方向，禁止输出任何数字坐标或百分比数值（如\"裁去15%\"\"[0,20,0,0]\"这类都不允许），裁切由专业算法根据你的意图精确计算。"
+        "严格要求：先仔细观察画面再回答；desc 必须80字以上且具体；只描述意图和方向，禁止输出任何数字坐标或百分比数值（如\"裁去15%\"\"[0,20,0,0]\"这类都不允许），裁切由专业算法根据你的意图精确计算。"
       ].join("\n");
       var body={ model:model, messages:[{ role:"user", content:[
         {type:"text", text:prompt},
         {type:"image_url", image_url:{ url:dataUrl }}
-      ]}], temperature:0.2, max_tokens:1600, enable_thinking:false };
+      ]}], temperature:0.2, max_tokens:2000, enable_thinking:false };
       // v4.7.0: 新云端请求发起前中止上一个仍在飞行的请求（连点分析/快速换图不堆积请求；旧请求 token 已过期会自行丢弃）
       if(state._cloudAbort){ try{ state._cloudAbort.abort(); }catch(e){} state._cloudAbort=null; }
       var ctrl=(typeof AbortController!=="undefined")?new AbortController():null;
       state._cloudAbort=ctrl;
       // v4.7.0: 云端超时28s（25张实测p90=23.9s，25s会误杀约8%的25-28s临界慢响应；外层runAnalysis云端兜底30s仍为最后保险）
       var timer=setTimeout(function(){ if(ctrl) ctrl.abort(); }, 35000); // v4.8.2: 28s→35s（关思考后 p50≈4-6s，35s 几乎不再误杀）
-      fetch(base+"/chat/completions", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json", "X-App-Token":appToken },
-        body:JSON.stringify(body),
-        signal: ctrl?ctrl.signal:undefined
-      }).then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); }).then(function(res){
+      // v6.1: 弱网韧性——瞬时 5xx/429/网络错误自动重试 1 次（2s 延迟），4xx 与超时 abort 不重试；
+      // 连续失败熔断：3 次失败后 5 分钟内直走本地（避免免费期额度/体验双重恶化）
+      var _tryN=0;
+      function _req(){
+        return fetch(base+"/chat/completions", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json", "X-App-Token":appToken },
+          body:JSON.stringify(body),
+          signal: ctrl?ctrl.signal:undefined
+        }).then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j, status:r.status}; }); });
+      }
+      function _retryReq(){
+        if(token!==state.analyzeToken) return;
+        var timer2=setTimeout(function(){ if(ctrl) ctrl.abort(); }, 35000);
+        _req().then(function(res2){
+          clearTimeout(timer2);
+          _handleCloudRes(res2);
+        }).catch(function(e2){
+          clearTimeout(timer2);
+          if(token!==state.analyzeToken) return;
+          if(state._cloudKilled){ return; }
+          console.warn("云端分析失败（重试后），回退本地:", String(e2&&e2.message?e2.message:e2).slice(0,60));
+          _cloudFail();
+          if(onDone) onDone(null);
+        });
+      }
+      function _cloudFail(){
+        try{
+          state.cloudFailCount=(state.cloudFailCount||0)+1;
+          if(state.cloudFailCount>=3){ state.cloudFailCount=0; state.cloudTripUntil=Date.now()+300000; }
+        }catch(e){}
+      }
+      function _handleCloudRes(res){
         clearTimeout(timer);
         if(token!==state.analyzeToken) return;
         if(!res.ok){
+          // v6.1: 瞬时 5xx/429 重试一次；4xx 不重试（token/配置问题）
+          var _st=res.status||0;
+          if(_tryN<1 && (_st>=500 || _st===429)){
+            _tryN++;
+            setTimeout(function(){ _retryReq(); }, 2000);
+            return;
+          }
           var em=res.j&&res.j.error&&res.j.error.message?String(res.j.error.message).slice(0,80):("HTTP "+res.ok);
           console.warn("云端分析拒绝:", em);
+          _cloudFail();
           if(onDone) onDone(null); return;
         }
         var txt=res.j && res.j.choices && res.j.choices[0] && res.j.choices[0].message && res.j.choices[0].message.content;
@@ -4437,26 +4533,17 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         var ruleKey=String(obj.rule||"thirds").toLowerCase();
         if(!RULES[ruleKey]) ruleKey="thirds";
         var sceneKey=String(obj.scene||"general").toLowerCase();
-        if(["portrait","landscape","food","architecture","street","animal","waterscape","general"].indexOf(sceneKey)<0) sceneKey="general";
+        // v6.0: 补 night——prompt 允许模型输出 night，旧白名单缺失导致夜景落 general（保守档/提示全错）
+        if(["portrait","portrait_close","landscape","food","architecture","street","night","animal","waterscape","general"].indexOf(sceneKey)<0) sceneKey="general";
         var conf=Math.max(40,Math.min(98,parseInt(obj.conf,10)||80));
-        // v4.7.0: 解析 VLM 主体包围框（严格校验，非法则 boxOk=false 回退固定模板）
+        // v6.0: 彻底移除 subjectBox 数值通道——prompt 禁止输出坐标，旧代码却消费坐标字段=数值幻觉残留。
+        // 主体框统一由本地像素显著性/COCO（云端模式并行跑 analyzePixels）与 VLM subjectPos 语义框提供。
+        // boxOk 恒 false：_guardCrop 强制包含分支与 _computeCropByRule 的 boxOk 兜底自动失效（保留变量防引用错误）。
         var boxOk=false,bx=0,by=0,bw=0,bh=0;
-        try{
-          if(Array.isArray(obj.subjectBox)&&obj.subjectBox.length===4){
-            var n4=obj.subjectBox.map(function(v){return Math.round(Number(v));});
-            if(n4.every(function(v){return isFinite(v);})){
-              bx=Math.max(0,Math.min(99,n4[0])); by=Math.max(0,Math.min(99,n4[1]));
-              bw=Math.max(2,Math.min(100-bx,n4[2])); bh=Math.max(2,Math.min(100-by,n4[3]));
-              boxOk=(bw>=2&&bh>=2&&(bx+bw)<=100&&(by+bh)<=100);
-            }
-          }
-        }catch(e){ boxOk=false; }
-        // v4.8.2: 裁切双通道——①VLM 直出 cropBox（首选，构图意图直通执行）②subjectBox 公式兜底；均过守门
-        // 守门规则：四边和≤70、强制包含 subjectBox、比例偏差>45% 时退化为中心等比裁（防横版裁成竖版）
         var iw=el.videoWidth||el.naturalWidth||640, ih=el.videoHeight||el.naturalHeight||480;
         function _guardCrop(cr){
           if(!cr || cr.length!==4){ return [10,8,10,8]; }
-          cr=cr.map(function(v){ return Math.max(0,Math.min(60,Math.round(v))); });
+          cr=cr.map(function(v){ return Math.max(0,Math.min(50,Math.round(v))); }); // v6.0: 单边 clamp 统一 50（引擎/预览三处一致）
           var s=cr[0]+cr[1]+cr[2]+cr[3];
           if(s>70){ var k=70/s; cr=cr.map(function(v){ return Math.round(v*k); }); }
           if(boxOk && (cr[0]||cr[1]||cr[2]||cr[3])){
@@ -4467,21 +4554,23 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             if(R0<bx+bw){ cr[2]=Math.max(0,100-(bx+bw)); }
             if(B0<by+bh){ cr[3]=Math.max(0,100-(by+bh)); }
           }
-          // 比例守护（v5.0 修复）：裁切保留区宽高比（w2/h2）相对原图变化>45% 时改为中心等比裁（每边平均），
-          // 防横版被"只裁上下"裁成超宽/竖版被"只裁左右"裁成超窄（旧公式多除了 a0 导致阈值失效）
+          // 比例兜底（v6.0 复核：归一化空间 ar=w2/h2 恰好=保留区相对原图的形状倍数，与 iw/ih 无关，
+          // 故 ar>1.45||ar<0.69 即"形状相对原图变化超45%"，数学正确，保留；这是引擎⑤段之后的最后保险）
           var w2=100-cr[0]-cr[2], h2=100-cr[1]-cr[3];
           var ar=(w2>0&&h2>0)?(w2/h2):1;
           if((ar>1.45 || ar<1/1.45) && (cr[0]+cr[1]+cr[2]+cr[3])>0){
             var edge=Math.round((cr[0]+cr[1]+cr[2]+cr[3])/4);
             cr=[edge,edge,edge,edge];
           }
-          return cr.map(function(v){ return Math.max(0,Math.min(60,v)); });
+          return cr.map(function(v){ return Math.max(0,Math.min(50,v)); });
         }
         // v5.0: crop 文字 ↔ cropBox 一致性校验——AI 偶发"文字说裁顶20%、box写[5,5,5,5]"，以文字为准纠正
         function _cropAlign(txt, box){
           try{
             if(!txt||!box) return box;
             var _s=String(txt), _dirN=0, _di=-1;
+            // v6.0: 组合方位词（右上方/左下方等）方向歧义，直接不干预，避免误判成单一方向
+            if(/右(上|下)方|左(上|下)方/.test(_s)) return box;
             if(/顶部|上方|上面/.test(_s)){ _dirN++; _di=1; }
             if(/底部|下方|下面/.test(_s)){ _dirN++; _di=3; }
             if(/左侧|左边/.test(_s)){ _dirN++; _di=0; }
@@ -4559,6 +4648,14 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           var padL=Sw*0.08, padR=Sw*0.08, padT=Sh*0.08, padB=Sh*0.08;
           if(isPort){ padT=Sh*0.10; padB=Sh*0.05; }
           var B0L=Math.max(0,Sx-padL), B0T=Math.max(0,Sy-padT), B0R=Math.min(100,Sx+Sw+padR), B0B=Math.min(100,Sy+Sh+padB);
+          // v6.0: 人脸框并入保护框——人脸/眼睛是构图红线，任何意图都不可裁到（外扩 2%）
+          var _faceBB=_ad2.faceBBox;
+          if(isPort && _faceBB && _faceBB.length===4){
+            B0L=Math.min(B0L, Math.max(0,_faceBB[0]*100-2));
+            B0T=Math.min(B0T, Math.max(0,_faceBB[1]*100-2));
+            B0R=Math.max(B0R, Math.min(100,(_faceBB[0]+_faceBB[2])*100+2));
+            B0B=Math.max(B0B, Math.min(100,(_faceBB[1]+_faceBB[3])*100+2));
+          }
           var BL=B0L, BT=B0T, BR=B0R, BB=B0B;
 
           // ---- 3) 意图裁剪（设定式：直接收紧意图方向到主体附近留小边距；其余方向保持保护框）----
@@ -4572,7 +4669,10 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           else if(_ci==="trim"){ BL=B0L+Math.min(3,Sw*0.03); BT=B0T+Math.min(3,Sh*0.03); BR=B0R-Math.min(3,Sw*0.03); BB=B0B-Math.min(3,Sh*0.03); }
           // v5.1.1: VLM 冗余信任——bbox 顶/底贴边（检测框可能含装饰冗余）且意图裁顶部/底部时，
           // 至少裁掉一部分（上限 10%），避免"检测框占满→意图被无视→顶部完全不裁"的失真
-          if((_ci==="crop_top"||_ci==="crop_tb") && Sy<12){
+          // v6.0: 顶部 10% 内有人脸时豁免强制裁顶，防特写/全身照被裁到头发、头顶
+          var _faceNearTop=isPort && (((_ad2.faceAvailable===true && typeof _ad2.faceY==="number" && _ad2.faceY<0.12))
+              || (typeof _ad2.skinCy==="number" && _ad2.skinCy<0.16 && _skinOk));
+          if((_ci==="crop_top"||_ci==="crop_tb") && Sy<12 && !_faceNearTop){
             BT=Math.max(BT, Math.min(10, Sy*0.4+4));
           }
           if((_ci==="crop_bottom"||_ci==="crop_tb") && (100-(Sy+Sh))<12){
@@ -4583,8 +4683,10 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           // ---- 4) 构图法重定位（保留区内平移，约束：保留区必须仍包含主体保护框，裁切量不反向扩大）----
           if(ruleKey==="thirds"||ruleKey==="golden"||ruleKey==="diag"||ruleKey==="lead"){
             var W2=BR-BL, H2=BB-BT;
-            var tX=(_refX<50)?33:67;
-            var tY=(isPort)?((_refY<50)?38:60):((_refY<50)?33:67);
+            // v6.0: golden 用真正黄金分割点 38.2/61.8（0.618 族），不再与三分法共用 33/67
+            var _isGolden=(ruleKey==="golden");
+            var tX=_isGolden?((_refX<50)?38.2:61.8):((_refX<50)?33:67);
+            var tY=_isGolden?((_refY<50)?38.2:61.8):(isPort?((_refY<50)?38:60):((_refY<50)?33:67));
             var nL=_refX-(tX/100)*W2;
             var nT=_refY-(tY/100)*H2;
             // 平移后保留区仍须包含主体（Sx..Sx+Sw 完整在内），且不越过画布
@@ -4611,36 +4713,39 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           }
           if(_symGuard){ _aiIntentCache.symGuard="对称镜像保护"; }
 
-          // ---- 5) 比例守护：目标比例 = 原比例 × 意图倾向系数（±25% 窗口），绝不横竖翻转 ----
+          // ---- 5) 比例守护（v6.0 修正量纲：统一在"相对原图形状倍数"空间运算）----
+          // BL/BT/BR/BB 是百分比坐标，_w=BR-BL/_h=BB-BT 为保留区占原图宽/高的百分比；
+          // 保留区"相对原图的形状倍数" = _w/_h（原图=1），与真实像素 iw/ih 无关：
+          //   真实像素比=(_w/_h)*(iw/ih)，再÷原图(iw/ih)后 iw/ih 恰好消去。
+          // v5.x 旧代码把 _w/_h 与真实像素比(iw/ih*系数)混算：竖拍 ar0=0.56 时 _dev 恒≈1.9，
+          // 误判"太宽"把 BT/BB 推回 0/100，系统性抵消"裁上下"意图（手机竖拍该裁不裁的根因）。
           var _wantTB=(_ci==="crop_top"||_ci==="crop_bottom"||_ci==="crop_tb");
           var _wantLR=(_ci==="crop_left"||_ci==="crop_right"||_ci==="crop_lr");
-          var _ar0=iw/ih;
-          var _arT=_ar0;
-          if(_ci==="crop_top"||_ci==="crop_bottom"||_ci==="crop_tb"){ _arT=_ar0*0.92; } // 裁上下 → 画面略高
-          else if(_ci==="crop_left"||_ci==="crop_right"||_ci==="crop_lr"){ _arT=_ar0*1.08; } // 裁左右 → 画面略宽
+          var _arT=1; // 归一化目标形状倍数（不裁=1）
+          if(_ci==="crop_top"||_ci==="crop_bottom"||_ci==="crop_tb"){ _arT=0.92; } // 裁上下 → 画面略高
+          else if(_ci==="crop_left"||_ci==="crop_right"||_ci==="crop_lr"){ _arT=1.08; } // 裁左右 → 画面略宽
           var _w=BR-BL, _h=BB-BT;
           if(_w>4 && _h>4){
             var _ar=_w/_h, _dev=_ar/_arT;
-            if(_dev>1.22){ // 太宽 → 优先补上下
+            if(_dev>1.22){ // 相对目标太宽 → 优先补上下（扩大纵向保留区）
               var _needH=_w/_arT, _add=(_needH-_h)/2, _t2=BT-_add, _b2=BB+_add;
               if(_t2>=0 && _b2<=100){ BT=_t2; BB=_b2; }
               else if(_t2<0 && _b2>100){ var _needW=_h*_arT; var _addW=(_w-_needW)/2; if(BL+_addW<=Sx && BR-_addW>=Sx+Sw){ BL=BL+_addW; BR=BR-_addW; } }
               else if(_t2<0){ BT=0; BB=Math.min(100,_needH); }
               else { BB=100; BT=Math.max(0,100-_needH); }
-            } else if(_dev<0.78){ // 太窄 → 优先补左右
+            } else if(_dev<0.78){ // 相对目标太窄 → 优先补左右
               var _needW=_h*_arT, _add2=(_needW-_w)/2, _l2=BL-_add2, _r2=BR+_add2;
               if(_l2>=0 && _r2<=100){ BL=_l2; BR=_r2; }
               else if(_l2<0 && _r2>100){ var _needH2=_w/_arT; var _addH=(_h-_needH2)/2; if(BT+_addH<=Sy && BB-_addH>=Sy+Sh){ BT=BT+_addH; BB=BB-_addH; } }
               else if(_l2<0){ BL=0; BR=Math.min(100,_needW); }
               else { BR=100; BL=Math.max(0,100-_needW); }
             }
-            // 防翻转硬约束：横图不得裁成竖图、竖图不得裁成横图
+            // 防翻转硬约束（v6.0 归一化）：相对原图形状倍数限 0.62-1.62，横不裁成竖、竖不裁成横
             var _arF=(BR-BL)/(BB-BT||1);
-            var _lo=_ar0*0.62, _hi=_ar0*1.62;
-            if(_arF>_hi || _arF<_lo){
+            if(_arF>1.62 || _arF<0.62){
               var _tgtW=BR-BL, _tgtH=BB-BT;
-              if(_tgtW/_tgtH > _ar0*1.2){ var _nH=_tgtW/_ar0; if(_nH<=100){ BT=Math.max(0,Math.min(100-_nH,_refY-_nH/2)); BB=Math.min(100,BT+_nH); } }
-              else if(_tgtW/_tgtH < _ar0*0.8){ var _nW=_tgtH*_ar0; if(_nW<=100){ BL=Math.max(0,Math.min(100-_nW,_refX-_nW/2)); BR=Math.min(100,BL+_nW); } }
+              if(_arF>1.2){ var _nH=_tgtW; if(_nH<=100){ BT=Math.max(0,Math.min(100-_nH,_refY-_nH/2)); BB=Math.min(100,BT+_nH); } }
+              else if(_arF<0.8){ var _nW=_tgtH; if(_nW<=100){ BL=Math.max(0,Math.min(100-_nW,_refX-_nW/2)); BR=Math.min(100,BL+_nW); } }
             }
           }
 
@@ -4666,11 +4771,11 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             }
           }
 
-          // ---- 6) 转 cropBox（四边裁切百分比）clamp ----
-          var L4=Math.max(0,Math.min(45,Math.round(BL)));
-          var T4=Math.max(0,Math.min(45,Math.round(BT)));
-          var R4=Math.max(0,Math.min(45,Math.round(100-BR)));
-          var B4=Math.max(0,Math.min(45,Math.round(100-BB)));
+          // ---- 6) 转 cropBox（四边裁切百分比）clamp（v6.0 统一单边上限 50）----
+          var L4=Math.max(0,Math.min(50,Math.round(BL)));
+          var T4=Math.max(0,Math.min(50,Math.round(BT)));
+          var R4=Math.max(0,Math.min(50,Math.round(100-BR)));
+          var B4=Math.max(0,Math.min(50,Math.round(100-BB)));
           var _sum=L4+T4+R4+B4;
           // 温和守门：人像四边和≤46（更克制），其他≤58。超出时优先削减非意图方向的裁切量
           // 温和守门：力度分级（v5.1.1）——夜景/动物更保守（保氛围），风景/建筑可稍多；小主体可多裁、占满少裁
@@ -4682,10 +4787,11 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           else if(sceneKey==="architecture"||sceneKey==="landscape"||sceneKey==="street"){ _cap=56; }
           else { _cap=52; }
           if(_ssk<=0.7){ _cap+=4; } else if(_ssk>=1.6){ _cap-=6; }
-          // v5.1.2: 低置信保守——VLM conf<55 少裁防乱裁；conf>=85 高置信可稍多
+          // v6.0: conf 是 VLM 主观打分、有漂移，弱化其对裁切力度的影响（原<55 -8/≥85 +4 过宽），
+          // 仅极低置信<50 保守 -6、极高置信≥90 放宽 +3，中间区间完全由本地可验证信号（主体占比/场景）决定
           var _cf0=(typeof conf==="number")?conf:70;
-          if(_cf0<55){ _cap=Math.max(34,_cap-8); }
-          else if(_cf0>=85){ _cap=Math.min(58,_cap+4); }
+          if(_cf0<50){ _cap=Math.max(34,_cap-6); }
+          else if(_cf0>=90){ _cap=Math.min(58,_cap+3); }
           _cap=Math.max(34,Math.min(58,_cap));
           if(_sum>_cap && _sum>0){
             // 意图方向的裁切量翻倍权重保留
@@ -4776,7 +4882,27 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         state.analyzed=true;
         // v5.0: 同图缓存保存（24h有效；plan 全量序列化，命中直接复用）
         if(_ccKey){
-          try{ localStorage.setItem("ai_cmp_cc_"+_ccKey, JSON.stringify({t:Date.now(), plan:plan})); }catch(e){}
+          try{
+            // v6.0: 写入前治理——删旧版 v514_/v600_ 键（引擎升级不复用），现存量上限 60 条，淘汰最老
+            var _allCC=[];
+            for(var _ki=0;_ki<localStorage.length;_ki++){
+              var _kk=localStorage.key(_ki);
+              if(!_kk) continue;
+              if(_kk.indexOf("ai_cmp_cc_v514_")===0){ try{ localStorage.removeItem(_kk); }catch(e2){} continue; }
+              if(_kk.indexOf("ai_cmp_cc_v600_")===0){ try{ localStorage.removeItem(_kk); }catch(e2){} continue; }
+              if(_kk.indexOf("ai_cmp_cc_")===0) _allCC.push(_kk);
+            }
+            if(_allCC.length>=60){
+              _allCC.sort(function(a,b){
+                var _va=null,_vb=null;
+                try{ _va=JSON.parse(localStorage.getItem(a)||"null"); }catch(e){}
+                try{ _vb=JSON.parse(localStorage.getItem(b)||"null"); }catch(e){}
+                return ((_va&&_va.t)?_va.t:0)-((_vb&&_vb.t)?_vb.t:0);
+              });
+              for(var _di=0;_di<_allCC.length-59;_di++){ try{ localStorage.removeItem(_allCC[_di]); }catch(e){} }
+            }
+            localStorage.setItem("ai_cmp_cc_"+_ccKey, JSON.stringify({t:Date.now(), plan:plan}));
+          }catch(e){}
         }
         // v5.0: 分析耗时反馈
         try{
@@ -4784,11 +4910,22 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           setStatus("云端分析完成（"+_el2+"s）","done");
         }catch(e){}
         try{ presentAnalysis(plan); }catch(e){ console.warn("云端结果渲染异常:",e); }
+        try{ state.cloudFailCount=0; }catch(e){}
         if(onDone) onDone(plan);
-      }).catch(function(e){
+      }
+      _req().then(_handleCloudRes).catch(function(e){
         clearTimeout(timer);
         if(token!==state.analyzeToken) return;
+        // v6.0: 已被外层 30s 兜底主动取消（本地初判结果已应用）——直接结束，不再回退本地模型，避免二次下载 18MB
+        if(state._cloudKilled){ return; }
+        // v6.1: 瞬时网络错误（非超时 abort）自动重试 1 次
+        if(_tryN<1 && !(e&&e.name==="AbortError")){
+          _tryN++;
+          setTimeout(function(){ _retryReq(); }, 2000);
+          return;
+        }
         console.warn("云端分析失败，回退本地:", String(e&&e.message?e.message:e).slice(0,60));
+        _cloudFail();
         if(onDone) onDone(null);
       });
     }
@@ -4830,6 +4967,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
                   state.aiData.faceY=Math.max(0,Math.min(1,bbox.ymin+bbox.height/2));
                   state.aiData.faceAvailable=true;
                   state.aiData.faceConfidence=d.score[0];
+                  // v6.0: 保存人脸归一化框，供裁切保护框使用（人脸/眼睛是构图红线，不可裁）
+                  state.aiData.faceBBox=[Math.max(0,bbox.xmin),Math.max(0,bbox.ymin),Math.min(1,bbox.width),Math.min(1,bbox.height)];
                 }
               } else {
                 state.aiData.faceAvailable=false;
@@ -5222,7 +5361,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         var _df = FILTERS[state.filter] ? FILTERS[state.filter].css : "none";
         ctx.filter = _df.trim() || "none";
         ctx.drawImage(photoView,0,0);
-        var finalUrl=c.toDataURL("image/jpeg",0.92);
+        var finalUrl=c.toDataURL("image/jpeg",0.95);
         state.lastShotURL=finalUrl;
         showShot(finalUrl);
         shotOverlay.classList.add("doka-shot");
@@ -5243,7 +5382,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       var c=document.createElement("canvas");
       c.width=Math.round(sw); c.height=Math.round(sh);
       c.getContext("2d").drawImage(img,sx,sy,sw,sh,0,0,sw,sh);
-      var url=c.toDataURL("image/jpeg",0.92);
+      var url=c.toDataURL("image/jpeg",0.95);
       pushUndo();
       photoView.src=url;
       state.cropped=true;
