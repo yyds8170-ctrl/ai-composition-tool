@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v4.7.1 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v4.7.1 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
+<title>AI 构图助手 Pro v4.8.0 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v4.8.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -138,6 +138,15 @@
   .ai-item{display:flex;gap:10px;margin-bottom:12px;font-size:12.5px;line-height:1.6;opacity:0;transform:translateY(5px);transition:all .4s;}
   .ai-item.show{opacity:1;transform:translateY(0);}
   .ai-item .ic{width:24px;height:24px;border-radius:7px;background:var(--panel2);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;border:1px solid var(--line);}
+  .ai-item .st-title{font-size:11px;font-weight:700;color:#4A9EFF;letter-spacing:.5px;margin-bottom:4px;display:flex;align-items:center;gap:4px;}
+  .ai-item .st-title::before{content:"☁️";font-size:10px;}
+  .cloud-badge{border:1px solid rgba(74,158,255,.35);background:linear-gradient(135deg,rgba(74,158,255,.10),rgba(74,158,255,.03));}
+  .cloud-badge .cb-head{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+  .cloud-badge .cb-cloud{font-size:15px;}
+  .cloud-badge .cb-title{font-weight:700;color:#4A9EFF;font-size:13px;}
+  .cloud-badge .cb-model{font-size:10px;color:#4A9EFF;background:rgba(74,158,255,.15);border-radius:9px;padding:1px 7px;}
+  .cloud-badge .cb-row{font-size:11.5px;line-height:1.6;margin-top:2px;}
+
   .ai-item .ic svg{width:13px;height:13px;}
   .ai-item .tx{color:#C7D0D9;}
   .ai-item .tx b{color:var(--text);font-weight:600;}
@@ -525,7 +534,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v4.7.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v4.8.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -863,7 +872,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v4.7.1 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v4.8.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -2730,14 +2739,16 @@
         aiBody.insertBefore(_off, aiBody.firstChild);
         setTimeout(function(){ _off.classList.add("show"); }, 60);
       }
-      // v4.7.0 云端 VLM 分析标记卡
+      // v4.7.0 云端 VLM 分析标记卡（v4.8.0 加强：醒目云端徽章，明确"这是云端分析的"）
       if(plan.cloud){
         var _cd=document.createElement("div");
-        _cd.className="ai-suggest";
+        _cd.className="ai-suggest cloud-badge";
         // v4.7.1: 场景英文键映射中文展示
         var _sceneNames={portrait:"人物",landscape:"风景",food:"美食",architecture:"建筑",street:"街景",animal:"动物",waterscape:"水面",general:"综合"};
         var _cs=(_sceneNames[plan.sceneType]||plan.sceneType||"综合");
-        _cd.innerHTML='<div class="dt-row">☁️ 云端 VLM 分析（'+state.cloud.model+'）· 场景：'+_cs+'</div>';
+        _cd.innerHTML='<div class="cb-head"><span class="cb-cloud">☁️</span><span class="cb-title">云端 VLM 分析</span><span class="cb-model">'+state.cloud.model+'</span></div>'
+          +'<div class="cb-row">场景：<b>'+_cs+'</b> · 构图：<b>'+rule.cn+'</b> · 契合 '+plan.conf+'%</div>'
+          +'<div class="cb-row" style="color:var(--sub)">此结果由云端视觉大模型识别画面语义生成，非本地像素算法</div>';
         aiBody.insertBefore(_cd, aiBody.firstChild);
         setTimeout(function(){ _cd.classList.add("show"); }, 60);
       }
@@ -2802,13 +2813,29 @@
         F:'<path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4"/>',
         A:'<path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/>'
       };
-      var items=[
-        {ic:'S',html:"<b>识别主体：</b>"+plan.subject},
-        {ic:'G',html:"<b>构图法则：</b>"+rule.cn+"（"+rule.zh+"）"},
-        {ic:'Z',html:"<b>推荐变焦：</b><span style='font-family:JetBrains Mono,monospace'>"+plan.z.toFixed(1)+"x</span> · "+(plan.z>1.05?"已自动放大":"保持原焦段")},
-        {ic:'F',html:"<b>推荐滤镜：</b><div class='ftags'>"+(plan.filters||[]).map(function(f){return "<span class='ftag"+(f.indexOf("Portra")>=0||f.indexOf("160")>=0||f.indexOf("暖")>=0?" warm":"")+"'>"+f+"</span>";}).join("")+"</div>"},
-        {ic:'A',html:"<b>优化建议：</b>"+(plan.desc||"")}
-      ];
+      var items;
+      if(plan.cloud){
+        // v4.8.0: 云端 VLM 分析按 4 步流程展示：画面描述→构图分析→滤镜建议→裁切方案（先看懂画面再给方案）
+        var _esc=function(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); };
+        var _steps=[
+          {n:"① 画面描述",ic:"S",html:"<b>"+_esc(plan.desc||"云端正在描述画面…")+"</b>"},
+          {n:"② 构图分析",ic:"G",html:"<b>"+_esc(rule.cn)+"</b>（"+_esc(rule.zh)+"）"+(plan.issue?'<br><span style="color:#EF6B6B;">问题：'+_esc(plan.issue)+"</span>":"")},
+          {n:"③ 滤镜建议",ic:"F",html:"<b>"+_esc((plan.filters&&plan.filters[0])||"自然")+"</b>"+((plan.filterAdvice&&plan.filters&&plan.filters[0]&&plan.filters[0].indexOf(plan.filterAdvice)<0)?'<br>推荐理由：'+_esc(plan.filterAdvice):"")},
+          {n:"④ 裁切方案",ic:"A",html:"<b>"+_esc(plan.cropAdvice||"已按最优构图自动裁切")+"</b>"+(plan.z>1.05?"<br>· 变焦 <span style='font-family:JetBrains Mono,monospace'>"+plan.z.toFixed(1)+"x</span> 已自动放大":"")}
+        ];
+        items=_steps.map(function(st){
+          return {ic:st.ic, html:'<div class="st-title">'+st.n+'</div>'+st.html};
+        });
+      }else{
+        items=[
+          {ic:'S',html:"<b>识别主体：</b>"+plan.subject},
+          {ic:'G',html:"<b>构图法则：</b>"+rule.cn+"（"+rule.zh+"）"},
+          {ic:'Z',html:"<b>推荐变焦：</b><span style='font-family:JetBrains Mono,monospace'>"+plan.z.toFixed(1)+"x</span> · "+(plan.z>1.05?"已自动放大":"保持原焦段")},
+          {ic:'F',html:"<b>推荐滤镜：</b><div class='ftags'>"+(plan.filters||[]).map(function(f){return "<span class='ftag"+(f.indexOf("Portra")>=0||f.indexOf("160")>=0||f.indexOf("暖")>=0?" warm":"")+"'>"+f+"</span>";}).join("")+"</div>"},
+          {ic:'A',html:"<b>优化建议：</b>"+(plan.desc||"")}
+        ];
+        if(plan.exp){ items.push({ic:'S',html:"<b>曝光诊断：</b>"+plan.exp}); }
+      }
       if(plan.exp){ items.push({ic:'S',html:"<b>曝光诊断：</b>"+plan.exp}); }
       items.forEach(function(it,i){
         var d=document.createElement("div");
@@ -4251,24 +4278,24 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       var dataUrl;
       try{ dataUrl=c.toDataURL("image/jpeg",0.8); }catch(e){ if(onDone) onDone(null); return; }
       var prompt=[
-        "你是专业摄影构图师，基于照片的真实像素做构图诊断。只输出一个 JSON 对象，不要任何其他文字、不要 markdown 代码块。",
-        "第一件事：先如实观察画面里实际有什么（人物/食物/建筑/动物/风景/物品等）。如果画面是布料、衣物、复杂纹理、模糊或难以辨认的内容，subject 如实写你看到的实际物体；确实看不清就写\"画面主体\"。严禁把衣物/纹理/静物臆测成风景、建筑或水面。",
-        "字段定义：",
-        "1. scene 场景，从 [portrait,landscape,food,architecture,street,animal,waterscape,general] 选一个：",
-        "portrait=人物为主体；landscape=山/天空/陆地等自然风景；waterscape=水面/海浪/河流/倒影为主体或占画面三分之一以上；food=食物饮品；architecture=单体或建筑群外观为主体且无明显街道纵深；street=存在道路/街巷纵深或沿街行进场景；animal=动物为主体；general=其他或不确定。",
-        "2. rule 构图法则，从 [thirds,golden,diag,lead,sym,center,frame,mini] 选一个：",
-        "thirds=主体在三分线或其交点附近；golden=主体落在黄金分割点附近；diag=画面存在明显对角线或斜线引导；lead=道路/栏杆/轨道等连续线条把视线引向主体；sym=左右或上下明显对称；center=主体居中突出；frame=门框/窗洞/拱形等前景框架包围主体；mini=大面积留白衬托小主体。",
-        "3. conf 契合度，0-100 整数，严格分档：法则与画面完美契合 90-98，基本契合 75-89，勉强适用 60-74，不契合低于 60。不要全部给高分，真实评价画面。",
-        "4. subjectBox 主体包围框 [x,y,w,h]，四个 0-100 的百分比整数（相对画面宽高的比例，严禁像素坐标、严禁任何数值大于100）：x,y 为主体左上角百分比，w,h 为主体宽高百分比，紧贴真实主体、不要过大；例如主体居中约占一半画面时输出 [25,28,50,48]。",
-        "5. fillPct 主体面积占整个画面百分比的整数估算，范围 1-95。",
-        "6. subject 一句话中文如实描述画面主体（基于真实像素，例如\"一位身穿波点纱裙站在水边的女性\"，不要只写\"画面主体\"除非完全看不清）。",
-        "7. advice 一句话中文裁切/构图建议：先点出画面实际情况（主体位置/留白/多余区域），再给出可执行的裁切或构图建议；必须基于 subjectBox，严禁建议裁掉主体。",
-        "输出格式（严格 JSON，键名与上面一致）：{\"scene\":\"portrait\",\"rule\":\"thirds\",\"conf\":88,\"subjectBox\":[30,20,40,60],\"fillPct\":28,\"subject\":\"一位站在水边的女性，身着波点纱裙\",\"advice\":\"主体在画面左侧，建议裁去右侧约10%多余空间，让主体落在左三分线，重心更稳\"}"
-      ].join("\n");
-      var body={ model:model, messages:[{ role:"user", content:[
+        "仔细看这张照片，用中文回答。只输出一个严格 JSON 对象，不要任何其他文字、不要 markdown 代码块：",
+        "{\"scene\":\"...\",\"subject\":\"...\",\"desc\":\"...\",\"issue\":\"...\",\"rule\":\"...\",\"crop\":\"...\",\"filter\":\"...\",\"conf\":88,\"subjectBox\":[30,20,40,60],\"fillPct\":28}",
+        "字段要求：",
+        "1. scene：food/portrait/landscape/street/architecture/animal/waterscape/general 之一，严格按画面实际内容选",
+        "2. subject：一句话中文描述画面主体（如\"一位穿白衬衫坐在窗边的女性\"）",
+        "3. desc：详细描述画面，50字以上（有什么物体/人物、在哪里、光线、色彩、空间关系、氛围）",
+        "4. issue：具体构图问题（如：顶部留白过多/主体偏左/前景杂物干扰/主体被裁切/画面杂乱/地平线歪斜），没有明显问题就写\"构图均衡\"",
+        "5. rule：thirds/golden/diag/lead/sym/center/frame/mini 之一（thirds=三分法 golden=黄金分割 diag=对角线 lead=引导线 sym=对称 center=居中 frame=框架式 mini=极简留白）",
+        "6. crop：具体可执行的裁切建议（如\"裁去顶部约15%的天空和左侧20%的杂物，把主体放到右三分点\"），画面已均衡就写\"保持原构图\"",
+        "7. filter：自然/暖阳/冷调/黑白/浓郁/清新/电影感 之一，选最适合这张照片的",
+        "8. conf：0-100 整数，严格打分：画面与该构图法则完美契合给90-98，基本契合75-89，勉强60-74，不契合低于60。不要全部打高分",
+        "9. subjectBox：主体包围框，[x,y,w,h]，x/y是框左上角相对画面宽高的百分比，w/h是框的宽高百分比（0-100整数，框要完整框住主体）",
+        "10. fillPct：主体占画面百分比，1-90 整数",
+        "先仔细看画面再回答。画面里没有的东西绝不编造；如果是布料/衣物/纹理/模糊影像，就如实写\"布料/纹理\"，严禁臆测成风景/建筑/水面"
+      ].join("\n");      var body={ model:model, messages:[{ role:"user", content:[
         {type:"text", text:prompt},
         {type:"image_url", image_url:{ url:dataUrl }}
-      ]}], temperature:0.2, max_tokens:500 };
+      ]}], temperature:0.2, max_tokens:700 };
       // v4.7.0: 新云端请求发起前中止上一个仍在飞行的请求（连点分析/快速换图不堆积请求；旧请求 token 已过期会自行丢弃）
       if(state._cloudAbort){ try{ state._cloudAbort.abort(); }catch(e){} state._cloudAbort=null; }
       var ctrl=(typeof AbortController!=="undefined")?new AbortController():null;
@@ -4337,16 +4364,36 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           z=Math.max(1.0,Math.min(2.0,Math.sqrt(tgtFill/(fp/100))));
           z=Math.round(z*10)/10;
         }
+        // v4.8.0: 云端推荐滤镜中文风格 -> app 滤镜 key 映射
+        function _cf2k(name){
+          var s=String(name||"").toLowerCase();
+          if(s.indexOf("黑白")>=0) return "mono";
+          if(s.indexOf("暖")>=0||s.indexOf("日落")>=0||s.indexOf("夕阳")>=0) return "sunset";
+          if(s.indexOf("冷")>=0) return "cool";
+          if(s.indexOf("清新")>=0||s.indexOf("日系")>=0) return "japan";
+          if(s.indexOf("浓郁")>=0||s.indexOf("重彩")>=0||s.indexOf("鲜艳")>=0) return "velvia";
+          if(s.indexOf("电影")>=0||s.indexOf("胶片")>=0) return "cine";
+          if(s.indexOf("人像")>=0) return "portra";
+          if(s.indexOf("自然")>=0) return "natural";
+          if(s.indexOf("莫兰迪")>=0) return "morandi";
+          if(s.indexOf("港")>=0) return "hk";
+          return "natural";
+        }
+        var _fk=_cf2k(obj.filter);
+        var _fobj=FILTERS[_fk]||FILTERS.natural;
         var plan={
           subject:obj.subject||"画面主体",
           rule:ruleKey,
           diag:(ruleKey==="diag")?[24,30,76,70]:[20,30,75,70],
           crop:crop,
           z:z,
-          f:"natural",
-          filters:["自然 · 忠实还原"],
+          f:_fk,
+          filters:[_fobj.name+" · "+(_fobj.desc||"")],
           conf:conf,
-          desc:(obj.advice||(RULES[ruleKey]?RULES[ruleKey].zh:"已分析画面"))+"（云端 VLM · "+model+"）",
+          desc:obj.desc||(obj.crop||obj.advice||(RULES[ruleKey]?RULES[ruleKey].zh:"已分析画面")),
+          issue:obj.issue||"",
+          cropAdvice:obj.crop||"",
+          filterAdvice:obj.filter||"",
           exp:RULES[ruleKey]?RULES[ruleKey].zh:"",
           sceneType:sceneKey,
           cloud:true
