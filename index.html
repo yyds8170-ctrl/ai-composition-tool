@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v4.8.1 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v4.8.1 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
+<title>AI 构图助手 Pro v4.8.2 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v4.8.2 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -1628,18 +1628,31 @@
       cropEl.style.left="0"; cropEl.style.top="0"; cropEl.style.width="0"; cropEl.style.height="0";
     }
     function drawGuides(plan){
+      // v4.8.2: 按 object-fit:cover 计算图片实际可见矩形后映射百分比坐标
+      // （Qwen-Max 实测：此前直接按 stage 尺寸定位，非 4:3 图片引导框错位 19/27 张）
+      var _img=currentEl();
+      var _iw=1,_ih=1;
+      if(_img){ _iw=_img.videoWidth||_img.naturalWidth||1; _ih=_img.videoHeight||_img.naturalHeight||1; }
       var w=stage.clientWidth, h=stage.clientHeight;
+      var _sc=Math.max(w/_iw, h/_ih);
+      var _dw=_iw*_sc, _dh=_ih*_sc;
+      var _ox=(w-_dw)/2, _oy=(h-_dh)/2;
+      function _mx(px){ return _ox+px/100*_dw; }
+      function _my(py){ return _oy+py/100*_dh; }
       var p1=plan.diag, p2=[p1[0]+(p1[0]>55?-28:40), p1[1]+(p1[1]>55?-24:26)];
       p2[0]=Math.max(2,Math.min(98,p2[0])); p2[1]=Math.max(2,Math.min(98,p2[1]));
-      var x1=p1[0]/100*w, y1=p1[1]/100*h, x2=p2[0]/100*w, y2=p2[1]/100*h;
+      var x1=_mx(p1[0]), y1=_my(p1[1]), x2=_mx(p2[0]), y2=_my(p2[1]);
       var len=Math.sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
       var ang=Math.atan2(y2-y1,x2-x1)*180/Math.PI;
       diagEl.style.left=x1+"px"; diagEl.style.top=y1+"px";
       diagEl.style.width=len+"px"; diagEl.style.transform="rotate("+ang+"deg)";
       var c=plan.crop;
-      var cl=c[0]/100*w, ct=c[1]/100*h, cw=(100-c[2]-c[0])/100*w, ch=(100-c[3]-c[1])/100*h;
-      cropEl.style.left=cl+"px"; cropEl.style.top=ct+"px";
-      cropEl.style.width=cw+"px"; cropEl.style.height=ch+"px";
+      if(c && c.length===4){
+        var cl=_mx(c[0]), ct=_my(c[1]);
+        var cw2=_mx(100-c[2])-cl, ch2=_my(100-c[3])-ct;
+        cropEl.style.left=cl+"px"; cropEl.style.top=ct+"px";
+        cropEl.style.width=Math.max(0,cw2)+"px"; cropEl.style.height=Math.max(0,ch2)+"px";
+      }
       guides.classList.add("on");
     }
 
@@ -2635,6 +2648,8 @@
 
           // v4.7.0: 云端 VLM 成功响应 p90≈23s（最慢23.5s），云端模式兜底放宽到 30s（25s云端窗口+回退本地精判）；纯本地仍 20s，绝不卡死
           setTimeout(function(){
+            // v4.8.2: 换图/重分析后旧兜底作废，否则旧 plan 会刷新面板（v4.5.0 BUG-04 残留）
+            if(token!==state.analyzeToken) return;
             if(!_fbDone){
               _fbDone=true;
               if(_cloudActiveNow){ state.analyzing=false; stage.classList.remove("scanning"); btnAnalyze.disabled=false; }
@@ -2893,6 +2908,7 @@
     aiApply.addEventListener("click",function(){
       if(!state.analyzed || !state.plan) return;
       var p=state.plan;
+      var _wasNoCrop=!!p.noCrop; // v4.8.2: 记录应用前是否要裁切，防清零后文案误报
       var ok=applyPlanCrop(); // 手动"一键成品"保持原交互：裁切后收起面板
       if(!ok){ setStatus("智能裁切失败，请重试", "err"); return; }
       state.plan=p; state.analyzed=true;   // 保留 AI 结果，可继续智能裁切微调
@@ -2900,7 +2916,7 @@
       if(p.crop){ p.crop=[0,0,0,0]; p.noCrop=true; }
       setZoom(p.z||1);
       setFilter(p.f||"clear");
-      if(p.noCrop){
+      if(_wasNoCrop){
         setStatus("已应用：滤镜优化（构图已很合理，未裁切）", "done");
         toastMsg("已应用"+(FILTERS[p.f]||FILTERS.natural).name+"滤镜，构图保持原样"); // v4.4: night 兜底
       } else {
@@ -4085,7 +4101,11 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         runCloudAnalysis(elSnap, function(cloudPlan){
           if(token!==state.analyzeToken){ return; } // 期间已换图/重分析，丢弃本次回调
           if(cloudPlan){ if(onDone) onDone(cloudPlan); }
-          else { runLocalAIDetection(elSnap, token, onDone); }
+          else {
+            // v4.8.2: 云端超时/失败回退本地时必须明确提示（4 家 AI 报告共识：静默回退是"感觉没跑云端"主因）
+            showCloudFallback();
+            runLocalAIDetection(elSnap, token, onDone);
+          }
         });
         return;
       }
@@ -4263,6 +4283,27 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       });
       updateCloudUI();
     }
+    // v4.8.2: 云端失败/超时回退本地提示（toast + 结果面板顶部提示卡）
+    function showCloudFallback(){
+      try{
+        setStatus("云端超时/失败，本次为本地引擎结果","warn");
+        var _fb=document.getElementById("cloudFallbackCard");
+        if(!_fb){
+          _fb=document.createElement("div");
+          _fb.id="cloudFallbackCard";
+          _fb.className="ai-suggest cloud-badge";
+          _fb.innerHTML='<div class="cb-head"><span class="cb-cloud">⚠️</span><span class="cb-title">云端超时/失败</span></div>'
+            +'<div class="cb-row" style="color:var(--sub)">已自动回退<b>本地引擎</b>分析。可重试云端（关思考后通常 3-8 秒返回）。</div>';
+          // v4.8.2: 插到 aiBody 之外（aiBody 会被 presentAnalysis 清空重渲染），
+          // 保证本地回退结果刷新后提示卡仍然可见（4 家 AI 报告共识：回退必须显性提示）
+          var panel=document.getElementById("aiPanel");
+          var body=document.getElementById("aiBody")||document.body;
+          if(panel && body){ panel.insertBefore(_fb, body); }
+          else{ body.insertBefore(_fb, body.firstChild); }
+          setTimeout(function(){ _fb.classList.add("show"); }, 60);
+        }
+      }catch(e){}
+    }
     function runCloudAnalysis(el, onDone){
       // 云端 VLM 构图分析（经 SCF 代理转发至 Cephalon /chat/completions）；失败或超时 → onDone(null) 回退本地首判
       // 代理模式：API Key 内置在服务端环境变量，前端只需访问口令（X-App-Token），避免 Key 泄露
@@ -4278,31 +4319,33 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       try{ c.getContext("2d").drawImage(el,0,0,c.width,c.height); }catch(e){ if(onDone) onDone(null); return; }
       var dataUrl;
       try{ dataUrl=c.toDataURL("image/jpeg",0.8); }catch(e){ if(onDone) onDone(null); return; }
-      var prompt=[
-        "仔细看这张照片，用中文回答。只输出一个严格 JSON 对象，不要任何其他文字、不要 markdown 代码块：",
-        "{\"scene\":\"...\",\"subject\":\"...\",\"desc\":\"...\",\"issue\":\"...\",\"rule\":\"...\",\"crop\":\"...\",\"filter\":\"...\",\"conf\":88,\"subjectBox\":[30,20,40,60],\"fillPct\":28}",
+            var prompt=[
+        "仔细看这张照片，用中文回答。只输出一个严格 JSON 对象，不要任何其他文字、不要 markdown 代码块。JSON 格式：",
+        "{\"scene\":\"...\",\"subject\":\"...\",\"desc\":\"...\",\"issue\":\"...\",\"rule\":\"...\",\"crop\":\"...\",\"filter\":\"...\",\"conf\":0,\"subjectBox\":[0,0,0,0],\"fillPct\":0,\"cropBox\":[0,0,0,0],\"keepOriginal\":false}",
         "字段要求：",
-        "1. scene：food/portrait/landscape/street/architecture/animal/waterscape/general 之一，严格按画面实际内容选",
+        "1. scene：food/portrait/landscape/street/architecture/animal/waterscape/general 之一。只要画面中存在清晰可辨的人物且人物是主要或次要主体（即使背景是建筑/风景/街道/室内），scene 就必须是 portrait；只有画面完全没有人物主体时，才可选 architecture/street/landscape/general",
         "2. subject：一句话中文描述画面主体（如\"一位穿白衬衫坐在窗边的女性\"）",
         "3. desc：详细描述画面，50字以上（有什么物体/人物、在哪里、光线、色彩、空间关系、氛围）",
-        "4. issue：具体构图问题（如：顶部留白过多/主体偏左/前景杂物干扰/主体被裁切/画面杂乱/地平线歪斜），没有明显问题就写\"构图均衡\"",
-        "5. rule：thirds/golden/diag/lead/sym/center/frame/mini 之一（thirds=三分法 golden=黄金分割 diag=对角线 lead=引导线 sym=对称 center=居中 frame=框架式 mini=极简留白）",
-        "6. crop：具体可执行的裁切建议（如\"裁去顶部约15%的天空和左侧20%的杂物，把主体放到右三分点\"），画面已均衡就写\"保持原构图\"",
+        "4. issue：具体构图问题（如：顶部留白过多/主体偏左/前景杂物干扰/主体被裁切/画面杂乱/地平线歪斜/水印干扰等）；若构图已均衡写\"构图均衡\"",
+        "5. rule：thirds/golden/diag/lead/sym/center/frame/mini 之一（thirds=三分法 golden=黄金分割 diag=对角线 lead=引导线 sym=对称 center=居中 frame=框架 mini=极简）。除非画面本身对称或主体明显居中，否则不要推荐 center；人像优先 thirds，美食优先 center 或 thirds",
+        "6. crop：一句话裁切建议（如\"裁去顶部约15%的天空，把主体放到右三分线\"）；构图均衡写\"保持原构图\"",
         "7. filter：自然/暖阳/冷调/黑白/浓郁/清新/电影感 之一，选最适合这张照片的",
-        "8. conf：0-100 整数，严格打分：画面与该构图法则完美契合给90-98，基本契合75-89，勉强60-74，不契合低于60。不要全部打高分",
-        "9. subjectBox：主体包围框，[x,y,w,h]，x/y是框左上角相对画面宽高的百分比，w/h是框的宽高百分比（0-100整数，框要完整框住主体）",
+        "8. conf：0-100 整数，严格打分：主体明显偏侧/明显失衡给60-69，基本合理给75-85，完美契合给90-98；不要全部打高分，人物类/有轻微瑕疵的构图不应超过88",
+        "9. subjectBox：主体核心包围框，[x,y,w,h]，x/y是框左上角相对画面宽高的百分比，w/h是框的宽高百分比。只框住主体核心区域，不要包含背景，w和h不要超过70",
         "10. fillPct：主体占画面百分比，1-90 整数",
+        "11. cropBox：你建议的最终裁切框，[左%,上%,右%,下%]，表示从四边各裁掉多少百分比，全部为 0-45 的整数，四边之和不要超过 70。若画面已均衡则返回 [0,0,0,0]。要求：裁切后主体应落在你所选 rule 的对应位置（thirds→三分线，golden→0.382/0.618，center→正中，sym→保持对称轴）",
+        "12. keepOriginal：布尔值，若你认为原图构图已足够好、不应裁切，返回 true",
         "先仔细看画面再回答。画面里没有的东西绝不编造；对不确定的物体(背景/远处/模糊/纹理/装饰)必须用不确定表述：如\"疑似\"\"像\"\"类似编织纹理\"\"看不清楚\"，严禁用具体名词强行命名(如\"茅草屋顶\"\"松枝\"\"挂饰\")；布料/衣物/纹理就如实写\"布料/纹理\"，严禁臆测成风景/建筑/水面/屋顶"
       ].join("\n");      var body={ model:model, messages:[{ role:"user", content:[
         {type:"text", text:prompt},
         {type:"image_url", image_url:{ url:dataUrl }}
-      ]}], temperature:0.2, max_tokens:700 };
+      ]}], temperature:0.2, max_tokens:1000, enable_thinking:false };
       // v4.7.0: 新云端请求发起前中止上一个仍在飞行的请求（连点分析/快速换图不堆积请求；旧请求 token 已过期会自行丢弃）
       if(state._cloudAbort){ try{ state._cloudAbort.abort(); }catch(e){} state._cloudAbort=null; }
       var ctrl=(typeof AbortController!=="undefined")?new AbortController():null;
       state._cloudAbort=ctrl;
       // v4.7.0: 云端超时28s（25张实测p90=23.9s，25s会误杀约8%的25-28s临界慢响应；外层runAnalysis云端兜底30s仍为最后保险）
-      var timer=setTimeout(function(){ if(ctrl) ctrl.abort(); }, 28000);
+      var timer=setTimeout(function(){ if(ctrl) ctrl.abort(); }, 35000); // v4.8.2: 28s→35s（关思考后 p50≈4-6s，35s 几乎不再误杀）
       fetch(base+"/chat/completions", {
         method:"POST",
         headers:{ "Content-Type":"application/json", "X-App-Token":appToken },
@@ -4338,34 +4381,73 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             }
           }
         }catch(e){ boxOk=false; }
-        // v4.7.0: 优先按真实主体框+法则生成裁切 [left,top,right,bottom]；主体框非法时回退场景模板
-        var crop;
-        if(boxOk){
-          var isPort=sceneKey==="portrait";
-          var cx=bx+bw/2, cy=by+bh/2;
-          var cw=Math.min(100,Math.max(bw/(isPort?0.82:0.62),bw+8));
-          var ch=Math.min(100,Math.max(bh/(isPort?0.82:0.66),bh+8));
-          var tx=0.5,ty=0.5;
-          if(ruleKey==="thirds"||ruleKey==="golden"||ruleKey==="diag"){ tx=cx<50?1/3:2/3; ty=cy<50?0.38:0.55; }
-          var L=Math.max(0,Math.min(100-cw,cx-tx*cw));
-          var T=Math.max(0,Math.min(100-ch,cy-ty*ch));
-          crop=[Math.round(L),Math.round(T),Math.round(100-L-cw),Math.round(100-T-ch)];
-          crop=crop.map(function(v){return Math.max(0,Math.min(40,v));});
+        // v4.8.2: 裁切双通道——①VLM 直出 cropBox（首选，构图意图直通执行）②subjectBox 公式兜底；均过守门
+        // 守门规则：四边和≤70、强制包含 subjectBox、比例偏差>45% 时退化为中心等比裁（防横版裁成竖版）
+        var iw=el.videoWidth||el.naturalWidth||640, ih=el.videoHeight||el.naturalHeight||480;
+        function _guardCrop(cr){
+          if(!cr || cr.length!==4){ return [10,8,10,8]; }
+          cr=cr.map(function(v){ return Math.max(0,Math.min(60,Math.round(v))); });
+          var s=cr[0]+cr[1]+cr[2]+cr[3];
+          if(s>70){ var k=70/s; cr=cr.map(function(v){ return Math.round(v*k); }); }
+          if(boxOk && (cr[0]||cr[1]||cr[2]||cr[3])){
+            // 强制包含 subjectBox：裁切保留区 [L,T]~[100-R,100-B] 必须完整包住主体框
+            var L0=cr[0], T0=cr[1], R0=100-cr[2], B0=100-cr[3];
+            if(L0>bx){ cr[0]=Math.max(0,bx); }
+            if(T0>by){ cr[1]=Math.max(0,by); }
+            if(R0<bx+bw){ cr[2]=Math.max(0,100-(bx+bw)); }
+            if(B0<by+bh){ cr[3]=Math.max(0,100-(by+bh)); }
+          }
+          // 比例守护：裁切后宽高比偏差>45% 时改为中心等比裁（每边平均），防横版被裁成竖版/超宽
+          var a0=iw/ih, w2=100-cr[0]-cr[2], h2=100-cr[1]-cr[3];
+          var a1=(w2>0&&h2>0)?(w2/h2):a0;
+          if((a1/a0>1.45 || a1/a0<1/1.45) && (cr[0]+cr[1]+cr[2]+cr[3])>0){
+            var edge=Math.round((cr[0]+cr[1]+cr[2]+cr[3])/4);
+            cr=[edge,edge,edge,edge];
+          }
+          return cr.map(function(v){ return Math.max(0,Math.min(60,v)); });
+        }
+        var crop=null;
+        // ① VLM 直出 cropBox（v4.8.2 主通道：模型"说"的裁切就是代码"做"的裁切）
+        if(obj.keepOriginal===true){
+          crop=[0,0,0,0];
         }else{
-          crop=[10,8,10,8];
-          if(sceneKey==="portrait"){ crop=[6,12,6,12]; }
-          if(ruleKey==="center"){ crop=[18,14,18,14]; }
-          if(ruleKey==="golden"){ crop=[14,10,14,10]; }
+          var cbOk=false, cb=[0,0,0,0];
+          try{
+            if(Array.isArray(obj.cropBox)&&obj.cropBox.length===4){
+              var n4b=obj.cropBox.map(function(v){return Math.round(Number(v));});
+              if(n4b.every(function(v){return isFinite(v);})){
+                cb=[Math.max(0,Math.min(45,n4b[0])),Math.max(0,Math.min(45,n4b[1])),Math.max(0,Math.min(45,n4b[2])),Math.max(0,Math.min(45,n4b[3]))];
+                cbOk=(cb[0]+cb[1]+cb[2]+cb[3])<=70;
+              }
+            }
+          }catch(e){ cbOk=false; }
+          if(cbOk){
+            crop=cb; // [0,0,0,0] 也代表"不裁"
+          }
         }
-        // v4.7.0: 按主体占比推荐变焦（主体越小越放大，钳制 1.0-2.0），非法回退 1.3
-        var z=1.3;
-        var fp=parseInt(obj.fillPct,10);
-        if(isFinite(fp)&&fp>0&&fp<=95){
-          var tgtFill=sceneKey==="portrait"?0.55:0.42;
-          z=Math.max(1.0,Math.min(2.0,Math.sqrt(tgtFill/(fp/100))));
-          z=Math.round(z*10)/10;
+        // ② 兜底：cropBox 缺失/非法时回退 subjectBox 公式（修正版：强制包含主体框）
+        if(!crop){
+          if(boxOk){
+            var isPort=sceneKey==="portrait";
+            var cx2=bx+bw/2, cy2=by+bh/2;
+            var cw2=Math.min(100,Math.max(bw/(isPort?0.82:0.62),bw+8));
+            var ch2=Math.min(100,Math.max(bh/(isPort?0.82:0.66),bh+8));
+            var tx2=0.5, ty2=0.5;
+            if(ruleKey==="thirds"||ruleKey==="golden"||ruleKey==="diag"){ tx2=cx2<50?1/3:2/3; ty2=cy2<50?0.38:0.55; }
+            var L2=Math.max(0,Math.min(100-cw2,cx2-tx2*cw2));
+            var T2=Math.max(0,Math.min(100-ch2,cy2-ty2*ch2));
+            crop=[Math.round(L2),Math.round(T2),Math.round(100-L2-cw2),Math.round(100-T2-ch2)];
+          }else{
+            crop=[10,8,10,8];
+            if(sceneKey==="portrait"){ crop=[6,12,6,12]; }
+            if(ruleKey==="center"){ crop=[18,14,18,14]; }
+            if(ruleKey==="golden"){ crop=[14,10,14,10]; }
+          }
         }
-        // v4.8.0: 云端推荐滤镜中文风格 -> app 滤镜 key 映射
+        crop=_guardCrop(crop);
+        var keepOriginal=(obj.keepOriginal===true)||(crop[0]+crop[1]+crop[2]+crop[3]===0);        // v4.8.2: 解除"变焦+裁切"双重叠加——裁切已由 cropBox 负责构图，再叠加 CSS 变焦会二次缩画面
+        // （Qwen-Max 实测：裁切后再 setZoom，最终保留面积中位数仅 60%）；云端结果一律 z=1.0
+        var z=1.0;        // v4.8.0: 云端推荐滤镜中文风格 -> app 滤镜 key 映射
         function _cf2k(name){
           var s=String(name||"").toLowerCase();
           if(s.indexOf("黑白")>=0) return "mono";
@@ -4395,11 +4477,21 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           issue:obj.issue||"",
           cropAdvice:obj.crop||"",
           filterAdvice:obj.filter||"",
+          noCrop:keepOriginal,
           exp:RULES[ruleKey]?RULES[ruleKey].zh:"",
           sceneType:sceneKey,
           cloud:true
         };
-        if(state.aiData){ state.aiData.cloudScene=sceneKey; state.aiData.cloudModel=model; }
+        // v4.8.2: 云端结果完整回写 aiData（Qwen/豆包报告：此前只写 scene/model，光学面板仍显示本地像素数据）
+        if(state.aiData){
+          state.aiData.cloudScene=sceneKey;
+          state.aiData.cloudModel=model;
+          state.aiData.cloudSubject=obj.subject||"";
+          state.aiData.cloudRule=ruleKey;
+          state.aiData.cloudCrop=crop;
+          state.aiData.cloudConf=conf;
+          state.aiData.cloudKeep=keepOriginal;
+        }
         // v4.7.0 P0修复：云端成功必须回写 state.plan 并 presentAnalysis 刷新结果面板（含云端标记卡），
         // 否则面板停留在本地像素初判、用户感知不到云端生效；同时保证后续自动裁切统一使用云端 plan
         state.plan=plan;
@@ -4857,6 +4949,9 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       var iw=img.naturalWidth, ih=img.naturalHeight;
       var sx=crop[0]/100*iw, sy=crop[1]/100*ih;
       var sw=iw-(crop[0]+crop[2])/100*iw, sh=ih-(crop[1]+crop[3])/100*ih;
+      // v4.8.2 P0: 边界钳制，防止 sw/sh 为 0/负导致 canvas 空白（Qwen-Max 实测）
+      sx=Math.max(0,Math.min(iw-1,sx)); sy=Math.max(0,Math.min(ih-1,sy));
+      sw=Math.max(4,Math.min(iw-sx,sw)); sh=Math.max(4,Math.min(ih-sy,sh));
       var c=document.createElement("canvas");
       c.width=Math.round(sw); c.height=Math.round(sh);
       c.getContext("2d").drawImage(img,sx,sy,sw,sh,0,0,sw,sh);
