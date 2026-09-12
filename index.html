@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v6.6.0 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v6.6.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
+<title>AI 构图助手 Pro v6.7.0 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v6.7.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -463,6 +463,15 @@
   .doka-crosshair.locked .dc-ring{border-color:#67D97A;box-shadow:0 0 14px rgba(103,217,122,.7);animation:none;}
   .doka-guide{position:absolute;pointer-events:none;}
   .doka-guide .dg-line{position:absolute;height:1.5px;background:rgba(255,255,255,.6);box-shadow:0 0 4px rgba(255,255,255,.4);}
+  .doka-steps{position:absolute;top:10px;right:10px;z-index:40;width:min(240px,72%);background:rgba(10,13,17,.86);border:1px solid rgba(255,255,255,.14);border-radius:12px;backdrop-filter:blur(6px);overflow:hidden;font-size:11px;color:#E8EAED;}
+  .doka-steps .ds-head{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:rgba(84,200,247,.12);font-weight:600;letter-spacing:.5px;}
+  .doka-steps .ds-head i{font-style:normal;color:#7FB5FF;cursor:pointer;padding:2px 6px;}
+  .doka-steps .ds-body{max-height:150px;overflow-y:auto;padding:7px 10px 8px;line-height:1.65;}
+  .doka-steps .ds-body.collapsed{display:none;}
+  .doka-steps .ds-row{display:flex;gap:6px;margin:3px 0;}
+  .doka-steps .ds-ic{flex-shrink:0;width:14px;text-align:center;}
+  .doka-steps .ds-lb{color:#9AA6B2;}
+  .doka-steps .ds-tx{color:#E8EAED;word-break:break-all;}
   .doka-filter-panel{margin:8px 12px 0;background:linear-gradient(180deg,rgba(30,35,42,.98),rgba(20,24,29,.98));border:1px solid var(--line2);border-radius:14px;padding:10px 12px;animation:dfpSlide .3s ease;}
   @keyframes dfpSlide{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
   .dfp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
@@ -578,6 +587,11 @@
       </div>
       <div class="doka-face-box" id="dokaFaceBox" style="display:none;"></div>
       <div class="doka-guide" id="dokaGuide"></div>
+      <!-- v6.7 P0: AI 分析四步卡（画面描述→构图法→滤镜→裁切理由），实时取景右上角可收起 -->
+      <div class="doka-steps" id="dokaSteps" style="display:none;">
+        <div class="ds-head"><span>AI 分析</span><i id="dsToggle">收起</i></div>
+        <div class="ds-body" id="dsBody"></div>
+      </div>
       <!-- v1.7.0: 定时倒计时 -->
       <div class="timer-overlay" id="timerOverlay" style="display:none;"><div class="timer-count" id="timerCount">3</div></div>
       <!-- v1.7.0: 连拍指示 -->
@@ -896,7 +910,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v6.6.0";
+var APP_VER="v6.7.0";
 (function(){
   try{
     document.title=(document.title||"").replace(/v\d+\.\d+\.\d+/,APP_VER);
@@ -5396,6 +5410,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           var plan = a ? planFromAnalysis(a) : null;
           if(!plan){ plan={subject:"画面主体",rule:"thirds",diag:[20,30,75,70],crop:[12,10,14,14],z:1.4,f:"natural",conf:80,desc:"建议三分法构图",filters:["自然","FClassic"]}; }
           state.plan=plan; state.dokaPlan=plan; state.analyzed=true; state.analyzing=false;
+          showDokaSteps(plan);
           // 显示 Doka 风格实时裁切预览
           showDokaCrop(plan);
           // 显示目标锁定
@@ -5416,6 +5431,25 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           }
         }catch(err){ console.error("Doka分析异常:",err); state.analyzing=false; }
       }, 1200);
+    }
+    function showDokaSteps(plan){
+      // v6.7 P0: 四步结构化展示——先描述画面→构图法→滤镜→裁切理由（云端语义字段缺失时优雅降级）
+      if(!plan){ return; }
+      var b=document.getElementById("dsBody"); if(!b) return;
+      var rows=[];
+      var _rn=RULES[plan.rule]?RULES[plan.rule].cn:"自动构图";
+      var _d=plan.desc||""; if(_d.length>68){ _d=_d.slice(0,68)+"…"; }
+      var _fr=(plan.filterReason||plan.filters&&plan.filters[0]?"根据场景色调与氛围匹配":"").toString();
+      var _cropCn={crop_top:"裁掉顶部冗余",crop_bottom:"裁掉底部冗余",crop_left:"裁掉左侧冗余",crop_right:"裁掉右侧冗余",
+        crop_tb:"上下收拢",crop_lr:"左右收拢",trim:"微调保留",none:"无需裁切"}[plan.cropIntent]||"智能裁切";
+      var _cr=(plan.cropReason||"保留主体与呼吸空间").toString();
+      rows.push('<div class="ds-row"><span class="ds-ic">📖</span><span class="ds-lb">画面</span><span class="ds-tx">'+esc(_d||"已识别画面主体")+'</span></div>');
+      rows.push('<div class="ds-row"><span class="ds-ic">📐</span><span class="ds-lb">构图</span><span class="ds-tx">'+esc(_rn)+" · "+(plan.ruleReason||"主体与引导线匹配").toString().slice(0,40)+'</span></div>');
+      rows.push('<div class="ds-row"><span class="ds-ic">🎨</span><span class="ds-lb">滤镜</span><span class="ds-tx">'+esc(plan.filter||"自然")+' · '+esc(_fr.slice(0,30))+'</span></div>');
+      rows.push('<div class="ds-row"><span class="ds-ic">✂️</span><span class="ds-lb">裁切</span><span class="ds-tx">'+esc(_cropCn)+" · "+esc(_cr.slice(0,36))+'</span></div>');
+      b.innerHTML=rows.join("");
+      var box=document.getElementById("dokaSteps");
+      if(box){ box.style.display="block"; }
     }
     function showDokaCrop(plan, _tries){
       _tries=_tries||0;
