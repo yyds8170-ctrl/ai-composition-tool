@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v6.4.0 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v6.3.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
+<title>AI 构图助手 Pro v6.5.0 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v6.5.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -896,7 +896,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v6.4.0";
+var APP_VER="v6.5.0";
 (function(){
   try{
     document.title=(document.title||"").replace(/v\d+\.\d+\.\d+/,APP_VER);
@@ -1909,6 +1909,22 @@ var APP_VER="v6.4.0";
         var thirdFit=Math.max(0,1-bestD); // 0~1
         // 对角线候选：主对角/反对角平均亮度显著高于邻域 → 对角引导
 
+      // v6.5: 显著性审计（熵审计法：Sobel 边缘密度质心 = 主体客观位置，无模型依赖/无幻觉）
+      var _sigCx=0.5,_sigCy=0.5,_sigN=0,_sigMinX=w,_sigMinY=h,_sigMaxX=0,_sigMaxY=0;
+      for(var _si=0;_si<w*h;_si++){
+        if(gradMag[_si]>edgeThresh){
+          var _sx=_si%w, _sy=(_si/w)|0;
+          _sigCx+=_sx; _sigCy+=_sy; _sigN++;
+          if(_sx<_sigMinX)_sigMinX=_sx; if(_sx>_sigMaxX)_sigMaxX=_sx;
+          if(_sy<_sigMinY)_sigMinY=_sy; if(_sy>_sigMaxY)_sigMaxY=_sy;
+        }
+      }
+      var _sigRatio=_sigN/Math.max(1,w*h);
+      if(_sigN>0){ _sigCx=_sigCx/_sigN/w; _sigCy=_sigCy/_sigN/h; }
+      else{ _sigCx=0.5; _sigCy=0.5; _sigMinX=w*0.3; _sigMaxX=w*0.7; _sigMinY=h*0.3; _sigMaxY=h*0.7; }
+      var _sigBox=[Math.max(0,(_sigMinX/w-0.02)),Math.max(0,(_sigMinY/h-0.02)),
+                   Math.min(1,(_sigMaxX/w+0.02)),Math.min(1,(_sigMaxY/h+0.02))];
+      if((_sigBox[2]-_sigBox[0])<0.08 || (_sigBox[3]-_sigBox[1])<0.08){ _sigBox=[0.25,0.25,0.75,0.75]; }
         return {
           cx:cx,cy:cy,mean:mean,contrast:contrast,
           row:bestRow,rowGap:bestGap,ratio:bestRow/h,rowPeakN:rowPeakN,
@@ -1919,7 +1935,7 @@ var APP_VER="v6.4.0";
           thirdFit:thirdFit, diagStrength:diagStrength,
           sharpness:sharpness, dynamicRange:dynamicRange, hueEntropy:hueEntropy,
           skinRatio:skinRatio, skinCx:skinCx, skinCy:skinCy, isPersonLikely:isPersonLikely,
-          skinAspect:skinAspect, skinFill:skinFill, skinHRatio:skinHRatio
+          sigCx:_sigCx, sigCy:_sigCy, sigBox:_sigBox, sigRatio:_sigRatio
         };
       }catch(err){
         return null;
@@ -2519,6 +2535,7 @@ var APP_VER="v6.4.0";
       setStatus("一键美化完成","done");
     }
     btnAnalyze.addEventListener("click",function(){
+      state.userAskAnalyze=true; // v6.5: 手动点击=强制重新云端分析（跳过同图缓存）
       if(state.analyzing) return;
       var el=currentEl();
       if(!el){ setStatus("请先选择取景画面", "err"); return; }
@@ -4475,14 +4492,14 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         // v6.0: 单 32-bit 哈希→双种子键（碰撞空间 2^31→约 2^62），防"撞图套用别人裁切方案"
         var _h1=0,_h2=0;
         for(var _i=0;_i<hd.length;_i++){ var _c=hd.charCodeAt(_i); _h1=((_h1<<5)-_h1+_c)|0; _h2=((_h2<<7)-_h2+_c*31)|0; }
-        _ccKey="v640_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v6.0 引擎大改，旧 v514_ 缓存不复用
+        _ccKey="v650_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v6.0 引擎大改，旧 v514_ 缓存不复用
       }catch(e){ _ccKey=null; }
       if(_ccKey){
         try{
           var _cs=localStorage.getItem("ai_cmp_cc_"+_ccKey);
           if(_cs){
             var _cj=JSON.parse(_cs);
-            if(_cj&&_cj.t&&(Date.now()-_cj.t)<86400000&&_cj.plan){
+              if(_cj&&_cj.t&&(Date.now()-_cj.t)<86400000&&_cj.plan&&!state.userAskAnalyze){
               _cj.plan.fromCache=true;
               try{ state.plan=_cj.plan; state.analyzed=true; presentAnalysis(_cj.plan); }catch(e){}
               try{ setStatus("云端分析完成（缓存结果，秒出）","done"); }catch(e){}
@@ -4494,7 +4511,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       }
             var prompt=[
         "你是专业摄影构图分析师。仔细看这张照片，用中文做专业分析。只输出一个严格 JSON 对象，不要任何多余文字。",
-        "{\"scene\":\"...\",\"subject\":\"...\",\"desc\":\"...\",\"issue\":\"...\",\"rule\":\"...\",\"ruleReason\":\"...\",\"subjectPos\":\"...\",\"subjectSize\":\"...\",\"cropIntent\":\"...\",\"cropReason\":\"...\",\"keepOriginal\":false,\"filter\":\"...\",\"filterReason\":\"...\",\"conf\":80}",
+        "{\"scene\":\"...\",\"subject\":\"...\",\"desc\":\"...\",\"issue\":\"...\",\"rule\":\"...\",\"ruleReason\":\"...\",\"subjectPos\":\"...\",\"headroom\":\"多/中/少\",\"gazeDir\":\"left/right/up/down/none\",\"clutter\":\"...\",\"horizon\":\"上三分/中/下三分/无\",\"subjectSize\":\"...\",\"cropIntent\":\"...\",\"cropReason\":\"...\",\"keepOriginal\":false,\"filter\":\"...\",\"filterReason\":\"...\",\"conf\":80}",
         "字段要求：",
         "1. scene：food/portrait/landscape/street/architecture/animal/waterscape/night/general 之一（美食/人像/风景/街拍/建筑/动物/水面/夜景/通用）。画面出现明显人物（任何大小/数量/正侧背）→必须portrait；仅当人物很小且纯属风景点缀时才可landscape；整体偏暗且以灯光/夜色氛围为主的→night；夜晚但建筑是绝对主体的→architecture；人工建筑白天为主体的→architecture；水面倒影为视觉主体的→waterscape。",
         "2. subject：一句话中文描述画面主体（如\"一位穿白衬衫坐在窗边的女性\"）。",
@@ -4510,8 +4527,13 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         "12. filter：自然/暖阳/冷调/黑白/浓郁/清新/电影感/莫兰迪/港风 之一，选最适合这张照片的风格。",
         "13. filterReason：为什么推荐这个滤镜（一句话）。",
         "14. conf：0-100 整数，严格打分：构图有明显问题且主体混乱给40-59；主体明确但构图一般给60-74；构图合理给75-85；构图优秀给90-98。人物类不超88。",
-        "严格要求：先仔细观察画面再回答；desc 必须80字以上且具体；只描述意图和方向，禁止输出任何数字坐标或百分比数值（如\"裁去15%\"\"[0,20,0,0]\"这类都不允许），裁切由专业算法根据你的意图精确计算。"
+        "15. headroom：主体上方（头顶/画面顶部）留白程度，多/中/少 之一（多=可裁掉部分顶部冗余，少=顶部必须保留）。",
+        "16. gazeDir：主体视线/朝向方向，left/right/up/down/none 之一（视线前方应保留空间）。",
+        "17. clutter：画面中杂物/干扰区域，用中文描述（如：左侧路牌杂物/顶部电线/前景行人），无则写“无”。",
+        "18. horizon：地平线/水面线位置，上三分/中/下三分/无 之一（倾斜或居中时给出）。",
+        "严格要求：先仔细观察画面再回答；desc 必须80字以上且具体；headroom/gazeDir/clutter/horizon 必须实际观察画面后给出语义判断，不要输出数字坐标或百分比数值（如\"裁去15%\"\"[0,20,0,0]\"这类都不允许），裁切由专业算法根据你的意图精确计算。"
       ].join("\n");
+      state.userAskAnalyze=false; // v6.5: 已进入云端流程，重置手动标志
       var body={ model:model, messages:[{ role:"user", content:[
         {type:"text", text:prompt},
         {type:"image_url", image_url:{ url:dataUrl }}
@@ -4667,6 +4689,20 @@ if(aiModelState!=="idle"){ resolve(false); return; }
               Sw=Math.min(100-Sx,_bw); Sh=Math.min(100-Sy,_bh);
             }
           }catch(e){ Sx=null; }
+          // v6.5: 显著性 bbox 融合（熵审计质心框）——与已有检测框取并集（保守防切主体）；
+          // 无 COCO/人脸时直接作为主体框（客观边缘质心，不受 VLM 语义位置偏差影响）
+          var _sgb=ad && ad.sigBox;
+          if(_sgb && _sgb.length===4 && ad.sigRatio && ad.sigRatio>0.02){
+            var _sgX=_sgb[0]*100,_sgY=_sgb[1]*100,_sgW=(_sgb[2]-_sgb[0])*100,_sgH=(_sgb[3]-_sgb[1])*100;
+            if(_sgW>8 && _sgH>8){
+              if(Sx!==null){
+                var _uL=Math.min(Sx,_sgX),_uT=Math.min(Sy,_sgY),_uR=Math.max(Sx+Sw,_sgX+_sgW),_uB=Math.max(Sy+Sh,_sgY+_sgH);
+                if((_uR-_uL)<100 && (_uB-_uT)<100 && (_uR-_uL)>Sw*0.5){ Sx=_uL; Sy=_uT; Sw=_uR-_uL; Sh=_uB-_uT; }
+              } else {
+                Sx=_sgX; Sy=_sgY; Sw=_sgW; Sh=_sgH;
+              }
+            }
+          }
           if(Sx===null && boxOk){ Sx=bx; Sy=by; Sw=bw; Sh=bh; }
           var _sp=String(obj.subjectPos||"center").toLowerCase();
           var _ss=String(obj.subjectSize||"medium").toLowerCase();
@@ -4698,6 +4734,14 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           var _refY=_faceOk?(_faceReal?_ad2.faceY*100:Math.max(15,Math.min(70,(_ad2.skinCy-0.12)*100))):Scy;
           // VLM 意图（供展示层读取）
           var _ci=String(obj.cropIntent||"none").toLowerCase();
+          // v6.5: VLM 语义护栏——头顶留白少=禁裁顶；视线方向=前方留白（依据：人像头顶留白5-15%、视线空间规则）
+          var _hr=String(obj.headroom||"中"); var _gd=String(obj.gazeDir||"none").toLowerCase();
+          var _clutter=String(obj.clutter||""); var _horizon=String(obj.horizon||"无");
+          if(_hr.indexOf("少")>=0 && (_ci==="crop_top"||_ci==="crop_tb")){ _ci=_ci==="crop_tb"?"crop_bottom":"trim"; }
+          if(_gd==="left" && _ci==="crop_left"){ _ci="trim"; }
+          if(_gd==="right" && _ci==="crop_right"){ _ci="trim"; }
+          if(_gd==="up" && _ci==="crop_top"){ _ci="trim"; }
+          if(_horizon.indexOf("中")>=0 && (_ci==="crop_tb"||_ci==="crop_top"||_ci==="crop_bottom")){ _ci="trim"; }
           var _intentName={crop_top:"裁顶部冗余",crop_bottom:"裁底部冗余",crop_left:"裁左侧冗余",crop_right:"裁右侧冗余",crop_tb:"裁上下冗余",crop_lr:"裁左右冗余",trim:"轻微收紧四边",none:"无需额外裁切"}[_ci]||"";
           _aiIntentCache={ rule:ruleKey, subjectPos:_sp, cropIntent:_ci, intentName:_intentName, cropReason:obj.cropReason||"", subjectBox:[Sx,Sy,Sw,Sh] };
 
@@ -4886,7 +4930,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           var R4=Math.max(0,Math.min(_maxSide,Math.round(100-BR)));
           var B4=Math.max(0,Math.min(_maxSide,Math.round(100-BB)));
           var _sum=L4+T4+R4+B4;
-          if(isPort && T4>10){ T4=10; } // v6.4: 人像顶部单边≤10%（头顶留白硬约束，防自拍/特写被切头）
+          if(isPort){ var _tCap=(_hr&&_hr.indexOf("少")>=0)?5:10; if(T4>_tCap){ T4=_tCap; } } // v6.5: 头顶留白少→顶部裁切上限收紧到5%
           if(isPort){ var _sumTB=T4+B4; if(_sumTB>22){ var _k6=22/_sumTB; T4=Math.round(T4*_k6); B4=Math.round(B4*_k6); } } // v6.4: 人像顶部+底部合计≤22%
           // 温和守门：力度分级（v5.1.1）——夜景/动物更保守（保氛围），风景/建筑可稍多；小主体可多裁、占满少裁
           var _cap=46;
