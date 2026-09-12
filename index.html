@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v6.5.0 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v6.5.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
+<title>AI 构图助手 Pro v6.6.0 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v6.6.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -896,7 +896,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v6.5.0";
+var APP_VER="v6.6.0";
 (function(){
   try{
     document.title=(document.title||"").replace(/v\d+\.\d+\.\d+/,APP_VER);
@@ -5508,32 +5508,54 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         shotOverlay.classList.remove("show");
         // 延迟到拍照完成后应用所有效果
         setTimeout(function(){
-          if(state.dokaPlan){
-            // 应用滤镜
-            if(p.f && p.f!=="clear"){ setFilter(p.f); } // v4.6 P1-1: applyFilter→setFilter（Hy4 BUG-01）
-            // 应用变焦
-            if(p.z && p.z>1.05){ zoomRange.value=p.z; state.zoom=p.z; applyZoom(); }
-            // 应用裁切，完成后生成成品
-            if(p.crop){
-              applyCropFromPlan(p.crop);
-              // 等待裁切后的图片加载完成
-              var checkReady=setInterval(function(){
-                if(photoView.naturalWidth && photoView.complete){
-                  clearInterval(checkReady);
-                  generateDokaFinal();
-                }
-              },50);
-              // 超时保护：最多等 2 秒
-              setTimeout(function(){ if(checkReady){ clearInterval(checkReady); generateDokaFinal(); } },2000);
-            } else {
-              generateDokaFinal();
-            }
+          // v6.6 P0-1: 相机模式拍照拍到旧图根治——Doka 成品链路(滤镜/变焦/裁切/generateDokaFinal)全部
+          // 基于 photoView(静态工作图)，而相机模式下 photoView 残留上一张缓存图 → 快门瞬间先截取
+          // videoCam 当前帧写入 photoView，保证成品基于实时画面
+          // v6.6 P0-1: 相机模式拍照拍到旧图根治——Doka 成品链路(滤镜/变焦/裁切/generateDokaFinal)全部
+          // 基于 photoView(静态工作图)，而相机模式下 photoView 残留上一张缓存图 → 快门瞬间先截取
+          // videoCam 当前帧写入 photoView，并等新帧加载完成后再应用效果（否则后续裁切仍作用于旧图）
+          var _needFreshFrame=(state.mode==="camera" && videoCam && videoCam.videoWidth);
+          if(_needFreshFrame){
+            try{
+              var _cf=document.createElement("canvas");
+              _cf.width=videoCam.videoWidth; _cf.height=videoCam.videoHeight;
+              var _cx2=_cf.getContext("2d");
+              _cx2.drawImage(videoCam,0,0);
+              var _freshUrl=_cf.toDataURL("image/jpeg",0.95);
+              photoView.onload=function(){ if(state.dokaPlan){ _applyDokaEffects(p); } };
+              photoView.src=_freshUrl;
+            }catch(e){ console.warn("截帧失败",e); if(state.dokaPlan){ _applyDokaEffects(p); } }
+            return;
           }
+          if(state.dokaPlan){ _applyDokaEffects(p); }
         },600);
       } else {
         shotOverlay.classList.remove("doka-shot");
       }
     },true);
+    function _applyDokaEffects(p){
+      if(!state.dokaPlan) return;
+      // 应用滤镜
+      if(p.f && p.f!=="clear"){ setFilter(p.f); } // v4.6 P1-1: applyFilter→setFilter（Hy4 BUG-01）
+      // 应用变焦
+      if(p.z && p.z>1.05){ zoomRange.value=p.z; state.zoom=p.z; applyZoom(); }
+      // 应用裁切，完成后生成成品
+      if(p.crop){
+        applyCropFromPlan(p.crop);
+        // 等待裁切后的图片加载完成
+        var checkReady=setInterval(function(){
+          if(photoView.naturalWidth && photoView.complete){
+            clearInterval(checkReady);
+            generateDokaFinal();
+          }
+        },50);
+        // 超时保护：最多等 2 秒
+        setTimeout(function(){ if(checkReady){ clearInterval(checkReady); generateDokaFinal(); } },2000);
+      } else {
+        generateDokaFinal();
+      }
+    }
+
     function generateDokaFinal(){
       if(photoView.naturalWidth){
         var c=document.createElement("canvas");
