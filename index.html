@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v6.7.0 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v6.7.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
+<title>AI 构图助手 Pro v7.0.0 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v7.0.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -452,6 +452,12 @@
     box-shadow:0 0 0 2px #54C8F7,0 0 0 9999px rgba(0,0,0,.55),0 0 20px rgba(84,200,247,.35);
     transition:all .35s cubic-bezier(.4,0,.2,1);pointer-events:none;}
   .doka-frame::before{content:'';position:absolute;inset:-3px;border-radius:6px;border:1px solid rgba(255,180,84,.5);pointer-events:none;}
+  .doka-frame .df-grid{position:absolute;inset:0;pointer-events:none;display:block;}
+  .doka-frame .df-grid i{position:absolute;background:rgba(255,255,255,.35);box-shadow:0 0 2px rgba(0,0,0,.25);}
+  .doka-frame .df-grid .df-v1{left:33.333%;top:0;bottom:0;width:1px;}
+  .doka-frame .df-grid .df-v2{left:66.666%;top:0;bottom:0;width:1px;}
+  .doka-frame .df-grid .df-h1{top:33.333%;left:0;right:0;height:1px;}
+  .doka-frame .df-grid .df-h2{top:66.666%;left:0;right:0;height:1px;}
   .doka-face-box{position:absolute;width:60px;height:72px;border:2px solid #67D97A;border-radius:8px;transform:translate(-50%,-50%);box-shadow:0 0 12px rgba(103,217,122,.5);transition:all .3s ease;pointer-events:none;}
   .doka-face-box::before{content:'👤';position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:11px;color:#67D97A;background:rgba(10,12,14,.7);padding:1px 6px;border-radius:4px;white-space:nowrap;}
   .doka-face-box::after{content:'面部';position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:10px;color:#c8ffd4;background:rgba(10,12,14,.7);padding:1px 6px;border-radius:4px;white-space:nowrap;}
@@ -580,7 +586,12 @@
       <div class="doka-mask doka-bottom"></div>
       <div class="doka-mask doka-left"></div>
       <div class="doka-mask doka-right"></div>
-      <div class="doka-frame" id="dokaFrame"></div>
+      <div class="doka-frame" id="dokaFrame">
+        <!-- v7.0: 三分线构图网格（随裁切框缩放，辅助对齐） -->
+        <div class="df-grid" id="dfGrid">
+          <i class="df-v1"></i><i class="df-v2"></i><i class="df-h1"></i><i class="df-h2"></i>
+        </div>
+      </div>
       <div class="doka-crosshair" id="dokaCross" style="display:none;">
         <div class="dc-h"></div><div class="dc-v"></div>
         <div class="dc-ring"></div>
@@ -910,7 +921,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v6.7.0";
+var APP_VER="v7.0.0";
 (function(){
   try{
     document.title=(document.title||"").replace(/v\d+\.\d+\.\d+/,APP_VER);
@@ -4506,7 +4517,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         // v6.0: 单 32-bit 哈希→双种子键（碰撞空间 2^31→约 2^62），防"撞图套用别人裁切方案"
         var _h1=0,_h2=0;
         for(var _i=0;_i<hd.length;_i++){ var _c=hd.charCodeAt(_i); _h1=((_h1<<5)-_h1+_c)|0; _h2=((_h2<<7)-_h2+_c*31)|0; }
-        _ccKey="v650_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v6.0 引擎大改，旧 v514_ 缓存不复用
+        _ccKey="v700_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v6.0 引擎大改，旧 v514_ 缓存不复用
       }catch(e){ _ccKey=null; }
       if(_ccKey){
         try{
@@ -4756,6 +4767,14 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           if(_gd==="right" && _ci==="crop_right"){ _ci="trim"; }
           if(_gd==="up" && _ci==="crop_top"){ _ci="trim"; }
           if(_horizon.indexOf("中")>=0 && (_ci==="crop_tb"||_ci==="crop_top"||_ci==="crop_bottom")){ _ci="trim"; }
+          // v6.8: 双引擎交叉校验——本地显著性边缘质心(客观像素证据)优先于云端语义意图，
+          // 防止 VLM 语义误判把裁切方向引向主体实际所在侧（质心判据：质心偏上=主体在上方）
+          var _sigX=(a&&typeof a.sigCx==="number")?a.sigCx:0.5;
+          var _sigY=(a&&typeof a.sigCy==="number")?a.sigCy:0.5;
+          if((_ci==="crop_top"||_ci==="crop_tb") && _sigY<0.45){ _ci="trim"; }
+          if(_ci==="crop_bottom" && _sigY>0.55){ _ci="trim"; }
+          if((_ci==="crop_left"||_ci==="crop_lr") && _sigX<0.45){ _ci="trim"; }
+          if(_ci==="crop_right" && _sigX>0.55){ _ci="trim"; }
           var _intentName={crop_top:"裁顶部冗余",crop_bottom:"裁底部冗余",crop_left:"裁左侧冗余",crop_right:"裁右侧冗余",crop_tb:"裁上下冗余",crop_lr:"裁左右冗余",trim:"轻微收紧四边",none:"无需额外裁切"}[_ci]||"";
           _aiIntentCache={ rule:ruleKey, subjectPos:_sp, cropIntent:_ci, intentName:_intentName, cropReason:obj.cropReason||"", subjectBox:[Sx,Sy,Sw,Sh] };
 
@@ -5004,6 +5023,29 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             }
           }
 
+          // v6.9: 裁切后自检看门狗——主体框相对裁切框的中心偏移与面积占比复核：
+          // 主体贴边(|相对中心|>0.32)或主体占裁切框>95%(裁切框没含主体) → 回退保守裁切
+          var _cw9=100-L4-R4, _ch9=100-T4-B4;
+          if(_cw9>2 && _ch9>2 && Sw>1 && Sh>1){
+            var _ccx9=L4+_cw9/2, _ccy9=T4+_ch9/2;
+            var _scx9=Sx+Sw/2, _scy9=Sy+Sh/2;
+            var _relCx9=(_scx9-_ccx9)/_cw9, _relCy9=(_scy9-_ccy9)/_ch9;
+            var _subjArea9=(Sw*Sh)/(_cw9*_ch9);
+            var _edge9=(Math.abs(_relCx9)>0.32 || Math.abs(_relCy9)>0.32);
+            var _overfill9=_subjArea9>0.95;
+            if(_overfill9 || _edge9){
+              // 保守回退：裁切量整体缩减 40%（外扩画面），并确保主体保护框完整在裁切框内
+              L4=Math.round(L4*0.6); T4=Math.round(T4*0.6); R4=Math.round(R4*0.6); B4=Math.round(B4*0.6);
+              var _needL9=Math.max(0,Math.round(Sx-8)), _needR9=Math.max(0,Math.round(100-(Sx+Sw)-8));
+              var _needT9=Math.max(0,Math.round(Sy-8)), _needB9=Math.max(0,Math.round(100-(Sy+Sh)-8));
+              if(L4>_needL9){ L4=_needL9; }
+              if(R4>_needR9){ R4=_needR9; }
+              if(T4>_needT9){ T4=_needT9; }
+              if(B4>_needB9){ B4=_needB9; }
+              L4=Math.max(0,Math.min(25,L4)); T4=Math.max(0,Math.min(25,T4));
+              R4=Math.max(0,Math.min(25,R4)); B4=Math.max(0,Math.min(25,B4));
+            }
+          }
           try{ window.__cropDiag={Sx:Sx,Sy:Sy,Sw:Sw,Sh:Sh,refX:_refX,refY:_refY,BL:BL,BT:BT,BR:BR,BB:BB,L4:L4,T4:T4,R4:R4,B4:B4,ci:_ci,rule:ruleKey,port:isPort,faceOk:_faceOk,ssk:_ssk,arW:_w,arH:_h}; }catch(e){ window.__cropDiag={err:String(e)}; }
           return [L4,T4,R4,B4];
         }
@@ -5541,68 +5583,90 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         // 先隐藏预览（避免半成品闪烁），等成品生成后再显示
         shotOverlay.classList.remove("show");
         // 延迟到拍照完成后应用所有效果
+        // 延迟到拍照完成后应用所有效果
         setTimeout(function(){
-          // v6.6 P0-1: 相机模式拍照拍到旧图根治——Doka 成品链路(滤镜/变焦/裁切/generateDokaFinal)全部
-          // 基于 photoView(静态工作图)，而相机模式下 photoView 残留上一张缓存图 → 快门瞬间先截取
-          // videoCam 当前帧写入 photoView，保证成品基于实时画面
-          // v6.6 P0-1: 相机模式拍照拍到旧图根治——Doka 成品链路(滤镜/变焦/裁切/generateDokaFinal)全部
-          // 基于 photoView(静态工作图)，而相机模式下 photoView 残留上一张缓存图 → 快门瞬间先截取
-          // videoCam 当前帧写入 photoView，并等新帧加载完成后再应用效果（否则后续裁切仍作用于旧图）
-          var _needFreshFrame=(state.mode==="camera" && videoCam && videoCam.videoWidth);
-          if(_needFreshFrame){
-            try{
-              var _cf=document.createElement("canvas");
-              _cf.width=videoCam.videoWidth; _cf.height=videoCam.videoHeight;
-              var _cx2=_cf.getContext("2d");
-              _cx2.drawImage(videoCam,0,0);
-              var _freshUrl=_cf.toDataURL("image/jpeg",0.95);
-              photoView.onload=function(){ if(state.dokaPlan){ _applyDokaEffects(p); } };
-              photoView.src=_freshUrl;
-            }catch(e){ console.warn("截帧失败",e); if(state.dokaPlan){ _applyDokaEffects(p); } }
-            return;
+          // v7.0 P0: Doka 成品链路根治——不再经过 photoView(静态工作图)中转，避免
+          // "photoView 残留上一张缓存/示例图 + onload/checkReady DOM 加载竞态"导致的成品
+          // 尺寸错乱(实测 4px/315px/空/旧图 四态不稳定)。改为纯 canvas 链：
+          // videoCam(相机)或 photoView(相册) → 滤镜 → 变焦 → 按 plan.crop 裁切 → 一次成型
+          var _doDokaShot=function(){
+            if(!state.dokaPlan){ return; }
+            // 应用滤镜
+            if(p.f && p.f!=="clear"){ setFilter(p.f); } // v4.6 P1-1: applyFilter→setFilter（Hy4 BUG-01）
+            // 应用变焦
+            if(p.z && p.z>1.05){ zoomRange.value=p.z; state.zoom=p.z; applyZoom(); }
+            generateDokaFinalCanvas();
+          };
+          if(state.dokaPlan){
+            _doDokaShot();
+          } else {
+            // v7.0 P1: 分析尚未落盘（云端返回/后处理边界）——等待至多 2 秒自动补拍，
+            // 避免"点击快门时 plan 未就绪→静默无成品"（连拍/快速点击场景）
+            var _wp=0, _wpTimer=setInterval(function(){
+              _wp+=100;
+              if(state.dokaPlan){ clearInterval(_wpTimer); _doDokaShot(); }
+              else if(_wp>=2000){ clearInterval(_wpTimer); toastMsg("AI 构图分析中，请稍后再拍"); }
+            },100);
           }
-          if(state.dokaPlan){ _applyDokaEffects(p); }
-        },600);
+        },150);
       } else {
         shotOverlay.classList.remove("doka-shot");
       }
     },true);
-    function _applyDokaEffects(p){
-      if(!state.dokaPlan) return;
-      // 应用滤镜
-      if(p.f && p.f!=="clear"){ setFilter(p.f); } // v4.6 P1-1: applyFilter→setFilter（Hy4 BUG-01）
-      // 应用变焦
-      if(p.z && p.z>1.05){ zoomRange.value=p.z; state.zoom=p.z; applyZoom(); }
-      // 应用裁切，完成后生成成品
-      if(p.crop){
-        applyCropFromPlan(p.crop);
-        // 等待裁切后的图片加载完成
-        var checkReady=setInterval(function(){
-          if(photoView.naturalWidth && photoView.complete){
-            clearInterval(checkReady);
-            generateDokaFinal();
-          }
-        },50);
-        // 超时保护：最多等 2 秒
-        setTimeout(function(){ if(checkReady){ clearInterval(checkReady); generateDokaFinal(); } },2000);
-      } else {
-        generateDokaFinal();
+    function generateDokaFinalCanvas(_retry){
+      // v7.0 P0: 纯 canvas 成品链（无 DOM 图片加载竞态）
+      // 相机模式取 videoCam 实时帧；相册模式取 photoView（已加载的工作图）
+      var srcEl=(state.mode==="camera" && videoCam && videoCam.videoWidth)?videoCam:photoView;
+      if(!srcEl) return;
+      // v7.0 P1: 视频首帧未就绪保护——readyState<2(HAVE_CURRENT_DATA)时 canvas 可能画空帧，
+      // 最多重试 3 次（间隔 200ms），仍失败则放弃（不产生脏成品）
+      if(srcEl===videoCam && (!srcEl.readyState || srcEl.readyState<2)){
+        if(!_retry){ _retry=0; }
+        if(_retry<3){ setTimeout(function(){ generateDokaFinalCanvas(_retry+1); },200); return; }
       }
-    }
-
-    function generateDokaFinal(){
-      if(photoView.naturalWidth){
+      var vw=srcEl.videoWidth||srcEl.naturalWidth, vh=srcEl.videoHeight||srcEl.naturalHeight;
+      if(!vw||!vh){ return; }
+      try{
+        // 1) 原帧 + 滤镜（canvas 2d filter 一次成型）
         var c=document.createElement("canvas");
-        c.width=photoView.naturalWidth; c.height=photoView.naturalHeight;
+        c.width=vw; c.height=vh;
         var ctx=c.getContext("2d");
-        var _df = FILTERS[state.filter] ? FILTERS[state.filter].css : "none";
-        ctx.filter = _df.trim() || "none";
-        ctx.drawImage(photoView,0,0);
+        var _df=FILTERS[state.filter]?FILTERS[state.filter].css:"none";
+        ctx.filter=_df.trim()||"none";
+        ctx.drawImage(srcEl,0,0);
+        // 2) 变焦（中心缩放）
+        var z=state.zoom||1;
+        if(z>1.001){
+          var cw=vw/z, ch=vh/z, sx=(vw-cw)/2, sy=(vh-ch)/2;
+          var c2=document.createElement("canvas");
+          c2.width=Math.max(4,Math.round(cw)); c2.height=Math.max(4,Math.round(ch));
+          c2.getContext("2d").drawImage(c,sx,sy,cw,ch,0,0,c2.width,c2.height);
+          c=c2;
+        }
+        // 3) 按 AI 构图裁切
+        var crop=state.dokaPlan?state.dokaPlan.crop:null;
+        if(crop && crop.length===4){
+          var iw=c.width, ih=c.height;
+          var sx2=crop[0]/100*iw, sy2=crop[1]/100*ih;
+          var sw=iw-(crop[0]+crop[2])/100*iw, sh=ih-(crop[1]+crop[3])/100*ih;
+          sx2=Math.max(0,Math.min(iw-1,sx2)); sy2=Math.max(0,Math.min(ih-1,sy2));
+          sw=Math.max(4,Math.min(iw-sx2,sw)); sh=Math.max(4,Math.min(ih-sy2,sh));
+          var c3=document.createElement("canvas");
+          c3.width=Math.round(sw); c3.height=Math.round(sh);
+          c3.getContext("2d").drawImage(c,sx2,sy2,sw,sh,0,0,c3.width,c3.height);
+          c=c3;
+        }
         var finalUrl=c.toDataURL("image/jpeg",0.95);
         state.lastShotURL=finalUrl;
+        state.cropped=true;
+        // 同步回 photoView（保留编辑态，可继续撤销/编辑）
+        try{ if(photoView.src!==finalUrl){ photoView.src=finalUrl; } }catch(e){}
         showShot(finalUrl);
         shotOverlay.classList.add("doka-shot");
         toastMsg("AI 构图成品已生成：裁切+滤镜+变焦");
+      }catch(err){
+        console.error("Doka 成品生成失败:",err);
+        setStatus("成品生成失败，请重试","err");
       }
     }
 
