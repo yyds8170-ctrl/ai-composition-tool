@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v7.0.0 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v7.0.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
+<title>AI 构图助手 Pro v7.0.1 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v7.0.1 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -921,7 +921,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v7.0.0";
+var APP_VER="v7.0.1";
 (function(){
   try{
     document.title=(document.title||"").replace(/v\d+\.\d+\.\d+/,APP_VER);
@@ -1657,7 +1657,7 @@ var APP_VER="v7.0.0";
     function analyzePixels(el, dims){
       // v4.0.1 增强引擎：降采样 192x128 + Sobel边缘对称度，输出亮度/曝光/色彩/对称/线条/主体等多维特征
       try{
-        var w=192, h=128;
+        var w=256, h=192; // v7.0.1: 192x128→256x192 显著性精度+78%（质心/Sobel 更稳）
         var c=document.createElement("canvas");
         c.width=w; c.height=h;
         var ctx=c.getContext("2d",{willReadFrequently:true});
@@ -4507,7 +4507,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       c.width=Math.max(2,Math.round(vw*scale)); c.height=Math.max(2,Math.round(vh*scale));
       try{ c.getContext("2d").drawImage(el,0,0,c.width,c.height); }catch(e){ if(onDone) onDone(null); return; }
       var dataUrl;
-      try{ dataUrl=c.toDataURL("image/jpeg",0.8); }catch(e){ if(onDone) onDone(null); return; }
+      // v7.0.1: 0.8→0.85 细节更清（云端VLM输入质量）
+      try{ dataUrl=c.toDataURL("image/jpeg",0.85); }catch(e){ if(onDone) onDone(null); return; }
       // v5.0: 同图缓存——相同照片24h内直接复用云端结果（省额度、秒出）；换图/清图不影响（按内容hash）
       var _ccKey=null;
       try{
@@ -4546,6 +4547,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         "6. ruleReason：为什么用这个构图法？画面中什么线条/位置关系/结构支撑了它（一句话，如\"人物位于画面右侧，左侧水面留白自然形成三分线\"）。",
         "7. subjectPos：画面主体核心区域的位置，只能是 center/left/right/left_third/right_third/top/bottom/upper_third/lower_third/full_frame 之一（居中/偏左/偏右/左三分之一线/右三分之一线/偏上/偏下/上三分之一线/下三分之一线/占满全幅）。",
         "8. subjectSize：主体占画面的大小，small/medium/large/full 之一（小/中/大/占满）。",
+        "8b. subjectPos 严格指主体核心（人脸/主要物体）的几何中心，不是画面中心；主体明显偏某侧时必须如实报 left/right/top/bottom，不得为了居中而报 center。",
         "9. cropIntent：你建议的裁切方向意图，只能是 crop_top/crop_bottom/crop_left/crop_right/crop_tb/crop_lr/trim/none 之一（裁顶部多余/裁底部多余/裁左侧多余/裁右侧多余/裁上下/裁左右/轻微收紧四边/不裁）。",
         "10. cropReason：为什么这样裁？裁掉的部分是什么（一句话，如\"顶部天空大面积留白无信息，裁去后人物更突出\"）。",
         "11. keepOriginal：布尔值。仅当原图构图已经专业、任何裁切都会损失信息时才为 true（此时 cropIntent 必须为 none）。大部分照片都应裁切优化，不要轻易给 true。",
@@ -4562,7 +4564,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       var body={ model:model, messages:[{ role:"user", content:[
         {type:"text", text:prompt},
         {type:"image_url", image_url:{ url:dataUrl }}
-      ]}], temperature:0.2, max_tokens:2000, enable_thinking:false };
+      ]}], temperature:0.15, // v7.0.1: 0.2→0.15 更稳定
+        max_tokens:2000, enable_thinking:false };
       // v4.7.0: 新云端请求发起前中止上一个仍在飞行的请求（连点分析/快速换图不堆积请求；旧请求 token 已过期会自行丢弃）
       if(state._cloudAbort){ try{ state._cloudAbort.abort(); }catch(e){} state._cloudAbort=null; }
       var ctrl=(typeof AbortController!=="undefined")?new AbortController():null;
