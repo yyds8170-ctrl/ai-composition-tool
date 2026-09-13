@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v7.8.0 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v7.8.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
+<title>AI 构图助手 Pro v7.9.0 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v7.9.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -956,7 +956,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v7.8.0";
+var APP_VER="v7.9.0";
 (function(){
   try{
     document.title=(document.title||"").replace(/v\d+\.\d+\.\d+/,APP_VER);
@@ -1171,6 +1171,28 @@ var APP_VER="v7.8.0";
     var SCENE_ASPECT={portrait:"3:4（竖幅，人像最显高自然）",portrait_close:"3:4 或 1:1（特写/头像）",landscape:"16:9 或 3:2（横幅更开阔）",food:"1:1（方图，美食最聚焦）",architecture:"4:3（端平、容纳完整建筑）",street:"3:4（竖幅街拍更有临场感）",night:"16:9（宽幅夜景更有氛围）",animal:"4:3（容纳动物与环境）",water:"16:9（横向展开倒影）",general:"4:3（万能稳妥）"};
     // v7.5 #14: 分场景主体占画面合理区间（面积占比，0-1）
     var SCENE_SUBJ={portrait:[0.32,0.72],portrait_close:[0.55,0.9],landscape:[0.14,0.48],food:[0.5,0.85],architecture:[0.35,0.8],street:[0.2,0.55],night:[0.12,0.5],animal:[0.3,0.7],water:[0.15,0.55],general:[0.24,0.62]};
+    // v7.9 #34/#35: 单人摆姿 + 多人合影建议库（面向不会摆姿势的普通人，全大白话）
+    var POSE_TIPS=[
+      "身体侧过来约 45° 对镜头，肩膀别完全正对，更自然也更显瘦",
+      "靠近镜头那条腿稍弯、重心放后腿，站姿立刻不僵硬",
+      "手别紧贴身体，留点空隙（轻插兜/叉腰/搭衣角），轮廓更清楚",
+      "下巴微微前伸再轻轻收一点，能避免拍出双下巴",
+      "肩膀向后向下放松、别耸起来，脖子会显得更修长",
+      "坐下来拍时只坐椅子前三分之一，背挺直、腿斜着放更显长",
+      "手里拿个小道具（杯子/帽子/树叶），就不会不知道手往哪放",
+      "脚尖朝画面斜角、两腿一前一后，比直直站着更有层次",
+      "眼神看镜头或往旁边偏一点点，嘴角放松轻轻笑就好",
+      "让光打在脸上（面朝窗户/光源），别背光，脸才不黑"
+    ];
+    var GROUP_TIPS=[
+      "所有人的脸都要完整露出来，别让前面的人挡住后面的人",
+      "高个站后排、矮个站前排，脸错落成两排更整齐",
+      "最左、最右的人离画面边缘留一拳距离，避免贴边被裁掉",
+      "数一二三统一看镜头再按快门，减少有人闭眼或没看镜头",
+      "人多就横过来拍，大家往画面中间三分之二聚拢，别散太开"
+    ];
+    function _pickPoseTip(){ try{ state._poseIdx=((state._poseIdx||0)+1)%POSE_TIPS.length; return POSE_TIPS[state._poseIdx]; }catch(e){ return POSE_TIPS[0]; } }
+    function _pickGroupTip(){ try{ state._groupIdx=((state._groupIdx||0)+1)%GROUP_TIPS.length; return GROUP_TIPS[state._groupIdx]; }catch(e){ return GROUP_TIPS[0]; } }
     // v7.5 #13: 由标准方案派生紧凑/宽松裁切（等比缩放四边，保持主体相对位置，只改取景松紧）
     function _deriveCrop(base,mode){
       var b=(base&&base.length===4)?base:[0,0,0,0];
@@ -2521,6 +2543,17 @@ var APP_VER="v7.8.0";
         if(personData.personBottom>0.95){ notes.push("⚠ 人物脚部被裁切，建议下移或拉远避免切脚踝"); }
       }
       
+      // v7.9 #35: 本地引擎多人合影——所有人脸并集落在保留区（头顶6%、左右3%），只减裁切。本地 crop 顺序[L,T,R,B]
+      try{
+        var _lfb=(state.aiData&&state.aiData.faceBoxes);
+        if(Array.isArray(_lfb)&&_lfb.length>=2&&plan.crop.length===4){
+          var lx0=1,ly0=1,lx1=0;
+          _lfb.forEach(function(f){ if(f&&f.length===4){ lx0=Math.min(lx0,f[0]); ly0=Math.min(ly0,f[1]); lx1=Math.max(lx1,f[2]); } });
+          if(plan.crop[0]>lx0*100-3){ plan.crop[0]=Math.round(Math.max(0,lx0*100-3)); }
+          if(plan.crop[1]>ly0*100-6){ plan.crop[1]=Math.round(Math.max(0,ly0*100-6)); }
+          if(plan.crop[2]>(1-lx1)*100-3){ plan.crop[2]=Math.round(Math.max(0,(1-lx1)*100-3)); }
+        }
+      }catch(e){}
       plan.notes=notes;
       return plan;
     }
@@ -3148,7 +3181,14 @@ var APP_VER="v7.8.0";
           +'<div style="display:flex;flex-direction:column;gap:5px;font-size:11.5px;line-height:1.6;">'
           +'<div style="padding:6px 9px;background:rgba(234,102,104,.08);border-left:3px solid #EA6668;border-radius:6px;"><b style="color:#EA6668;">❌ 新手常这样：</b>'+_sk.bad+"</div>"
           +'<div style="padding:6px 9px;background:rgba(103,217,122,.08);border-left:3px solid #67D97A;border-radius:6px;"><b style="color:#67D97A;">✅ 这样拍更好：</b>'+_sk.good+"</div>"
-          +"</div>"+_tipsHtml;
+          +"</div>"+_tipsHtml
+          +(function(){
+              var _fc=(state.aiData&&state.aiData.faceCount)||0;
+              var _isPort=/portrait/.test(plan.sceneType);
+              if(_fc>=2){ return '<div style="margin-top:6px;padding:6px 9px;background:rgba(201,167,232,.1);border-left:3px solid #C9A7E8;border-radius:6px;font-size:11.5px;line-height:1.65;"><b style="color:#C9A7E8;">👥 多人合影 · </b>'+_pickGroupTip()+"</div>"; }
+              if(_isPort){ return '<div style="margin-top:6px;padding:6px 9px;background:rgba(234,167,178,.1);border-left:3px solid #EAA7B2;border-radius:6px;font-size:11.5px;line-height:1.65;"><b style="color:#EAA7B2;">🧍 摆姿小技巧 · </b>'+_pickPoseTip()+"</div>"; }
+              return "";
+            })();
         aiBody.appendChild(_sc);
         setTimeout(function(){ _sc.classList.add("show"); }, 160+items.length*320);
       }catch(e){}
@@ -3156,6 +3196,11 @@ var APP_VER="v7.8.0";
       try{
         if(!plan.noCrop && plan.crop && (plan.crop[0]+plan.crop[1]+plan.crop[2]+plan.crop[3])>0){
           if(!plan._cropBase) plan._cropBase=plan.crop.slice();
+          // v7.9 #33: 记住上次选的裁切松紧，下次默认沿用（个人偏好学习）
+          var _prefMode="standard";
+          try{ var _pm=localStorage.getItem("aiCropModePref"); if(_pm==="loose"||_pm==="tight"||_pm==="standard") _prefMode=_pm; }catch(e){}
+          if(_prefMode!=="standard"){ plan.crop=_deriveCrop(plan._cropBase,_prefMode); }
+          var _mstyle=function(m){ return m===_prefMode?_bn:_bo; };
           var _asp=SCENE_ASPECT[plan.sceneType]||SCENE_ASPECT.general;
           var _ad=state.aiData||{}, _sr=null;
           if(_ad.personLeft!=null && _ad.personRight!=null && _ad.headTop!=null){ _sr=[_ad.personLeft,_ad.headTop,_ad.personRight,(_ad.personBottom!=null?_ad.personBottom:0.95)]; }
@@ -3168,9 +3213,9 @@ var APP_VER="v7.8.0";
           var _cc=document.createElement("div"); _cc.className="ai-suggest"; _cc.style.margin="10px";
           _cc.innerHTML='<div class="db-head" style="color:#7FB5FF;margin-bottom:6px;">✂️ 裁切方案（点按切换对比）</div>'
             +'<div style="display:flex;gap:6px;margin-bottom:7px;">'
-            +'<button data-m="loose" style="'+_bo+'">宽松·留环境</button>'
-            +'<button data-m="standard" style="'+_bn+'">标准·推荐</button>'
-            +'<button data-m="tight" style="'+_bo+'">紧凑·特写</button></div>'
+            +'<button data-m="loose" style="'+_mstyle("loose")+'">宽松·留环境</button>'
+            +'<button data-m="standard" style="'+_mstyle("standard")+'">标准·推荐</button>'
+            +'<button data-m="tight" style="'+_mstyle("tight")+'">紧凑·特写</button></div>'
             +(_subjPct>0?('<div style="font-size:11.5px;margin-bottom:4px;line-height:1.6;">主体约占画面 <b>'+_subjPct+'%</b> · '+_subjTxt+'</div>'):'')
             +'<div style="font-size:11.5px;color:var(--sub);line-height:1.6;">推荐画幅：'+_asp+'（输出时可按此比例二次裁剪）</div>';
           aiBody.appendChild(_cc);
@@ -3180,7 +3225,9 @@ var APP_VER="v7.8.0";
             btn.addEventListener("click",function(){
               _tabs.forEach(function(x){x.setAttribute("style",_bo);});
               btn.setAttribute("style",_bn);
-              plan.crop=_deriveCrop(plan._cropBase,btn.getAttribute("data-m"));
+              var _mm=btn.getAttribute("data-m");
+              try{ localStorage.setItem("aiCropModePref",_mm); }catch(e){}
+              plan.crop=_deriveCrop(plan._cropBase,_mm);
               state.plan=plan;
               _showCropPreview(plan);
             });
@@ -4729,7 +4776,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         // v6.0: 单 32-bit 哈希→双种子键（碰撞空间 2^31→约 2^62），防"撞图套用别人裁切方案"
         var _h1=0,_h2=0;
         for(var _i=0;_i<hd.length;_i++){ var _c=hd.charCodeAt(_i); _h1=((_h1<<5)-_h1+_c)|0; _h2=((_h2<<7)-_h2+_c*31)|0; }
-        _ccKey="v780_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v6.0 引擎大改，旧 v514_ 缓存不复用
+        _ccKey="v790_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v6.0 引擎大改，旧 v514_ 缓存不复用
       }catch(e){ _ccKey=null; }
       if(_ccKey){
         try{
@@ -5283,6 +5330,15 @@ if(aiModelState!=="idle"){ resolve(false); return; }
               if(R4>100-_kR){ R4=Math.round(100-_kR); }
               if(B4>100-_kB){ B4=Math.round(100-_kB); }
             }
+            // v7.9 #35: 多人合影——所有人脸并集都必须落在保留区（头顶留6%、左右留3%），只减裁切
+            if(Array.isArray(_ad2.faceBoxes)&&_ad2.faceBoxes.length>=2){
+              var _fx0=1,_fy0=1,_fx1=0;
+              _ad2.faceBoxes.forEach(function(f){ if(f&&f.length===4){ _fx0=Math.min(_fx0,f[0]); _fy0=Math.min(_fy0,f[1]); _fx1=Math.max(_fx1,f[2]); } });
+              var _gL=Math.max(0,_fx0*100-3),_gT=Math.max(0,_fy0*100-6),_gR=Math.min(100,_fx1*100+3);
+              if(L4>_gL){ L4=Math.round(_gL); }
+              if(T4>_gT){ T4=Math.round(_gT); }
+              if(R4>100-_gR){ R4=Math.round(100-_gR); }
+            }
           }catch(e){}
           try{ window.__cropDiag={Sx:Sx,Sy:Sy,Sw:Sw,Sh:Sh,refX:_refX,refY:_refY,BL:BL,BT:BT,BR:BR,BB:BB,L4:L4,T4:T4,R4:R4,B4:B4,ci:_ci,rule:ruleKey,port:isPort,faceOk:_faceOk,ssk:_ssk,arW:_w,arH:_h}; }catch(e){ window.__cropDiag={err:String(e)}; }
           return [L4,T4,R4,B4];
@@ -5485,6 +5541,12 @@ if(aiModelState!=="idle"){ resolve(false); return; }
               if(state.aiData && state.aiData._probeGuard){ delete state.aiData._probeGuard; return; }
               // v4.3: 空指针保护（豆包BUG-02：state.aiData 未初始化时回调抛错）
               if(!state.aiData){ state.aiData={}; }
+              // v7.9 #35: 记录人脸数量与所有人脸框，供多人合影建议/裁切并集保护
+              state.aiData.faceCount=results.detections.length;
+              var _fbs=[];
+              results.detections.forEach(function(_dd){ var _bb=(_dd&&_dd.locationData)?_dd.locationData.relativeBoundingBox:null;
+                if(_bb){ _fbs.push([Math.max(0,_bb.xmin),Math.max(0,_bb.ymin),Math.min(1,_bb.xmin+_bb.width),Math.min(1,_bb.ymin+_bb.height)]); } });
+              state.aiData.faceBoxes=_fbs;
               if(results.detections && results.detections.length>0){
                 var d=results.detections[0];
                 // MediaPipe 返回的是归一化坐标 [x,y,w,h]；v4.5 P2: locationData 可能缺失（探针时序）加空保护
@@ -5498,7 +5560,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
                   state.aiData.faceBBox=[Math.max(0,bbox.xmin),Math.max(0,bbox.ymin),Math.min(1,bbox.width),Math.min(1,bbox.height)];
                 }
               } else {
-                state.aiData.faceAvailable=false;
+                state.aiData.faceAvailable=false; state.aiData.faceCount=0; state.aiData.faceBoxes=[];
               }
             });
             // v4.3: 就绪探针——构造完成≠wasm就绪（Qwen：UI显示已加载但send永久无效+控制台刷屏）
