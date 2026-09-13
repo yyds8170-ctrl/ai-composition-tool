@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v7.0.1 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v7.0.1 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
+<title>AI 构图助手 Pro v7.1.0 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v7.1.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -469,6 +469,13 @@
   .doka-crosshair.locked .dc-ring{border-color:#67D97A;box-shadow:0 0 14px rgba(103,217,122,.7);animation:none;}
   .doka-guide{position:absolute;pointer-events:none;}
   .doka-guide .dg-line{position:absolute;height:1.5px;background:rgba(255,255,255,.6);box-shadow:0 0 4px rgba(255,255,255,.4);}
+  /* v7.1: 实时动作引导条——教不会拍照的人怎么移动手机 */
+  .doka-move-guide{position:absolute;top:54px;left:50%;transform:translateX(-50%);z-index:45;display:none;flex-direction:column;gap:5px;align-items:center;pointer-events:none;max-width:92%;}
+  .doka-move-guide.show{display:flex;}
+  .dmg-item{display:flex;align-items:center;gap:7px;background:rgba(12,16,22,.86);border:1px solid rgba(127,181,255,.35);border-radius:22px;padding:7px 15px;color:#EAF1FF;font-size:14px;font-weight:600;line-height:1.3;backdrop-filter:blur(6px);box-shadow:0 3px 14px rgba(0,0,0,.4);white-space:nowrap;}
+  .dmg-item.good{border-color:rgba(103,217,122,.55);background:rgba(18,40,24,.9);color:#9BF0AE;}
+  .dmg-item.warn{border-color:rgba(240,180,80,.55);background:rgba(42,32,14,.9);color:#FFD98A;}
+  .dmg-arrow{font-size:17px;font-weight:800;}
   .doka-steps{position:absolute;top:10px;right:10px;z-index:40;width:min(240px,72%);background:rgba(10,13,17,.86);border:1px solid rgba(255,255,255,.14);border-radius:12px;backdrop-filter:blur(6px);overflow:hidden;font-size:11px;color:#E8EAED;}
   .doka-steps .ds-head{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:rgba(84,200,247,.12);font-weight:600;letter-spacing:.5px;}
   .doka-steps .ds-head i{font-style:normal;color:#7FB5FF;cursor:pointer;padding:2px 6px;}
@@ -598,6 +605,7 @@
       </div>
       <div class="doka-face-box" id="dokaFaceBox" style="display:none;"></div>
       <div class="doka-guide" id="dokaGuide"></div>
+      <div class="doka-move-guide" id="dokaMoveGuide"></div>
       <!-- v6.7 P0: AI 分析四步卡（画面描述→构图法→滤镜→裁切理由），实时取景右上角可收起 -->
       <div class="doka-steps" id="dokaSteps" style="display:none;">
         <div class="ds-head"><span>AI 分析</span><i id="dsToggle">收起</i></div>
@@ -921,7 +929,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v7.0.1";
+var APP_VER="v7.1.0";
 (function(){
   try{
     document.title=(document.title||"").replace(/v\d+\.\d+\.\d+/,APP_VER);
@@ -4518,7 +4526,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         // v6.0: 单 32-bit 哈希→双种子键（碰撞空间 2^31→约 2^62），防"撞图套用别人裁切方案"
         var _h1=0,_h2=0;
         for(var _i=0;_i<hd.length;_i++){ var _c=hd.charCodeAt(_i); _h1=((_h1<<5)-_h1+_c)|0; _h2=((_h2<<7)-_h2+_c*31)|0; }
-        _ccKey="v700_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v6.0 引擎大改，旧 v514_ 缓存不复用
+        _ccKey="v710_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v6.0 引擎大改，旧 v514_ 缓存不复用
       }catch(e){ _ccKey=null; }
       if(_ccKey){
         try{
@@ -4772,8 +4780,9 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           if(_horizon.indexOf("中")>=0 && (_ci==="crop_tb"||_ci==="crop_top"||_ci==="crop_bottom")){ _ci="trim"; }
           // v6.8: 双引擎交叉校验——本地显著性边缘质心(客观像素证据)优先于云端语义意图，
           // 防止 VLM 语义误判把裁切方向引向主体实际所在侧（质心判据：质心偏上=主体在上方）
-          var _sigX=(a&&typeof a.sigCx==="number")?a.sigCx:0.5;
-          var _sigY=(a&&typeof a.sigCy==="number")?a.sigCy:0.5;
+          var _pa=state.aiData;
+          var _sigX=(_pa&&typeof _pa.sigCx==="number")?_pa.sigCx:0.5;
+          var _sigY=(_pa&&typeof _pa.sigCy==="number")?_pa.sigCy:0.5;
           if((_ci==="crop_top"||_ci==="crop_tb") && _sigY<0.45){ _ci="trim"; }
           if(_ci==="crop_bottom" && _sigY>0.55){ _ci="trim"; }
           if((_ci==="crop_left"||_ci==="crop_lr") && _sigX<0.45){ _ci="trim"; }
@@ -5047,6 +5056,13 @@ if(aiModelState!=="idle"){ resolve(false); return; }
               if(B4>_needB9){ B4=_needB9; }
               L4=Math.max(0,Math.min(25,L4)); T4=Math.max(0,Math.min(25,T4));
               R4=Math.max(0,Math.min(25,R4)); B4=Math.max(0,Math.min(25,B4));
+              // v7.1 #15: 回退后以主体中心重新对齐（兜底框也要构图居中，不只是外扩）
+              var _cwR=100-L4-R4, _chR=100-T4-B4;
+              var _scxR=Sx+Sw/2, _scyR=Sy+Sh/2;
+              var _nLR=Math.max(0,Math.min(100-_cwR,_scxR-_cwR/2));
+              var _nTR=Math.max(0,Math.min(100-_chR,_scyR-_chR/2));
+              L4=Math.round(_nLR); R4=Math.round(100-_nLR-_cwR);
+              T4=Math.round(_nTR); B4=Math.round(100-_nTR-_chR);
             }
           }
           try{ window.__cropDiag={Sx:Sx,Sy:Sy,Sw:Sw,Sh:Sh,refX:_refX,refY:_refY,BL:BL,BT:BT,BR:BR,BB:BB,L4:L4,T4:T4,R4:R4,B4:B4,ci:_ci,rule:ruleKey,port:isPort,faceOk:_faceOk,ssk:_ssk,arW:_w,arH:_h}; }catch(e){ window.__cropDiag={err:String(e)}; }
@@ -5151,9 +5167,60 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         }catch(e){}
         try{ presentAnalysis(plan); }catch(e){ console.warn("云端结果渲染异常:",e); }
         try{ state.cloudFailCount=0; }catch(e){}
-        if(onDone) onDone(plan);
+        // v7.1 #11: VLM 自审闭环——人像且确有裁切时，把裁后小图喂回模型自查是否切到头/手/脚
+        var _vlmSelfReview=function(p, srcEl, tk, cb){
+          try{
+            var crop=p.crop||[0,0,0,0];
+            var cutSum=crop[0]+crop[1]+crop[2]+crop[3];
+            var _sceneTxt=String(p.scene||"")+String(p.sceneType||"")+String(p.subject||"");
+            var isPScene=/portrait|人像|人物|女性|男性|女孩|男孩|女人|男人|女生|男生|儿童|孩童|宝宝|婴儿/i.test(_sceneTxt);
+            if(!isPScene || cutSum<6 || !srcEl || tk!==state.analyzeToken){ cb(p); return; }
+            var iw=srcEl.videoWidth||srcEl.naturalWidth||0, ih=srcEl.videoHeight||srcEl.naturalHeight||0;
+            if(!iw||!ih){ cb(p); return; }
+            var sx=crop[0]/100*iw, sy=crop[1]/100*ih;
+            var sw=(100-crop[0]-crop[2])/100*iw, sh=(100-crop[1]-crop[3])/100*ih;
+            if(sw<10||sh<10){ cb(p); return; }
+            var tc=document.createElement("canvas"); var TW=480;
+            tc.width=TW; tc.height=Math.max(60,Math.min(720,Math.round(TW*sh/sw)));
+            tc.getContext("2d").drawImage(srcEl,sx,sy,sw,sh,0,0,tc.width,tc.height);
+            var thumb=tc.toDataURL("image/jpeg",0.8);
+            var rp=["你是摄影构图审查员。这是一张已经裁切完成的成片。",
+              "请只判断：画面中的人物是否完整？有没有被切掉头顶、下巴、手、脚或身体任何部位？",
+              '只输出JSON：{"complete":true或false,"cutPart":"被切部位或无"}。complete=false 仅当确实切到人物部位，构图留白不算问题。'].join("\n");
+            var rbody={ model:model, messages:[{role:"user",content:[{type:"text",text:rp},{type:"image_url",image_url:{url:thumb}}]}], temperature:0.1, max_tokens:200, enable_thinking:false };
+            var done=false;
+            var finish=function(fp){ if(done) return; done=true; cb(fp); };
+            var tm=setTimeout(function(){ finish(p); }, 14000);
+            fetch(base+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","X-App-Token":appToken},body:JSON.stringify(rbody)})
+              .then(function(r){ return r.json(); })
+              .then(function(j){
+                clearTimeout(tm);
+                if(tk!==state.analyzeToken){ finish(p); return; }
+                var tx=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content?j.choices[0].message.content:"";
+                var mm=tx.match(/\{[\s\S]*\}/), o=null;
+                if(mm){ try{ o=JSON.parse(mm[0]); }catch(e){ o=null; } }
+                if(o && o.complete===false){
+                  var nc=p.crop.map(function(v){ return Math.max(0,Math.round(v*0.5)); });
+                  var note=o.cutPart&&o.cutPart!=="无" ? ("AI 二次审查：原裁切可能切到"+o.cutPart+"，已自动放宽") : "AI 二次审查：原裁切可能切到人物，已自动放宽";
+                  finish(Object.assign({}, p, {crop:nc, selfReviewed:true, selfReviewNote:note}));
+                } else { finish(p); }
+              })
+              .catch(function(){ clearTimeout(tm); finish(p); });
+          }catch(e){ cb(p); }
+        };
+        _vlmSelfReview(plan, el, token, function(finalPlan){
+          if(token!==state.analyzeToken){ return; }
+          if(finalPlan!==plan){
+            // v7.1 修复：自审调整后的方案必须回写 state.plan（后续裁切/快门读的是它），并同步云端裁切缓存
+            state.plan=finalPlan; state.analyzed=true;
+            try{ state.aiData.cloudCrop=finalPlan.crop; }catch(e){}
+            try{ presentAnalysis(finalPlan); toastMsg(finalPlan.selfReviewNote||"AI 已自动调整裁切"); }catch(e){}
+          }
+          if(onDone) onDone(finalPlan);
+        });
       }
       _req().then(_handleCloudRes).catch(function(e){
+        console.warn("云端首响处理异常:", String(e&&e.message?e.message:e).slice(0,120));
         clearTimeout(timer);
         if(token!==state.analyzeToken) return;
         // v6.0: 已被外层 30s 兜底主动取消（本地初判结果已应用）——直接结束，不再回退本地模型，避免二次下载 18MB
@@ -5437,6 +5504,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       lhSubject.classList.remove("locked");
       dokaFilterPanel.style.display="none";
       dokaZoomBtn.style.display="none";
+      var _dmg=document.getElementById("dokaMoveGuide"); if(_dmg){ _dmg.classList.remove("show"); _dmg.innerHTML=""; }
       setStatus("已退出 AI 构图模式","idle");
     }
     function runDokaAnalysis(){
@@ -5464,6 +5532,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           showDokaFilters(plan);
           // 显示变焦建议
           showDokaZoom(plan);
+          // v7.1: 实时动作引导（怎么移动手机）+ 实时构图纠错
+          showDokaGuide(plan, a);
           setStatus("构图已锁定 · 可直接拍照，拍完即成品","done");
           // v4.0.1: AI 分析时主动加载模型并等待，确保 isPerson 生效
           if(state.aiModelEnabled){
@@ -5571,6 +5641,40 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         zoomRange.value=z; applyZoom(z);
         toastMsg("已变焦至 "+z.toFixed(1)+"x");
       };
+    }
+    // v7.1: 实时动作引导 + 构图纠错——用大白话告诉用户手机该怎么动
+    function showDokaGuide(plan, a){
+      var box=document.getElementById("dokaMoveGuide");
+      if(!box){ return; }
+      try{
+        var d=plan&&plan.diag?plan.diag:null;
+        if(!d||d.length!==4){ box.classList.remove("show"); return; }
+        var x1=d[0], y1=d[1], x2=d[2], y2=d[3];
+        if(x2<=x1){ x1=20;x2=80; }
+        if(y2<=y1){ y1=20;y2=80; }
+        var cx=(x1+x2)/2, sw=x2-x1, sh=y2-y1;
+        var isP=(a&&(a.isPerson||a.isPersonLikely))||/人像|人物|portrait/i.test(plan.subject||"")||/portrait/i.test(plan.scene||"");
+        var tips=[];
+        // 1) 头顶太挤（人像硬伤，最高优先级）
+        if(isP && y1<4.5){ tips.push({t:"warn",a:"⬇️",x:"手机放低一点，头顶太挤了"}); }
+        // 2) 主体太满/太小（距离）
+        else if(sh>90 || sw>94){ tips.push({t:"warn",a:"🔙",x:"退远一点，主体太满了"}); }
+        else if((isP&&sh<20)||(!isP&&Math.max(sw,sh)<16)){ tips.push({t:"warn",a:"🔜",x:"走近一点，主体太小了"}); }
+        // 3) 贴边
+        if(x1<2.5){ tips.push({t:"warn",a:"➡️",x:"向右挪一点，主体贴到左边了"}); }
+        else if(x2>97.5){ tips.push({t:"warn",a:"⬅️",x:"向左挪一点，主体贴到右边了"}); }
+        // 4) 水平居中（主体偏哪边，手机就往哪边转，主体会相对移向中心）
+        if(tips.length<2 && cx<36){ tips.push({t:"",a:"⬅️",x:"手机向左移一点"}); }
+        else if(tips.length<2 && cx>64){ tips.push({t:"",a:"➡️",x:"手机向右移一点"}); }
+        // 5) 人像头顶太空
+        if(isP && tips.length<2 && y1>26 && sh<55){ tips.push({t:"",a:"⬆️",x:"手机举高一点，上方太空了"}); }
+        // 6) 一切正常
+        if(tips.length===0){ tips.push({t:"good",a:"✅",x:"构图很好，保持住，可以拍了"}); }
+        box.innerHTML=tips.slice(0,2).map(function(t){
+          return '<div class="dmg-item '+t.t+'"><span class="dmg-arrow">'+t.a+'</span><span>'+t.x+'</span></div>';
+        }).join("");
+        box.classList.add("show");
+      }catch(e){ box.classList.remove("show"); }
     }
     btnAIC.addEventListener("click",function(){
       if(state.dokaMode){ stopDokaMode(); }
@@ -6301,7 +6405,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
   }catch(e){ console.error(e); }
   // v4.3: 只读调试钩子（自动化回归断言用，不影响任何功能与模型行为）
   try{ window.__ai={
-    get plan(){ return state&&state.plan?{rule:state.plan.rule,sceneType:state.plan.sceneType,conf:state.plan.conf,subject:state.plan.subject,noCrop:!!state.plan.noCrop}:null; },
+    get plan(){ return state&&state.plan?{rule:state.plan.rule,sceneType:state.plan.sceneType,conf:state.plan.conf,subject:state.plan.subject,noCrop:!!state.plan.noCrop,crop:state.plan.crop||null,selfReviewed:!!state.plan.selfReviewed,selfReviewNote:state.plan.selfReviewNote||"",fromCache:!!state.plan.fromCache}:null; },
     get data(){ return state&&state.aiData?{sceneType:(state.plan&&state.plan.sceneType)||'',rowGap:state.aiData.rowGap,rowPeakN:state.aiData.rowPeakN,bodyRatio:state.aiData.bodyRatio,sat:state.aiData.sat,mean:state.aiData.mean,detectedClasses:state.aiData.detectedClasses,isPerson:state.aiData.isPerson,personScore:state.aiData.personScore,faceAvailable:state.aiData.faceAvailable,sym:state.aiData.sym,vSym:state.aiData.vSym,hSym:state.aiData.hSym,contrast:state.aiData.contrast,skinRatio:state.aiData.skinRatio,skinCx:state.aiData.skinCx,skinCy:state.aiData.skinCy,isPersonLikely:state.aiData.isPersonLikely,skinAspect:state.aiData.skinAspect,skinFill:state.aiData.skinFill,skinHRatio:state.aiData.skinHRatio}:null; }
   }; }catch(e){}
 })();
