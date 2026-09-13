@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v7.5.0 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v7.5.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
+<title>AI 构图助手 Pro v7.6.0 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v7.6.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -682,8 +682,8 @@
         </div>
       </div>
       <div class="ai-foot">
-        <div class="ai-apply-tip" id="aiApplyTip">👆 点下方按钮自动应用裁切+滤镜+变焦</div>
-        <button class="ai-btn highlight" id="aiApply"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg>一键成品（智能裁切 + 滤镜 + 变焦）</button>
+        <div class="ai-apply-tip" id="aiApplyTip">👆 不用自己动手调，点这一下就自动帮你裁好、调好色</div>
+        <button class="ai-btn highlight" id="aiApply"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg>✨ 一键拍得更好看（自动裁切+调色）</button>
         <button class="ai-btn ghost" id="aiCropNow">按构图框智能裁切</button>
       </div>
     </div>
@@ -952,7 +952,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v7.5.0";
+var APP_VER="v7.6.0";
 (function(){
   try{
     document.title=(document.title||"").replace(/v\d+\.\d+\.\d+/,APP_VER);
@@ -967,6 +967,46 @@ var APP_VER="v7.5.0";
       navigator.serviceWorker.register('./sw.js').catch(function(){});
     });
   }
+})();
+(function(){
+  // v7.6 #25: 首次使用新手引导（独立零耦合，localStorage 记已读，左下角?可重看）
+  try{
+    var KEY="aiComposeOnboarded_v76";
+    var STEPS=[
+      {i:"①",t:"两种方式开始",d:"点「相册」选一张已经拍好的照片；或点「相机」对着现场，我会在取景框里实时教你怎么站、怎么摆、什么时候按快门。"},
+      {i:"②",t:"AI 帮你看",d:"点「AI 分析」，我用大白话告诉你：这张哪里好、哪里能更好、用什么构图、打算怎么裁，全程不讲难懂的术语。"},
+      {i:"③",t:"一键拍得更好看",d:"看完点「✨ 一键拍得更好看」，自动帮你裁好、调好色；也可以在「裁切方案」里选宽松/标准/紧凑对比后再用。"}
+    ];
+    function build(){
+      var idx=0, mask=document.createElement("div");
+      mask.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:99999;display:flex;align-items:center;justify-content:center;padding:26px;";
+      function close(){ mask.remove(); try{localStorage.setItem(KEY,"1");}catch(e){} }
+      function render(){
+        var st=STEPS[idx];
+        mask.innerHTML='<div style="max-width:380px;width:100%;background:#16181d;border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:22px 20px;color:#E8EDF2;box-sizing:border-box;">'
+          +'<div style="font-size:13px;color:#7FB5FF;margin-bottom:6px;">新手引导 '+(idx+1)+' / 3</div>'
+          +'<div style="font-size:19px;font-weight:700;margin-bottom:10px;">'+st.i+" "+st.t+'</div>'
+          +'<div style="font-size:14px;line-height:1.75;color:#C7D0D9;margin-bottom:18px;">'+st.d+'</div>'
+          +'<div style="display:flex;gap:10px;align-items:center;">'
+          +'<span id="_obSkip" style="font-size:12.5px;color:#7d8794;cursor:pointer;">不再提示</span>'
+          +'<button id="_obNext" style="margin-left:auto;background:#3a7bd5;color:#fff;border:none;border-radius:10px;padding:9px 18px;font-size:14px;font-weight:700;cursor:pointer;">'+(idx===2?"开始使用":"下一步")+'</button></div></div>';
+        mask.querySelector("#_obNext").onclick=function(){ if(idx<STEPS.length-1){idx++;render();}else{close();} };
+        mask.querySelector("#_obSkip").onclick=close;
+      }
+      render();
+      if(mask.parentNode!==document.body) document.body.appendChild(mask);
+    }
+    function addHelpBtn(){
+      if(document.getElementById("_obHelp")) return;
+      var h=document.createElement("div");
+      h.id="_obHelp"; h.textContent="?";
+      h.style.cssText="position:fixed;left:10px;bottom:84px;width:30px;height:30px;border-radius:50%;background:rgba(58,123,213,.82);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;z-index:9000;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3);";
+      h.title="新手引导"; h.addEventListener("click",build);
+      document.body.appendChild(h);
+    }
+    function boot(){ if(!document.body){ setTimeout(boot,120); return; } addHelpBtn(); var seen=false; try{seen=localStorage.getItem(KEY)==="1";}catch(e){} if(!seen) setTimeout(build,350); }
+    window.addEventListener("load",function(){ setTimeout(boot,300); });
+  }catch(e){}
 })();
 (function(){
   "use strict";
@@ -2939,6 +2979,33 @@ var APP_VER="v7.5.0";
         aiBody.insertBefore(_cd, aiBody.firstChild);
         setTimeout(function(){ _cd.classList.add("show"); }, 60);
       }
+      // v7.6 #22/#23: 置顶大白话点评——先鼓励、再给一条最关键人话建议，零术语
+      (function(){
+        try{
+          var a=state.aiData||{};
+          var good=[];
+          if(plan.conf>=78) good.push("构图思路很清晰");
+          else if(plan.conf>=55) good.push("整体感觉不错");
+          else good.push("这张有可塑的空间");
+          if(a.sharpness!=null && a.sharpness>70) good.push("画面拍得清楚");
+          if(a.mean!=null && a.mean>=85 && a.mean<=190) good.push("光线看着舒服");
+          if(good.length>2) good=good.slice(0,2);
+          var tip="";
+          var cr=plan.crop, cs=cr?(cr[0]+cr[1]+cr[2]+cr[3]):0;
+          if(plan.noCrop||cs<=0){ tip="构图已经挺到位，不用怎么裁，保持就好"; }
+          else if(a.mean!=null && a.mean<70){ tip="稍微有点暗，下次找亮一点的地方，或点屏幕最暗处提亮"; }
+          else if(a.mean!=null && a.mean>205){ tip="有点过亮，避开正对强光，压一点曝光"; }
+          else if(a.cx!=null && (a.cx<0.34||a.cx>0.66)){ tip="主体稍微靠边，往画面中间或三分线放一点"; }
+          else if(a.sharpness!=null && a.sharpness<40){ tip="有点虚，按快门前先点屏幕对焦、手别抖"; }
+          else { tip="我帮你裁掉多余的边、调个色，主体会更突出"; }
+          var vc=document.createElement("div"); vc.className="ai-suggest"; vc.style.margin="10px";
+          vc.innerHTML='<div style="font-size:13px;line-height:1.75;">'
+            +'<div style="margin-bottom:5px;"><span style="font-size:15px;">👏</span> <b style="color:#67D97A;">'+good.join("、")+"</b></div>"
+            +'<div><span style="color:#7FB5FF;">💡 小建议：</span>'+tip+"</div></div>";
+          aiBody.appendChild(vc);
+          setTimeout(function(){vc.classList.add("show");},40);
+        }catch(e){}
+      })();
       // V5: 专业光学数据面板
       (function(){
         var a=state.aiData; if(!a) return;
@@ -2957,11 +3024,14 @@ var APP_VER="v7.5.0";
           ["对角线", f2(a.diagStrength), "光影引导强度", a.diagStrength>0.5?"强引导":(a.diagStrength>0.2?"中":"弱")],
           ["三分匹配", f2(a.thirdFit), "主体距分割线", a.thirdFit>0.78?"高契合":(a.thirdFit>0.5?"中契合":"低契合")]
         ];
-        var html='<div class="db-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg>专业光学数据</div>';
+        var html='<div class="db-head" style="cursor:pointer;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg>专业数据（普通人可忽略，点我展开/收起）<span style="float:right;color:#7d8794;">▸</span></div><div class="db-rows" style="display:none;">';
         rows.forEach(function(r){
           html+='<div class="db-row"><span class="k">'+r[0]+'</span><span class="v">'+r[1]+'</span><span class="t">'+r[2]+'</span><span class="s">'+r[3]+'</span></div>';
         });
+        html+='</div>';
         card.innerHTML=html;
+        var _dh=card.querySelector(".db-head"), _dr=card.querySelector(".db-rows");
+        if(_dh&&_dr){ _dh.addEventListener("click",function(){ _dr.style.display=_dr.style.display==="none"?"block":"none"; }); }
         aiBody.appendChild(card);
         setTimeout(function(){ card.classList.add("show"); }, 100);
       
@@ -4641,7 +4711,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         // v6.0: 单 32-bit 哈希→双种子键（碰撞空间 2^31→约 2^62），防"撞图套用别人裁切方案"
         var _h1=0,_h2=0;
         for(var _i=0;_i<hd.length;_i++){ var _c=hd.charCodeAt(_i); _h1=((_h1<<5)-_h1+_c)|0; _h2=((_h2<<7)-_h2+_c*31)|0; }
-        _ccKey="v750_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v6.0 引擎大改，旧 v514_ 缓存不复用
+        _ccKey="v760_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v6.0 引擎大改，旧 v514_ 缓存不复用
       }catch(e){ _ccKey=null; }
       if(_ccKey){
         try{
