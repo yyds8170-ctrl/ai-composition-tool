@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v7.7.0 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v7.7.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
+<title>AI 构图助手 Pro v7.8.0 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v7.8.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -956,7 +956,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v7.7.0";
+var APP_VER="v7.8.0";
 (function(){
   try{
     document.title=(document.title||"").replace(/v\d+\.\d+\.\d+/,APP_VER);
@@ -4630,22 +4630,28 @@ if(aiModelState!=="idle"){ resolve(false); return; }
     // v4.8.2: 云端失败/超时回退本地提示（toast + 结果面板顶部提示卡）
     function showCloudFallback(){
       try{
-        setStatus("云端超时/失败，本次为本地引擎结果","warn");
+        // v7.8 #32: 按失败原因给不同人话文案，不再笼统说"超时/失败"
+        var rs=state._cloudFailReason||"network", info;
+        if(rs==="trip"){ var _sec=Math.max(0,Math.round(((state.cloudTripUntil||0)-Date.now())/1000)); var _min=Math.ceil(_sec/60);
+          info={t:"云端暂时冷却中",d:"云端连续几次没响应，先冷却约"+_min+"分钟保护额度，这期间用<b>本地引擎</b>，过会儿再试云端即可。"};
+        } else if(rs==="timeout"){ info={t:"云端响应超时",d:"等了 35 秒还没返回，已先用<b>本地引擎</b>出结果；网络好时可点「重新分析」再试云端。"};
+        } else if(rs==="auth"){ info={t:"云端口令可能有误",d:"云端鉴权没通过，已先用<b>本地引擎</b>；请在设置里核对口令。"};
+        } else if(rs==="busy"){ info={t:"云端繁忙/额度受限",d:"云端暂时忙或额度不足，已先用<b>本地引擎</b>，稍后再试。"};
+        } else { info={t:"网络不通或云端超时",d:"已自动回退<b>本地引擎</b>分析（本地照样能用）；联网后可重试云端。"}; }
+        setStatus(info.t+"，本次为本地引擎结果","warn");
         var _fb=document.getElementById("cloudFallbackCard");
         if(!_fb){
           _fb=document.createElement("div");
           _fb.id="cloudFallbackCard";
           _fb.className="ai-suggest cloud-badge";
-          _fb.innerHTML='<div class="cb-head"><span class="cb-cloud">⚠️</span><span class="cb-title">云端超时/失败</span></div>'
-            +'<div class="cb-row" style="color:var(--sub)">已自动回退<b>本地引擎</b>分析。可重试云端（关思考后通常 3-8 秒返回）。</div>';
-          // v4.8.2: 插到 aiBody 之外（aiBody 会被 presentAnalysis 清空重渲染），
-          // 保证本地回退结果刷新后提示卡仍然可见（4 家 AI 报告共识：回退必须显性提示）
           var panel=document.getElementById("aiPanel");
           var body=document.getElementById("aiBody")||document.body;
           if(panel && body){ panel.insertBefore(_fb, body); }
           else{ body.insertBefore(_fb, body.firstChild); }
-          setTimeout(function(){ _fb.classList.add("show"); }, 60);
         }
+        _fb.innerHTML='<div class="cb-head"><span class="cb-cloud">⚠️</span><span class="cb-title">'+info.t+'</span></div>'
+          +'<div class="cb-row" style="color:var(--sub)">'+info.d+'</div>';
+        setTimeout(function(){ _fb.classList.add("show"); }, 60);
       }catch(e){}
     }
     function runCloudAnalysis(el, onDone){
@@ -4655,6 +4661,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       // v6.1: 熔断——连续 3 次云端失败后 5 分钟内直走本地（额度/体验保护）
       try{
         if(state.cloudTripUntil && Date.now()<state.cloudTripUntil){
+          state._cloudFailReason="trip";
           if(onDone) onDone(null);
           return;
         }
@@ -4722,7 +4729,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         // v6.0: 单 32-bit 哈希→双种子键（碰撞空间 2^31→约 2^62），防"撞图套用别人裁切方案"
         var _h1=0,_h2=0;
         for(var _i=0;_i<hd.length;_i++){ var _c=hd.charCodeAt(_i); _h1=((_h1<<5)-_h1+_c)|0; _h2=((_h2<<7)-_h2+_c*31)|0; }
-        _ccKey="v770_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v6.0 引擎大改，旧 v514_ 缓存不复用
+        _ccKey="v780_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v6.0 引擎大改，旧 v514_ 缓存不复用
       }catch(e){ _ccKey=null; }
       if(_ccKey){
         try{
@@ -4798,6 +4805,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           if(token!==state.analyzeToken) return;
           if(state._cloudKilled){ return; }
           console.warn("云端分析失败（重试后），回退本地:", String(e2&&e2.message?e2.message:e2).slice(0,60));
+          state._cloudFailReason=(e2&&e2.name==="AbortError")?"timeout":"network";
           _cloudFail();
           if(onDone) onDone(null);
         });
@@ -4820,6 +4828,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             return;
           }
           var em=res.j&&res.j.error&&res.j.error.message?String(res.j.error.message).slice(0,80):("HTTP "+res.ok);
+          state._cloudFailReason=(_st===401||_st===403)?"auth":"busy";
           console.warn("云端分析拒绝:", em);
           _cloudFail();
           if(onDone) onDone(null); return;
@@ -5426,6 +5435,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             try{ state.aiData.cloudCrop=finalPlan.crop; }catch(e){}
             try{ presentAnalysis(finalPlan); toastMsg(finalPlan.selfReviewNote||"AI 已自动调整裁切"); }catch(e){}
           }
+          state._cloudFailReason=""; state.cloudFailCount=0;
           if(onDone) onDone(finalPlan);
         });
       }
@@ -5723,6 +5733,19 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       state._lastMoment=null; state._momentHit=0;
       setStatus("已退出 AI 构图模式","idle");
     }
+    // v7.8 #31: 轻量帧指纹（24x16 行灰度均值），用于增量取景判断画面是否明显变化
+    function _dokaFingerprint(el){
+      try{
+        var w=24,h=16,c=document.createElement("canvas"); c.width=w; c.height=h;
+        var cx=c.getContext("2d",{willReadFrequently:true});
+        cx.drawImage(el,0,0,w,h); var d=cx.getImageData(0,0,w,h).data;
+        var sum=0,rows=[];
+        for(var y=0;y<h;y++){ var rs=0; for(var x=0;x<w;x++){ var i=(y*w+x)*4; var g=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]; rs+=g; sum+=g; } rows.push(rs/w); }
+        var mean=sum/(w*h), diff=0, prev=state._dokaLastSig;
+        if(prev&&prev.rows&&prev.rows.length===rows.length){ var acc=0; for(var k=0;k<h;k++){ acc+=Math.abs(rows[k]-prev.rows[k]); } diff=acc/h; }
+        return {mean:mean, rows:rows, diff:diff};
+      }catch(e){ return null; }
+    }
     function runDokaAnalysis(){
       if(!state.dokaMode) return;
       var el=currentEl();
@@ -5734,6 +5757,13 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         if(token!==state.analyzeToken || !state.dokaMode){ state.analyzing=false; return; }
         try{
           var dims=currentSrcDims(el);
+          // v7.8 #31 增量取景：画面基本没动(帧差很小)且3.5s内刚算过 -> 跳过本次重算，复用上次结果，降发热/卡顿
+          var _sig=_dokaFingerprint(el);
+          var _nowMs=Date.now();
+          if(_sig && state._dokaLastSig && state.dokaPlan && _sig.diff<2.5 && (_nowMs-(state._dokaLastFull||0))<3500){
+            state.analyzing=false; return;
+          }
+          state._dokaLastSig=_sig; state._dokaLastFull=_nowMs;
           var a=analyzePixels(el,dims);
           state.aiData=a;
           var plan = a ? planFromAnalysis(a) : null;

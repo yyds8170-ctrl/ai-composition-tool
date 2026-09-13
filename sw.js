@@ -1,5 +1,5 @@
-/* AI 构图助手 · Service Worker v7.7.0 —— 离线缓存，让应用像原生 App 一样秒开 */
-const CACHE = 'ai-compose-v770';
+/* AI 构图助手 · Service Worker v7.8.0 —— 离线缓存，让应用像原生 App 一样秒开 */
+const CACHE = 'ai-compose-v780';
 const CORE = [
   './',
   './index.html',
@@ -47,7 +47,22 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const url = e.request.url;
   if (e.request.method !== 'GET') return;
-  if (url.indexOf(self.location.origin) !== 0) return;
+  // v7.8 #30: 跨域 CDN（tfjs / coco-ssd 模型权重 / mediapipe 库）运行时缓存——
+  // 首次在线访问后写入 Cache，二次启动弱网/离线也能加载模型；SCF 云端 API 不在此列，不缓存
+  if (url.indexOf(self.location.origin) !== 0) {
+    if (/(cdn\.jsdelivr\.net|unpkg\.com)/.test(url)) {
+      e.respondWith(
+        caches.open(CACHE).then((c) => c.match(e.request).then((hit) => {
+          const network = fetch(e.request, { mode: 'cors' }).then((res) => {
+            if (res && (res.ok || res.type === 'opaque')) c.put(e.request, res.clone()).catch(() => {});
+            return res;
+          }).catch(() => hit);
+          return hit || network;  // 缓存优先、后台更新（stale-while-revalidate）
+        }))
+      );
+    }
+    return;
+  }
   const p = new URL(e.request.url).pathname;
   const isCore = (p === '/' || p.endsWith('/index.html') || p.endsWith('/manifest.webmanifest'));
   if (isCore) {
