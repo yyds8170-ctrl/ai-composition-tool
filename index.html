@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v7.6.0 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v7.6.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
+<title>AI 构图助手 Pro v7.7.0 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v7.7.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -685,6 +685,10 @@
         <div class="ai-apply-tip" id="aiApplyTip">👆 不用自己动手调，点这一下就自动帮你裁好、调好色</div>
         <button class="ai-btn highlight" id="aiApply"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg>✨ 一键拍得更好看（自动裁切+调色）</button>
         <button class="ai-btn ghost" id="aiCropNow">按构图框智能裁切</button>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button class="ai-btn ghost" id="aiReanalyze" style="flex:1 1 0;font-size:12.5px;">🔄 不满意，重新分析</button>
+          <button class="ai-btn ghost" id="aiChangeImg" style="flex:1 1 0;font-size:12.5px;">🖼 换一张</button>
+        </div>
       </div>
     </div>
       </div>
@@ -952,7 +956,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v7.6.0";
+var APP_VER="v7.7.0";
 (function(){
   try{
     document.title=(document.title||"").replace(/v\d+\.\d+\.\d+/,APP_VER);
@@ -3110,19 +3114,22 @@ var APP_VER="v7.6.0";
       try{
         var hist=[]; try{ hist=JSON.parse(localStorage.getItem("ai_cmp_hist")||"[]"); }catch(e){ hist=[]; }
         var now=new Date();
+        var _scn=(typeof SCENE_SCHOOL!=="undefined"&&SCENE_SCHOOL[plan.sceneType])?SCENE_SCHOOL[plan.sceneType].name:"";
         var hrec={
           t: (now.getMonth()+1)+"月"+now.getDate()+"日 "+String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0"),
-          rule: rule.cn, conf: plan.conf, f: (plan.filters&&plan.filters[0])||"", z: plan.z
+          rule: rule.cn, conf: plan.conf, f: (plan.filters&&plan.filters[0])||"", z: plan.z,
+          sc: _scn, src: plan.cloud?"云端":"本地"  // v7.7 #27: 补场景与引擎来源
         };
         hist.unshift(hrec);
-        if(hist.length>5) hist=hist.slice(0,5);
+        if(hist.length>8) hist=hist.slice(0,8);
         localStorage.setItem("ai_cmp_hist",JSON.stringify(hist));
         // 渲染历史
         var hwrap=document.createElement("div");
         hwrap.className="ai-history";
-        hwrap.innerHTML='<div class="h-hd"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>最近分析</div>';
+        hwrap.innerHTML='<div class="h-hd"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>最近的 AI 建议</div>';
         hist.forEach(function(h){
-          hwrap.innerHTML+='<div class="h-row"><span class="h-t">'+h.t+'</span><span class="h-r">'+h.rule+'</span><span class="h-c">'+h.conf+'%</span></div>';
+          var _meta=(h.sc?h.sc+" · ":"")+(h.src||"")+(h.f?(" · "+h.f):"");
+          hwrap.innerHTML+='<div class="h-row"><span class="h-t">'+h.t+'</span><span class="h-r">'+h.rule+'<span style="color:var(--dim);font-size:10px;"> '+_meta+'</span></span><span class="h-c">'+h.conf+'%</span></div>';
         });
         aiBody.appendChild(hwrap);
         setTimeout(function(){ hwrap.classList.add("show"); }, 140+items.length*320);
@@ -3231,6 +3238,10 @@ var APP_VER="v7.6.0";
       if(!state.analyzed || !state.plan) return;
       openCrop(true);
     });
+    // v7.7 #28: 不满意快速重来——重新分析(复用按钮,强制跳过云端缓存) / 换一张
+    var _aiRe=$("aiReanalyze"), _aiCh=$("aiChangeImg");
+    if(_aiRe){ _aiRe.addEventListener("click",function(){ if(btnAnalyze) btnAnalyze.click(); }); }
+    if(_aiCh){ _aiCh.addEventListener("click",function(){ closeAi(); if(fileInput) fileInput.click(); }); }
     aiClose.addEventListener("click",closeAi);
     function closeAi(){ aiPanel.classList.remove("open"); }
     // v5.0: AI 裁切预览——分析结果含裁切方案时，在照片上叠加"将裁区域"遮罩（四边暗化+保留区虚线框）
@@ -4711,7 +4722,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         // v6.0: 单 32-bit 哈希→双种子键（碰撞空间 2^31→约 2^62），防"撞图套用别人裁切方案"
         var _h1=0,_h2=0;
         for(var _i=0;_i<hd.length;_i++){ var _c=hd.charCodeAt(_i); _h1=((_h1<<5)-_h1+_c)|0; _h2=((_h2<<7)-_h2+_c*31)|0; }
-        _ccKey="v760_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v6.0 引擎大改，旧 v514_ 缓存不复用
+        _ccKey="v770_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v6.0 引擎大改，旧 v514_ 缓存不复用
       }catch(e){ _ccKey=null; }
       if(_ccKey){
         try{
