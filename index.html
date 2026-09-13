@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v7.2.0 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v7.2.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
+<title>AI 构图助手 Pro v7.3.0 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v7.3.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -486,6 +486,14 @@
   .doka-level::before,.doka-level::after{content:"";position:absolute;top:-5px;width:2px;height:12px;background:inherit;}
   .doka-level::before{left:0;} .doka-level::after{right:0;}
   .doka-level .lvl-txt{position:absolute;left:50%;top:-26px;transform:translateX(-50%);font-size:11px;font-weight:700;color:#EAF1FF;background:rgba(12,16,22,.7);padding:2px 8px;border-radius:10px;white-space:nowrap;}
+  /* v7.3 #2: 主体跟随框——实时框出AI锁定的主体 */
+  .doka-subject-box{position:absolute;z-index:42;border:2px solid #67D97A;border-radius:6px;box-shadow:0 0 0 1px rgba(0,0,0,.25),0 0 14px rgba(103,217,122,.35) inset;display:none;pointer-events:none;transition:left .18s ease,top .18s ease,width .18s ease,height .18s ease,border-color .2s;}
+  .doka-subject-box.warn{border-color:#FFD166;box-shadow:0 0 0 1px rgba(0,0,0,.25),0 0 14px rgba(255,209,102,.3) inset;}
+  .doka-subject-box .dsb-tag{position:absolute;left:0;top:-20px;font-size:10px;font-weight:700;color:#0c1016;background:#67D97A;padding:1px 7px;border-radius:8px;white-space:nowrap;}
+  .doka-subject-box.warn .dsb-tag{background:#FFD166;}
+  /* v7.3 #3: 快门时机徽章 */
+  .doka-moment{position:absolute;bottom:118px;left:50%;transform:translateX(-50%) translateY(8px);z-index:45;display:none;align-items:center;gap:6px;background:rgba(32,120,60,.92);color:#EAFDF0;font-size:14px;font-weight:700;padding:8px 18px;border-radius:22px;box-shadow:0 4px 16px rgba(0,0,0,.4);opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;white-space:nowrap;}
+  .doka-moment.show{display:flex;opacity:1;transform:translateX(-50%) translateY(0);}
   .dmg-arrow{font-size:17px;font-weight:800;}
   .doka-steps{position:absolute;top:10px;right:10px;z-index:40;width:min(240px,72%);background:rgba(10,13,17,.86);border:1px solid rgba(255,255,255,.14);border-radius:12px;backdrop-filter:blur(6px);overflow:hidden;font-size:11px;color:#E8EAED;}
   .doka-steps .ds-head{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:rgba(84,200,247,.12);font-weight:600;letter-spacing:.5px;}
@@ -619,6 +627,8 @@
       <div class="doka-move-guide" id="dokaMoveGuide"></div>
       <div class="doka-tech-guide" id="dokaTechGuide"></div>
       <div class="doka-level" id="dokaLevel"><span class="lvl-txt" id="dokaLevelTxt"></span></div>
+      <div class="doka-subject-box" id="dokaSubjectBox"><span class="dsb-tag" id="dokaSubjectTag">主体</span></div>
+      <div class="doka-moment" id="dokaMoment">✓ 现在就是好时机，按快门</div>
       <!-- v6.7 P0: AI 分析四步卡（画面描述→构图法→滤镜→裁切理由），实时取景右上角可收起 -->
       <div class="doka-steps" id="dokaSteps" style="display:none;">
         <div class="ds-head"><span>AI 分析</span><i id="dsToggle">收起</i></div>
@@ -942,7 +952,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v7.2.0";
+var APP_VER="v7.3.0";
 (function(){
   try{
     document.title=(document.title||"").replace(/v\d+\.\d+\.\d+/,APP_VER);
@@ -4539,7 +4549,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         // v6.0: 单 32-bit 哈希→双种子键（碰撞空间 2^31→约 2^62），防"撞图套用别人裁切方案"
         var _h1=0,_h2=0;
         for(var _i=0;_i<hd.length;_i++){ var _c=hd.charCodeAt(_i); _h1=((_h1<<5)-_h1+_c)|0; _h2=((_h2<<7)-_h2+_c*31)|0; }
-        _ccKey="v720_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v6.0 引擎大改，旧 v514_ 缓存不复用
+        _ccKey="v730_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v6.0 引擎大改，旧 v514_ 缓存不复用
       }catch(e){ _ccKey=null; }
       if(_ccKey){
         try{
@@ -5078,6 +5088,20 @@ if(aiModelState!=="idle"){ resolve(false); return; }
               T4=Math.round(_nTR); B4=Math.round(100-_nTR-_chR);
             }
           }
+          // v7.3 #12: 最终人体硬保护（最后防线）——真人边界必须完整落在保留区内，只减裁切不增裁切
+          // 用 COCO 真检测到的 personLeft/headTop/personRight/personBottom（比显著性S框更准）
+          // 余量：头顶4%、左右3%、脚下6%（专业人像不切头顶/下巴/手/脚）
+          try{
+            if(isPort && _ad2 && typeof _ad2.personLeft==="number" && typeof _ad2.headTop==="number" && typeof _ad2.personRight==="number"){
+              var _pb=_ad2.personBottom!=null?_ad2.personBottom*100:99;
+              var _kL=Math.max(0,_ad2.personLeft*100-3), _kT=Math.max(0,_ad2.headTop*100-4);
+              var _kR=Math.min(100,_ad2.personRight*100+3), _kB=Math.min(100,_pb+6);
+              if(L4>_kL){ L4=Math.round(_kL); }
+              if(T4>_kT){ T4=Math.round(_kT); }
+              if(R4>100-_kR){ R4=Math.round(100-_kR); }
+              if(B4>100-_kB){ B4=Math.round(100-_kB); }
+            }
+          }catch(e){}
           try{ window.__cropDiag={Sx:Sx,Sy:Sy,Sw:Sw,Sh:Sh,refX:_refX,refY:_refY,BL:BL,BT:BT,BR:BR,BB:BB,L4:L4,T4:T4,R4:R4,B4:B4,ci:_ci,rule:ruleKey,port:isPort,faceOk:_faceOk,ssk:_ssk,arW:_w,arH:_h}; }catch(e){ window.__cropDiag={err:String(e)}; }
           return [L4,T4,R4,B4];
         }
@@ -5521,6 +5545,9 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       var _dmg=document.getElementById("dokaMoveGuide"); if(_dmg){ _dmg.classList.remove("show"); _dmg.innerHTML=""; }
       var _dtg=document.getElementById("dokaTechGuide"); if(_dtg){ _dtg.classList.remove("show"); _dtg.innerHTML=""; }
       state._lastTechKey=""; state._techHit=0; state._sharpBaseN=0; state._sharpBaseSum=0; state._sharpBase=0; _hideDokaLevel();
+      var _dsb=document.getElementById("dokaSubjectBox"); if(_dsb)_dsb.style.display="none";
+      var _dmm=document.getElementById("dokaMoment"); if(_dmm)_dmm.classList.remove("show");
+      state._lastMoment=null; state._momentHit=0;
       setStatus("已退出 AI 构图模式","idle");
     }
     function runDokaAnalysis(){
@@ -5552,6 +5579,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           showDokaGuide(plan, a);
           // v7.2: 光线/夜景/对焦技术提示
           showDokaTechTips(a);
+          // v7.3: 主体跟随框+距离建议、快门时机
+          showDokaSubject(a); showDokaMoment(a);
           setStatus("构图已锁定 · 可直接拍照，拍完即成品","done");
           // v4.0.1: AI 分析时主动加载模型并等待，确保 isPerson 生效
           if(state.aiModelEnabled){
@@ -5721,6 +5750,60 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           box.classList.remove("show"); box.innerHTML="";
         }
       }catch(e){ box.classList.remove("show"); }
+    }
+    // v7.3 #2: 归一化主体框（真人边界 > COCO框 > 显著性框）
+    function _subjectRect(a){
+      try{
+        var ad=state.aiData||{};
+        if(ad.isPerson && typeof ad.personLeft==="number" && typeof ad.headTop==="number"){
+          return [ad.personLeft,ad.headTop,ad.personRight,(ad.personBottom!=null?ad.personBottom:0.95)];
+        }
+        if(ad.topBBox && ad.topBBox.length===4){
+          var el=currentEl(); var iw=el?(el.naturalWidth||el.videoWidth):0, ih=el?(el.naturalHeight||el.videoHeight):0;
+          if(iw&&ih){ var b=ad.topBBox; return [b[0]/iw,b[1]/ih,(b[0]+b[2])/iw,(b[1]+b[3])/ih]; }
+        }
+        if(a&&a.sigBox&&a.sigBox.length===4) return a.sigBox.slice();
+      }catch(e){}
+      return null;
+    }
+    // v7.3 #2+#5: 主体跟随框 + 距离/位置大白话建议
+    function showDokaSubject(a){
+      var box=document.getElementById("dokaSubjectBox"), tag=document.getElementById("dokaSubjectTag");
+      if(!box) return;
+      try{
+        var r=_subjectRect(a);
+        if(!r){ box.style.display="none"; return; }
+        var x1=Math.max(0,r[0]),y1=Math.max(0,r[1]),x2=Math.min(1,r[2]),y2=Math.min(1,r[3]);
+        var w=x2-x1,h=y2-y1;
+        if(w<0.04||h<0.04){ box.style.display="none"; return; }
+        var W=stage.clientWidth,H=stage.clientHeight;
+        if(W<=10||H<=10){ box.style.display="none"; return; }
+        box.style.display="block";
+        box.style.left=(x1*W)+"px"; box.style.top=(y1*H)+"px";
+        box.style.width=(w*W)+"px"; box.style.height=(h*H)+"px";
+        var cx=(x1+x2)/2, msg="", warn=false;
+        if(h<0.22){ msg="主体偏小，走近一步"; warn=true; }
+        else if(h>0.92){ msg="主体太满，退半步"; warn=true; }
+        else if(Math.abs(cx-0.5)>0.22){ msg=cx<0.5?"主体偏左，向右转一点":"主体偏右，向左转一点"; warn=true; }
+        box.classList.toggle("warn",warn);
+        if(tag) tag.textContent=msg||"已锁定主体";
+      }catch(e){ box.style.display="none"; }
+    }
+    // v7.3 #3: 快门时机——清晰/大小/居中/光线全达标才提示，连续3帧防抖
+    function showDokaMoment(a){
+      var el=document.getElementById("dokaMoment"); if(!el) return;
+      try{
+        if(!a){ el.classList.remove("show"); return; }
+        var r=_subjectRect(a);
+        var sharp=typeof a.sharpness==="number"?a.sharpness:60;
+        var okSharp=state._sharpBase?sharp>=state._sharpBase*0.88:sharp>=44;
+        var h=r?(r[3]-r[1]):0.5, cx=r?((r[0]+r[2])/2):0.5;
+        var ok=!!r && okSharp && h>=0.20 && h<=0.94 && Math.abs(cx-0.5)<0.22 && a.mean>=55 && a.mean<=192;
+        if(ok===state._lastMoment){ state._momentHit=(state._momentHit||0)+1; }
+        else { state._lastMoment=ok; state._momentHit=1; }
+        if(ok && state._momentHit>=3){ el.classList.add("show"); }
+        else if(!ok){ el.classList.remove("show"); }
+      }catch(e){ el.classList.remove("show"); }
     }
     // v7.2 #20: 水平仪（真机陀螺仪；桌面无传感器自动隐藏，绝不报错）
     function _dokaOnOrient(ev){
@@ -6542,7 +6625,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
   // v4.3: 只读调试钩子（自动化回归断言用，不影响任何功能与模型行为）
   try{ window.__ai={
     get plan(){ return state&&state.plan?{rule:state.plan.rule,sceneType:state.plan.sceneType,conf:state.plan.conf,subject:state.plan.subject,noCrop:!!state.plan.noCrop,crop:state.plan.crop||null,selfReviewed:!!state.plan.selfReviewed,selfReviewNote:state.plan.selfReviewNote||"",fromCache:!!state.plan.fromCache}:null; },
-    get data(){ return state&&state.aiData?{sceneType:(state.plan&&state.plan.sceneType)||'',rowGap:state.aiData.rowGap,rowPeakN:state.aiData.rowPeakN,bodyRatio:state.aiData.bodyRatio,sat:state.aiData.sat,mean:state.aiData.mean,detectedClasses:state.aiData.detectedClasses,isPerson:state.aiData.isPerson,personScore:state.aiData.personScore,faceAvailable:state.aiData.faceAvailable,sym:state.aiData.sym,vSym:state.aiData.vSym,hSym:state.aiData.hSym,contrast:state.aiData.contrast,sharpness:state.aiData.sharpness,highClip:state.aiData.highClip,shadowClip:state.aiData.shadowClip,dynamicRange:state.aiData.dynamicRange,skinRatio:state.aiData.skinRatio,skinCx:state.aiData.skinCx,skinCy:state.aiData.skinCy,isPersonLikely:state.aiData.isPersonLikely,skinAspect:state.aiData.skinAspect,skinFill:state.aiData.skinFill,skinHRatio:state.aiData.skinHRatio}:null; }
+    get data(){ return state&&state.aiData?{sceneType:(state.plan&&state.plan.sceneType)||'',rowGap:state.aiData.rowGap,rowPeakN:state.aiData.rowPeakN,bodyRatio:state.aiData.bodyRatio,sat:state.aiData.sat,mean:state.aiData.mean,detectedClasses:state.aiData.detectedClasses,isPerson:state.aiData.isPerson,headTop:state.aiData.headTop,personLeft:state.aiData.personLeft,personRight:state.aiData.personRight,personBottom:state.aiData.personBottom,topBBox:state.aiData.topBBox,personScore:state.aiData.personScore,faceAvailable:state.aiData.faceAvailable,sym:state.aiData.sym,vSym:state.aiData.vSym,hSym:state.aiData.hSym,contrast:state.aiData.contrast,sharpness:state.aiData.sharpness,highClip:state.aiData.highClip,shadowClip:state.aiData.shadowClip,dynamicRange:state.aiData.dynamicRange,skinRatio:state.aiData.skinRatio,skinCx:state.aiData.skinCx,skinCy:state.aiData.skinCy,isPersonLikely:state.aiData.isPersonLikely,skinAspect:state.aiData.skinAspect,skinFill:state.aiData.skinFill,skinHRatio:state.aiData.skinHRatio}:null; }
   }; }catch(e){}
 })();
   </script>
