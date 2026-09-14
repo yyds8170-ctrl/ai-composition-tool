@@ -3,6 +3,8 @@
 > **AI 拍照 · AI 构图 · AI 裁切** —— 给不会拍照的普通人用的「手机 App 形态」网页应用。
 > 打开相机 → 对准 → AI 告诉你怎么拍 → 一键拍出构图合格、不切头不切手脚的成品。
 
+> 👤 **作者：洋洋**（[GitHub](https://github.com/yyds8170-ctrl)）· 独立开发，专注「帮不会拍照的人拍出好照片」。
+
 [![在线体验](https://img.shields.io/badge/在线体验-GitHub%20Pages-blue?logo=github)](https://yyds8170-ctrl.github.io/ai-composition-tool/)
 [![最新版本](https://img.shields.io/github/v/release/yyds8170-ctrl/ai-composition-tool?label=最新版本&color=brightgreen)](https://github.com/yyds8170-ctrl/ai-composition-tool/releases)
 [![PWA](https://img.shields.io/badge/PWA-可安装-8A2BE2)](https://developer.mozilla.org/zh-CN/docs/Web/Progressive_web_apps)
@@ -70,25 +72,39 @@
 
 ## 📸 真实效果演示
 
-以下均为**产品对真实照片的实际分析输出**（本地像素引擎，非示意图）。同一张照片：先给构图诊断（构图法+契合度+点评），再给裁切方案与调色建议，全部在手机本地完成。
+以下均为**产品对真实照片的实际分析输出**（本地像素引擎，非示意图）。同一张照片：先给构图诊断（构图法 + 契合度 + 点评），再给裁切方案与调色建议，全部在手机本地完成。点击图片可查看大图。
 
-### 人像 · 逆光剪影 —— 三分法 · 契合 85%
-![人像 · 逆光剪影 · 三分法85%](imgs/demo_portrait.png)
+### 人像（5 张）
 
-### 街拍 · 东京街道 —— 三分法 · 契合 83%
-![街拍 · 东京街道 · 三分法83%](imgs/demo_street.png)
+| ![人像·逆光剪影](imgs/d25/portrait_1.png) | ![人像·日常写真](imgs/d25/portrait_2.png) | ![人像·街边随拍](imgs/d25/portrait_3.png) | ![人像·逆光写真](imgs/d25/portrait_4.png) | ![人像·林间写真](imgs/d25/portrait_5.png) |
+|:---:|:---:|:---:|:---:|:---:|
+| 逆光剪影 · 三分法 85% | 日常写真 · 居中 91% | 街边随拍 · 居中 91% | 逆光写真 · 居中 90% | 林间写真 · 居中 90% |
 
-### 美食 · 西式聚餐 —— 居中构图 · 契合 93%
-![美食 · 西式聚餐 · 居中93%](imgs/demo_food.png)
+### 街拍（5 张）
 
-### 建筑 · 黄鹤楼 —— 对称构图 · 契合 90%
-![建筑 · 黄鹤楼 · 对称90%](imgs/demo_arch.png)
+| ![街拍·东京街道](imgs/d25/street_1.png) | ![街拍·城市街角](imgs/d25/street_2.png) | ![街拍·街头瞬间](imgs/d25/street_3.png) | ![街拍·东京街景](imgs/d25/street_4.png) | ![街拍·新宿夜景](imgs/d25/street_5.png) |
+|:---:|:---:|:---:|:---:|:---:|
+| 东京街道 · 三分法 83% | 城市街角 · 三分法 83% | 街头瞬间 · 居中 91% | 东京街景 · 居中 90% | 新宿夜景 · 黄金分割 88% |
 
-### 水面 · 枯木倒影 —— 对角线构图 · 契合 87%
-![水面 · 枯木倒影 · 对角线87%](imgs/demo_water.png)
+### 美食（5 张）
+
+| ![美食·西式聚餐](imgs/d25/food_1.png) | ![美食·精致餐点](imgs/d25/food_2.png) | ![美食·餐桌特写](imgs/d25/food_3.png) | ![美食·节日大餐](imgs/d25/food_4.png) | ![美食·牛排晚餐](imgs/d25/food_5.png) |
+|:---:|:---:|:---:|:---:|:---:|
+| 西式聚餐 · 居中 93% | 精致餐点 · 居中 90% | 餐桌特写 · 居中 92% | 节日大餐 · 居中 91% | 牛排晚餐 · 居中 92% |
+
+### 建筑（5 张）
+
+| ![建筑·黄鹤楼](imgs/d25/arch_1.png) | ![建筑·古建一角](imgs/d25/arch_2.png) | ![建筑·塔楼远眺](imgs/d25/arch_3.png) | ![建筑·钟楼蓝调](imgs/d25/arch_4.png) | ![建筑·钟楼日景](imgs/d25/arch_5.png) |
+|:---:|:---:|:---:|:---:|:---:|
+| 黄鹤楼 · 对称 90% | 古建一角 · 三分法 84% | 塔楼远眺 · 居中 92% | 钟楼蓝调 · 对称 95% | 钟楼日景 · 三分法 82% |
+
+### 水面（5 张）
+
+| ![水面·枯木倒影](imgs/d25/water_1.png) | ![水面·湖畔风光](imgs/d25/water_2.png) | ![水面·水天一色](imgs/d25/water_3.png) | ![水面·黄昏枯树](imgs/d25/water_4.png) | ![水面·湖畔余晖](imgs/d25/water_5.png) |
+|:---:|:---:|:---:|:---:|:---:|
+| 枯木倒影 · 对角线 87% | 湖畔风光 · 居中 92% | 水天一色 · 居中 91% | 黄昏枯树 · 对称 93% | 湖畔余晖 · 居中 92% |
 
 ---
-
 ## 🚀 快速开始
 
 **在线使用（推荐）**：用手机浏览器打开
