@@ -76,33 +76,88 @@
 
 ### 人像（5 张）
 
-| ![人像·逆光剪影](imgs/d25/portrait_1.png) | ![人像·日常写真](imgs/d25/portrait_2.png) | ![人像·街边随拍](imgs/d25/portrait_3.png) | ![人像·逆光写真](imgs/d25/portrait_4.png) | ![人像·林间写真](imgs/d25/portrait_5.png) |
-|:---:|:---:|:---:|:---:|:---:|
-| 逆光剪影 · 三分法 85% | 日常写真 · 居中 91% | 街边随拍 · 居中 91% | 逆光写真 · 居中 90% | 林间写真 · 居中 90% |
+<p align="center">
+<img width="46%" alt="人像·逆光剪影 · 三分法 85%" src="imgs/d25/portrait_1.png">
+<img width="46%" alt="人像·日常写真 · 居中 91%" src="imgs/d25/portrait_2.png">
+</p>
+
+<p align="center">
+<img width="46%" alt="人像·街边随拍 · 居中 91%" src="imgs/d25/portrait_3.png">
+<img width="46%" alt="人像·逆光写真 · 居中 90%" src="imgs/d25/portrait_4.png">
+</p>
+
+<p align="center">
+<img width="46%" alt="人像·林间写真 · 居中 90%" src="imgs/d25/portrait_5.png">
+</p>
+
 
 ### 街拍（5 张）
 
-| ![街拍·东京街道](imgs/d25/street_1.png) | ![街拍·城市街角](imgs/d25/street_2.png) | ![街拍·街头瞬间](imgs/d25/street_3.png) | ![街拍·东京街景](imgs/d25/street_4.png) | ![街拍·新宿夜景](imgs/d25/street_5.png) |
-|:---:|:---:|:---:|:---:|:---:|
-| 东京街道 · 三分法 83% | 城市街角 · 三分法 83% | 街头瞬间 · 居中 91% | 东京街景 · 居中 90% | 新宿夜景 · 黄金分割 88% |
+<p align="center">
+<img width="46%" alt="街拍·东京街道 · 三分法 83%" src="imgs/d25/street_1.png">
+<img width="46%" alt="街拍·城市街角 · 三分法 83%" src="imgs/d25/street_2.png">
+</p>
+
+<p align="center">
+<img width="46%" alt="街拍·街头瞬间 · 居中 91%" src="imgs/d25/street_3.png">
+<img width="46%" alt="街拍·东京街景 · 居中 90%" src="imgs/d25/street_4.png">
+</p>
+
+<p align="center">
+<img width="46%" alt="街拍·新宿夜景 · 黄金分割 88%" src="imgs/d25/street_5.png">
+</p>
+
 
 ### 美食（5 张）
 
-| ![美食·西式聚餐](imgs/d25/food_1.png) | ![美食·精致餐点](imgs/d25/food_2.png) | ![美食·餐桌特写](imgs/d25/food_3.png) | ![美食·节日大餐](imgs/d25/food_4.png) | ![美食·牛排晚餐](imgs/d25/food_5.png) |
-|:---:|:---:|:---:|:---:|:---:|
-| 西式聚餐 · 居中 93% | 精致餐点 · 居中 90% | 餐桌特写 · 居中 92% | 节日大餐 · 居中 91% | 牛排晚餐 · 居中 92% |
+<p align="center">
+<img width="46%" alt="美食·西式聚餐 · 居中 93%" src="imgs/d25/food_1.png">
+<img width="46%" alt="美食·精致餐点 · 居中 90%" src="imgs/d25/food_2.png">
+</p>
+
+<p align="center">
+<img width="46%" alt="美食·餐桌特写 · 居中 92%" src="imgs/d25/food_3.png">
+<img width="46%" alt="美食·节日大餐 · 居中 91%" src="imgs/d25/food_4.png">
+</p>
+
+<p align="center">
+<img width="46%" alt="美食·牛排晚餐 · 居中 92%" src="imgs/d25/food_5.png">
+</p>
+
 
 ### 建筑（5 张）
 
-| ![建筑·黄鹤楼](imgs/d25/arch_1.png) | ![建筑·古建一角](imgs/d25/arch_2.png) | ![建筑·塔楼远眺](imgs/d25/arch_3.png) | ![建筑·钟楼蓝调](imgs/d25/arch_4.png) | ![建筑·钟楼日景](imgs/d25/arch_5.png) |
-|:---:|:---:|:---:|:---:|:---:|
-| 黄鹤楼 · 对称 90% | 古建一角 · 三分法 84% | 塔楼远眺 · 居中 92% | 钟楼蓝调 · 对称 95% | 钟楼日景 · 三分法 82% |
+<p align="center">
+<img width="46%" alt="建筑·黄鹤楼 · 对称 90%" src="imgs/d25/arch_1.png">
+<img width="46%" alt="建筑·古建一角 · 三分法 84%" src="imgs/d25/arch_2.png">
+</p>
+
+<p align="center">
+<img width="46%" alt="建筑·塔楼远眺 · 居中 92%" src="imgs/d25/arch_3.png">
+<img width="46%" alt="建筑·钟楼蓝调 · 对称 95%" src="imgs/d25/arch_4.png">
+</p>
+
+<p align="center">
+<img width="46%" alt="建筑·钟楼日景 · 三分法 82%" src="imgs/d25/arch_5.png">
+</p>
+
 
 ### 水面（5 张）
 
-| ![水面·枯木倒影](imgs/d25/water_1.png) | ![水面·湖畔风光](imgs/d25/water_2.png) | ![水面·水天一色](imgs/d25/water_3.png) | ![水面·黄昏枯树](imgs/d25/water_4.png) | ![水面·湖畔余晖](imgs/d25/water_5.png) |
-|:---:|:---:|:---:|:---:|:---:|
-| 枯木倒影 · 对角线 87% | 湖畔风光 · 居中 92% | 水天一色 · 居中 91% | 黄昏枯树 · 对称 93% | 湖畔余晖 · 居中 92% |
+<p align="center">
+<img width="46%" alt="水面·枯木倒影 · 对角线 87%" src="imgs/d25/water_1.png">
+<img width="46%" alt="水面·湖畔风光 · 居中 92%" src="imgs/d25/water_2.png">
+</p>
+
+<p align="center">
+<img width="46%" alt="水面·水天一色 · 居中 91%" src="imgs/d25/water_3.png">
+<img width="46%" alt="水面·黄昏枯树 · 对称 93%" src="imgs/d25/water_4.png">
+</p>
+
+<p align="center">
+<img width="46%" alt="水面·湖畔余晖 · 居中 92%" src="imgs/d25/water_5.png">
+</p>
+
 
 ---
 ## 🚀 快速开始
