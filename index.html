@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v8.0.1 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v8.0.1 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
+<title>AI 构图助手 Pro v8.0.2 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v8.0.2 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、29 款滤镜、Doka 模式、构图法则百科、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <!-- PWA / 手机 App 形态 -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -956,7 +956,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v8.0.1";
+var APP_VER="v8.0.2";
 (function(){
   try{
     document.title=(document.title||"").replace(/v\d+\.\d+\.\d+/,APP_VER);
@@ -2763,6 +2763,8 @@ var APP_VER="v8.0.1";
             stage.classList.remove("scanning");
             btnAnalyze.disabled=false;
             drawGuides(plan);
+            // v8.0.2: 本地结果已出，状态栏不再长时间停在"正在分析"，自动应用完成后再覆盖为最终态
+            setStatus("已生成构图方案，正在自动优化…","");
           }
           presentAnalysis(plan);
           // v1.3.0: 异步真 AI 视觉识别（加载失败自动静默，不影响基础分析）
@@ -2827,6 +2829,8 @@ var APP_VER="v8.0.1";
           var _cloudActiveNow=!!(state.cloud && state.cloud.on && state.cloud.key);
 
           runAIDetection(function(finalPlan){
+            // v8.0.2: 旧分析的检测回调若在换图/重新分析后才返回，直接作废，避免串台误报"自动应用失败"/污染新结果
+            if(token!==state.analyzeToken){ return; }
             _fbDone=true;
             // v4.7.1: 云端模式分析完成（云端成功/失败回退本地模型）统一恢复按钮与扫描态
             if(_cloudActiveNow){ state.analyzing=false; stage.classList.remove("scanning"); btnAnalyze.disabled=false; }
@@ -3512,6 +3516,18 @@ var APP_VER="v8.0.1";
       // 边界限制
       if(nr.w<min){ nr.w=min; }
       if(nr.h<min){ nr.h=min; }
+      // v8.0.2: 右/下边不得越出画面显示区——手柄猛拖到屏幕外时，裁切框不得大于画面（原仅约束位置导致输出尺寸可超原图）
+      nr.x=Math.max(disp.ox,nr.x); nr.y=Math.max(disp.oy,nr.y);
+      var _maxW=disp.ox+disp.w-nr.x, _maxH=disp.oy+disp.h-nr.y;
+      if(nr.w>_maxW){ nr.w=_maxW; }
+      if(nr.h>_maxH){ nr.h=_maxH; }
+      if(cropState.ratio!=="free" && d.mode!=="move"){
+        // 比例锁定：上限收敛后重新对齐宽高比，避免 clamp 破坏比例
+        var _pr=cropState.ratio.split(":"), _rw2=parseFloat(_pr[0])/parseFloat(_pr[1]);
+        if(nr.w/_rw2<=nr.h){ nr.h=nr.w/_rw2; } else { nr.w=nr.h*_rw2; }
+        if(nr.w<min){ nr.w=min; nr.h=nr.w/_rw2; }
+        if(nr.h<min){ nr.h=min; nr.w=nr.h*_rw2; }
+      }
       nr.x=Math.max(disp.ox, Math.min(disp.ox+disp.w-nr.w, nr.x));
       nr.y=Math.max(disp.oy, Math.min(disp.oy+disp.h-nr.h, nr.y));
       cropState.rect=nr;
@@ -4785,7 +4801,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         // v6.0: 单 32-bit 哈希→双种子键（碰撞空间 2^31→约 2^62），防"撞图套用别人裁切方案"
         var _h1=0,_h2=0;
         for(var _i=0;_i<hd.length;_i++){ var _c=hd.charCodeAt(_i); _h1=((_h1<<5)-_h1+_c)|0; _h2=((_h2<<7)-_h2+_c*31)|0; }
-        _ccKey="v801_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v6.0 引擎大改，旧 v514_ 缓存不复用
+        _ccKey="v802_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v6.0 引擎大改，旧 v514_ 缓存不复用
       }catch(e){ _ccKey=null; }
       if(_ccKey){
         try{
