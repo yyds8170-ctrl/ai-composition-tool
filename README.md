@@ -4,10 +4,10 @@
 > 打开相机 → 对准 → AI 告诉你怎么拍 → 一键拍出构图合格、不切头不切手脚的成品。
 
 [![在线体验](https://img.shields.io/badge/在线体验-GitHub%20Pages-blue?logo=github)](https://yyds8170-ctrl.github.io/ai-composition-tool/)
-[![最新版本](https://img.shields.io/badge/版本-v8.0.3-brightgreen)](https://github.com/yyds8170-ctrl/ai-composition-tool/releases)
+[![最新版本](https://img.shields.io/github/v/release/yyds8170-ctrl/ai-composition-tool?label=最新版本&color=brightgreen)](https://github.com/yyds8170-ctrl/ai-composition-tool/releases)
 [![PWA](https://img.shields.io/badge/PWA-可安装-8A2BE2)](https://developer.mozilla.org/zh-CN/docs/Web/Progressive_web_apps)
 [![离线可用](https://img.shields.io/badge/离线-支持-orange)](https://github.com/yyds8170-ctrl/ai-composition-tool/blob/main/sw.js)
-[![发布](https://img.shields.io/badge/Release-63个版本-blueviolet)](https://github.com/yyds8170-ctrl/ai-composition-tool/releases)
+[![发布数](https://img.shields.io/github/v/release/yyds8170-ctrl/ai-composition-tool?label=Releases&color=blueviolet)](https://github.com/yyds8170-ctrl/ai-composition-tool/releases)
 
 ---
 
