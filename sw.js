@@ -1,5 +1,5 @@
-/* AI 构图助手 · Service Worker v8.0.4 —— 离线缓存，让应用像原生 App 一样秒开 */
-const CACHE = 'ai-compose-v804';
+/* AI 构图助手 · Service Worker v8.0.5 —— 离线缓存，让应用像原生 App 一样秒开 */
+const CACHE = 'ai-compose-v805';
 const CORE = [
   './',
   './index.html',
