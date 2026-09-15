@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v8.0.8 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v8.0.8 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、30 款滤镜、AI 构图 模式、构图法则百科、云端 VLM 分析">
+<title>AI 构图助手 Pro v8.0.9 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v8.0.9 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、30 款滤镜、AI 构图 模式、构图法则百科、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v8.0.8 · AI 拍照 / 构图 / 裁切">
+<meta property="og:title" content="AI 构图助手 Pro v8.0.9 · AI 拍照 / 构图 / 裁切">
 <meta property="og:description" content="给不会拍照的普通人：打开相机，AI 教你怎么拍。AI 构图分析（本地像素+云端 VLM 双引擎）、人像保护裁切（不切头不切手脚）、30 款滤镜，一键出成品。默认本地运行，照片不上传。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
@@ -576,7 +576,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.0.8</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.0.9</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -916,7 +916,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.0.8 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.0.9 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -947,15 +947,36 @@
     <div class="mp-row">
       <label class="mp-sw"><input type="checkbox" id="cloudOn"><span class="mp-sl"></span>启用云端 VLM 构图分析</label>
     </div>
-    <div class="mp-desc">联网时通过安全代理调用大模型"看懂"画面（场景/主体/构图），比本地像素算法更准；未填口令或断网时自动回退本地引擎。启用后照片会经代理发送至云端分析。模型固定 qwen3.5-flash，API Key 已内置在代理服务端，无需填写。</div>
+    <div class="mp-desc">联网时调用大模型"看懂"画面（场景/主体/构图），比本地像素算法更准；未填 Key 或断网时自动回退本地引擎。启用后照片会发送至云端分析。</div>
     <div style="height:6px;"></div>
+    <!-- v8.0.9: 双通道云端——共享口令（作者代理）/ 自带 API Key（直连，用自己的额度） -->
     <div class="mp-row" style="flex-wrap:wrap;gap:6px;">
-      <input type="text" id="cloudBase" value="https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com" placeholder="代理 Base URL" style="flex:1 1 100%;padding:7px 10px;border-radius:8px;border:1px solid rgba(0,0,0,.14);background:#fff;font-size:12px;color:#1A1B1C;min-width:0;box-sizing:border-box;">
+      <select id="cloudMode" style="flex:1 1 100%;padding:7px 10px;border-radius:8px;border:1px solid rgba(0,0,0,.14);background:#fff;font-size:12px;color:#1A1B1C;min-width:0;box-sizing:border-box;">
+        <option value="shared">共享口令（作者代理 · 免配置，需向作者获取口令）</option>
+        <option value="byok">自带 API Key（直连 · 用你自己的额度，不占用作者）</option>
+      </select>
     </div>
-    <div class="mp-row" style="flex-wrap:wrap;gap:6px;">
-      <input type="password" id="cloudKey" placeholder="访问口令（X-App-Token，仅保存在本机）" style="flex:1 1 100%;padding:7px 10px;border-radius:8px;border:1px solid rgba(0,0,0,.14);background:#fff;font-size:12px;color:#1A1B1C;min-width:0;box-sizing:border-box;">
+    <div id="cloudSharedRow" style="display:none;">
+      <div class="mp-row" style="flex-wrap:wrap;gap:6px;">
+        <input type="text" id="cloudBase" value="https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com" placeholder="代理 Base URL" style="flex:1 1 100%;padding:7px 10px;border-radius:8px;border:1px solid rgba(0,0,0,.14);background:#fff;font-size:12px;color:#1A1B1C;min-width:0;box-sizing:border-box;">
+      </div>
+      <div class="mp-row" style="flex-wrap:wrap;gap:6px;">
+        <input type="password" id="cloudKey" placeholder="访问口令（X-App-Token，仅保存在本机）" style="flex:1 1 100%;padding:7px 10px;border-radius:8px;border:1px solid rgba(0,0,0,.14);background:#fff;font-size:12px;color:#1A1B1C;min-width:0;box-sizing:border-box;">
+      </div>
+      <div class="mp-desc" style="line-height:1.7;">共享模式：真实 Key 只保存在作者的安全代理服务端，不会进入本页代码；只需向作者获取「代理地址」和「访问口令」填入即可。</div>
     </div>
-    <div class="mp-desc" style="line-height:1.7;">代理模式下你和朋友都<b>无需注册 Cephalon 账号、无需自带 API Key</b>：真实 Key 只保存在作者的安全代理服务端，不会进入本页代码；只需向作者获取「代理地址」和「访问口令」填入上方即可，照片经代理转发至云端分析。</div>
+    <div id="cloudByokRow" style="display:none;">
+      <div class="mp-row" style="flex-wrap:wrap;gap:6px;">
+        <select id="cloudVendor" style="flex:1 1 100%;padding:7px 10px;border-radius:8px;border:1px solid rgba(0,0,0,.14);background:#fff;font-size:12px;color:#1A1B1C;min-width:0;box-sizing:border-box;"></select>
+      </div>
+      <div class="mp-row" style="flex-wrap:wrap;gap:6px;">
+        <input type="password" id="cloudByokKey" placeholder="你自己的 API Key（仅保存在本机，只发往你选的厂商）" style="flex:1 1 100%;padding:7px 10px;border-radius:8px;border:1px solid rgba(0,0,0,.14);background:#fff;font-size:12px;color:#1A1B1C;min-width:0;box-sizing:border-box;">
+      </div>
+      <div class="mp-row" style="flex-wrap:wrap;gap:6px;">
+        <input type="text" id="cloudByokModel" placeholder="模型名（选厂商后自动填入，可按需修改）" style="flex:1 1 100%;padding:7px 10px;border-radius:8px;border:1px solid rgba(0,0,0,.14);background:#fff;font-size:12px;color:#1A1B1C;min-width:0;box-sizing:border-box;">
+      </div>
+      <div class="mp-desc" style="line-height:1.7;">自带 Key 模式：在下方选厂商，填你自己的 API Key 即可<b>浏览器直连</b>该厂商（DeepSeek/通义/智谱/Kimi/混元/千帆/MiniMax/阶跃/硅基流动/OpenRouter 已实测支持直连）；豆包/OpenAI 官方不支持直连，需走共享模式或自备代理。Key 只存本机、只发往所选厂商，绝不进入代码。</div>
+    </div>
   </div>
   <div class="help-body" id="helpBody"></div>
   </div>
@@ -964,7 +985,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v8.0.8";
+var APP_VER="v8.0.9";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -1071,6 +1092,8 @@ var APP_VER="v8.0.8";
         lhTip=$("lhTip"), lhModel=$("lhModel"), lhSubject=$("lhSubject"),
         modelPanel=$("modelPanel"), mpBadge=$("mpBadge"), mpOn=$("mpOn"), mpReload=$("mpReload"),
         cloudBadge=$("cloudBadge"), cloudOn=$("cloudOn"), cloudBase=$("cloudBase"), cloudKey=$("cloudKey"),
+        cloudMode=$("cloudMode"), cloudVendor=$("cloudVendor"), cloudByokKey=$("cloudByokKey"), cloudByokModel=$("cloudByokModel"),
+        cloudSharedRow=$("cloudSharedRow"), cloudByokRow=$("cloudByokRow"),
         btnCmp=$("btnCmp"), cmpBase=$("cmpBase"), cmpUI=$("cmpUI"), cmpLine=$("cmpLine"), cmpHandle=$("cmpHandle"),
         baseLayer=$("baseLayer"), strengthRow=$("strengthRow"), strengthRange=$("strengthRange"), strengthVal=$("strengthVal"),
         toast=$("toast"),
@@ -1110,16 +1133,44 @@ var APP_VER="v8.0.8";
       aiModelEnabled: (function(){ try{ var v=localStorage.getItem("aiModelEnabled"); return v===null?true:v==="1"; }catch(e){ return true; } })(),
       liveMode:false,
       // v4.7.0 云端分析引擎（经 SCF 代理转发 Cephalon VLM · qwen3.5-flash）：口令/Base 仅存 localStorage，绝不写入代码
+      // v8.0.9 双通道：shared=共享口令（作者代理）/ byok=自带 API Key（直连，10 家实测支持 CORS 的厂商）
       cloud:{
         on:(function(){ try{ return localStorage.getItem("aiComposeCloudOn")==="1"; }catch(e){ return false; } })(),
+        mode:(function(){ try{ var v=localStorage.getItem("aiComposeCloudMode"); return (v==="byok")?"byok":"shared"; }catch(e){ return "shared"; } })(),
         base:(function(){ try{ var dft="https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com"; var v=localStorage.getItem("aiComposeCloudBase");
           // v4.7.0 一次性迁移：旧版"自带 Key 直连"残留的 cephalon.cloud 直连地址会被浏览器按 Origin 拦截(403)，统一重置为安全代理地址
           if(!v||/cephalon\.cloud/i.test(v)){ try{ localStorage.setItem("aiComposeCloudBase",dft); }catch(e){} return dft; }
           return v; }catch(e){ return "https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com"; } })(),
         model:"qwen3.5-flash",
-        key:(function(){ try{ return localStorage.getItem("aiComposeCloudKey")||""; }catch(e){ return ""; } })()
+        key:(function(){ try{ return localStorage.getItem("aiComposeCloudKey")||""; }catch(e){ return ""; } })(),
+        byokVendor:(function(){ try{ return localStorage.getItem("aiComposeByokVendor")||"deepseek"; }catch(e){ return "deepseek"; } })(),
+        byokKey:(function(){ try{ return localStorage.getItem("aiComposeByokKey")||""; }catch(e){ return ""; } })(),
+        byokModel:(function(){ try{ return localStorage.getItem("aiComposeByokModel")||""; }catch(e){ return ""; } })()
       }
     };
+
+    // v8.0.9: 云端"已配置可用"统一判定——shared 看访问口令、byok 看 API Key，任一套就绪即云端可用
+    function _cloudReady(){ try{ return !!(state.cloud && state.cloud.on && (state.cloud.mode==="byok" ? state.cloud.byokKey : state.cloud.key)); }catch(e){ return false; } }
+
+    /* ===================== v8.0.9 自带 Key 厂商预设 =====================
+       实测（OPTIONS 预检 + 带 Origin GET）：DeepSeek/通义DashScope/智谱/月之暗面Kimi/腾讯混元/百度千帆/
+       MiniMax/阶跃星辰/硅基流动/OpenRouter 均返回 CORS 头（浏览器可直连）；豆包(火山方舟)/OpenAI 无 CORS 头，
+       需走共享代理或用户自备代理。base 均为 OpenAI 兼容 /chat/completions 端点。 */
+    var BYOK_VENDORS=[
+      {id:"deepseek",    name:"DeepSeek",            base:"https://api.deepseek.com/v1",                         model:"deepseek-chat",        note:"支持直连"},
+      {id:"dashscope",   name:"通义千问 DashScope",   base:"https://dashscope.aliyuncs.com/compatible-mode/v1",    model:"qwen-plus",            note:"支持直连"},
+      {id:"zhipu",       name:"智谱 GLM",             base:"https://open.bigmodel.cn/api/paas/v4",                  model:"glm-4-flash",          note:"支持直连"},
+      {id:"kimi",        name:"月之暗面 Kimi",        base:"https://api.moonshot.cn/v1",                            model:"moonshot-v1-8k",       note:"支持直连"},
+      {id:"hunyuan",     name:"腾讯混元",             base:"https://api.hunyuan.cloud.tencent.com/v1",             model:"hunyuan-lite",         note:"支持直连"},
+      {id:"qianfan",     name:"百度千帆",             base:"https://qianfan.baidubce.com/v2",                      model:"ernie-4.0-turbo-8k",    note:"支持直连"},
+      {id:"minimax",     name:"MiniMax",             base:"https://api.minimax.chat/v1",                          model:"abab6.5s-chat",        note:"支持直连"},
+      {id:"stepfun",     name:"阶跃星辰 StepFun",     base:"https://api.stepfun.com/v1",                           model:"step-1-8k",            note:"支持直连"},
+      {id:"siliconflow", name:"硅基流动（聚合）",      base:"https://api.siliconflow.cn/v1",                         model:"deepseek-ai/DeepSeek-V3", note:"支持直连"},
+      {id:"openrouter",  name:"OpenRouter（聚合）",   base:"https://openrouter.ai/api/v1",                          model:"deepseek/deepseek-chat",  note:"支持直连"},
+      {id:"ark",         name:"豆包·火山方舟",        base:"https://ark.cn-beijing.volces.com/api/v3",              model:"",                     note:"不支持直连，需走共享代理"},
+      {id:"openai",      name:"OpenAI",              base:"https://api.openai.com/v1",                             model:"gpt-4o-mini",          note:"不支持直连，需走共享代理"}
+    ];
+    function _byokVendor(id){ for(var _i=0;_i<BYOK_VENDORS.length;_i++){ if(BYOK_VENDORS[_i].id===id) return BYOK_VENDORS[_i]; } return BYOK_VENDORS[0]; }
 
     /* ===================== 数据 ===================== */
     var FILTERS={
@@ -2898,7 +2949,7 @@ var APP_VER="v8.0.8";
           state.analyzed=true;
           // v4.7.1: 云端模式不抢跑——本地像素初判只做后台数据，按钮保持禁用、面板显示"云端分析中"，
           // 避免用户看到本地初判误以为分析完成、随后云端结果又自动裁切（"分析好了又裁切一遍"）
-          if(state.cloud && state.cloud.on && state.cloud.key){
+          if(_cloudReady()){
             plan.cloudPending=true;
           }else{
             state.analyzing=false;
@@ -2968,7 +3019,7 @@ var APP_VER="v8.0.8";
           // 现改为20s防挂起兜底：onDone已触发则不再重复应用；模型检测通常3-10s内完成，不会抢先
 
           var _fbDone=false;
-          var _cloudActiveNow=!!(state.cloud && state.cloud.on && state.cloud.key);
+          var _cloudActiveNow=_cloudReady();
 
           runAIDetection(function(finalPlan){
             // v8.0.2: 旧分析的检测回调若在换图/重新分析后才返回，直接作废，避免串台误报"自动应用失败"/污染新结果
@@ -4570,7 +4621,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       }
       // v5.1.1: 云端模式只更新 aiData 数据、不渲染本地检测卡/检测框——
       // 避免本地检测卡插入面板顶部覆盖"云端 VLM 分析"徽章（用户误以为没跑云端）
-      if(state.cloud && state.cloud.on && state.cloud.key){ return; }
+      if(_cloudReady()){ return; }
 
       // v1.3.2: AI 场景识别
       var scene=sceneFromPreds(preds);
@@ -4661,7 +4712,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       var elSnap=el;
       // v4.7.0 云端分支：开启云端且已填口令时走云端 VLM（经 SCF 代理，跳过本地 18MB 模型预加载）；
       // 云端失败/超时/解析失败时自动回退本地模型精判（而非仅用粗糙像素初判），保证"本地效果不变差"
-      if(state.cloud && state.cloud.on && state.cloud.key){
+      if(_cloudReady()){
         runCloudAnalysis(elSnap, function(cloudPlan){
           if(token!==state.analyzeToken){ return; } // 期间已换图/重分析，丢弃本次回调
           if(cloudPlan){ if(onDone) onDone(cloudPlan); }
@@ -4799,7 +4850,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       updateModelUI();
       // v2.0.2: 页面初始化时如果开关打开，自动加载 Coco-SSD（不依赖进入实时模式）
       // v4.7.0: 云端已启用且已填口令时跳过本地 18MB 模型预加载（云端失败回退时再按需现场加载，省流量）
-      if(state.aiModelEnabled && aiModelState==="idle" && !(state.cloud&&state.cloud.on&&state.cloud.key)){
+      if(state.aiModelEnabled && aiModelState==="idle" && !_cloudReady()){
         setTimeout(function(){ tryLoadModel(false); }, 800);
       }
     }
@@ -4807,16 +4858,40 @@ if(aiModelState!=="idle"){ resolve(false); return; }
     /* ===================== v4.7.0 云端分析引擎（Cephalon VLM · qwen3.5-flash） =====================
        Key/Base 仅存 localStorage，绝不写入源码/仓库；云端失败自动回退本地（onDone(null)）。
        照片会压缩到长边 1024 后发送至云端，用于构图分析。 */
+    // v8.0.9: 双通道 UI 刷新——模式切换显示/隐藏对应输入区；badge 显示当前通道与模型
+    function _cloudUIApplyMode(){
+      var byok=(state.cloud.mode==="byok");
+      if(cloudMode){ cloudMode.value=state.cloud.mode||"shared"; }
+      if(cloudSharedRow){ cloudSharedRow.style.display=byok?"none":""; }
+      if(cloudByokRow){ cloudByokRow.style.display=byok?"":"none"; }
+      if(cloudBase){ cloudBase.value=state.cloud.base||"https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com"; }
+      if(cloudKey){ cloudKey.value=state.cloud.key||""; }
+      // 厂商下拉填充 + 选中
+      if(cloudVendor){
+        var _prev=cloudVendor.value||state.cloud.byokVendor;
+        cloudVendor.innerHTML="";
+        for(var _i=0;_i<BYOK_VENDORS.length;_i++){
+          var _o=document.createElement("option");
+          _o.value=BYOK_VENDORS[_i].id;
+          _o.textContent=BYOK_VENDORS[_i].name+"（"+BYOK_VENDORS[_i].note+"）";
+          cloudVendor.appendChild(_o);
+        }
+        var _vd=_byokVendor(_prev);
+        cloudVendor.value=_vd.id;
+        if(cloudByokKey){ cloudByokKey.value=state.cloud.byokKey||""; }
+        if(cloudByokModel){ cloudByokModel.value=state.cloud.byokModel||_vd.model; }
+      }
+      if(cloudBadge){
+        var txt=!state.cloud.on?"未启用":(!byok?(!state.cloud.key?"已启用 · 未填口令":"已启用 · 共享口令 · "+state.cloud.model)
+          :(!state.cloud.byokKey?"已启用 · 未填 API Key":"已启用 · 自带 Key · "+(_byokVendor(state.cloud.byokVendor).name.split("（")[0])));
+        var cls=!state.cloud.on?"idle":(!byok?(!state.cloud.key?"loading":"ready"):(!state.cloud.byokKey?"loading":"ready"));
+        cloudBadge.textContent=txt; cloudBadge.className="mp-badge "+cls;
+      }
+    }
     function updateCloudUI(){
       if(!cloudOn) return;
       cloudOn.checked=!!state.cloud.on;
-      if(cloudBase){ cloudBase.value=state.cloud.base||"https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com"; }
-      if(cloudKey){ cloudKey.value=state.cloud.key||""; }
-      if(cloudBadge){
-        var txt=!state.cloud.on?"未启用":(!state.cloud.key?"已启用 · 未填口令":"已启用 · "+state.cloud.model);
-        var cls=!state.cloud.on?"idle":(!state.cloud.key?"loading":"ready");
-        cloudBadge.textContent=txt; cloudBadge.className="mp-badge "+cls;
-      }
+      _cloudUIApplyMode();
     }
     function initCloudUI(){
       if(cloudOn) cloudOn.addEventListener("change",function(){
@@ -4850,7 +4925,39 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       }
       if(cloudBase){ cloudBase.addEventListener("input",_saveCloudInputs); cloudBase.addEventListener("change",_saveCloudInputs); }
       if(cloudKey){ cloudKey.addEventListener("input",_saveCloudInputs); cloudKey.addEventListener("change",_saveCloudInputs); }
-      updateCloudUI();
+      // v8.0.9: 模式切换 + 自带 Key 输入防抖保存
+      if(cloudMode){ cloudMode.addEventListener("change",function(){
+        state.cloud.mode=cloudMode.value==="byok"?"byok":"shared";
+        try{ localStorage.setItem("aiComposeCloudMode", state.cloud.mode); }catch(e){}
+        _cloudUIApplyMode();
+        toastMsg(state.cloud.mode==="byok"?"已切换到自带 API Key 模式（直连，用自己的额度）":"已切换到共享口令模式（作者代理）");
+      }); }
+      var _byokTimer=null;
+      function _saveByokInputs(){
+        clearTimeout(_byokTimer);
+        _byokTimer=setTimeout(function(){
+          if(cloudVendor){
+            var _vd=_byokVendor(cloudVendor.value);
+            state.cloud.byokVendor=_vd.id;
+            // 换厂商时若模型还是旧厂商的默认值且用户没手动改过，则跟随新厂商默认
+            if(cloudByokModel){
+              var _cur=(cloudByokModel.value||"").trim();
+              var _isOldDefault=BYOK_VENDORS.some(function(v2){ return v2.id!==_vd.id && v2.model && _cur===v2.model; });
+              if(_cur==="" || _isOldDefault){ cloudByokModel.value=_vd.model; state.cloud.byokModel=_vd.model; }
+              else{ state.cloud.byokModel=_cur; }
+            }
+          }
+          if(cloudByokKey){ state.cloud.byokKey=(cloudByokKey.value||"").trim(); }
+          try{ localStorage.setItem("aiComposeByokVendor", state.cloud.byokVendor); }catch(e){}
+          try{ localStorage.setItem("aiComposeByokKey", state.cloud.byokKey); }catch(e){}
+          try{ localStorage.setItem("aiComposeByokModel", state.cloud.byokModel||""); }catch(e){}
+          updateCloudUI();
+        },250);
+      }
+      if(cloudVendor){ cloudVendor.addEventListener("change",_saveByokInputs); }
+      if(cloudByokKey){ cloudByokKey.addEventListener("input",_saveByokInputs); cloudByokKey.addEventListener("change",_saveByokInputs); }
+      if(cloudByokModel){ cloudByokModel.addEventListener("input",_saveByokInputs); cloudByokModel.addEventListener("change",_saveByokInputs); }
+      _cloudUIApplyMode();
     }
     // v4.8.2: 云端失败/超时回退本地提示（toast + 结果面板顶部提示卡）
     function showCloudFallback(){
@@ -4862,7 +4969,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         } else if(rs==="timeout"){ info={t:"云端响应超时",d:"等了 35 秒还没返回，已先用<b>本地引擎</b>出结果；网络好时可点「重新分析」再试云端。"};
         } else if(rs==="auth"){ info={t:"云端口令可能有误",d:"云端鉴权没通过，已先用<b>本地引擎</b>；请在设置里核对口令。"};
         } else if(rs==="busy"){ info={t:"云端繁忙/额度受限",d:"云端暂时忙或额度不足，已先用<b>本地引擎</b>，稍后再试。"};
-        } else { info={t:"网络不通或云端超时",d:"已自动回退<b>本地引擎</b>分析（本地照样能用）；联网后可重试云端。"}; }
+        } else if(rs==="cors"){ info={t:"云端厂商不支持直连或 Key 无效",d:"你选的厂商不允许浏览器跨域直连（或 API Key 不对/网络被拦）。已先用<b>本地引擎</b>；请在设置里改回「共享口令」模式，或换用支持直连的厂商（DeepSeek/通义/智谱/Kimi 等）。"}; }
+        else { info={t:"网络不通或云端超时",d:"已自动回退<b>本地引擎</b>分析（本地照样能用）；联网后可重试云端。"}; }
         setStatus(info.t+"，本次为本地引擎结果","warn");
         var _fb=document.getElementById("cloudFallbackCard");
         if(!_fb){
@@ -4895,8 +5003,12 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       var _t0=Date.now(); // v5.0: 分析耗时统计
       state._cloudKilled=false; // v6.0: 每次云端分析重置"被外层30s兜底主动取消"标记
       var token=state.analyzeToken;
-      var base=state.cloud.base.replace(/\/+$/,"");
-      var appToken=state.cloud.key, model=state.cloud.model||"qwen3.5-flash";
+      // v8.0.9 双通道：shared=作者代理（X-App-Token）；byok=自带 Key 直连（Authorization Bearer，厂商端点内置）
+      var _byok=(state.cloud.mode==="byok");
+      var _vd=_byok?_byokVendor(state.cloud.byokVendor):null;
+      var base=_byok?_vd.base.replace(/\/+$/,""):(state.cloud.base||"").replace(/\/+$/,"");
+      var model=_byok?(state.cloud.byokModel||_vd.model||"deepseek-chat"):(state.cloud.model||"qwen3.5-flash");
+      var appToken=_byok?state.cloud.byokKey:state.cloud.key;
       if(!appToken || !base){ if(onDone) onDone(null); return; }
       var vw=el.videoWidth||el.naturalWidth||640, vh=el.videoHeight||el.naturalHeight||480;
       // v5.1.1: 云端模式也跑轻量像素主体分析（毫秒级，无需 18MB 模型）——给裁切引擎提供主体质心，
@@ -4960,7 +5072,9 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         // 双种子键（碰撞空间约 2^62），防"撞图套用别人裁切方案"
         var _h1=0,_h2=0;
         for(var _i=0;_i<hd.length;_i++){ var _c=hd.charCodeAt(_i); _h1=((_h1<<5)-_h1+_c)|0; _h2=((_h2<<7)-_h2+_c*31)|0; }
-        _ccKey="v808_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v8.0.5 裁切引擎调参，旧缓存不复用
+        // v8.0.9: 缓存键带通道标识（s=共享代理 / b=厂商+模型），同图换通道/换厂商不串缓存
+        var _ccMode=(state.cloud.mode==="byok")?("b"+state.cloud.byokVendor+(state.cloud.byokModel||"").replace(/[^a-z0-9]/gi,"").slice(0,10)):"s";
+        _ccKey="v809_"+_ccMode+"_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36);
       }catch(e){ _ccKey=null; }
       if(_ccKey){
         try{
@@ -5028,9 +5142,11 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       // 连续失败熔断：3 次失败后 5 分钟内直走本地（避免免费期额度/体验双重恶化）
       var _tryN=0;
       function _req(){
+        var _h={ "Content-Type":"application/json" };
+        if(_byok){ _h["Authorization"]="Bearer "+appToken; } else { _h["X-App-Token"]=appToken; } // v8.0.9
         return fetch(base+"/chat/completions", {
           method:"POST",
-          headers:{ "Content-Type":"application/json", "X-App-Token":appToken },
+          headers:_h,
           body:JSON.stringify(body),
           signal: ctrl?ctrl.signal:undefined
         }).then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j, status:r.status}; }); });
@@ -5046,7 +5162,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           if(token!==state.analyzeToken) return;
           if(state._cloudKilled){ return; }
           console.warn("云端分析失败（重试后），回退本地:", String(e2&&e2.message?e2.message:e2).slice(0,60));
-          state._cloudFailReason=(e2&&e2.name==="AbortError")?"timeout":"network";
+          // v8.0.9: byok 直连失败（无 CORS 头/网络拦截/K key 无效均表现为 TypeError）→ 明确提示换共享模式或换厂商
+          state._cloudFailReason=(e2&&e2.name==="AbortError")?"timeout":(_byok?"cors":"network");
           _cloudFail();
           if(onDone) onDone(null);
         });
@@ -5689,13 +5806,16 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         // v6.0: 已被外层 30s 兜底主动取消（本地初判结果已应用）——直接结束，不再回退本地模型，避免二次下载 18MB
         if(state._cloudKilled){ return; }
         // v8.0.5: 瞬时网络错误（非超时 abort）最多重试 2 次（退避 2s/5s）
-        if(_tryN<2 && !(e&&e.name==="AbortError")){
+        // v8.0.9: byok 直连失败（CORS 拦截/Key 无效/网络阻断均为 TypeError）重试无意义——立即回退并提示，不等 7 秒
+        if(_tryN<2 && !(e&&e.name==="AbortError") && !_byok){
           var _waitN=(_tryN===0)?2000:5000;
           _tryN++;
           setTimeout(function(){ _retryReq(); }, _waitN);
           return;
         }
         console.warn("云端分析失败，回退本地:", String(e&&e.message?e.message:e).slice(0,60));
+        // v8.0.9: 主请求 catch 补 failReason（此前缺失，abort/直连失败回退时文案不准确）
+        state._cloudFailReason=(e&&e.name==="AbortError")?"timeout":(_byok?"cors":"network");
         _cloudFail();
         if(onDone) onDone(null);
       });
@@ -7128,7 +7248,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
     try{
       if(typeof initModelUI==="function") initModelUI();
       // v4.7.0: 云端已启用且已填口令时跳过本地模型自动预加载（省 18MB 流量；云端失败回退时按需加载）
-      if(state.aiModelEnabled && aiModelState==="idle" && !(state.cloud&&state.cloud.on&&state.cloud.key)){
+      if(state.aiModelEnabled && aiModelState==="idle" && !_cloudReady()){
         setTimeout(function(){ tryLoadModel(false); }, 1000);
       }
     }catch(e){ console.warn("自动加载模型失败:", e); }
