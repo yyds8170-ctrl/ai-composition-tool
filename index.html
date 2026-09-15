@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v8.0.9 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v8.0.9 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、30 款滤镜、AI 构图 模式、构图法则百科、云端 VLM 分析">
+<title>AI 构图助手 Pro v8.1.0 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v8.1.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、30 款滤镜、AI 构图 模式、构图法则百科、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v8.0.9 · AI 拍照 / 构图 / 裁切">
+<meta property="og:title" content="AI 构图助手 Pro v8.1.0 · AI 拍照 / 构图 / 裁切">
 <meta property="og:description" content="给不会拍照的普通人：打开相机，AI 教你怎么拍。AI 构图分析（本地像素+云端 VLM 双引擎）、人像保护裁切（不切头不切手脚）、30 款滤镜，一键出成品。默认本地运行，照片不上传。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
@@ -576,7 +576,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.0.9</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.1.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -916,7 +916,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.0.9 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.1.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -985,7 +985,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v8.0.9";
+var APP_VER="v8.1.0";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -3864,6 +3864,7 @@ var APP_VER="v8.0.9";
 
       btnShoot.addEventListener("pointerdown",function(e){
         dragging=true; moved=false;
+        btnShoot._dragMoved=false; // v8.1.0: 每次按下重置拖动标志（与"长按连拍"互斥用）
         sx=e.clientX; sy=e.clientY;
         var rect=btnShoot.getBoundingClientRect();
         ox=rect.left; oy=rect.top;
@@ -3875,6 +3876,11 @@ var APP_VER="v8.0.9";
         var dx=e.clientX-sx, dy=e.clientY-sy;
         if(Math.abs(dx)>4||Math.abs(dy)>4){ moved=true; }
         if(moved){
+          if(!btnShoot._dragMoved){
+            btnShoot._dragMoved=true;
+            // v8.1.0 修复：慢拖快门(>500ms)会误触发"长按连拍"。一旦判定为拖动，立即取消连拍定时器
+            try{ if(typeof burstTimer!=="undefined" && burstTimer){ clearTimeout(burstTimer); burstTimer=null; } }catch(_e){}
+          }
           var nx=ox+dx, ny=oy+dy;
           // 限制在可视区域内
           nx=Math.max(8,Math.min(window.innerWidth-72,nx));
@@ -5517,7 +5523,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
 
           // ---- 6) 转 cropBox（四边裁切百分比）clamp（v6.0 统一单边上限 50）----
           var _maxSide=isPort?25:35; // v6.3: 单边裁切上限（人像25%/其他35%，防单侧裁没）
-          if(isPort){ var _sumTB=T4+B4; if(_sumTB>22){ var _k6=22/_sumTB; T4=Math.round(T4*_k6); B4=Math.round(B4*_k6); } } // v6.4: 人像顶部+底部合计裁切≤22%（头顶留白≥5-15%+脚部不被切）
+          // v8.1.0 修复：原此处有一份"T4+B4≤22%"约束写在 var T4/B4 声明之前，var 提升致其为 undefined，
+          // _sumTB=NaN 恒 false 空转；正确约束已在下方 T4/B4 赋值且 _tCap 封顶之后执行，删除这份死代码。
           var L4=Math.max(0,Math.min(_maxSide,Math.round(BL)));
           var T4=Math.max(0,Math.min(_maxSide,Math.round(BT)));
           var R4=Math.max(0,Math.min(_maxSide,Math.round(100-BR)));
@@ -6972,8 +6979,11 @@ if(aiModelState!=="idle"){ resolve(false); return; }
     var burstTimer=null;
     btnShoot.addEventListener("pointerdown",function(e){
       // 长按 500ms 进入连拍模式
+      btnShoot._dragMoved=false; // v8.1.0: 按下重置（与快门拖动互斥）
       state.burstMode=false; state.burstCount=0; state.burstShots=[];
       burstTimer=setTimeout(function(){
+        // v8.1.0 修复：这 500ms 内若已发生拖动（位移>4px），判定用户在移动快门位置，不进入连拍
+        if(btnShoot._dragMoved){ return; }
         state.burstMode=true;
         burstIndicator.classList.add("show");
         startBurst();
