@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v8.0.6 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v8.0.6 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、30 款滤镜、AI 构图 模式、构图法则百科、云端 VLM 分析">
+<title>AI 构图助手 Pro v8.0.7 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v8.0.7 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、30 款滤镜、AI 构图 模式、构图法则百科、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v8.0.6 · AI 拍照 / 构图 / 裁切">
+<meta property="og:title" content="AI 构图助手 Pro v8.0.7 · AI 拍照 / 构图 / 裁切">
 <meta property="og:description" content="给不会拍照的普通人：打开相机，AI 教你怎么拍。AI 构图分析（本地像素+云端 VLM 双引擎）、人像保护裁切（不切头不切手脚）、30 款滤镜，一键出成品。默认本地运行，照片不上传。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
@@ -576,7 +576,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.0.6</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.0.7</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -916,7 +916,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.0.6 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.0.7 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -964,7 +964,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v8.0.6";
+var APP_VER="v8.0.7";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -2184,6 +2184,8 @@ var APP_VER="v8.0.6";
           thirdFit:thirdFit, diagStrength:diagStrength,
           sharpness:sharpness, dynamicRange:dynamicRange, hueEntropy:hueEntropy,
           skinRatio:skinRatio, skinCx:skinCx, skinCy:skinCy, isPersonLikely:isPersonLikely,
+          // v8.0.7 修复: 补 skinFill/skinHRatio/skinAspect 三个几何守卫字段——v4.6 起 planFromAnalysis 的 geoOk 引用它们，但 return 一直缺失致 geoOk 恒 false（弱网人像判定从未按设计工作：真人像不进 portrait，暖色建筑兜底误判人像）
+          skinFill:skinFill, skinHRatio:skinHRatio, skinAspect:skinAspect,
           sigCx:_sigCx, sigCy:_sigCy, sigBox:_sigBox, sigRatio:_sigRatio,
           tiltDeg:_tiltDeg, tiltConf:_tiltConf
         };
@@ -2220,9 +2222,14 @@ var APP_VER="v8.0.6";
         // 铺满拦截交给 skinHRatio<=0.98（误判铺满均≥0.98），暖色区间重叠由 hratio/aspect/fill 组合判据承担
         // v4.6 复测校准：38 张弱网样张中，误判人像的皮肤占比 8%-72%，真人 24%-61% 区间重叠；
         // 加 skinRatio>=0.25 下限——拦掉 10 张误判中的 8 张（风景/建筑/食物/湖湾弥散暖色），真人零损失（真人均 ≥29%，且 <25% 的全是 hr100 已拦）
-        var geoOk = (a.skinFill>=0.15 && a.skinHRatio>=0.15 && a.skinHRatio<=0.98 && a.skinAspect>=0.3 && a.skinAspect<=3.2 && a.skinRatio>=0.25);
-        skinPass = (dx*dx + dy*dy) < 0.04 && geoOk; // 0.20^2
+        // v8.0.7 修复: geoOk 守卫三个字段此前从未从 analyzePixels 返回（恒 undefined→geoOk 恒 false），补字段后暴露误杀：skinHRatio<=0.98 把半身真人（皮肤包围盒占满高度=1.0）也拦掉；
+        // 铺满拦截改用密实度 skinFill<0.98（暖色铺满 fill≈1），保留 HR>=0.15 拦零散暖色细条；特写真人（fill 0.6-0.97）放行
+        var geoOk = (a.skinFill>=0.15 && a.skinHRatio>=0.15 && a.skinAspect>=0.3 && a.skinAspect<=3.2 && a.skinRatio>=0.25 && a.skinFill<0.98);
+        // v8.0.7 修复: 加方向约束 skinCy<cy-0.02——真人像皮肤（脸/手）必在显著性主体（全身）上方；暖色物体（牛排/红酒桌）皮肤=物体本身无上下关系（food_1 美食图 skinRatio0.34 全过旧判据被误判人像）
+        skinPass = (dx*dx + dy*dy) < 0.04 && geoOk && (a.skinCy < a.cy - 0.02); // 0.20^2
         if(skinPass) offlineGuess = true;
+        // v8.0.7 dbg: 皮肤特征调试（挂在计算后，值可信；确认后清理）
+        try{ plan._dbgSkin={isPersonLikely:!!a.isPersonLikely,skinRatio:a.skinRatio,skinFill:a.skinFill,skinHRatio:a.skinHRatio,skinAspect:a.skinAspect,geoOk:!!geoOk,skinPass:!!skinPass,dx:dx,dy:dy,cx:a.cx,cy:a.cy,skinCx:a.skinCx,skinCy:a.skinCy,modelPerson:!!modelPerson,modelLoaded:!!modelLoaded}; }catch(e){ plan._dbgSkin={err:String(e)}; }
       }
       // v4.5 P0-1: 模型已加载时肤色绝不硬判人像；弱网时肤色经几何守卫后仅作"初判"（面板明示+置信度上限）
       var isPerson = modelPerson || (!modelLoaded && skinPass);
@@ -2593,7 +2600,7 @@ var APP_VER="v8.0.6";
       notes.push(plan.exp);
 
       // ===== 6.5 画面倾斜检测（v8.0.6 新能力）——风景/水面/建筑才提示，仅建议不动画面 =====
-      if(!isPerson && a.tiltDeg!==undefined && a.tiltConf>=40 && Math.abs(a.tiltDeg)>=2 &&
+      if(sceneType!=="portrait" && sceneType!=="portrait_close" && a.tiltDeg!==undefined && a.tiltConf>=40 && Math.abs(a.tiltDeg)>=2 &&
          (sceneType==="landscape"||sceneType==="waterscape"||sceneType==="architecture")){
         var _tl=Math.abs(a.tiltDeg);
         var _tdir=a.tiltDeg<0?"左":"右";
@@ -2602,8 +2609,8 @@ var APP_VER="v8.0.6";
         plan.tiltHint="画面向"+_tdir+"倾斜约 "+_tl+"°——手机向"+_fix+"端平即可";
       }
 
-      // ===== 6.6 非人像场景优化建议（v8.0.6 补全）——本地路径也给出"下一步怎么动" =====
-      if(!plan.isPerson){
+      // ===== 6.6 非人像场景优化建议（v8.0.6 补全；v8.0.7 修正判据：改用最终 sceneType——此前 plan.isPerson 在第7段才赋值恒 false 致人像混入风景建议，isPersonLikely 又过松致暖色建筑（黄鹤楼）被误判为场景无人；sceneType 已融合 modelPerson/skinPass/楼层线/对称全部判据，最稳）=====
+      if(sceneType!=="portrait" && sceneType!=="portrait_close"){
         var _sceneKey=sceneType==="waterscape"?"water":(sceneType==="portrait_close"?"portrait_close":sceneType);
         var _sc=SCENE_SCHOOL[_sceneKey]||SCENE_SCHOOL.general;
         var _sn=[];
@@ -2629,7 +2636,7 @@ var APP_VER="v8.0.6";
       // ===== 7. 人像专项分析（专业人像摄影法则） =====
       var personData = (state.aiData && state.aiData.isPerson) ? state.aiData : a;
       // v4.2: 弱网肤色兜底判定为人像时，用肤色质心补齐人脸字段，让人像专项建议不再缺失
-      if(personData && !personData.isPerson && a.isPersonLikely && a.skinCx!==undefined){
+      if(personData && !personData.isPerson && a.isPersonLikely && a.skinCx!==undefined && geoOk && (a.skinCy < a.cy - 0.02)){ // v8.0.7: 补 geoOk+方向守卫——与 isPerson/skinPass 判定全量对齐：暖色建筑（黄鹤楼红顶）与暖色食物（牛排红酒桌）不再误出人像建议
         personData = {
           isPerson:true,
           faceX: a.skinCx, faceY: a.skinCy,
@@ -4948,7 +4955,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         // 双种子键（碰撞空间约 2^62），防"撞图套用别人裁切方案"
         var _h1=0,_h2=0;
         for(var _i=0;_i<hd.length;_i++){ var _c=hd.charCodeAt(_i); _h1=((_h1<<5)-_h1+_c)|0; _h2=((_h2<<7)-_h2+_c*31)|0; }
-        _ccKey="v806_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v8.0.5 裁切引擎调参，旧缓存不复用
+        _ccKey="v807_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36); // v8.0.5 裁切引擎调参，旧缓存不复用
       }catch(e){ _ccKey=null; }
       if(_ccKey){
         try{
@@ -6061,6 +6068,15 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       if(_adv.length){
         rows.push('<div class="ds-row ds-adv"><span class="ds-ic">📌</span><span class="ds-lb">建议</span><span class="ds-tx">'+esc(_adv.slice(0,3).join("｜"))+'</span></div>');
       }
+      // v8.0.7: AIC 实时路径摆姿/合影小技巧（相机模式正是需要指导的时刻；多人合影优先）
+      try{
+        var _fbs=(state.aiData&&state.aiData.faceBoxes);
+        if(Array.isArray(_fbs)&&_fbs.length>=2){
+          rows.push('<div class="ds-row"><span class="ds-ic">👥</span><span class="ds-lb">合影</span><span class="ds-tx">'+esc(_pickGroupTip())+'</span></div>');
+        } else if(plan.isPerson){
+          rows.push('<div class="ds-row"><span class="ds-ic">🧍</span><span class="ds-lb">摆姿</span><span class="ds-tx">'+esc(_pickPoseTip())+'</span></div>');
+        }
+      }catch(e){}
       b.innerHTML=rows.join("");
       var box=document.getElementById("aicSteps");
       if(box){ box.style.display="block"; }
@@ -7111,7 +7127,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
   }catch(e){ console.error(e); }
   // v4.3: 只读调试钩子（自动化回归断言用，不影响任何功能与模型行为）
   try{ window.__ai={
-    get plan(){ return state&&state.plan?{rule:state.plan.rule,sceneType:state.plan.sceneType,conf:state.plan.conf,subject:state.plan.subject,noCrop:!!state.plan.noCrop,crop:state.plan.crop||null,selfReviewed:!!state.plan.selfReviewed,selfReviewNote:state.plan.selfReviewNote||"",fromCache:!!state.plan.fromCache,notes:state.plan.notes||null,tiltHint:state.plan.tiltHint||null,cropIntent:state.plan.cropIntent||null,tiltDeg:state.aiData&&state.aiData.tiltDeg||null,tiltConf:state.aiData&&state.aiData.tiltConf||null}:null; },
+    get plan(){ return state&&state.plan?{rule:state.plan.rule,sceneType:state.plan.sceneType,conf:state.plan.conf,subject:state.plan.subject,noCrop:!!state.plan.noCrop,crop:state.plan.crop||null,selfReviewed:!!state.plan.selfReviewed,selfReviewNote:state.plan.selfReviewNote||"",fromCache:!!state.plan.fromCache,notes:state.plan.notes||null,_dbgSkin:(state.plan&&state.plan._dbgSkin)||null,tiltHint:state.plan.tiltHint||null,cropIntent:state.plan.cropIntent||null,tiltDeg:state.aiData&&state.aiData.tiltDeg||null,tiltConf:state.aiData&&state.aiData.tiltConf||null}:null; },
     get data(){ return state&&state.aiData?{sceneType:(state.plan&&state.plan.sceneType)||'',rowGap:state.aiData.rowGap,rowPeakN:state.aiData.rowPeakN,bodyRatio:state.aiData.bodyRatio,sat:state.aiData.sat,mean:state.aiData.mean,detectedClasses:state.aiData.detectedClasses,isPerson:state.aiData.isPerson,headTop:state.aiData.headTop,personLeft:state.aiData.personLeft,personRight:state.aiData.personRight,personBottom:state.aiData.personBottom,topBBox:state.aiData.topBBox,personScore:state.aiData.personScore,faceAvailable:state.aiData.faceAvailable,sym:state.aiData.sym,vSym:state.aiData.vSym,hSym:state.aiData.hSym,contrast:state.aiData.contrast,sharpness:state.aiData.sharpness,highClip:state.aiData.highClip,shadowClip:state.aiData.shadowClip,dynamicRange:state.aiData.dynamicRange,skinRatio:state.aiData.skinRatio,skinCx:state.aiData.skinCx,skinCy:state.aiData.skinCy,isPersonLikely:state.aiData.isPersonLikely,skinAspect:state.aiData.skinAspect,skinFill:state.aiData.skinFill,skinHRatio:state.aiData.skinHRatio}:null; }
   }; }catch(e){}
 })();
