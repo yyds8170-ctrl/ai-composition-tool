@@ -216,6 +216,105 @@
 
 
 ---
+
+## ☁️ 云端真实效果演示（云端 VLM · 28 张实测）
+
+以下均为产品**云端 AI 分析输出**（云端视觉大模型 qwen3.5-flash，非本地像素算法）。同一张照片：**识别场景 → 判定构图 → 契合度 → 四维评分 → 大白话建议 → 自动应用智能裁切**，28 张真实照片分 8 类目逐一实测。点击图片可查看大图。
+
+### 人像（3 张）
+
+<p align="center">
+<img width="46%" alt="人像 · 居中构图 82%" src="imgs/cloud25/portrait_2.png">
+<img width="46%" alt="人像 · 框架构图 86%" src="imgs/cloud25/portrait_3.png">
+</p>
+
+<p align="center">
+<img width="46%" alt="人像 · 三分法 87%" src="imgs/cloud25/portrait_5.png">
+</p>
+
+### 街拍（3 张）
+
+<p align="center">
+<img width="46%" alt="街拍 · 对称构图 92%" src="imgs/cloud25/street_2.png">
+<img width="46%" alt="街拍 · 引导线 78%" src="imgs/cloud25/street_4.png">
+</p>
+
+<p align="center">
+<img width="46%" alt="街拍 · 引导线 78%" src="imgs/cloud25/street_5.png">
+</p>
+
+### 美食（4 张）
+
+<p align="center">
+<img width="46%" alt="美食 · 居中构图 85%" src="imgs/cloud25/food_1.png">
+<img width="46%" alt="美食 · 引导线 82%" src="imgs/cloud25/food_2.png">
+</p>
+
+<p align="center">
+<img width="46%" alt="美食 · 居中构图 82%" src="imgs/cloud25/food_3.png">
+<img width="46%" alt="美食 · 居中构图 85%" src="imgs/cloud25/food_5.png">
+</p>
+
+### 建筑（4 张）
+
+<p align="center">
+<img width="46%" alt="建筑 · 三分法 85%" src="imgs/cloud25/arch_1.png">
+<img width="46%" alt="建筑 · 引导线 86%" src="imgs/cloud25/arch_2.png">
+</p>
+
+<p align="center">
+<img width="46%" alt="建筑 · 对称构图 85%" src="imgs/cloud25/arch_3.png">
+<img width="46%" alt="建筑 · 对称构图 92%" src="imgs/cloud25/arch_5.png">
+</p>
+
+### 水景（4 张）
+
+<p align="center">
+<img width="46%" alt="水景 · 对称构图 92%" src="imgs/cloud25/water_2.png">
+<img width="46%" alt="水景 · 对称构图 92%" src="imgs/cloud25/water_3.png">
+</p>
+
+<p align="center">
+<img width="46%" alt="水景 · 对称构图 92%" src="imgs/cloud25/water_4.png">
+<img width="46%" alt="水景 · 对称构图 92%" src="imgs/cloud25/water_5.png">
+</p>
+
+### 夜景（4 张）
+
+<p align="center">
+<img width="46%" alt="夜景 · 对称构图 92%" src="imgs/cloud25/night_2.png">
+<img width="46%" alt="夜景 · 对称构图 92%" src="imgs/cloud25/night_3.png">
+</p>
+
+<p align="center">
+<img width="46%" alt="夜景 · 对角线 82%" src="imgs/cloud25/street_3.png">
+<img width="46%" alt="夜景 · 对称构图 85%" src="imgs/cloud25/night_1.png">
+</p>
+
+### 动物（3 张）
+
+<p align="center">
+<img width="46%" alt="动物 · 居中构图 85%" src="imgs/cloud25/animal_1.png">
+<img width="46%" alt="动物 · 居中构图 85%" src="imgs/cloud25/animal_2.png">
+</p>
+
+<p align="center">
+<img width="46%" alt="动物 · 居中构图 85%" src="imgs/cloud25/animal_3.png">
+</p>
+
+### 风光（3 张）
+
+<p align="center">
+<img width="46%" alt="风光 · 引导线 86%" src="imgs/cloud25/landscape_1.png">
+<img width="46%" alt="风光 · 三分法 85%" src="imgs/cloud25/landscape_2.png">
+</p>
+
+<p align="center">
+<img width="46%" alt="风光 · 对称构图 92%" src="imgs/cloud25/landscape_3.png">
+</p>
+
+
+---
 ## 🚀 快速开始
 
 **在线使用（推荐）**：用手机浏览器打开
