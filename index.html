@@ -2590,15 +2590,16 @@ var APP_VER="v8.0.5";
         if(personData.personBottom>0.95){ notes.push("⚠ 人物脚部被裁切，建议下移或拉远避免切脚踝"); }
       }
       
-      // v7.9 #35: 本地引擎多人合影——所有人脸并集落在保留区（头顶6%、左右3%），只减裁切。本地 crop 顺序[L,T,R,B]
+      // v7.9 #35: 本地引擎多人合影——所有人脸并集落在保留区（头顶6%、左右3%、底部6%），只减裁切。本地 crop 顺序[L,T,R,B]
       try{
         var _lfb=(state.aiData&&state.aiData.faceBoxes);
         if(Array.isArray(_lfb)&&_lfb.length>=2&&plan.crop.length===4){
-          var lx0=1,ly0=1,lx1=0;
-          _lfb.forEach(function(f){ if(f&&f.length===4){ lx0=Math.min(lx0,f[0]); ly0=Math.min(ly0,f[1]); lx1=Math.max(lx1,f[2]); } });
+          var lx0=1,ly0=1,lx1=0,ly1=0;
+          _lfb.forEach(function(f){ if(f&&f.length===4){ lx0=Math.min(lx0,f[0]); ly0=Math.min(ly0,f[1]); lx1=Math.max(lx1,f[2]); ly1=Math.max(ly1,f[3]); } }); // v8.0.5(终检): faceBoxes=[x1,y1,x2,y2]，底部取 y2=f[3]，与云端合影保护对齐
           if(plan.crop[0]>lx0*100-3){ plan.crop[0]=Math.round(Math.max(0,lx0*100-3)); }
           if(plan.crop[1]>ly0*100-6){ plan.crop[1]=Math.round(Math.max(0,ly0*100-6)); }
           if(plan.crop[2]>(1-lx1)*100-3){ plan.crop[2]=Math.round(Math.max(0,(1-lx1)*100-3)); }
+          if(plan.crop[3]>(1-ly1)*100-6){ plan.crop[3]=Math.round(Math.max(0,(1-ly1)*100-6)); } // v8.0.5(终检): 补并集底边，前排最下方人脸/下巴不被裁
         }
       }catch(e){}
       plan.notes=notes;
@@ -4279,7 +4280,7 @@ function prefetchModelFiles(){
     var tryUrl=function(u){
       return fetch(u,{cache:"force-cache"}).then(function(r){
         if(!r.ok||!r.body) throw new Error("bad "+u);
-        var len=parseInt(r.headers.get("content-length")||"0")||0;
+        var len=parseInt(r.headers.get("content-length")||"0",10)||0;
         var reader=r.body.getReader();
         return new Promise(function(res){
           (function pump(){
@@ -5420,7 +5421,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             // v7.9 #35: 多人合影——所有人脸并集都必须落在保留区（头顶6%、左右3%、下巴/底部6%），只减裁切
             if(Array.isArray(_ad2.faceBoxes)&&_ad2.faceBoxes.length>=2){
               var _fx0=1,_fy0=1,_fx1=0,_fy1=0;
-              _ad2.faceBoxes.forEach(function(f){ if(f&&f.length===4){ _fx0=Math.min(_fx0,f[0]); _fy0=Math.min(_fy0,f[1]); _fx1=Math.max(_fx1,f[2]); _fy1=Math.max(_fy1,f[1]+f[3]); } });
+              _ad2.faceBoxes.forEach(function(f){ if(f&&f.length===4){ _fx0=Math.min(_fx0,f[0]); _fy0=Math.min(_fy0,f[1]); _fx1=Math.max(_fx1,f[2]); _fy1=Math.max(_fy1,f[3]); } }); // v8.0.5(终检): faceBoxes 为 [x1,y1,x2,y2]，底部取 y2=f[3]（原 f[1]+f[3] 高估底部边界，多人合影底部过度保守）
               var _gL=Math.max(0,_fx0*100-3),_gT=Math.max(0,_fy0*100-6),_gR=Math.min(100,_fx1*100+3),_gB=Math.min(100,_fy1*100+6);
               if(L4>_gL){ L4=Math.round(_gL); }
               if(T4>_gT){ T4=Math.round(_gT); }
@@ -5881,6 +5882,9 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       var _dmg=document.getElementById("aicMoveGuide"); if(_dmg){ _dmg.classList.remove("show"); _dmg.innerHTML=""; }
       var _dtg=document.getElementById("aicTechGuide"); if(_dtg){ _dtg.classList.remove("show"); _dtg.innerHTML=""; }
       state._lastTechKey=""; state._techHit=0; state._sharpBaseN=0; state._sharpBaseSum=0; state._sharpBase=0; _hideAicLevel();
+      // v8.0.5(终检): 退出 AIC 时解绑 deviceorientation 并重置绑定标志，避免水平仪回调在后台空转（内存/电耗）
+      try{ window.removeEventListener("deviceorientation",_aicOnOrient); }catch(e){}
+      try{ _lvlBound=false; }catch(e){}
       var _dsb=document.getElementById("aicSubjectBox"); if(_dsb)_dsb.style.display="none";
       var _dmm=document.getElementById("aicMoment"); if(_dmm)_dmm.classList.remove("show");
       state._lastMoment=null; state._momentHit=0;
