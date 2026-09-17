@@ -1,7 +1,7 @@
 {
  "name": "AI 构图助手",
  "short_name": "构图助手",
- "description": "AI 构图助手 Pro v8.1.3 · 普通人的 AI 拍照助手：AI 构图分析（本地像素引擎+云端 VLM 双引擎）、智能人像裁切（不切头/手/脚）、30 款滤镜、变焦特写、AI 构图 实时取景引导、拍摄小课堂",
+ "description": "AI 构图助手 Pro v8.1.4 · 普通人的 AI 拍照助手：AI 构图分析（本地像素引擎+云端 VLM 双引擎）、智能人像裁切（不切头/手/脚）、30 款滤镜、变焦特写、AI 构图 实时取景引导、拍摄小课堂",
  "id": "/ai-composition-tool/",
  "start_url": "./index.html",
  "scope": "./",
@@ -24,5 +24,5 @@
    "purpose": "any maskable"
   }
  ],
- "version": "8.1.3"
+ "version": "8.1.4"
 }
