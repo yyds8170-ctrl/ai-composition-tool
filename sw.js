@@ -1,5 +1,5 @@
-/* AI 构图助手 · Service Worker v8.2.6 —— 离线缓存，让应用像原生 App 一样秒开 */
-const CACHE = 'ai-compose-v826';
+/* AI 构图助手 · Service Worker v8.2.7 —— 离线缓存，让应用像原生 App 一样秒开 */
+const CACHE = 'ai-compose-v827';
 const CORE = [
   './',
   './index.html',
@@ -44,7 +44,7 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
   // v8.2.2: 通知所有受控页面"新版本已就绪"，页面据此弹出刷新提示条（根治旧缓存看不到新功能）
   self.clients.matchAll({type:'window', includeUncontrolled:true}).then(function(clients){
-    clients.forEach(function(c){ c.postMessage({type:'AIC_SW_UPDATE', ver:'v8.2.6'}); });
+    clients.forEach(function(c){ c.postMessage({type:'AIC_SW_UPDATE', ver:'v8.2.7'}); });
   }).catch(function(){});
 });
 
