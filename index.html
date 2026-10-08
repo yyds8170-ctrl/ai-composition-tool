@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v8.1.4 · 实时取景</title>
-<meta name="description" content="AI 构图助手 Pro v8.1.4 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、30 款滤镜、AI 构图 模式、构图法则百科、云端 VLM 分析">
+<title>AI 构图助手 Pro v8.2.0 · 实时取景</title>
+<meta name="description" content="AI 构图助手 Pro v8.2.0 · 人像 AI 构图工具：真 AI 主体识别、智能裁切变焦、30 款滤镜、AI 构图 模式、构图法则百科、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v8.1.4 · AI 拍照 / 构图 / 裁切">
+<meta property="og:title" content="AI 构图助手 Pro v8.2.0 · AI 拍照 / 构图 / 裁切">
 <meta property="og:description" content="给不会拍照的普通人：打开相机，AI 教你怎么拍。AI 构图分析（本地像素+云端 VLM 双引擎）、人像保护裁切（不切头不切手脚）、30 款滤镜，一键出成品。默认本地运行，照片不上传。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
@@ -331,6 +331,9 @@
   .ai-row{margin-top:6px;gap:8px;justify-content:center;}
   .ai-row .btn{flex:0 1 auto;min-width:110px;max-width:180px;padding:9px 14px;font-size:12.5px;}
   .ai-row .btn svg{width:16px;height:16px;}
+  /* v8.2.0 双入口：实景构图 + 轻量构图，窄屏自动 2×2 等宽排布 */
+  .ai-row .btn.aic{min-width:118px;}
+  .ai-row .btn.aic-lite{min-width:92px;}
   .main-row .btn .b-txt{font-size:11.5px;}
   /* 悬浮拍摄按钮 */
   /* v4.7.0黑屏修复: 作品/分享按钮需高于拍摄键(z22),避免被悬浮键遮挡点击 */
@@ -551,6 +554,31 @@
   .shot-overlay.aic-shot #btnShotKeep{display:none!important;}
   .shot-overlay.aic-shot .shot-actions{justify-content:center;gap:10px;flex-wrap:wrap;}
   .shot-overlay.aic-shot .shot-actions .btn{flex:1 1 calc(50% - 10px);min-width:0;min-height:46px;}
+  /* ===== v8.2.0 实景构图器：目标圆环 / 场景教练条 / 步骤教学 / 拍后对比 ===== */
+  .aic-ring{position:absolute;left:0;top:0;width:96px;height:96px;margin-left:-48px;margin-top:-48px;
+    border:3px solid var(--amber);border-radius:50%;box-shadow:0 0 0 4px rgba(255,193,7,.18),0 0 18px rgba(255,193,7,.55);
+    z-index:14;pointer-events:none;transition:border-color .25s,box-shadow .25s,transform .2s;display:none;}
+  .aic-ring .ring-dot{position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:var(--amber);}
+  .aic-ring.locked{border-color:#67D97A;box-shadow:0 0 0 4px rgba(103,217,122,.2),0 0 18px rgba(103,217,122,.55);}
+  .aic-ring.locked .ring-dot{background:#67D97A;}
+  .aic-ring .ring-lbl{position:absolute;left:50%;top:-32px;transform:translateX(-50%);white-space:nowrap;font-size:11px;color:#fff;background:rgba(0,0,0,.55);padding:2px 9px;border-radius:10px;}
+  .aic-scene-advice{position:absolute;left:10px;right:10px;bottom:76px;z-index:15;display:flex;flex-wrap:wrap;gap:6px;pointer-events:none;}
+  .aic-scene-advice .sa-chip{font-size:11.5px;line-height:1.4;color:#fff;background:rgba(0,0,0,.55);padding:4px 9px;border-radius:14px;backdrop-filter:blur(2px);max-width:100%;overflow-wrap:break-word;word-break:break-word;}
+  .aic-scene-advice .sa-chip.warn{background:rgba(255,107,107,.74);}
+  .aic-scene-advice .sa-chip.good{background:rgba(103,217,122,.8);}
+  .aic-teach-bar{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:15;display:none;gap:7px;align-items:center;background:rgba(0,0,0,.5);padding:5px 12px;border-radius:16px;pointer-events:none;max-width:92%;}
+  .aic-teach-bar .tb-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.35);}
+  .aic-teach-bar .tb-dot.on{background:var(--amber);box-shadow:0 0 6px rgba(255,193,7,.8);}
+  .aic-teach-bar .tb-dot.done{background:#67D97A;}
+  .aic-teach-bar .tb-txt{font-size:11px;color:#fff;margin-left:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .shot-compare{display:flex;flex-direction:column;gap:6px;margin-top:8px;background:rgba(0,0,0,.35);border-radius:12px;padding:8px;}
+  .shot-compare .sc-row{display:flex;gap:6px;}
+  .shot-compare .sc-item{flex:1;min-width:0;}
+  .shot-compare .sc-item img{width:100%;border-radius:8px;display:block;max-height:190px;object-fit:contain;}
+  .shot-compare .sc-cap{font-size:11px;color:#fff;text-align:center;padding-top:2px;opacity:.9;}
+  .shot-compare .sc-teach{font-size:12px;color:#FFD166;line-height:1.45;}
+  .btn.aic-lite{border-color:rgba(255,255,255,.25);color:var(--sub);}
+  .btn.aic-lite.on{color:#fff;border-color:var(--amber);background:rgba(255,193,7,.14);}
 
 ,18,22,.96);backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,.08);padding:14px 16px 20px;z-index:60;transform:translateY(100%);transition:transform .3s ease;}
     /* ===== v1.7.0 定时倒计时 ===== */
@@ -582,7 +610,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.1.4</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.2.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -643,6 +671,10 @@
       <div class="aic-level" id="aicLevel"><span class="lvl-txt" id="aicLevelTxt"></span></div>
       <div class="aic-subject-box" id="aicSubjectBox"><span class="dsb-tag" id="aicSubjectTag">主体</span></div>
       <div class="aic-moment" id="aicMoment">✓ 现在就是好时机，按快门</div>
+      <!-- v8.2.0 实景构图器：目标圆环（移动手机让主体进入圆环）+ 场景教练条（距离/景别/机位/光线）+ 步骤教学进度 -->
+      <div class="aic-ring" id="aicRing"><span class="ring-dot"></span><span class="ring-lbl" id="aicRingLbl">移动手机，让主体进入圆环</span></div>
+      <div class="aic-scene-advice" id="aicSceneAdvice"></div>
+      <div class="aic-teach-bar" id="aicTeachBar"><span class="tb-txt" id="aicTeachTxt"></span></div>
       <!-- v6.7 P0: AI 分析四步卡（画面描述→构图法→滤镜→裁切理由），实时取景右上角可收起 -->
       <div class="aic-steps" id="aicSteps" style="display:none;">
         <div class="ds-head"><span>AI 分析</span><i id="dsToggle">收起</i></div>
@@ -726,7 +758,8 @@
     <div class="ctrl-row ai-row">
       <button class="btn primary" id="btnAnalyze"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>AI 分析</button>
       <button class="btn live" id="btnLive" title="实时取景辅助：开启后取景框实时显示 AI 主体锁定 / 光线 / 水平 / 变焦建议 / 可拍提示"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg><span class="b-txt">实时取景</span></button>
-      <button class="btn aic" id="btnAIC" title="AI 构图模式：实时引导线+目标锁定+裁切预览+滤镜推荐，拍完即成品"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6z"/></svg><span class="b-txt">AI构图</span></button>
+      <button class="btn aic" id="btnAIC" title="实景构图器：AI 手把手教你拍——目标圆环对准 + 距离/景别 + 机位/光线 + 拍后对比，拍完即成品"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6z"/></svg><span class="b-txt">实景构图</span></button>
+      <button class="btn aic-lite" id="btnAICLite" title="轻量构图：旧版 AI 构图——实时引导线+目标锁定+裁切预览+滤镜推荐，无教学步骤"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.7 4.8L18 9l-4.3 1.2L12 15l-1.7-4.8L6 9l4.3-1.2z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/></svg><span class="b-txt">轻量</span></button>
     </div>
     <div class="sample-strip" id="sampleStrip">
       <span class="s-tip">示例样张：</span>
@@ -892,6 +925,14 @@
   <div class="shot-overlay" id="shotOverlay">
     <div class="shot-box">
       <img id="shotImg" alt="成片">
+      <!-- v8.2.0 实景构图器：拍后并排对比「你看到的画面 vs AI 成片」+ 构图教学 -->
+      <div class="shot-compare" id="shotCompare" style="display:none;">
+        <div class="sc-row">
+          <div class="sc-item"><img id="cmpRawImg" alt="你看到的画面"><div class="sc-cap">你看到的画面</div></div>
+          <div class="sc-item"><img id="cmpFinalImg" alt="AI 成片"><div class="sc-cap">AI 成片</div></div>
+        </div>
+        <div class="sc-teach" id="cmpTeach"></div>
+      </div>
       <div class="cap">
         <div class="row" id="shotCapChips"></div>
         <div id="shotCapText"></div>
@@ -922,7 +963,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.1.4 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.2.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -946,6 +987,11 @@
         <button class="mp-btn" id="poseReload">重新加载</button>
       </div>
       <div class="mp-desc">MediaPipe Pose，检测 33 个人体关节点（头/肩/肘/手/髋/膝/脚），用于精准人像构图、姿态引导、背景虚化人体轮廓，约 5MB。</div>
+      <div class="mp-row">
+        <label class="mp-sw"><input type="checkbox" id="teachOn" checked><span class="mp-sl"></span>实景构图·步骤教学引导</label>
+        <button class="mp-btn" id="teachReset">重置教学</button>
+      </div>
+      <div class="mp-desc">开启后「实景构图」会按 对准圆环→调距离景别→看机位光线→开拍 四步手把手引导；关闭则只静默提示，不打断。</div>
     </div>
     <!-- v4.7.0 云端分析引擎（Cephalon VLM · qwen3.5-flash）：Key 只存 localStorage，绝不写入代码/仓库 -->
     <div style="height:8px;"></div>
@@ -991,7 +1037,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v8.1.4";
+var APP_VER="v8.2.0";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -1138,6 +1184,14 @@ var APP_VER="v8.1.4";
       analyzeToken:0,
       aiModelEnabled: (function(){ try{ var v=localStorage.getItem("aiModelEnabled"); return v===null?true:v==="1"; }catch(e){ return true; } })(),
       liveMode:false,
+      // v8.2.0 实景构图器：full=完整教练引导 / lite=轻量旧版 AI 构图
+      aicStyle:"full",
+      teachStep:0,
+      teachOn:(function(){ try{ var v=localStorage.getItem("aiComposeTeachOn"); return v===null?true:v==="1"; }catch(e){ return true; } })(),
+      _ringLocked:false,
+      _ringTarget:null,   // 目标圆环位置 {x,y}（相对 stage 归一化）
+      _aicScene:null,     // 场景教练数据 {dist,sizeCur,sizeTarget,light,heightAdv,advChips}
+      _lastRawShot:null,  // 快门瞬间原画面 URL（拍后对比用）
       // v4.7.0 云端分析引擎（经 SCF 代理转发 Cephalon VLM · qwen3.5-flash）：口令/Base 仅存 localStorage，绝不写入代码
       // v8.0.9 双通道：shared=共享口令（作者代理）/ byok=自带 API Key（直连，10 家实测支持 CORS 的厂商）
       cloud:{
@@ -4042,6 +4096,9 @@ var APP_VER="v8.1.4";
     function closeShotOverlay(){
       shotOverlay.classList.remove("show");
       shotOverlay.classList.remove("aic-shot");
+      // v8.2.0 清理拍后对比（避免下次普通拍照残留）
+      state._lastRawShot=null;
+      var _sc=document.getElementById("shotCompare"); if(_sc){ _sc.style.display="none"; }
       _consumeGate();
     }
     btnShotClose.addEventListener("click",closeShotOverlay);
@@ -4968,6 +5025,23 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         toastMsg(ok?"姿态检测模型加载成功":"姿态检测模型加载失败，请检查网络");
       });
     });
+    // v8.2.0 实景构图器：步骤教学开关 + 重置
+    var _teachCb=document.getElementById("teachOn");
+    if(_teachCb){
+      _teachCb.checked=!!state.teachOn;
+      _teachCb.addEventListener("change",function(){
+        state.teachOn=!!_teachCb.checked;
+        try{ localStorage.setItem("aiComposeTeachOn",state.teachOn?"1":"0"); }catch(e){}
+        toastMsg(state.teachOn?"已开启步骤教学引导（下次进入实景构图生效）":"已关闭步骤教学，仅静默提示");
+      });
+    }
+    var _teachReset=document.getElementById("teachReset");
+    if(_teachReset){
+      _teachReset.addEventListener("click",function(){
+        state.teachStep=0;
+        toastMsg("教学进度已重置，下次进入实景构图从头引导");
+      });
+    }
       updateModelUI();
       // v2.0.2: 页面初始化时如果开关打开，自动加载 Coco-SSD（不依赖进入实时模式）
       // v4.7.0: 云端已启用且已填口令时跳过本地 18MB 模型预加载（云端失败回退时再按需现场加载，省流量）
@@ -6219,28 +6293,34 @@ if(aiModelState!=="idle"){ resolve(false); return; }
     state.aicMode=false;
     state.aicPlan=null;
 
-    function startAicMode(){
+    function startAicMode(style){
       if(state.aicMode) return;
       if(state.mode!=="camera" || !state.stream){
         setStatus("AI 构图需先连接相机","err"); toastMsg("请先点「相机」连接摄像头"); return;
       }
+      // v8.2.0 实景构图器双入口：full=完整教练引导（圆环/距离景别/机位光线/教学/对比）；lite=轻量旧版
+      style=style||"full";
       // 确保 videoCam 显示、photoView 隐藏
       videoCam.classList.add("show");
       photoView.classList.remove("show");
       state.aicMode=true;
-      btnAIC.classList.add("active");
+      state.aicStyle=style;
+      btnAIC.classList.toggle("active", style==="full");
+      var _bl=document.getElementById("btnAICLite"); if(_bl){ _bl.classList.toggle("on", style==="lite"); }
       // 启动实时取景（如果还没启动）
       if(!state.liveMode){ startLive(); }
-      setStatus("AI 构图中 · 移动手机对准主体，拍完即成品","done");
+      setStatus(style==="full"?"实景构图器中 · AI 手把手教你拍，拍完即成品":"轻量构图中 · 移动手机对准主体，拍完即成品","done");
       _startAicLevel();
-      // 快速分析（缩短到 1.2 秒，AI 构图 风格即时反馈）
+      // 快速分析（缩短到 1.2 秒，即时反馈）
       runAicAnalysis();
     }
     function stopAicMode(){
       if(!state.aicMode) return;
       state.aicMode=false;
       state.aicPlan=null;
+      state._ringLocked=false; state._ringTarget=null; state._aicScene=null;
       btnAIC.classList.remove("active");
+      var _bl=document.getElementById("btnAICLite"); if(_bl){ _bl.classList.remove("on"); }
       aicOverlay.style.display="none";
       aicFrame.style.display="none";
       aicCross.style.display="none";
@@ -6250,6 +6330,9 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       aicZoomBtn.style.display="none";
       var _dmg=document.getElementById("aicMoveGuide"); if(_dmg){ _dmg.classList.remove("show"); _dmg.innerHTML=""; }
       var _dtg=document.getElementById("aicTechGuide"); if(_dtg){ _dtg.classList.remove("show"); _dtg.innerHTML=""; }
+      var _drg=document.getElementById("aicRing"); if(_drg){ _drg.style.display="none"; _drg.classList.remove("locked"); }
+      var _dsa=document.getElementById("aicSceneAdvice"); if(_dsa){ _dsa.innerHTML=""; }
+      var _dtb=document.getElementById("aicTeachBar"); if(_dtb){ _dtb.style.display="none"; }
       state._lastTechKey=""; state._techHit=0; state._sharpBaseN=0; state._sharpBaseSum=0; state._sharpBase=0; _hideAicLevel();
       // v8.0.5(终检): 退出 AIC 时解绑 deviceorientation 并重置绑定标志，避免水平仪回调在后台空转（内存/电耗）
       try{ window.removeEventListener("deviceorientation",_aicOnOrient); }catch(e){}
@@ -6257,7 +6340,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       var _dsb=document.getElementById("aicSubjectBox"); if(_dsb)_dsb.style.display="none";
       var _dmm=document.getElementById("aicMoment"); if(_dmm)_dmm.classList.remove("show");
       state._lastMoment=null; state._momentHit=0;
-      setStatus("已退出 AI 构图模式","idle");
+      setStatus("已退出构图模式","idle");
     }
     // v7.8 #31: 轻量帧指纹（24x16 行灰度均值），用于增量取景判断画面是否明显变化
     function _aicFingerprint(el){
@@ -6310,6 +6393,16 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           showAicTechTips(a);
           // v7.3: 主体跟随框+距离建议、快门时机
           showAicSubject(a); showAicMoment(a);
+          // v8.2.0 实景构图器（full 模式）：目标圆环 + 场景教练条 + 步骤教学
+          if(state.aicStyle==="full" && state.aicMode){
+            showAicRing(plan, a);
+            showSceneAdvice(a, plan);
+            updateTeachBar(plan, a);
+          } else {
+            var _tr=document.getElementById("aicRing"); if(_tr){ _tr.style.display="none"; }
+            var _tsa=document.getElementById("aicSceneAdvice"); if(_tsa){ _tsa.innerHTML=""; }
+            var _ttb=document.getElementById("aicTeachBar"); if(_ttb){ _ttb.style.display="none"; }
+          }
           setStatus("构图已锁定 · 可直接拍照，拍完即成品","done");
           // v4.0.1: AI 分析时主动加载模型并等待，确保 isPerson 生效
           if(state.aiModelEnabled){
@@ -6559,6 +6652,178 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         else if(!ok){ el.classList.remove("show"); }
       }catch(e){ el.classList.remove("show"); }
     }
+    /* ============ v8.2.0 实景构图器：目标圆环 / 距离景别 / 机位光线 / 步骤教学 ============ */
+    // 1) 目标圆环：按构图法则计算最佳主体位置（三分点/中心），引导用户移动手机让主体进入圆环
+    function _ringTargetFor(plan){
+      try{
+        var rule=plan&&plan.rule?plan.rule:"thirds";
+        if(rule==="thirds"||rule==="diag"){
+          var curX=0.5;
+          var sc=state._aicScene;
+          if(sc&&typeof sc.cx==="number"){ curX=sc.cx; }
+          return {x:curX<0.5?0.68:0.32, y:(rule==="diag"?0.30:0.38)};
+        }
+        return {x:0.5, y:0.45};
+      }catch(e){ return {x:0.5,y:0.45}; }
+    }
+    function showAicRing(plan,a){
+      var ring=document.getElementById("aicRing"); if(!ring) return;
+      try{
+        if(!plan||!state.aicMode||state.aicStyle!=="full"){ ring.style.display="none"; return; }
+        var r=_subjectRect(a);
+        var W=stage.clientWidth,H=stage.clientHeight;
+        if(!r||W<=10||H<=10){ ring.style.display="none"; return; }
+        var t=state._ringTarget||_ringTargetFor(plan);
+        state._ringTarget=t;
+        var cx=t.x*W, cy=t.y*H;
+        ring.style.left=cx+"px"; ring.style.top=cy+"px";
+        ring.style.display="block";
+        var sx=(r[0]+r[2])/2, sy=(r[1]+r[3])/2;
+        var dist=Math.sqrt(Math.pow((sx-t.x)*W,2)+Math.pow((sy-t.y)*H,2));
+        var th=W*0.10;
+        var lbl=document.getElementById("aicRingLbl");
+        if(dist<th){
+          ring.classList.add("locked"); state._ringLocked=true;
+          if(lbl) lbl.textContent="✓ 已对准，保持住";
+        } else {
+          ring.classList.remove("locked"); state._ringLocked=false;
+          if(lbl){
+            var dx=sx-t.x, dy=sy-t.y;
+            if(Math.abs(dx)>Math.abs(dy)){ lbl.textContent=dx>0?"主体在圆环右方 · 手机向左移":"主体在圆环左方 · 手机向右移"; }
+            else{ lbl.textContent=dy>0?"主体在圆环下方 · 手机放低一点":"主体在圆环上方 · 手机举高一点"; }
+          }
+        }
+      }catch(e){ ring.style.display="none"; }
+    }
+    // 2) 距离估算（米）：真人边界约1.7m + 主摄竖直FOV约60° → d≈1.47/h
+    function _estDistance(a){
+      try{
+        var r=_subjectRect(a);
+        if(!r) return null;
+        var h=r[3]-r[1]; if(h<0.05) return null;
+        var d=1.47/h;
+        return Math.max(0.5,Math.round(d*2)/2);
+      }catch(e){ return null; }
+    }
+    function _shotSizeLabel(h){
+      if(h>=0.82) return "特写";
+      if(h>=0.60) return "半身";
+      if(h>=0.42) return "七分身";
+      if(h>=0.26) return "全身";
+      return "远景";
+    }
+    var _sizeTargetH={特写:0.88,半身:0.70,七分身:0.50,全身:0.34,远景:0.18};
+    // 3) 光线方向（像素近似）：主体上部(脸区)亮度 vs 画面整体亮度
+    function _lightDir(a){
+      try{
+        var r=_subjectRect(a);
+        if(!r) return null;
+        var el=currentEl();
+        if(!el) return null;
+        var vw=el.videoWidth||el.naturalWidth, vh=el.videoHeight||el.naturalHeight;
+        if(!vw||!vh) return null;
+        var W=64, H=Math.max(1,Math.round(W*vh/vw));
+        var c=document.createElement("canvas"); c.width=W; c.height=H;
+        var cx=c.getContext("2d",{willReadFrequently:true});
+        cx.drawImage(el,0,0,W,H);
+        var d=cx.getImageData(0,0,W,H).data;
+        var faceSum=0,faceN=0,allSum=0,allN=0;
+        var fx1=Math.max(0,Math.floor(r[0]*W)), fy1=Math.max(0,Math.floor(r[1]*H));
+        var fx2=Math.min(W-1,Math.ceil(r[2]*W)), fy2=Math.min(H-1,Math.ceil((r[1]+(r[3]-r[1])*0.38)*H));
+        for(var y=0;y<H;y++){ for(var x=0;x<W;x++){ var i=(y*W+x)*4; var g=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]; allSum+=g; allN++; if(x>=fx1&&x<=fx2&&y>=fy1&&y<=fy2){ faceSum+=g; faceN++; } } }
+        if(!allN) return null;
+        var mean=allSum/allN, face=faceN?faceSum/faceN:mean;
+        if(face<mean*0.62) return {k:"back",txt:"人物背光：可拍剪影/氛围感；想清晰人像请转身让光打到脸上"};
+        if(face>mean*1.22) return {k:"front",txt:"正面光：色彩饱满，直接拍"};
+        return {k:"side",txt:"光线柔和均匀，很适合拍"};
+      }catch(e){ return null; }
+    }
+    function _cameraHeightAdvice(size){
+      var m={特写:"手机与人物眼睛平齐",半身:"手机举到与胸部平齐",七分身:"手机放低到腰部下方、微仰拍更显高",全身:"手机放低到膝盖高度、微微仰拍显腿长",远景:"机位可稍低，突出环境"};
+      return m[size]||"手机与胸部平齐";
+    }
+    // 4) 场景教练条：距离/景别/机位/光线一句话提示
+    function showSceneAdvice(a,plan){
+      var box=document.getElementById("aicSceneAdvice"); if(!box) return;
+      try{
+        if(!state.aicMode||state.aicStyle!=="full"){ box.innerHTML=""; return; }
+        var chips=[]; var scene={}; scene.cx=0.5;
+        var r=_subjectRect(a);
+        if(r){
+          scene.cx=(r[0]+r[2])/2;
+          var h=r[3]-r[1];
+          var size=_shotSizeLabel(h);
+          var dist=_estDistance(a);
+          scene.sizeCur=size; scene.h=h; scene.dist=dist;
+          var hT=_sizeTargetH.七分身;
+          var adv=null;
+          if(h>hT*1.18){ var back=Math.max(1,Math.round((h/hT-1)*(dist||2))); adv={t:"warn",x:"当前"+size+"偏满：后退约 "+back+" 米拍七分身"}; }
+          else if(h<hT*0.85){ var fwd=Math.max(1,Math.round((1-h/hT)*(dist||2))); adv={t:"warn",x:"当前"+size+"偏小：前进约 "+fwd+" 米拍七分身"}; }
+          else { adv={t:"good",x:"当前"+size+"，景别合适"}; }
+          chips.push(adv); scene.sizeAdv=adv;
+          if(dist){ chips.push({t:"",x:"距人物约 "+dist+" 米"}); }
+          var ld=_lightDir(a);
+          if(ld){ scene.light=ld; chips.push({t:ld.k==="back"?"warn":"",x:ld.txt}); }
+          var ha=_cameraHeightAdvice("七分身");
+          chips.push({t:"",x:"机位："+ha});
+          scene.heightAdv=ha;
+        } else {
+          chips.push({t:"",x:"未检测到人物，按风景构图引导"});
+          var ld2=_lightDir(a);
+          if(ld2){ chips.push({t:ld2.k==="back"?"warn":"",x:ld2.txt}); }
+        }
+        state._aicScene=scene;
+        box.innerHTML=chips.slice(0,4).map(function(c){ return '<span class="sa-chip'+(c.t?" "+c.t:"")+'">'+esc(c.x)+'</span>'; }).join("");
+      }catch(e){ box.innerHTML=""; }
+    }
+    // 5) 步骤教学：对准→距离→机位光线→开拍（只前进不回退，防闪烁）
+    var _TEACH_MSGS=["第1步 · 移动手机，让主体进入彩色圆环","第2步 · 按提示调整距离（景别）","第3步 · 看机位/光线提示并调整","第4步 · 画面就绪，按下方快门"];
+    function updateTeachBar(plan,a){
+      var bar=document.getElementById("aicTeachBar"); if(!bar) return;
+      try{
+        if(!state.aicMode||state.aicStyle!=="full"||!state.teachOn){ bar.style.display="none"; return; }
+        bar.style.display="flex";
+        var step=state.teachStep||1; if(step<1) step=1;
+        var r=_subjectRect(a);
+        var sc=state._aicScene||{};
+        var ringOk=state._ringLocked;
+        if(!ringOk && r && state._ringTarget){
+          var W=stage.clientWidth||1;
+          var dd=Math.sqrt(Math.pow(((r[0]+r[2])/2-state._ringTarget.x)*W,2)+Math.pow(((r[1]+r[3])/2-state._ringTarget.y)*(stage.clientHeight||1),2));
+          ringOk=dd<W*0.10;
+        }
+        var distOk=typeof sc.h==="number" && Math.abs(sc.h-_sizeTargetH.七分身)<0.13;
+        if(step===1&&ringOk) step=2;
+        if(step===2&&distOk) step=3;
+        if(step===3&&ringOk&&distOk) step=4;
+        if(step>4) step=4;
+        state.teachStep=step;
+        var dots="";
+        for(var i=1;i<=4;i++){ var cls=i<step?"done":(i===step?"on":""); dots+='<span class="tb-dot '+cls+'"></span>'; }
+        bar.innerHTML=dots+'<span class="tb-txt">'+esc(_TEACH_MSGS[step-1])+'</span>';
+      }catch(e){ bar.style.display="none"; }
+    }
+    // 6) 拍后并排对比：你看到的画面 vs AI 成片 + 构图教学
+    function showShotCompare(){
+      var box=document.getElementById("shotCompare"); if(!box) return;
+      try{
+        var raw=state._lastRawShot, fin=state.lastShotURL;
+        if(!raw||!fin){ box.style.display="none"; return; }
+        var ri=document.getElementById("cmpRawImg"), fi=document.getElementById("cmpFinalImg");
+        if(ri) ri.src=raw;
+        if(fi) fi.src=fin;
+        var plan=state.aicPlan||state.plan||{};
+        var teach="";
+        if(plan.rule&&RULES[plan.rule]){
+          var rn=RULES[plan.rule].cn;
+          var sc=state._aicScene||{};
+          var sizeTxt=sc.sizeAdv?("画面"+sc.sizeAdv.x+"。"):"";
+          teach="✏️ 构图教学：采用"+rn+"，主体更突出。"+sizeTxt;
+        }
+        var t=document.getElementById("cmpTeach"); if(t) t.textContent=teach;
+        box.style.display="block";
+      }catch(e){ box.style.display="none"; }
+    }
     // v7.2 #20: 水平仪（真机陀螺仪；桌面无传感器自动隐藏，绝不报错）
     function _aicOnOrient(ev){
       try{
@@ -6589,8 +6854,16 @@ if(aiModelState!=="idle"){ resolve(false); return; }
     function _hideAicLevel(){ var bar=document.getElementById("aicLevel"); if(bar)bar.classList.remove("show"); }
     btnAIC.addEventListener("click",function(){
       if(state.aicMode){ stopAicMode(); }
-      else { startAicMode(); }
+      else { startAicMode("full"); }
     });
+    // v8.2.0 轻量构图入口：保留旧版 AI 构图全部行为（引导线+锁定+裁切+滤镜+变焦），无实景教练层
+    var _aicLite=document.getElementById("btnAICLite");
+    if(_aicLite){
+      _aicLite.addEventListener("click",function(){
+        if(state.aicMode){ stopAicMode(); return; }
+        startAicMode("lite");
+      });
+    }
     dfpClose.addEventListener("click",function(){ aicFilterPanel.style.display="none"; });
 
     // AI 构图 模式下拍照自动应用裁切+滤镜+变焦，然后显示成品
@@ -6707,6 +6980,11 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       var vw=srcEl.videoWidth||srcEl.naturalWidth||srcEl.width, vh=srcEl.videoHeight||srcEl.naturalHeight||srcEl.height;
       if(!vw||!vh){ return; }
       try{
+        // 0) v8.2.0 实景构图器：捕获快门瞬间原画面（未滤镜/未裁切）供拍后并排对比
+        var _rawC=document.createElement("canvas");
+        _rawC.width=vw; _rawC.height=vh;
+        _rawC.getContext("2d").drawImage(srcEl,0,0);
+        state._lastRawShot=_rawC.toDataURL("image/jpeg",0.85);
         // 1) 原帧 + 滤镜（canvas 2d filter 一次成型）
         var c=document.createElement("canvas");
         c.width=vw; c.height=vh;
@@ -6743,6 +7021,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         try{ if(photoView.src!==finalUrl){ photoView.src=finalUrl; } }catch(e){}
         showShot(finalUrl);
         shotOverlay.classList.add("aic-shot");
+        // v8.2.0 实景构图器：full 模式成片后自动并排对比「你看到的画面 vs AI 成片」
+        if(state.aicStyle==="full"){ setTimeout(function(){ showShotCompare(); },60); }
         toastMsg("AI 构图成品已生成：裁切+滤镜+变焦");
       }catch(err){
         console.error("AI 构图 成品生成失败:",err);
