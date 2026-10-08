@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v8.2.8 · 实景视觉构图生成工具</title>
-<meta name="description" content="AI 构图助手 Pro v8.2.8 · 实景视觉构图生成工具：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。含智能人像裁切（不切头/手/脚）、30 款滤镜、构图法则百科与云端 VLM 分析">
+<title>AI 构图助手 Pro v8.2.9 · 实景视觉构图生成工具</title>
+<meta name="description" content="AI 构图助手 Pro v8.2.9 · 实景视觉构图生成工具：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。含智能人像裁切（不切头/手/脚）、30 款滤镜、构图法则百科与云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v8.2.8 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切">
+<meta property="og:title" content="AI 构图助手 Pro v8.2.9 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切">
 <meta property="og:description" content="给不会拍照的普通人：打开相机，AI 教你怎么拍。AI 构图分析（本地像素+云端 VLM 双引擎）、人像保护裁切（不切头不切手脚）、30 款滤镜，一键出成品。默认本地运行，照片不上传。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
@@ -656,7 +656,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.2.8</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.2.9</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -1014,7 +1014,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.2.8 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.2.9 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1088,7 +1088,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v8.2.8";
+var APP_VER="v8.2.9";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -2026,9 +2026,16 @@ var APP_VER="v8.2.8";
 
     /* ===================== 真实像素分析 ===================== */
     function analyzePixels(el, dims){
-      // v4.0.1 增强引擎：降采样 192x128 + Sobel边缘对称度，输出亮度/曝光/色彩/对称/线条/主体等多维特征
+      // v4.0.1 增强引擎：降采样 + Sobel边缘对称度，输出亮度/曝光/色彩/对称/线条/主体等多维特征
+      // v8.2.9 内核修复：画布比例随源图自适应（原固定 256x192 把竖图压扁，bodyRatio/rowGap/皮肤比例全失真——
+      //          60 张实测竖人像 bodyRatio 仅 0.07，人像/美食/水景大量误判 landscape）；
+      //          rowGap/rowPeakN 按 192 行基准归一化（rowScale），下游全部阈值体系零改动
       try{
-        var w=256, h=192; // v7.0.1: 192x128→256x192 显著性精度+78%（质心/Sobel 更稳）
+        var _vw0=el.videoWidth||el.naturalWidth||640, _vh0=el.videoHeight||el.naturalHeight||480;
+        if(!_vw0||!_vh0){ _vw0=640; _vh0=480; }
+        var w=256;
+        var h=Math.max(96, Math.min(512, Math.round(256*(_vh0/_vw0)))); // 竖图→高比例画布，横图→宽比例画布
+        var rowScale=192/h; // rowGap 映射回 192 行基准（阈值按该基准校准）
         var c=document.createElement("canvas");
         c.width=w; c.height=h;
         var ctx=c.getContext("2d",{willReadFrequently:true});
@@ -2106,7 +2113,7 @@ var APP_VER="v8.2.8";
           var a=0,b=0;
           for(var x0=0;x0<w;x0++){ a+=lum[(r0-1)*w+x0]; b+=lum[r0*w+x0]; }
           a/=w; b/=w;
-          var gap=Math.abs(a-b);
+          var gap=Math.abs(a-b)*rowScale; // v8.2.9: 按 192 行基准归一化（画布行数随源比例变化）
           if(gap>bestGap){ bestGap=gap; bestRow=r0; }
           // v4.6 P1-4: 楼层线判别器（Qwen：建筑立面多条强水平线，风景单一地平线）——亮度差>10/255 的行数
           if(gap>10){ rowPeakN++; }
@@ -2395,7 +2402,15 @@ var APP_VER="v8.2.8";
       // v4.6 P0-1: COCO person 二次校验——低置信 person（score<0.5）且画面像素特征强烈指向建筑/风景（强对称或强水平结构+小主体）时忽略
       // （豆包：泰姬陵/海边日落被误检 person → 强制人像+对称清零；Hy4：水晶球日落/鸬鹚山水被误检 person → 假人脸建议）
       if(modelPerson && state.aiData.personScore!==undefined && state.aiData.personScore<0.5){
-        if(a.sym>0.30 || (a.rowGap>25 && a.bodyRatio<0.35)){ modelPerson=false; }
+        // v8.2.9 食物豁免：低置信 person + COCO 食物类检出（蛋糕/碗/杯/盘等甜点特写圆形暖色常被误检人）→ 忽略 person 硬证据
+        // （60 张实测 dessert1/3/6 全被模型误检 person → 甜点判人像特写；真人人像 score 通常≥0.5 不受影响）
+        var _foodClsL = a.detectedClasses && (a.detectedClasses.indexOf("cake")>=0 || a.detectedClasses.indexOf("donut")>=0 ||
+          a.detectedClasses.indexOf("sandwich")>=0 || a.detectedClasses.indexOf("bowl")>=0 || a.detectedClasses.indexOf("cup")>=0 ||
+          a.detectedClasses.indexOf("dining table")>=0 || a.detectedClasses.indexOf("fork")>=0 || a.detectedClasses.indexOf("knife")>=0 ||
+          a.detectedClasses.indexOf("bottle")>=0 || a.detectedClasses.indexOf("banana")>=0 || a.detectedClasses.indexOf("apple")>=0 ||
+          a.detectedClasses.indexOf("orange")>=0 || a.detectedClasses.indexOf("broccoli")>=0 || a.detectedClasses.indexOf("carrot")>=0 ||
+          a.detectedClasses.indexOf("hot dog")>=0 || a.detectedClasses.indexOf("pizza")>=0 || a.detectedClasses.indexOf("cake")>=0);
+        if(_foodClsL || a.sym>0.30 || (a.rowGap>25 && a.bodyRatio<0.35)){ modelPerson=false; }
       }
       var modelLoaded = state.aiData && state.aiData.modelLoaded === true;
       var skinPass = false;
@@ -2412,7 +2427,9 @@ var APP_VER="v8.2.8";
         // 加 skinRatio>=0.25 下限——拦掉 10 张误判中的 8 张（风景/建筑/食物/湖湾弥散暖色），真人零损失（真人均 ≥29%，且 <25% 的全是 hr100 已拦）
         // v8.0.7 修复: geoOk 守卫三个字段此前从未从 analyzePixels 返回（恒 undefined→geoOk 恒 false），补字段后暴露误杀：skinHRatio<=0.98 把半身真人（皮肤包围盒占满高度=1.0）也拦掉；
         // 铺满拦截改用密实度 skinFill<0.98（暖色铺满 fill≈1），保留 HR>=0.15 拦零散暖色细条；特写真人（fill 0.6-0.97）放行
-        var geoOk = (a.skinFill>=0.15 && a.skinHRatio>=0.15 && a.skinAspect>=0.3 && a.skinAspect<=3.2 && a.skinRatio>=0.25 && a.skinFill<0.98);
+        // v8.2.9 弱网人像重校准：skinRatio>=0.25 只放行特写/半身；全身/大半身像皮肤占比天然 0.09~0.25（仅头+手），
+        // 放宽下限至 0.09，用 skinPass 的双重守卫（质心居中 dx²+dy²<0.04 + 皮肤必在主体上方 skinCy<cy-0.02）拦暖色误判
+        var geoOk = (a.skinFill>=0.15 && a.skinHRatio>=0.15 && a.skinAspect>=0.3 && a.skinAspect<=3.2 && a.skinRatio>=0.09 && a.skinFill<0.98);
         // v8.0.7 修复: 加方向约束 skinCy<cy-0.02——真人像皮肤（脸/手）必在显著性主体（全身）上方；暖色物体（牛排/红酒桌）皮肤=物体本身无上下关系（food_1 美食图 skinRatio0.34 全过旧判据被误判人像）
         skinPass = (dx*dx + dy*dy) < 0.04 && geoOk && (a.skinCy < a.cy - 0.02); // 0.20^2
         if(skinPass) offlineGuess = true;
@@ -2421,6 +2438,9 @@ var APP_VER="v8.2.8";
       }
       // v4.5 P0-1: 模型已加载时肤色绝不硬判人像；弱网时肤色经几何守卫后仅作"初判"（面板明示+置信度上限）
       var isPerson = modelPerson || (!modelLoaded && skinPass);
+      // v8.2.9 弱人像保护：像素初判 likely 但皮肤守卫未满（全身/大半身像皮肤占比天然 0.05~0.25，skinPass 常差一点），
+      // 跳过风景/建筑/水面等强判定落通用构图——三分法对任何主体安全，避免"人像被判水面/建筑"强错误建议
+      var weakPerson = !modelLoaded && !isPerson && (!!a.isPersonLikely || (a.skinRatio>0.03 && a.skinCy<0.75 && a.skinFill>0.03));
       var sceneType = "general";
       if(isPerson){
         // v4.3: 特写判据改用 bbox 高度占比（面积占比被宽松框撑到91-95%，半身/环境人像被误判特写强制居中）
@@ -2428,9 +2448,14 @@ var APP_VER="v8.2.8";
         // v4.6 P2-7: 弱网特写兜底（Qwen 三轮遗留）——模型/面部均不可用时，肤色 bbox 高占比+密实度近似特写
         if(a.bodyH===undefined && !modelLoaded && a.skinHRatio!==undefined && a.skinHRatio>=0.45 && a.skinFill>=0.35){ closeUpRatio = 0.75; }
         sceneType = closeUpRatio > 0.72 ? "portrait_close" : "portrait";
-      } else if(!isPerson && a.hSym>0.30 && a.hSym>a.vSym*1.15 && a.contrast<95){
+      } else if(!weakPerson && !isPerson && a.hSym>0.30 && a.hSym>a.vSym*1.15 && a.contrast<95){
         sceneType = "waterscape"; // v4.5 P1-2: 水平镜像显著+低对比=水面倒影（COCO无lake类，boat未检出时像素通道兜底）
-      } else {
+      } else if(!weakPerson){
+        // v8.2.9 夜景像素通道：暗光主导(mean<75)+高饱和霓虹(sat≥0.5)+低对比(contrast<60)——60 张实测 night 3/3
+        // 放建筑/风景判定前：夜景灯光氛围优先，避免霓虹夜景被风景三通道误判 landscape
+        if(a.mean<75 && a.sat>=0.5 && a.contrast<60){
+          sceneType = "night";
+        } else {
         // v4.6 P1-4: boat 置信度豁免（GLM：城堡被低信度 boat 带偏）——boat score≥0.5 才豁免建筑判定；弱网无模型时保持原逻辑
         var boatSkip=false;
         if(a.detectedClasses && a.detectedClasses.indexOf("boat")>=0){
@@ -2502,6 +2527,7 @@ var APP_VER="v8.2.8";
           var landscapeGuard = (a.rowGap>25 && !hasTable && a.bodyRatio<0.35 && foodDetCount<2);
           if(hasFW && a.sat>0.2 && (hasTable || hasSmall || a.bodyRatio<0.45) && !landscapeGuard){ sceneType="food"; }
         }
+        } // v8.2.9: night 通道 else 闭合
       }
       if(sceneType==="animal"){ plan.subject=a.subject||"动物"; }
       if(sceneType==="food"){ plan.subject=a.subject||"美食"; }
@@ -7864,7 +7890,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
   }; }catch(e){}
 })();
   </script>
-<div id="aicUpdateBar" class="hide"><span class="ub-t">✨ 新版本 v8.2.8 已就绪：实景构图更跟手 + 循环底层减负</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
+<div id="aicUpdateBar" class="hide"><span class="ub-t">✨ 新版本 v8.2.9 已就绪：本地分析引擎重构（竖图不再压扁）+ 夜景识别 + 弱网人像保护</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
 <script>
 (function(){
   // v8.2.3 新版本就绪提示条：SW 激活后广播 → 页面弹出"立即刷新"，根治旧缓存看不到新功能
