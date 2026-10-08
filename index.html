@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v8.2.4 · 实景视觉构图生成工具</title>
-<meta name="description" content="AI 构图助手 Pro v8.2.4 · 实景视觉构图生成工具：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。含智能人像裁切（不切头/手/脚）、30 款滤镜、构图法则百科与云端 VLM 分析">
+<title>AI 构图助手 Pro v8.2.5 · 实景视觉构图生成工具</title>
+<meta name="description" content="AI 构图助手 Pro v8.2.5 · 实景视觉构图生成工具：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。含智能人像裁切（不切头/手/脚）、30 款滤镜、构图法则百科与云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v8.2.4 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切">
+<meta property="og:title" content="AI 构图助手 Pro v8.2.5 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切">
 <meta property="og:description" content="给不会拍照的普通人：打开相机，AI 教你怎么拍。AI 构图分析（本地像素+云端 VLM 双引擎）、人像保护裁切（不切头不切手脚）、30 款滤镜，一键出成品。默认本地运行，照片不上传。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
@@ -656,7 +656,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.2.4</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.2.5</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -1014,7 +1014,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.2.4 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.2.5 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1088,7 +1088,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v8.2.4";
+var APP_VER="v8.2.5";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -2051,7 +2051,9 @@ var APP_VER="v8.2.4";
           // v4.0.1: YCbCr肤色检测（标准人像肤色范围）
           var cb=128-0.168736*r-0.331264*g+0.5*b;
           var cr=128+0.5*r-0.418688*g-0.081312*b;
-          if(cb>77 && cb<127 && cr>133 && cr<173 && r>95 && g>40 && b>20 && r>g && r>b){
+          // v8.2.5 收紧肤色：cr下限133→140（暖白纸/墙面cr≈128-138被误判，真人肤色cr≈140-165）；
+          // 加 r-b>18（白纸三色接近，肤色红蓝差大）、r<246（排除高亮白纸；真人高光除外）、g>b
+          if(cb>77 && cb<127 && cr>140 && cr<173 && r>95 && g>40 && b>20 && r>g && g>b && (r-b)>18 && r<246){
             skinCnt++; skinSx+=(i%w); skinSy+=Math.floor(i/w);
             var _px=i%w, _py=Math.floor(i/w);
             if(_px<skinMinX) skinMinX=_px; if(_px>skinMaxX) skinMaxX=_px;
@@ -4167,6 +4169,20 @@ var APP_VER="v8.2.4";
       if(ruleSheet.classList.contains("show")){ ruleSheet.classList.remove("show"); return; }
       if(cropTool.classList.contains("show")){ cropTool.classList.remove("show"); return; }
     });
+    // v8.2.5 恢复实时取景：video 播放 + 隐藏 photoView（成片曾写入 photoView），_reset 时复位变焦/滤镜；
+    // 持续分析循环在 shotOverlay 隐藏后会自动恢复（_aicMaybeAnalyze 不再被结果卡挡住）
+    function _resumeAicLive(_reset){
+      try{
+        if(!(state.aicMode && state.mode==="camera" && state.stream)){ return; }
+        videoCam.classList.add("show");
+        photoView.classList.remove("show");
+        try{ var _pr=videoCam.play(); if(_pr&&_pr.catch){ _pr.catch(function(){}); } }catch(e){}
+        if(_reset){
+          if(state.zoom && state.zoom>1.001){ state.zoom=1; try{ zoomRange.value=1; }catch(e){} applyZoom(); }
+          if(state.filter && state.filter!=="clear"){ setFilter("clear"); }
+        }
+      }catch(e){}
+    }
     // v8.1.2: 统一关闭结果卡——同时复位 AIC 结果卡样式，避免拍完卡在浮层无法返回
     function closeShotOverlay(){
       shotOverlay.classList.remove("show");
@@ -4175,12 +4191,14 @@ var APP_VER="v8.2.4";
       state._lastRawShot=null;
       var _sc=document.getElementById("shotCompare"); if(_sc){ _sc.style.display="none"; }
       _consumeGate();
+      _resumeAicLive(true); // v8.2.5 关闭后恢复实时取景（根治画面冻结）
     }
     btnShotClose.addEventListener("click",closeShotOverlay);
     // v8.1.2: 点击结果卡以外的遮罩空白区域也可关闭返回（手机上的兜底返回手势）
     shotOverlay.addEventListener("click",function(e){ if(e.target===shotOverlay){ closeShotOverlay(); } });
     btnShotAgain.addEventListener("click",function(){
       shotOverlay.classList.remove("show");
+      _resumeAicLive(false); // v8.2.5 确保 video 恢复播放，再重拍
       setTimeout(function(){ btnShoot.click(); }, 60);
     });
 
@@ -6388,6 +6406,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           _stc.addEventListener("click",function(){ var _b=document.getElementById("btnShoot"); if(_b){ _b.click(); } });
           _stx.addEventListener("click",function(){ stopAicMode(); });
         }
+        _aicStartLoop(); // v8.2.5 持续分析循环：圆环/教练实时跟随
       }
       state.aicMode=true;
       state.aicStyle=style;
@@ -6402,6 +6421,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
     }
     function stopAicMode(){
       if(!state.aicMode) return;
+      _aicStopLoop(); // v8.2.5 停止持续分析循环
       // v8.2.3 退出实景构图工作室：隐藏全屏层并恢复原相机界面
       var _st=document.getElementById("aicStudio"); if(_st){ _st.classList.remove("show"); }
       document.body.classList.remove("aic-studio-on");
@@ -6444,13 +6464,13 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         return {mean:mean, rows:rows, diff:diff};
       }catch(e){ return null; }
     }
-    function runAicAnalysis(){
+    function runAicAnalysis(_silent){
       if(!state.aicMode) return;
       var el=currentEl();
-      if(!el){ setTimeout(runAicAnalysis,300); return; }
+      if(!el){ setTimeout(function(){ runAicAnalysis(_silent); },300); return; }
       state.analyzing=true;
       var token=++state.analyzeToken;
-      setStatus("AI 正在分析构图…","");
+      if(!_silent){ setStatus("AI 正在分析构图…",""); }
       setTimeout(function(){
         if(token!==state.analyzeToken || !state.aicMode){ state.analyzing=false; return; }
         try{
@@ -6492,7 +6512,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             var _tsa=document.getElementById("aicSceneAdvice"); if(_tsa){ _tsa.innerHTML=""; }
             var _ttb=document.getElementById("aicTeachBar"); if(_ttb){ _ttb.style.display="none"; }
           }
-          setStatus("构图已锁定 · 可直接拍照，拍完即成品","done");
+          if(!_silent){ setStatus("构图已锁定 · 可直接拍照，拍完即成品","done"); }
           // v4.0.1: AI 分析时主动加载模型并等待，确保 isPerson 生效
           if(state.aiModelEnabled){
             // v8.0.5 B-01: 此处仅为补本地人体框(isPerson)，固定本地检测，避免云端模式下重复发云端请求
@@ -6504,7 +6524,25 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             }
           }
         }catch(err){ console.error("AI 构图分析异常:",err); state.analyzing=false; }
-      }, 1200);
+      }, _silent?300:1200);
+    }
+    // v8.2.5 实景构图持续分析循环：让圆环/教练实时跟随画面（此前仅进入时分析一次，移动手机教练不动）
+    function _aicMaybeAnalyze(){
+      try{
+        if(!state.aicMode || state.aicStyle!=="full"){ return; }
+        if(state.analyzing){ return; }
+        var ov=document.getElementById("shotOverlay");
+        if(ov && ov.classList.contains("show")){ return; } // 结果卡/对比显示时暂停
+        var el=currentEl(); if(!el){ return; }
+        runAicAnalysis(true);
+      }catch(e){}
+    }
+    function _aicStartLoop(){
+      _aicStopLoop();
+      state._aicLoopTimer=setInterval(_aicMaybeAnalyze, 600);
+    }
+    function _aicStopLoop(){
+      if(state._aicLoopTimer){ clearInterval(state._aicLoopTimer); state._aicLoopTimer=null; }
     }
     function showAicSteps(plan){
       // v6.7 P0: 四步结构化展示——先描述画面→构图法→滤镜→裁切理由（云端语义字段缺失时优雅降级）
@@ -7806,7 +7844,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
   }; }catch(e){}
 })();
   </script>
-<div id="aicUpdateBar" class="hide"><span class="ub-t">✨ 新版本 v8.2.4 已就绪：实景构图界面全面精简优化</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
+<div id="aicUpdateBar" class="hide"><span class="ub-t">✨ 新版本 v8.2.5 已就绪：拍照后实时更新恢复 + 人物识别更准</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
 <script>
 (function(){
   // v8.2.3 新版本就绪提示条：SW 激活后广播 → 页面弹出"立即刷新"，根治旧缓存看不到新功能
