@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v8.3.0 · 实景视觉构图生成工具</title>
-<meta name="description" content="AI 构图助手 Pro v8.3.0 · 实景视觉构图生成工具：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。含 YOLO11n 本地检测、智能人像裁切（不切头/手/脚）、30 款滤镜、构图法则百科与云端 VLM 分析">
+<title>AI 构图助手 Pro v8.3.1 · 实景视觉构图生成工具</title>
+<meta name="description" content="AI 构图助手 Pro v8.3.1 · 实景视觉构图生成工具：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。含 YOLO11n 本地检测、智能人像裁切（不切头/手/脚）、30 款滤镜、构图法则百科与云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v8.3.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切">
+<meta property="og:title" content="AI 构图助手 Pro v8.3.1 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切">
 <meta property="og:description" content="给不会拍照的普通人：打开相机，AI 教你怎么拍。AI 构图分析（本地像素+云端 VLM 双引擎）、人像保护裁切（不切头不切手脚）、30 款滤镜，一键出成品。默认本地运行，照片不上传。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
@@ -656,7 +656,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.3.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.3.1</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -1014,7 +1014,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.3.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.3.1 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1088,7 +1088,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v8.3.0";
+var APP_VER="v8.3.1";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -2785,6 +2785,20 @@ var APP_VER="v8.3.0";
       plan.conf=Math.min(99,Math.round(70+Math.min(1,bestScore)*25));
       if(plan.offlineGuess){ plan.conf=Math.min(plan.conf,82); } // v4.5 P0-1: 弱网像素初判置信度上限
       if(a.bodyRatio<0.05 && (!a.detectedClasses||!a.detectedClasses.length) && a.contrast<15){ plan.conf=Math.min(plan.conf,65); } // v4.5 P2: 纯色无主体置信度封顶（GLM问题A）
+      // v8.3.1 场景置信挂钩：水景/建筑是多特征阈值判定，证据"刚过线"时置信度诚实下调（82~96），
+      // 不误导用户以为把握十足；不影响 sceneType/rule/crop（零回退）。证据越足 conf 越高。
+      if(!isPerson && !weakPerson){
+        if(sceneType==="waterscape"){
+          var _ws=Math.min(1, (a.blueWater||0)*0.40 + (a.shoreReflect||0)*0.35 + Math.max(0,0.55-(a.manmadeScore||0))/0.55*0.25);
+          plan.conf=Math.min(plan.conf, Math.round(82+_ws*14));
+        } else if(sceneType==="architecture"){
+          var _as=0.55; // facadeHint 默认中位证据
+          if(typeof _a1!=="undefined" && _a1){ _as=Math.min(1, (a.manmadeScore-0.55)/0.25 + (a.horizOrtho||0)*0.30); }
+          else if(typeof _a2!=="undefined" && _a2){ _as=Math.min(1, ((a.warmRatio||0)-0.30)/0.20 + (a.horizOrtho||0)*0.30); }
+          else if(typeof _a3!=="undefined" && _a3){ _as=Math.min(1, ((a.centerVert||0)-0.38)/0.12 + (a.centerH2||0)*0.30); }
+          plan.conf=Math.min(plan.conf, Math.round(82+_as*14));
+        }
+      }
       
       // ===== 2. 动态裁切框计算（v4.0.1 核心优化：人像优先保证人脸完整） =====
       var cropLeft=0, cropRight=0, cropTop=0, cropBottom=0;
@@ -3094,6 +3108,32 @@ var APP_VER="v8.3.0";
           if(plan.crop[1]>ly0*100-6){ plan.crop[1]=Math.round(Math.max(0,ly0*100-6)); }
           if(plan.crop[2]>(1-lx1)*100-3){ plan.crop[2]=Math.round(Math.max(0,(1-lx1)*100-3)); }
           if(plan.crop[3]>(1-ly1)*100-6){ plan.crop[3]=Math.round(Math.max(0,(1-ly1)*100-6)); } // v8.0.5(终检): 补并集底边，前排最下方人脸/下巴不被裁
+        }
+      }catch(e){}
+      // v8.3.1 裁后构图质量分：裁切不仅要"不裁到主体"，还要"裁完落在三分点附近"
+      // 偏离明显时保守收窄（×0.6，只减不增，绝不反向扩裁）；质量分写入 notes 供用户感知
+      try{
+        var _qc=plan.crop;
+        if(_qc && _qc.length===4 && (_qc[0]+_qc[1]+_qc[2]+_qc[3])>0.5 && !plan.noCrop){
+          var _qL=_qc[0]/100,_qT=_qc[1]/100,_qR=_qc[2]/100,_qB=_qc[3]/100;
+          var _qw=Math.max(0.01,1-_qL-_qR), _qh=Math.max(0.01,1-_qT-_qB);
+          var _qx=hasFace?faceX:a.cx, _qy=hasFace?faceY:a.cy;
+          if(typeof _qx==="number" && typeof _qy==="number"){
+            var _qx2=(_qx-_qL)/_qw, _qy2=(_qy-_qT)/_qh;
+            var _dx=Math.min(Math.abs(_qx2-0.33),Math.abs(_qx2-0.67));
+            var _dy=Math.min(Math.abs(_qy2-0.33),Math.abs(_qy2-0.67));
+            var _qScore=Math.round(100-(_dx+_dy)*180);
+            if(_qScore<62){
+              var _k6=0.6;
+              _qc[0]=Math.round(_qc[0]*_k6); _qc[1]=Math.round(_qc[1]*_k6);
+              _qc[2]=Math.round(_qc[2]*_k6); _qc[3]=Math.round(_qc[3]*_k6);
+              notes.push("✂️ 已保守收窄裁切，避免主体偏离构图点");
+            } else if(_qScore<78){
+              notes.push("✂️ 裁后主体接近构图点，构图较稳");
+            } else {
+              notes.push("✓ 裁后主体精准落在构图点上");
+            }
+          }
         }
       }catch(e){}
       plan.notes=notes;
