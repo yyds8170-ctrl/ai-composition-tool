@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v8.2.9 · 实景视觉构图生成工具</title>
-<meta name="description" content="AI 构图助手 Pro v8.2.9 · 实景视觉构图生成工具：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。含智能人像裁切（不切头/手/脚）、30 款滤镜、构图法则百科与云端 VLM 分析">
+<title>AI 构图助手 Pro v8.3.0 · 实景视觉构图生成工具</title>
+<meta name="description" content="AI 构图助手 Pro v8.3.0 · 实景视觉构图生成工具：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。含 YOLO11n 本地检测、智能人像裁切（不切头/手/脚）、30 款滤镜、构图法则百科与云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v8.2.9 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切">
+<meta property="og:title" content="AI 构图助手 Pro v8.3.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切">
 <meta property="og:description" content="给不会拍照的普通人：打开相机，AI 教你怎么拍。AI 构图分析（本地像素+云端 VLM 双引擎）、人像保护裁切（不切头不切手脚）、30 款滤镜，一键出成品。默认本地运行，照片不上传。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
@@ -656,7 +656,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.2.9</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.3.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -1014,7 +1014,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.2.9 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.3.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1088,7 +1088,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v8.2.9";
+var APP_VER="v8.3.0";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -2231,6 +2231,144 @@ var APP_VER="v8.2.9";
         var hTop3=(hIoUs[0]+hIoUs[1]+hIoUs[2])/3; // v4.5 P1-3: top-3平均IoU（强对称多偏移高IoU，偶然对齐仅单峰被抑制）
         var hSym=hChance<0.9?Math.max(0,(hTop3-hChance)/(1-hChance)):0;
         sym=Math.max(sym,hSym); // v4.3: 水平/垂直对称取强者
+
+        // ===== v8.3.0 场景三特征：水面 / 人工建筑结构 / 夜间灯光（数据驱动校准，替代"对称即建筑""暗即夜景"的单信号误判）=====
+        var midY=Math.floor(h*0.5);
+        // (1) 水面基础特征：下半区低纹理占比（平静水面）+ 横贯水岸线 + 水面反光 + 上下半纹理落差
+        var lowTexLower=0, lowerN=0, glareLower=0;
+        for(var wy=midY; wy<h; wy++){
+          for(var wx=0; wx<w; wx++){
+            var wii=wy*w+wx; lowerN++;
+            if(gradMag[wii]<edgeThresh) lowTexLower++;
+            if(lum[wii]>195) glareLower++;
+          }
+        }
+        lowTexLower/=Math.max(1,lowerN); glareLower/=Math.max(1,lowerN);
+        var horizonOk=(bestRow>=h*0.2 && bestRow<=h*0.78 && bestGap>12)?1:0;
+        var upperTex=0, utN=0;
+        for(var uy=0;uy<midY;uy++) for(var ux=0;ux<w;ux++){ utN++; if(gradMag[uy*w+ux]>edgeThresh) upperTex++; }
+        upperTex/=Math.max(1,utN);
+        var splitTex=Math.abs(upperTex-(1-lowTexLower));
+        // (1b) 水岸线局部倒影 IoU：以最强水平边缘行（水岸线，位置任意）为轴，上下紧邻条带镜像边缘匹配
+        //      修正"水岸线不在画面正中→中线 hSym 失效"（water_2/4、mountain4 实测）
+        function _shoreIoU(rRow){
+          var hh=Math.min(Math.floor(h*0.26), h-rRow, rRow);
+          if(hh<Math.floor(h*0.09)) return 0;
+          var best=0;
+          for(var hOff=-4;hOff<=4;hOff+=2){
+            var inter=0,union=0;
+            for(var dy=0;dy<hh;dy++){
+              var ryU=rRow-1-dy, ryD=rRow+dy+hOff;
+              if(ryU<0||ryD>=h) continue;
+              for(var xx=2;xx<w-2;xx++){
+                var eU=gradMag[ryU*w+xx]>edgeThresh?1:0;
+                var eD=gradMag[ryD*w+xx]>edgeThresh?1:0;
+                if(eU||eD) union++;
+                if(eU&&eD) inter++;
+              }
+            }
+            if(union>0) best=Math.max(best,inter/union);
+          }
+          return best;
+        }
+        var shoreReflect=0;
+        // 多候选水岸线：最强水平边缘常被屋顶/平台抢走（water_2 实测），对所有 gap>6 的候选行
+        // （位于画面 0.18~0.82）算局部倒影 IoU，取最大；另保留 bestRow 邻域
+        var _candRows=[];
+        for(var cr0=1;cr0<h;cr0++){
+          var aa=0,bb=0;
+          for(var cx0=0;cx0<w;cx0++){ aa+=lum[(cr0-1)*w+cx0]; bb+=lum[cr0*w+cx0]; }
+          var _g=Math.abs(aa/w-bb/w)*rowScale;
+          if(_g>6 && cr0>h*0.18 && cr0<h*0.82) _candRows.push([cr0,_g]);
+        }
+        _candRows.sort(function(u,v){return v[1]-u[1];});
+        var _seenRow={};
+        for(var ci2=0;ci2<Math.min(10,_candRows.length);ci2++){
+          var _r0=_candRows[ci2][0];
+          for(var srz=-4;srz<=4;srz+=4){
+            var rr=_r0+srz;
+            if(rr>h*0.15&&rr<h*0.85&&!_seenRow[rr]){ _seenRow[rr]=1; shoreReflect=Math.max(shoreReflect,_shoreIoU(rr)); }
+          }
+        }
+        // (1c) 蓝水面：下半区均值 g/b 明显高于 r（反射蓝天/蓝海）；森林俯瞰（下半为树）不满足
+        var lrr=0,lgg=0,lbb=0,lnn=0;
+        for(var byy=midY;byy<h;byy++) for(var bxx=0;bxx<w;bxx++){
+          var pp=byy*w*4+bxx*4; lnn++; lrr+=data[pp]; lgg+=data[pp+1]; lbb+=data[pp+2];
+        }
+        lrr/=lnn;lgg/=lnn;lbb/=lnn;
+        var _blueGap=((lgg+lbb)/2-lrr);
+        var blueWater=(_blueGap>14 && sat>0.18)?Math.min(1,(_blueGap-14)/45+0.35):0;
+        var waterScore=Math.min(1, lowTexLower*0.16 + horizonOk*0.20 + Math.min(1,glareLower*4)*0.08
+            + Math.min(1,splitTex*2)*0.08 + shoreReflect*0.24 + blueWater*0.20 + (hSym>0.30?0.04:0));
+        // (2) 人工建筑结构分：近垂直与近水平正交边缘必须同时具备（森林只有树干垂直、无水平楼层线）
+        var vertOrthoN=0, horizOrthoN=0, edgeN2=0;
+        for(var oi=0;oi<w*h;oi++){
+          var agm=gradMag[oi];
+          if(agm>edgeThresh*1.2){
+            edgeN2++;
+            var aabs=Math.abs(Math.atan2(gy[oi],gx[oi]));
+            if(aabs<0.30 || aabs>Math.PI-0.30) horizOrthoN++;          // 近水平边缘（楼层/屋檐）
+            else if(Math.abs(aabs-Math.PI/2)<0.30) vertOrthoN++;       // 近垂直边缘（柱子/墙沿）
+          }
+        }
+        var vertOrtho=edgeN2?vertOrthoN/edgeN2:0, horizOrtho=edgeN2?horizOrthoN/edgeN2:0;
+        var orthoRatio=edgeN2?(vertOrthoN+horizOrthoN)/edgeN2:0;
+        var orthoBoth=Math.min(vertOrtho,horizOrtho)*2; // 垂直/水平平衡才高（单方向=森林/海面）
+        var strongVertCols=0;
+        for(var vc=1;vc<w;vc++){
+          var cgs=0;
+          for(var cy2=1;cy2<h;cy2++){ cgs+=Math.abs(lum[cy2*w+vc]-lum[(cy2-1)*w+vc]); }
+          if(cgs/h>14) strongVertCols++;
+        }
+        var manmadeScore=Math.min(1, orthoBoth*0.55 + Math.min(1,(strongVertCols/w)*3)*0.30
+            + ((rowPeakN>=3&&rowPeakN<=60)?0.15:0));
+        // (3) 夜间灯光分：暗背景中散布的高亮像素簇（城市灯光/路灯），整片暗水面无亮点不得分
+        var brightN=0;
+        for(var li=0;li<w*h;li++){ if(lum[li]>175) brightN++; }
+        var brightRatio=brightN/(w*h);
+        var lightScore=(mean<100 && brightRatio>0.002 && brightRatio<0.20)?Math.min(1,0.25+brightRatio*8):0;
+        // (4) 绿色色相像素占比：森林/绿植主导 vs 城市建筑（俯视楼群与森林正交边缘接近，sat 亦重叠，绿色相是关键区分）
+        var greenN=0;
+        for(var hp2=0;hp2<w*h;hp2++){
+          var pr2=data[hp2*4]/255, pg2=data[hp2*4+1]/255, pb2=data[hp2*4+2]/255;
+          var hmx=Math.max(pr2,pg2,pb2), hd2=hmx-Math.min(pr2,pg2,pb2);
+          if(hd2>0.18 && hmx===pg2 && pg2>pr2*1.05 && pg2>pb2*1.05) greenN++;
+        }
+        var greenRatio=greenN/(w*h);
+        // (5) 中央人工结构：中心区垂直/水平正交边缘平衡（钟楼类中央主体、天空大、前景平滑，全图 manmd 低时兜底）
+        var cx0=Math.floor(w*0.18),cx1=Math.floor(w*0.82),cy0=Math.floor(h*0.10),cy1=Math.floor(h*0.72);
+        var cV=0,cH=0,cE=0;
+        for(var cy3=cy0;cy3<cy1;cy3++) for(var cx3=cx0;cx3<cx1;cx3++){
+          var ci3=cy3*w+cx3;
+          if(gradMag[ci3]>edgeThresh*1.2){
+            cE++;
+            var ca=Math.abs(Math.atan2(gy[ci3],gx[ci3]));
+            if(ca<0.30||ca>Math.PI-0.30) cH++;
+            else if(Math.abs(ca-Math.PI/2)<0.30) cV++;
+          }
+        }
+        var centerManmade=cE?Math.min(cV,cH)/cE*2:0;
+        // (5b) 中央窄区垂直塔：中央 26% 宽、上 72% 高区域内垂直/水平边缘占比（钟楼/塔：天空大前景平滑，全图 mm 低）
+        var tw0=Math.floor(w*0.37),tw1=Math.floor(w*0.63),tv0=Math.floor(h*0.06),tv1=Math.floor(h*0.72);
+        var ctV=0,ctH=0,ctE=0;
+        for(var cty=tv0;cty<tv1;cty++) for(var ctx=tw0;ctx<tw1;ctx++){
+          var cti=cty*w+ctx;
+          if(gradMag[cti]>edgeThresh*1.2){
+            ctE++;
+            var cta=Math.abs(Math.atan2(gy[cti],gx[cti]));
+            if(cta<0.30||cta>Math.PI-0.30) ctH++;
+            else if(Math.abs(cta-Math.PI/2)<0.30) ctV++;
+          }
+        }
+        var centerVert=ctE?ctV/ctE:0, centerH2=ctE?ctH/ctE:0;
+        // (6) 暖色人工表面占比：橙瓦/红墙/棕砖（r>g>b 强暖色），区分"橙屋顶城市/古建"与"绿色森林/蓝水面"
+        var warmN=0;
+        for(var wi3=0;wi3<w*h;wi3++){
+          var wrr=data[wi3*4], wrg=data[wi3*4+1], wrb=data[wi3*4+2];
+          if(wrr>wrg*1.03 && wrg>wrb*1.08 && (wrr-wrb)>22 && wrr<240 && (Math.max(wrr,wrg,wrb)-Math.min(wrr,wrg,wrb))>35) warmN++;
+        }
+        var warmRatio=warmN/(w*h);
+
         // v4.0.1: 清晰度（梯度方差，拉普拉斯算子的近似）
         var gradMean=0, gradVar=0;
         for(var gi=0;gi<w*h;gi++){
@@ -2382,7 +2520,15 @@ var APP_VER="v8.2.9";
           // v8.0.7 修复: 补 skinFill/skinHRatio/skinAspect 三个几何守卫字段——v4.6 起 planFromAnalysis 的 geoOk 引用它们，但 return 一直缺失致 geoOk 恒 false（弱网人像判定从未按设计工作：真人像不进 portrait，暖色建筑兜底误判人像）
           skinFill:skinFill, skinHRatio:skinHRatio, skinAspect:skinAspect,
           sigCx:_sigCx, sigCy:_sigCy, sigBox:_sigBox, sigRatio:_sigRatio,
-          tiltDeg:_tiltDeg, tiltConf:_tiltConf
+          tiltDeg:_tiltDeg, tiltConf:_tiltConf,
+          // v8.3.0 场景三特征
+          waterScore:waterScore, manmadeScore:manmadeScore, lightScore:lightScore,
+          lowTexLower:lowTexLower, glareLower:glareLower, horizonOk:horizonOk,
+          orthoRatio:orthoRatio, vertColRatio:strongVertCols/w, brightRatio:brightRatio,
+          shoreReflect:shoreReflect, blueWater:blueWater,
+          vertOrtho:vertOrtho, horizOrtho:horizOrtho,
+          greenRatio:greenRatio, centerManmade:centerManmade, warmRatio:warmRatio,
+          centerVert:centerVert, centerH2:centerH2
         };
       }catch(err){
         return null;
@@ -2448,27 +2594,47 @@ var APP_VER="v8.2.9";
         // v4.6 P2-7: 弱网特写兜底（Qwen 三轮遗留）——模型/面部均不可用时，肤色 bbox 高占比+密实度近似特写
         if(a.bodyH===undefined && !modelLoaded && a.skinHRatio!==undefined && a.skinHRatio>=0.45 && a.skinFill>=0.35){ closeUpRatio = 0.75; }
         sceneType = closeUpRatio > 0.72 ? "portrait_close" : "portrait";
-      } else if(!weakPerson && !isPerson && a.hSym>0.30 && a.hSym>a.vSym*1.15 && a.contrast<95){
-        sceneType = "waterscape"; // v4.5 P1-2: 水平镜像显著+低对比=水面倒影（COCO无lake类，boat未检出时像素通道兜底）
       } else if(!weakPerson){
-        // v8.2.9 夜景像素通道：暗光主导(mean<75)+高饱和霓虹(sat≥0.5)+低对比(contrast<60)——60 张实测 night 3/3
-        // 放建筑/风景判定前：夜景灯光氛围优先，避免霓虹夜景被风景三通道误判 landscape
-        if(a.mean<75 && a.sat>=0.5 && a.contrast<60){
+        // v8.3.0 场景通道重排（26 类目真实照片数据校准）：水景三通道 → 夜景 → 建筑 → 食物 → 风景 → 街景
+        // 水景：水岸线局部倒影(shoreReflect，轴位置任意)+蓝水面(blueWater)+低人工结构(manmadeScore)
+        // 水面均为白天场景：mean≥45 排除"极暗夜景水面"（night_1 类城市夜景水面倒影应归 night）
+        var _w1=(a.mean>=45 && a.blueWater>=0.65 && a.shoreReflect>=0.25 && a.manmadeScore<0.55);
+        var _w2=(a.mean>=45 && a.shoreReflect>=0.55 && a.manmadeScore<0.50);
+        var _w3=(a.mean>=45 && a.blueWater>=0.35 && a.shoreReflect>=0.30 && a.manmadeScore<0.40);
+        if(_w1||_w2||_w3){
+          sceneType = "waterscape";
+        } else if(a.mean<75 && a.sat>=0.5 && a.contrast<60){
+          // 夜景：暗+霓虹高饱和+低对比（water_3 傍晚水景已由上方水景通道先判）
           sceneType = "night";
         } else {
-        // v4.6 P1-4: boat 置信度豁免（GLM：城堡被低信度 boat 带偏）——boat score≥0.5 才豁免建筑判定；弱网无模型时保持原逻辑
+        // boat 置信度豁免：boat score≥0.5 时不进建筑（水乡/湖面船只）
         var boatSkip=false;
         if(a.detectedClasses && a.detectedClasses.indexOf("boat")>=0){
           boatSkip = (state.aiData && state.aiData.maxBoatScore!==undefined) ? (state.aiData.maxBoatScore>=0.5) : true;
         }
-        // v4.6 P1-4: 楼层线判别器（Qwen：现代建筑无强对称——多条强水平线 rowPeakN≥3 且 rowGap>25，sat<0.35 排除彩色风景/森林）
-        // v4.6 复测修正：排除餐具/食物检测——美食5（5个碗排排坐=多水平线）被误判 architecture（实测 rowPeakN=31/rowGap=86）
+        // v8.3.0 街头市集计数（提前算，作为 else if 条件，避免进入分支后截流 landscape）
+        var _umb=0,_psn=0;
+        if(a.detectedClasses) for(var _ui=0;_ui<a.detectedClasses.length;_ui++){
+          if(a.detectedClasses[_ui]==="umbrella") _umb++;
+          if(a.detectedClasses[_ui]==="person") _psn++;
+        }
         var _foodCls = a.detectedClasses && (a.detectedClasses.indexOf("bowl")>=0 || a.detectedClasses.indexOf("cup")>=0 || a.detectedClasses.indexOf("dining table")>=0 || a.detectedClasses.indexOf("fork")>=0 || a.detectedClasses.indexOf("knife")>=0 || a.detectedClasses.indexOf("bottle")>=0);
         var facadeHint = (a.rowPeakN>=3 && a.rowPeakN<=80 && a.rowGap>25 && a.contrast>30 && a.sat<0.35 && !_foodCls);
-        if((!boatSkip && a.sym > 0.30 && a.contrast > 50) || facadeHint){
-          sceneType = "architecture"; // 高对称+高对比=建筑（v4.4: boat 检出跳过）；楼层线密集=立面（v4.6）
+        // 建筑 A1：人工正交结构(mm≥.60)+水平屋檐边缘；自然排除块（森林：绿色相+暖岩+无蓝水面）
+        // 自然阻断：森林（绿相+暖岩+无蓝水）；warm<.30 保护暖色古建（ancient4 红墙 warm .37）
+        var _natBlock=(a.greenRatio>=0.12 && a.warmRatio>=0.15 && a.warmRatio<0.30 && a.blueWater<0.10);
+        var _a1=(a.manmadeScore>=0.60 && a.horizOrtho>=0.13 && !_natBlock);
+        // 建筑 A2：暖色古建（红墙/橙瓦 warm≥.35）+水平屋檐(hOrt≥.16)；沙滩暖黄 hOrt 低被排除
+        var _a2=(a.warmRatio>=0.35 && a.horizOrtho>=0.16 && a.manmadeScore<0.60);
+        // 建筑 A3：中央窄区垂直塔（钟楼）：cVert≥.42+局部屋檐；森林 .41/水面(水景先判)/咖啡馆(cH2 高) 被排除
+        var _a3=(a.centerVert>=0.42 && a.centerH2>=0.06 && a.centerH2<=0.13 && a.manmadeScore>=0.20 && a.manmadeScore<0.50 && a.mean>=90);
+        if((!boatSkip && (_a1||_a2||_a3)) || facadeHint){
+          sceneType = "architecture";
         } else if(!isPerson && a.sat>0.35 && a.mean>60 && a.mean<170 && a.rowGap<25 && a.contrast<90 && a.bodyRatio>=0.15 && a.bodyRatio<0.55 && a.wb>0){
           sceneType = "food"; // v4.5 P1-4: 纯肉盘/无餐具美食弱通道（GLM：肉盘无检出时退化landscape）——饱和暖调+中亮度+无明显水平结构+主体适中
+        } else if(a.mean>90 && _umb>=2 && _psn>=2){
+          // v8.3.0 白天街头市集（置于 landscape 前，防止被"明亮高饱和小主体"风景通道抢先）
+          sceneType="street";
         } else if(a.bodyRatio < 0.35 && ((a.rowGap > 40 && a.sat > 0.2) || (a.mean > 100 && a.sat > 0.3) || (a.sat > 0.32 && a.mean > 55 && a.contrast < 80) || (a.rowGap > 30 && a.sat > 0.15 && a.mean < 100 && !(a.detectedClasses && (a.detectedClasses.indexOf("person")>=0 || a.detectedClasses.indexOf("cat")>=0 || a.detectedClasses.indexOf("dog")>=0 || a.detectedClasses.indexOf("bowl")>=0 || a.detectedClasses.indexOf("cup")>=0 || a.detectedClasses.indexOf("dining table")>=0 || a.detectedClasses.indexOf("fork")>=0 || a.detectedClasses.indexOf("knife")>=0))))){ // v4.3: 风景判定三通道——锐利地平线(rowGap>40)、明亮高饱和(mean>100)、渐变山林/沙滩(小主体+高饱和+中亮度)，实测渐变地平线 rowGap 仅10-13
           // v4.6 P0-3: bodyRatio<0.15→<0.35 填补"双不靠"空隙（GLM：森林湖湾 bodyRatio=0.302 卡在食物弱通道与风景通道之间退化 general）
           sceneType = "landscape"; // 明亮+高饱和+小主体=风景；v4.4 P1-2: 第四通道——低饱和暗调(阴天/雪景/水墨)rowGap>30&&sat>0.15&&mean<100且无人物/宠物/餐具检测
@@ -2493,7 +2659,12 @@ var APP_VER="v8.2.9";
         }
         var bestSc=null, bestScN=0;
         for(var sk3 in seenSc){ if(seenSc[sk3]>bestScN){ bestScN=seenSc[sk3]; bestSc=sk3; } }
-        if(bestSc==="animal"||bestSc==="food"){ sceneType=bestSc; }
+        if(bestSc==="animal"){
+          // v8.3.0: 唯一动物线索为单个 bird 且置信度<0.5（花苞/花瓣误检）→ 不覆盖
+          var _animalCls=a.detectedClasses.filter(function(c){var sv=SCENE_MAP[c];return sv&&(sv.indexOf("萌宠")===0||sv.indexOf("动物")===0);});
+          var _birdOnly=(_animalCls.length===1 && _animalCls[0]==="bird");
+          if(!_birdOnly || (state.aiData && state.aiData.maxBirdScore>=0.5)) sceneType="animal";
+        } else if(bestSc==="food"){ sceneType=bestSc; }
         else if(bestSc==="waterscape"&&(sceneType==="landscape"||sceneType==="architecture")){ sceneType="waterscape"; } // v4.4: 覆盖 architecture（豆包：湖泊倒影被误判建筑）
         else if(bestSc==="street"){
           // v8.1.1: 多辆交通工具(≥2)是明确街景，允许覆盖像素误判的 landscape/architecture（原仅 general 可覆盖，致"多车街景"被判风景，实测 street_1 检出7辆车仍落 landscape）；
@@ -3357,8 +3528,8 @@ var APP_VER="v8.2.9";
       // v4.2: 清空后重建模型/检测状态卡（presentAnalysis 重渲染会把模型卡一起清掉，用户看不到模型加载状态）
       try{
         // v4.7.0: 云端 VLM 结果不插入本地模型状态卡/本地检测卡（云端模式跳过本地模型，避免"下载中/本地真AI模型"误导）
-        if(!plan.cloud && typeof aiModelState!=="undefined" && (aiModelState==="ready"||aiModelState==="loading")){
-          renderAiModelStatus(aiModelState==="ready"?"on":"loading");
+        if(!plan.cloud && typeof aiModelState!=="undefined" && (localModelReady()||aiModelState==="loading"||yoloState==="loading")){
+          renderAiModelStatus(localModelReady()?"on":"loading");
         }
         if(!plan.cloud && state.aiData && state.aiData.detectedClasses && state.aiData.detectedClasses.length){
           var _detCard=document.createElement("div");
@@ -4557,6 +4728,14 @@ var APP_VER="v8.2.9";
 
     /* ===================== v1.3.0: 真 AI 视觉识别（本地 Coco-SSD，懒加载+自动降级） ===================== */
     var aiModelState="idle", aiModel=null, aiDetectEl=null;
+    // v8.3.0: YOLO11n + onnxruntime-web 新一代本地检测（mAP 39.5 vs coco-ssd ~22；模型 10.7MB vs 18MB）
+    var AI_ORT_URL="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/ort.min.js";
+    var AI_ORT_URL2="https://unpkg.com/onnxruntime-web@1.22.0/dist/ort.min.js";
+    var AI_ORT_WASM_CDN="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/";
+    var AI_ORT_WASM_LOCAL="model/ort/";
+    var AI_YOLO_URL="https://cdn.jsdelivr.net/gh/yyds8170-ctrl/ai-composition-tool@main/model/yolo/yolo11n.onnx";
+    var AI_YOLO_URL_FB="model/yolo/yolo11n.onnx";
+
     var AI_TFJS_URL="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js";
     var AI_COCO_URL="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js";
     var AI_TFJS_URL2="https://unpkg.com/@tensorflow/tfjs@4.22.0/dist/tf.min.js";
@@ -4746,6 +4925,220 @@ if(aiModelState!=="idle"){ resolve(false); return; }
     }
     var COCO_CN={person:"人物",bicycle:"自行车",car:"汽车",motorcycle:"摩托车",airplane:"飞机",bus:"公交车",train:"火车",truck:"卡车",boat:"船","traffic light":"红绿灯","fire hydrant":"消防栓","stop sign":"停车牌","parking meter":"停车计费器",bench:"长椅",bird:"鸟",cat:"猫",dog:"狗",horse:"马",sheep:"羊",cow:"牛",elephant:"大象",bear:"熊",zebra:"斑马",giraffe:"长颈鹿",backpack:"背包",umbrella:"雨伞",handbag:"手提包",tie:"领带",suitcase:"行李箱",frisbee:"飞盘",skis:"滑雪板",snowboard:"滑雪板","sports ball":"球",kite:"风筝","baseball bat":"棒球棒","baseball glove":"棒球手套",skateboard:"滑板",surfboard:"冲浪板","tennis racket":"网球拍",bottle:"瓶子","wine glass":"酒杯",cup:"杯子",fork:"叉子",knife:"刀",spoon:"勺子",bowl:"碗",banana:"香蕉",apple:"苹果",sandwich:"三明治",orange:"橙子",broccoli:"西兰花",carrot:"胡萝卜","hot dog":"热狗",pizza:"披萨",donut:"甜甜圈",cake:"蛋糕",chair:"椅子",couch:"沙发","potted plant":"盆栽",bed:"床","dining table":"餐桌",toilet:"马桶",tv:"电视",laptop:"笔记本电脑",mouse:"鼠标",remote:"遥控器",keyboard:"键盘","cell phone":"手机",microwave:"微波炉",oven:"烤箱",toaster:"烤面包机",sink:"水槽",refrigerator:"冰箱",book:"书本",clock:"时钟",vase:"花瓶",scissors:"剪刀","teddy bear":"泰迪熊","hair drier":"吹风机",toothbrush:"牙刷"} // v4.4: 6个下划线键改空格（豆包：COCO-SSD输出空格类名，中文标签永久失效）;
     function cnLabel(c){ return COCO_CN[c]||c; }
+
+    // ===================== v8.3.0: YOLO11n 新一代本地检测器（onnxruntime-web，WebGPU 优先 / WASM 兜底） =====================
+    // 标准 COCO 80 类顺序（与 coco-ssd 输出 class 名一致，renderAiDetect / cnLabel / SCENE_MAP 零改动）
+    var YOLO_CLASSES=["person","bicycle","car","motorcycle","airplane","bus","train","truck","boat","traffic light",
+      "fire hydrant","stop sign","parking meter","bench","bird","cat","dog","horse","sheep","cow","elephant","bear",
+      "zebra","giraffe","backpack","umbrella","handbag","tie","suitcase","frisbee","skis","snowboard","sports ball",
+      "kite","baseball bat","baseball glove","skateboard","surfboard","tennis racket","bottle","wine glass","cup",
+      "fork","knife","spoon","bowl","banana","apple","sandwich","orange","broccoli","carrot","hot dog","pizza",
+      "donut","cake","chair","couch","potted plant","bed","dining table","toilet","tv","laptop","mouse","remote",
+      "keyboard","cell phone","microwave","oven","toaster","sink","refrigerator","book","clock","vase","scissors",
+      "teddy bear","hair drier","toothbrush"];
+    var yoloState="idle", yoloSession=null, yoloLoadPromise=null;
+    function _syncYoloMark(){ try{ window.__yoloState=yoloState; }catch(e){} } // v8.3.0: 供外层调试钩子/测试读取
+    var _ylT0=0;
+    function _ylMark(k){ try{ (window.__yoloTimeline=window.__yoloTimeline||[]).push([k,+((performance.now()-_ylT0)/1000).toFixed(2)]); }catch(e){} }
+    function localModelReady(){ return yoloState==="ready" || aiModelState==="ready"; }
+    // v8.3.0: 探测 WebGPU 可用性（adapter 可请求才算；iOS 18+/Android Chrome 113+ 支持）
+    function _webgpuOk(){
+      try{
+        if(!navigator.gpu) return Promise.resolve(false);
+        // v8.3.0-fix: 2.5s 超时——部分设备/软件渲染（headless SwiftShader）requestAdapter 会挂起数百秒
+        var guard=new Promise(function(r){ setTimeout(function(){ r("timeout"); },2500); });
+        return Promise.race([navigator.gpu.requestAdapter().then(function(a){
+          if(!a) return false;
+          // v8.3.0: 识别软件渲染（SwiftShader/llvmpipe/WARP）——adapter 存在但性能不可用，按无 GPU 处理
+          try{
+            var info=a.info||a.adapterInfo||{};
+            var blob=((info.device||"")+(info.description||"")+(info.vendor||"")).toLowerCase();
+            if(/swiftshader|llvmpipe|software|warp|microsoft basic/.test(blob)) return false;
+          }catch(e){}
+          return true;
+        }).catch(function(){ return false; }), guard]).then(function(v){ return v===true; });
+      }catch(e){ return Promise.resolve(false); }
+    }
+    // 带进度 fetch 模型为 buffer（同源优先，sw force-cache 热身；进度 0→72%）
+    function _fetchModelBuf(url){
+      return fetch(url,{cache:"force-cache"}).then(function(r){
+        if(!r.ok||!r.body) throw new Error("bad "+url);
+        var len=parseInt(r.headers.get("content-length")||"0",10)||10720228, reader=r.body.getReader(), got=0, chunks=[];
+        function pump(){
+          return reader.read().then(function(x){
+            if(x.done){
+              var total=got, out=new Uint8Array(total), off=0;
+              chunks.forEach(function(c){ out.set(c,off); off+=c.length; });
+              return out;
+            }
+            chunks.push(x.value); got+=x.value.length;
+            updateModelProgress(Math.min(72,Math.round(got/len*72)));
+            return pump();
+          });
+        }
+        return pump();
+      });
+    }
+    function loadYolo(){
+      if(yoloState==="ready") return Promise.resolve(true);
+      if(yoloLoadPromise) return yoloLoadPromise;
+      yoloState="loading"; _syncYoloMark(); _ylT0=performance.now(); window.__yoloTimeline=[];
+      yoloLoadPromise=new Promise(function(resolve){ _ylMark("start");
+        if(location.protocol==="file:" || location.protocol==="null"){ yoloState="fail"; _syncYoloMark(); resolve(false); return; }
+        var ortObj=null, useGPU=false, modelBuf=null, chain=Promise.resolve();
+        updateModelProgress(0);
+        chain=chain.then(function(){
+          if(typeof ort!=="undefined"){ ortObj=window.ort; return; }
+          // v8.3.0-fix: 同源优先（sw 预缓存、离线可用、无国际线路抖动）→ jsdelivr → unpkg
+          return loadScript(AI_ORT_WASM_LOCAL+"ort.min.js").then(function(){ ortObj=window.ort; }).catch(function(){
+            return loadScript(AI_ORT_URL).then(function(){ ortObj=window.ort; }).catch(function(){
+              return loadScript(AI_ORT_URL2).then(function(){ ortObj=window.ort; });
+            });
+          });
+        }).then(function(){ _ylMark("ort_js_ready"); });
+        chain=chain.then(function(){ return _webgpuOk(); }).then(function(gpuOk){ _ylMark("gpu_probe_"+(gpuOk?"gpu":"wasm"));
+          useGPU=!!gpuOk;
+          ortObj.env.wasm.simd=true;
+          ortObj.env.wasm.numThreads=(typeof SharedArrayBuffer!=="undefined")?Math.min(4,(navigator.hardwareConcurrency||2)):1;
+          // v8.3.0-fix: 必须绝对 URL——相对路径在 ort 的 ESM worker 里是非法裸模块说明符（离线同源路径会直接失败）
+          ortObj.env.wasm.wasmPaths=location.href.replace(/[^/]*$/,'')+AI_ORT_WASM_LOCAL;
+          // v8.3.0-fix: 统一 fp32（10.7MB）——fp16 在部分 WebGPU 实现（中低端 Mali/软件渲染）数值不稳会漏检，精度优先
+          var local="model/yolo/yolo11n.onnx", cdn=AI_YOLO_URL;
+          return _fetchModelBuf(local).catch(function(){ _ylMark("local_model_miss"); return _fetchModelBuf(cdn); })
+            .then(function(buf){ modelBuf=buf; _ylMark("model_buf_"+buf.byteLength); });
+        });
+        chain=chain.then(function(){
+          updateModelProgress(78); _ylMark("create_start"); // wasm 编译/会话初始化（浏览器原生，无细粒度进度）
+          var eps=useGPU?["webgpu","wasm"]:["wasm"];
+          var opts={executionProviders:eps, graphOptimizationLevel:"all", enableCpuMemArena:true};
+          return ortObj.InferenceSession.create(modelBuf,opts).catch(function(e1){
+            // buffer 创建失败（wasm 路径 404 等）→ CDN wasm 路径 + URL 方式整体重试
+            ortObj.env.wasm.wasmPaths=AI_ORT_WASM_CDN;
+            return ortObj.InferenceSession.create(AI_YOLO_URL,opts).catch(function(){
+              return ortObj.InferenceSession.create("model/yolo/yolo11n.onnx",opts);
+            });
+          }).then(function(sess){ yoloSession=sess; _ylMark("create_ok"); });
+        });
+        // v8.3.0: 加载阶段 dummy 预热——① WebGPU shader 编译前置 ② 性能熔断：预热 >8s 判定 WebGPU 慢（软件渲染/低端 GPU），自动改 WASM 重建
+        chain=chain.then(function(){
+          return new Promise(function(warmDone){
+            try{
+              var SIZE=640, c=document.createElement("canvas"); c.width=SIZE; c.height=SIZE;
+              var cx2=c.getContext("2d"); cx2.fillStyle="#727272"; cx2.fillRect(0,0,SIZE,SIZE);
+              var px=cx2.getImageData(0,0,SIZE,SIZE).data, S=SIZE*SIZE, data=new Float32Array(3*S);
+              for(var p2=0;p2<S;p2++){ data[p2]=px[p2*4]/255; data[S+p2]=px[p2*4+1]/255; data[2*S+p2]=px[p2*4+2]/255; }
+              var tensor=ortObj.Tensor("float32",data,[1,3,SIZE,SIZE]);
+              function feedsOf(sess){ var f={}; f[sess.inputNames[0]]=tensor; return f; }
+              updateModelProgress(90);
+              var wT=performance.now(), settled=false;
+              function finish(){ if(!settled){settled=true; warmDone();} }
+              yoloSession.run(feedsOf(yoloSession)).then(function(){
+                var warmSec=(performance.now()-wT)/1000;
+                _ylMark("warmup_"+warmSec.toFixed(1)+"s");
+                if(useGPU && warmSec>8){
+                  _ylMark("circuit_wasm"); updateModelProgress(88);
+                  try{ yoloSession.release(); }catch(e){}
+                  ortObj.InferenceSession.create(modelBuf,{executionProviders:["wasm"],graphOptimizationLevel:"all",enableCpuMemArena:true})
+                    .then(function(sess2){ yoloSession=sess2; useGPU=false; _ylMark("wasm_rebuilt"); finish(); })
+                    .catch(finish);
+                } else finish();
+              }).catch(finish);
+              setTimeout(function(){ // 预热 30s 超时：WebGPU 卡死也熔断改 WASM
+                if(useGPU && !settled){
+                  _ylMark("warm_timeout_wasm");
+                  try{ yoloSession.release(); }catch(e){}
+                  ortObj.InferenceSession.create(modelBuf,{executionProviders:["wasm"],graphOptimizationLevel:"all"})
+                    .then(function(sess2){ yoloSession=sess2; useGPU=false; finish(); }).catch(finish);
+                } else finish();
+              }, 30000);
+            }catch(e){ // v8.3.0: 预热同步异常（WebGPU 初始化失败）也熔断改 WASM
+              _ylMark("warm_err_"+(e&&e.message?(""+e.message).slice(0,30):"?"));
+              if(useGPU){
+                try{ yoloSession.release(); }catch(e2){}
+                ortObj.InferenceSession.create(modelBuf,{executionProviders:["wasm"],graphOptimizationLevel:"all"})
+                  .then(function(sess2){ yoloSession=sess2; useGPU=false; _ylMark("wasm_rebuilt"); warmDone(); })
+                  .catch(warmDone);
+              } else warmDone();
+            }
+          });
+        });
+        chain.then(function(){ yoloState="ready"; _modelRetries=0; updateModelProgress(100); _syncYoloMark(); resolve(true); updateModelUI(); })
+             .catch(function(e){ console.warn("YOLO11n 加载失败，回退 coco-ssd:",e); yoloState="fail"; _syncYoloMark(); resolve(false); updateModelUI(); });
+        setTimeout(function(){ if(yoloState==="loading"){ yoloState="fail"; _syncYoloMark(); resolve(false); updateModelUI(); } },120000);
+      });
+      return yoloLoadPromise;
+    }
+    // letterbox 到 640×640（padding 114 灰），输出 NCHW RGB /255 tensor
+    function _yoloLetterboxTensor(el, ortObj){
+      var iw=el.naturalWidth||el.videoWidth, ih=el.naturalHeight||el.videoHeight;
+      var SIZE=640, r=Math.min(SIZE/iw,SIZE/ih);
+      var nw=Math.round(iw*r), nh=Math.round(ih*r);
+      var top=Math.floor((SIZE-nh)/2), left=Math.floor((SIZE-nw)/2);
+      var c=document.createElement("canvas"); c.width=SIZE; c.height=SIZE;
+      var ctx=c.getContext("2d");
+      ctx.fillStyle="#727272"; ctx.fillRect(0,0,SIZE,SIZE);
+      ctx.drawImage(el,left,top,nw,nh);
+      var px=ctx.getImageData(0,0,SIZE,SIZE).data, S=SIZE*SIZE;
+      var data=new Float32Array(3*S);
+      for(var p=0;p<S;p++){
+        data[p]=px[p*4]/255; data[S+p]=px[p*4+1]/255; data[2*S+p]=px[p*4+2]/255;
+      }
+      return {tensor:new ortObj.Tensor("float32",data,[1,3,SIZE,SIZE]), r:r, left:left, top:top};
+    }
+    function _yoloNMS(b,s,thr){
+      if(!b.length) return [];
+      var order=s.map(function(v,i){return i;}).sort(function(a,bb){return s[bb]-s[a];}), keep=[];
+      while(order.length){
+        var i=order.shift(); keep.push(i);
+        order=order.filter(function(j){
+          var x1=Math.max(b[i][0],b[j][0]), y1=Math.max(b[i][1],b[j][1]);
+          var x2=Math.min(b[i][2],b[j][2]), y2=Math.min(b[i][3],b[j][3]);
+          var inter=Math.max(0,x2-x1)*Math.max(0,y2-y1);
+          var ai=(b[i][2]-b[i][0])*(b[i][3]-b[i][1]), aj=(b[j][2]-b[j][0])*(b[j][3]-b[j][1]);
+          return inter/(ai+aj-inter+1e-9)<=thr;
+        });
+      }
+      return keep;
+    }
+    // 输出与 coco-ssd 同构：[{class, score, bbox:[x,y,w,h]}]（bbox 为源图像素坐标）
+    function yoloDetect(el, conf){
+      conf=conf||0.25;
+      return new Promise(function(resolve,reject){
+        loadYolo().then(function(ok){
+          if(!ok){ reject(new Error("yolo not ready")); return; }
+          try{
+            var ortObj=window.ort, L=_yoloLetterboxTensor(el,ortObj);
+            var feeds={}; feeds[yoloSession.inputNames[0]]=L.tensor;
+            yoloSession.run(feeds).then(function(out){
+              var o=out[yoloSession.outputNames[0]], d=o.data, N=o.dims[2], boxes=[],scores=[],cls=[];
+              for(var i=0;i<N;i++){
+                var best=0,bs=0;
+                for(var c=4;c<84;c++){ var v=d[c*N+i]; if(v>bs){bs=v;best=c-4;} }
+                if(bs<conf) continue;
+                var cx=d[i],cy=d[N+i],w=d[2*N+i],h=d[3*N+i];
+                boxes.push([(cx-w/2-L.left)/L.r,(cy-h/2-L.top)/L.r,(cx+w/2-L.left)/L.r,(cy+h/2-L.top)/L.r]);
+                scores.push(bs); cls.push(best);
+              }
+              var keep=_yoloNMS(boxes,scores,0.45);
+              resolve(keep.map(function(k){
+                return {class:YOLO_CLASSES[cls[k]], score:scores[k],
+                  bbox:[boxes[k][0],boxes[k][1],boxes[k][2]-boxes[k][0],boxes[k][3]-boxes[k][1]]};
+              }));
+            }).catch(reject);
+          }catch(e){ reject(e); }
+        });
+      });
+    }
+    // v8.3.0 统一本地检测入口：YOLO11n 优先 → coco-ssd 兜底（输出同构 preds；空画面返回 []）
+    function localDetect(el){
+      return yoloDetect(el).catch(function(){
+        return loadAIModel().then(function(ok){
+          if(!ok) return [];
+          return aiModel.detect(_detectCanvasOf(el)).catch(function(){ return []; });
+        });
+      });
+    }
+
     function removeAiBox(){ if(aiDetectEl&&aiDetectEl.parentNode){ aiDetectEl.parentNode.removeChild(aiDetectEl); } aiDetectEl=null; }
     function drawAiBox(top, el){
       removeAiBox();
@@ -4839,6 +5232,10 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           var _mb=0;
           for(var _bi=0;_bi<valid.length;_bi++){ if(valid[_bi].class==="boat" && valid[_bi].score>_mb){ _mb=valid[_bi].score; } }
           state.aiData.maxBoatScore=_mb;
+          // v8.3.0: bird 置信度记录（花苞/花瓣偶被误检 bird，低信度 bird 不参与 animal 场景覆盖）
+          var _mbd=0;
+          for(var _bdi=0;_bdi<valid.length;_bdi++){ if(valid[_bdi].class==="bird" && valid[_bdi].score>_mbd){ _mbd=valid[_bdi].score; } }
+          state.aiData.maxBirdScore=_mbd;
           var t=valid[0];
           state.aiData.cx=Math.max(0,Math.min(1,(t.bbox[0]+t.bbox[2]/2)/iw));
           state.aiData.cy=Math.max(0,Math.min(1,(t.bbox[1]+t.bbox[3]/2)/ih));
@@ -5007,19 +5404,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
     // v4.7.0: 本地 COCO/MediaPipe 模型精判（纯本地模式与云端失败回退共用同一条路径）
     function runLocalAIDetection(elSnap, token, onDone){
       if(!state.aiModelEnabled){ renderAiModelStatus("off"); if(onDone) onDone(null); return; }
-      loadAIModel().then(function(ok){
-        if(!ok){
-          // v4.1: 模型加载失败时明确标记（planFromAnalysis据此启用肤色兜底）
-          if(state.aiData){ state.aiData.modelLoaded=false; }
-          renderAiModelStatus("off"); if(onDone) onDone(null); return;
-        }
-        if(token!==state.analyzeToken || currentEl()!==elSnap){ if(onDone) onDone(null); return; }
-        renderAiModelStatus("on");
-        // v4.1: 激活modelLoaded死变量——模型成功加载并检测后标记，planFromAnalysis据此决定肤色兜底是否启用
-        if(state.aiData){ state.aiData.modelLoaded=true; }
-        // v8.1.1: 先绘制等尺寸离屏 canvas 再检测，规避 tfjs 直接读 img/video 元素在部分 GPU 后端只框到局部的缺陷
-        var _detEl=_detectCanvasOf(elSnap);
-        aiModel.detect(_detEl).then(function(preds){
+      // v8.3.0: YOLO11n 优先（onnxruntime-web，WebGPU 优先 / WASM 兜底），失败自动回退 coco-ssd
+      localDetect(elSnap).then(function(preds){
           if(token!==state.analyzeToken){ if(onDone) onDone(null); return; }
           // v4.1: 修复空预测bug——模型确认画面无主体（如纯风景）时，也重新生成plan
           // 之前直接return导致首次分析（modelLoaded尚false）的肤色误判被保留（风景图误判人像）
@@ -5072,8 +5458,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           if(faceEnabled && faceModelState==="ready"){ detectFace(elSnap); }
           // v3.0.0: 同时运行姿态检测（更精准的人体定位）
           if(poseEnabled && poseModelState==="ready"){ detectPose(elSnap); }
-        }).catch(function(e){ console.warn("AI 检测失败:", e); if(onDone) onDone(null); });
-      });
+      }).catch(function(e){ console.warn("本地检测失败:", e); if(onDone) onDone(null); });
     }
 
     /* ===================== v1.4.0: AI 真模型管理（开关/状态/重载） ===================== */
@@ -5084,8 +5469,11 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       updateModelUI();
     }
     function updateModelUI(){
+      try{ window.__cocoState=aiModelState; }catch(e){} // v8.3.0: 供外层调试钩子
       if(mpOn) mpOn.checked=state.aiModelEnabled;
       var st=aiModelState;
+      if(yoloState==="ready") st="ready";                  // v8.3.0: YOLO 优先显示
+      else if(yoloState==="loading" && st!=="ready") st="loading";
       var txt, cls;
       if(!state.aiModelEnabled){ txt="已关闭"; cls="idle"; }
       else if(st==="ready"){ txt=aiModelLoadTime?("已加载 · "+aiModelLoadTime+"ms"):"已加载"; cls="ready"; }
@@ -5103,11 +5491,15 @@ if(aiModelState!=="idle"){ resolve(false); return; }
     }
     function tryLoadModel(force){
       if(!state.aiModelEnabled){ updateModelUI(); return; }
-      if(aiModelState==="ready"){ updateModelUI(); return; }
-      if(aiModelState==="loading" && !force){ updateModelUI(); return; }
+      if(localModelReady()){ updateModelUI(); return; }
+      if((aiModelState==="loading"||yoloState==="loading") && !force){ updateModelUI(); return; }
+      if(force){ yoloState="idle"; yoloLoadPromise=null; }   // v8.3.0: 强制重载也重置 YOLO
       var t0=Date.now();
-      loadAIModel().then(function(ok){
-        
+      // v8.3.0: YOLO11n 优先，失败回退 coco-ssd
+      loadYolo().then(function(yok){
+        if(yok) return true;
+        return loadAIModel().then(function(cok){ return cok; });
+      }).then(function(ok){
         aiModelLoadTime=Date.now()-t0;
         updateModelUI();
         if(ok){ toastMsg("🤖 真 AI 模型加载成功（"+(Math.round(aiModelLoadTime/100)/10)+"s）"); }
@@ -5124,7 +5516,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       if(mpReload) mpReload.addEventListener("click",function(){
         if(!state.aiModelEnabled){ persistModelEnabled(true); }
         if(aiModelState==="ready"){ toastMsg("模型已是最新，无需重载"); updateModelUI(); return; }
-        aiModelState="idle";
+        aiModelState="idle"; yoloState="idle"; yoloLoadPromise=null;
         toastMsg("开始重新加载 AI 模型…");
         tryLoadModel(true);
       });
@@ -5645,7 +6037,14 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           if(Sx===null){ Sx=40; Sy=35; Sw=20; Sh=30; }
           Sx=Math.max(0,Sx); Sy=Math.max(0,Sy); Sw=Math.max(5,Math.min(100-Sx,Sw)); Sh=Math.max(5,Math.min(100-Sy,Sh));
           var Scx=Sx+Sw/2, Scy=Sy+Sh/2;
-          var isPort=sceneKey==="portrait";
+          // v8.3.0 修复：isPort 不能只认 VLM 场景标签——portrait_close（特写）、婚礼/亲子/夜景人像
+          // 被 VLM 误判 general/landscape 时会失去全部人像硬保护（外扩/头顶封顶/人脸保护/保守力度）。
+          // 多证据：VLM 场景 OR 本地人像判定 OR 主体是人 OR 本地初判场景为人像；背景路人街景（subject 为车/建筑）不触发。
+          var _ad0t=state.aiData||{};
+          var _lp0=state.plan||{};
+          var isPort=(sceneKey==="portrait"||sceneKey==="portrait_close"
+            || _ad0t.isPerson===true||_ad0t.subject==="人"
+            || _lp0.sceneType==="portrait"||_lp0.sceneType==="portrait_close");
           // v5.1.1: 人像面部优先——构图核心是脸/眼，三分法定位用面部中心而非身体框中心
           // v5.1.2: 人脸优先双通道——①本地 MediaPipe 真实人脸（faceX/Y）②云端皮肤质心近似（skinCx/Cy）
           var _ad2=state.aiData||{};
@@ -6372,7 +6771,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       window.addEventListener("deviceorientation",onDev);
       live._cleanup=function(){ window.removeEventListener("deviceorientation",onDev); };
       setTimeout(function(){ if(!live.devOK && state.liveMode){ lhLevel.className="lh"; lhLevel.textContent="➡ 水平仪不可用（无陀螺仪）"; } },2600);
-      if(state.aiModelEnabled && aiModelState==="idle"){ tryLoadModel(false); }
+      if(state.aiModelEnabled && !localModelReady() && yoloState!=="loading" && aiModelState!=="loading"){ tryLoadModel(false); }
       else { updateModelUI(); }
       function tick(){
         if(!state.liveMode || state.mode!=="camera"){ if(state.liveMode){ stopLive(); } return; }
@@ -6380,7 +6779,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         if(live.brightTick%20===0){ checkBrightness(); }
         updateLiveLevel();
         var now=Date.now();
-        if(now-live.lastDetect>LIVE_INTERVAL && !live.detecting && state.aiModelEnabled && aiModelState==="ready"){
+        if(now-live.lastDetect>LIVE_INTERVAL && !live.detecting && state.aiModelEnabled && localModelReady()){
           live.lastDetect=now; detectLiveSubject();
         }
         updateLiveAdvice();
@@ -6548,7 +6947,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           // v8.2.6 节流：持续循环下模型推理最多每 2.5s 一次（COCO 手机端推理重，0.6s 一次太耗电）；加载尝试最多每 8s 一次
           if(state.aiModelEnabled){
             var _nowM=Date.now();
-            if(aiModelState==="ready"){
+            if(localModelReady()){
               if((_silent && state._lastModelDetect && (_nowM-state._lastModelDetect)<2500) || (!_silent && state._lastModelDetect && (_nowM-state._lastModelDetect)<800)){
                 // 节流跳过
               } else {
@@ -6556,11 +6955,15 @@ if(aiModelState!=="idle"){ resolve(false); return; }
                 runLocalAIDetection(currentEl(), token);
               }
             }
-            else if(aiModelState==="idle" || aiModelState==="fail"){
+            else if(!localModelReady()){
               if(!_silent || !state._lastModelTry || (_nowM-state._lastModelTry)>=8000){
                 state._lastModelTry=_nowM;
-                loadAIModel().then(function(ok){
-                  if(ok && token===state.analyzeToken){ runLocalAIDetection(currentEl(), token); }
+                // v8.3.0: 先 YOLO11n，失败回退 coco-ssd
+                loadYolo().then(function(yok){
+                  if(yok) return true;
+                  return loadAIModel().then(function(cok){ return cok; });
+                }).then(function(anyOk){
+                  if(anyOk && token===state.analyzeToken){ runLocalAIDetection(currentEl(), token); }
                 });
               }
             }
@@ -7273,7 +7676,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         var c=document.createElement("canvas");
         c.width=W; c.height=H;
         c.getContext("2d").drawImage(videoCam,0,0,W,H);
-        aiModel.detect(c).then(function(preds){
+        // v8.3.0: 统一走 localDetect（YOLO11n 优先）
+        localDetect(c).then(function(preds){
           live.detecting=false;
           if(!state.liveMode) return;
           var best=null;
@@ -7324,7 +7728,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         lhTip.textContent=tips[0]+(tips.length>1?(" · "+tips[1]):"");
       } else {
         lhTip.className="live-bottom";
-        lhTip.textContent=(state.aiModelEnabled&&aiModelState==="ready")?"🎥 实时取景中 · 对准主体":"🎥 实时取景中 · 可在「帮助」开启真 AI 获得主体锁定";
+        lhTip.textContent=(state.aiModelEnabled&&localModelReady())?"🎥 实时取景中 · 对准主体":"🎥 实时取景中 · 可在「帮助」开启真 AI 获得主体锁定";
       }
       if(live.subj){ lhSubject.style.display="inline-flex"; lhSubject.textContent="🎯 "+cnLabel(live.subj.class)+" "+Math.round(live.subjScore*100)+"%"; }
       else { lhSubject.style.display="none"; }
@@ -7754,13 +8158,13 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       if(blurRAF) return;
       // v8.0.5 B-01: 虚化只需要本地人体框，强制走本地检测，绝不走云端
       // （原调 runAIDetection，云端开启时每600ms发一次云端请求，几秒烧光额度）
-      if(state.aiModelEnabled && aiModelState==="ready"){ runLocalAIDetection(currentEl(), state.analyzeToken); }
+      if(state.aiModelEnabled && localModelReady()){ runLocalAIDetection(currentEl(), state.analyzeToken); }
       function loop(){
         if(!state.blurOn){ blurRAF=null; if(blurCanvas) blurCanvas.style.display="none"; return; }
         applyBlurFrame();
         // v2.0.4: 每 600ms 自动检测一次人体（节流，避免卡顿）；v8.0.5 固定走本地通道
         var now=Date.now();
-        if(now-lastBlurDetect>600 && state.aiModelEnabled && aiModelState==="ready" && !blurBusy){
+        if(now-lastBlurDetect>600 && state.aiModelEnabled && localModelReady() && !blurBusy){
           lastBlurDetect=now;
           blurBusy=true;
           runLocalAIDetection(currentEl(), state.analyzeToken, function(){ blurBusy=false; });
@@ -7789,7 +8193,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         if(!state.aiModelEnabled){
           try{ state.aiModelEnabled=true; toastMsg("背景虚化在手机本地识别人体，需加载一次本地模型（照片不上传）"); }catch(e){}
         }
-        if(aiModelState==="ready"){ runLocalAIDetection(currentEl(), state.analyzeToken); }
+        if(localModelReady()){ runLocalAIDetection(currentEl(), state.analyzeToken); }
         else if(typeof loadAIModel==="function" && (aiModelState==="idle"||aiModelState==="fail")){ try{ loadAIModel(); }catch(e){} }
         // v2.0.1: 检查是否检测到人
         var hasP = state.aiData && state.aiData.isPerson;
@@ -7886,11 +8290,21 @@ if(aiModelState!=="idle"){ resolve(false); return; }
   // v4.3: 只读调试钩子（自动化回归断言用，不影响任何功能与模型行为）
   try{ window.__ai={
     get plan(){ return state&&state.plan?{rule:state.plan.rule,sceneType:state.plan.sceneType,conf:state.plan.conf,subject:state.plan.subject,noCrop:!!state.plan.noCrop,crop:state.plan.crop||null,selfReviewed:!!state.plan.selfReviewed,selfReviewNote:state.plan.selfReviewNote||"",fromCache:!!state.plan.fromCache,notes:state.plan.notes||null,_dbgSkin:(state.plan&&state.plan._dbgSkin)||null,tiltHint:state.plan.tiltHint||null,cropIntent:state.plan.cropIntent||null,tiltDeg:state.aiData&&state.aiData.tiltDeg||null,tiltConf:state.aiData&&state.aiData.tiltConf||null}:null; },
-    get data(){ return state&&state.aiData?{sceneType:(state.plan&&state.plan.sceneType)||'',rowGap:state.aiData.rowGap,rowPeakN:state.aiData.rowPeakN,bodyRatio:state.aiData.bodyRatio,sat:state.aiData.sat,mean:state.aiData.mean,detectedClasses:state.aiData.detectedClasses,isPerson:state.aiData.isPerson,headTop:state.aiData.headTop,personLeft:state.aiData.personLeft,personRight:state.aiData.personRight,personBottom:state.aiData.personBottom,topBBox:state.aiData.topBBox,personScore:state.aiData.personScore,faceAvailable:state.aiData.faceAvailable,sym:state.aiData.sym,vSym:state.aiData.vSym,hSym:state.aiData.hSym,contrast:state.aiData.contrast,sharpness:state.aiData.sharpness,highClip:state.aiData.highClip,shadowClip:state.aiData.shadowClip,dynamicRange:state.aiData.dynamicRange,skinRatio:state.aiData.skinRatio,skinCx:state.aiData.skinCx,skinCy:state.aiData.skinCy,isPersonLikely:state.aiData.isPersonLikely,skinAspect:state.aiData.skinAspect,skinFill:state.aiData.skinFill,skinHRatio:state.aiData.skinHRatio}:null; }
+    get data(){ return state&&state.aiData?{sceneType:(state.plan&&state.plan.sceneType)||'',rowGap:state.aiData.rowGap,rowPeakN:state.aiData.rowPeakN,bodyRatio:state.aiData.bodyRatio,sat:state.aiData.sat,mean:state.aiData.mean,detectedClasses:state.aiData.detectedClasses,isPerson:state.aiData.isPerson,headTop:state.aiData.headTop,personLeft:state.aiData.personLeft,personRight:state.aiData.personRight,personBottom:state.aiData.personBottom,topBBox:state.aiData.topBBox,personScore:state.aiData.personScore,faceAvailable:state.aiData.faceAvailable,sym:state.aiData.sym,vSym:state.aiData.vSym,hSym:state.aiData.hSym,contrast:state.aiData.contrast,sharpness:state.aiData.sharpness,highClip:state.aiData.highClip,shadowClip:state.aiData.shadowClip,dynamicRange:state.aiData.dynamicRange,skinRatio:state.aiData.skinRatio,skinCx:state.aiData.skinCx,skinCy:state.aiData.skinCy,isPersonLikely:state.aiData.isPersonLikely,skinAspect:state.aiData.skinAspect,skinFill:state.aiData.skinFill,skinHRatio:state.aiData.skinHRatio,modelLoaded:(state.aiData&&'modelLoaded' in state.aiData)?state.aiData.modelLoaded:null,
+waterScore:state.aiData.waterScore,manmadeScore:state.aiData.manmadeScore,lightScore:state.aiData.lightScore,
+lowTexLower:state.aiData.lowTexLower,glareLower:state.aiData.glareLower,horizonOk:state.aiData.horizonOk,
+orthoRatio:state.aiData.orthoRatio,vertColRatio:state.aiData.vertColRatio,brightRatio:state.aiData.brightRatio,
+shoreReflect:state.aiData.shoreReflect,blueWater:state.aiData.blueWater,
+vertOrtho:state.aiData.vertOrtho,horizOrtho:state.aiData.horizOrtho,
+greenRatio:state.aiData.greenRatio,centerManmade:state.aiData.centerManmade,
+warmRatio:state.aiData.warmRatio,
+centerVert:state.aiData.centerVert,centerH2:state.aiData.centerH2,
+hSym2:state.aiData.hSym}:null; }
+    ,get model(){ return {yolo:window.__yoloState||'idle',coco:window.__cocoState||'idle',ready:(window.__yoloState==='ready'||window.__cocoState==='ready')}; }
   }; }catch(e){}
 })();
   </script>
-<div id="aicUpdateBar" class="hide"><span class="ub-t">✨ 新版本 v8.2.9 已就绪：本地分析引擎重构（竖图不再压扁）+ 夜景识别 + 弱网人像保护</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
+<div id="aicUpdateBar" class="hide"><span class="ub-t">✨ 新版本 v8.3.0 已就绪：本地检测升级 YOLO11n（更准）+ 水景/建筑场景识别重写 + 云端人像裁切保护加固</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
 <script>
 (function(){
   // v8.2.3 新版本就绪提示条：SW 激活后广播 → 页面弹出"立即刷新"，根治旧缓存看不到新功能

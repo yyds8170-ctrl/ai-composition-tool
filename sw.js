@@ -1,5 +1,5 @@
-/* AI 构图助手 · Service Worker v8.2.9 —— 离线缓存，让应用像原生 App 一样秒开 */
-const CACHE = 'ai-compose-v829';
+/* AI 构图助手 · Service Worker v8.3.0 —— 离线缓存，让应用像原生 App 一样秒开 */
+const CACHE = 'ai-compose-v830';
 const CORE = [
   './',
   './index.html',
@@ -15,7 +15,12 @@ const MODEL_FILES = [
   './model/group1-shard2of5',
   './model/group1-shard3of5',
   './model/group1-shard4of5',
-  './model/group1-shard5of5'
+  './model/group1-shard5of5',
+  // v8.3.0: YOLO11n + onnxruntime-web（WebGPU/WASM）
+  './model/yolo/yolo11n.onnx',
+  './model/ort/ort.min.js',
+  './model/ort/ort-wasm-simd-threaded.jsep.wasm',
+  './model/ort/ort-wasm-simd-threaded.jsep.mjs'
 ];
 
 self.addEventListener('install', (e) => {
@@ -44,7 +49,7 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
   // v8.2.2: 通知所有受控页面"新版本已就绪"，页面据此弹出刷新提示条（根治旧缓存看不到新功能）
   self.clients.matchAll({type:'window', includeUncontrolled:true}).then(function(clients){
-    clients.forEach(function(c){ c.postMessage({type:'AIC_SW_UPDATE', ver:'v8.2.9'}); });
+    clients.forEach(function(c){ c.postMessage({type:'AIC_SW_UPDATE', ver:'v8.3.0'}); });
   }).catch(function(){});
 });
 
