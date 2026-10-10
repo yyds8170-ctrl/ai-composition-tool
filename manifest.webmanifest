@@ -1,28 +1,28 @@
 {
- "name": "AI 构图助手",
- "short_name": "构图助手",
- "description": "AI 构图助手 Pro v8.3.1 · 实景视觉构图生成工具：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。含 YOLO11n 本地检测、智能人像裁切（不切头/手/脚）、30 款滤镜、构图法则百科与云端 VLM 分析",
- "id": "/ai-composition-tool/",
- "start_url": "./index.html",
- "scope": "./",
- "display": "standalone",
- "orientation": "portrait",
- "background_color": "#0A0C0E",
- "theme_color": "#0A0C0E",
- "lang": "zh-CN",
- "icons": [
-  {
-   "src": "icon-192.png",
-   "sizes": "192x192",
-   "type": "image/png",
-   "purpose": "any"
-  },
-  {
-   "src": "icon-512.png",
-   "sizes": "512x512",
-   "type": "image/png",
-   "purpose": "any maskable"
-  }
- ],
- "version": "8.3.1"
+  "name": "AI 构图助手",
+  "short_name": "构图助手",
+  "description": "AI 构图助手 Pro v8.3.2 · 实景视觉构图生成工具：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。含 YOLO11n 本地检测、智能人像裁切（不切头/手/脚）、30 款滤镜、构图法则百科与云端 VLM 分析",
+  "id": "/ai-composition-tool/",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A0C0E",
+  "theme_color": "#0A0C0E",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "version": "8.3.2"
 }

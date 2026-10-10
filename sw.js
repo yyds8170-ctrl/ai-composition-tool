@@ -1,5 +1,5 @@
-/* AI 构图助手 · Service Worker v8.3.1 —— 离线缓存，让应用像原生 App 一样秒开 */
-const CACHE = 'ai-compose-v831';
+/* AI 构图助手 · Service Worker v8.3.2 —— 离线缓存，让应用像原生 App 一样秒开 */
+const CACHE = 'ai-compose-v832';
 const CORE = [
   './',
   './index.html',
@@ -20,7 +20,36 @@ const MODEL_FILES = [
   './model/yolo/yolo11n.onnx',
   './model/ort/ort.min.js',
   './model/ort/ort-wasm-simd-threaded.jsep.wasm',
-  './model/ort/ort-wasm-simd-threaded.jsep.mjs'
+  './model/ort/ort-wasm-simd-threaded.jsep.mjs',
+  // v8.3.2: MediaPipe 同源完整运行时（JS + wasm + tflite + data），根治国内移动网络 CDN 挂起导致人脸/姿态加载失败
+  './model/mediapipe/face_detection/face_detection.js',
+  './model/mediapipe/face_detection/face_detection_solution_simd_wasm_bin.js',
+  './model/mediapipe/face_detection/face_detection_solution_simd_wasm_bin.wasm',
+  './model/mediapipe/face_detection/face_detection_solution_wasm_bin.js',
+  './model/mediapipe/face_detection/face_detection_solution_wasm_bin.wasm',
+  './model/mediapipe/face_detection/face_detection_short_range.tflite',
+  './model/mediapipe/face_detection/face_detection_full_range.tflite',
+  './model/mediapipe/face_detection/face_detection_full_range_sparse.tflite',
+  './model/mediapipe/face_detection/face_detection_short.binarypb',
+  './model/mediapipe/face_detection/face_detection_full.binarypb',
+  './model/mediapipe/pose/pose.js',
+  './model/mediapipe/pose/pose_solution_packed_assets_loader.js',
+  './model/mediapipe/pose/pose_solution_packed_assets.data',
+  './model/mediapipe/pose/pose_solution_simd_wasm_bin.js',
+  './model/mediapipe/pose/pose_solution_simd_wasm_bin.wasm',
+  './model/mediapipe/pose/pose_solution_wasm_bin.js',
+  './model/mediapipe/pose/pose_solution_wasm_bin.wasm',
+  './model/mediapipe/pose/pose_landmark_full.tflite',
+  './model/mediapipe/pose/pose_landmark_lite.tflite',
+  './model/mediapipe/pose/pose_web.binarypb',
+  './model/mediapipe/selfie_segmentation/selfie_segmentation.js',
+  './model/mediapipe/selfie_segmentation/selfie_segmentation_solution_simd_wasm_bin.js',
+  './model/mediapipe/selfie_segmentation/selfie_segmentation_solution_simd_wasm_bin.wasm',
+  './model/mediapipe/selfie_segmentation/selfie_segmentation_solution_wasm_bin.js',
+  './model/mediapipe/selfie_segmentation/selfie_segmentation_solution_wasm_bin.wasm',
+  './model/mediapipe/selfie_segmentation/selfie_segmentation.tflite',
+  './model/mediapipe/selfie_segmentation/selfie_segmentation_landscape.tflite',
+  './model/mediapipe/selfie_segmentation/selfie_segmentation.binarypb'
 ];
 
 self.addEventListener('install', (e) => {
@@ -49,7 +78,7 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
   // v8.2.2: 通知所有受控页面"新版本已就绪"，页面据此弹出刷新提示条（根治旧缓存看不到新功能）
   self.clients.matchAll({type:'window', includeUncontrolled:true}).then(function(clients){
-    clients.forEach(function(c){ c.postMessage({type:'AIC_SW_UPDATE', ver:'v8.3.1'}); });
+    clients.forEach(function(c){ c.postMessage({type:'AIC_SW_UPDATE', ver:'v8.3.2'}); });
   }).catch(function(){});
 });
 
