@@ -1,5 +1,5 @@
-/* AI 构图助手 · Service Worker v8.3.2 —— 离线缓存，让应用像原生 App 一样秒开 */
-const CACHE = 'ai-compose-v832';
+/* AI 构图助手 · Service Worker v8.3.3 —— 离线缓存，让应用像原生 App 一样秒开 */
+const CACHE = 'ai-compose-v833';
 const CORE = [
   './',
   './index.html',
@@ -9,6 +9,8 @@ const CORE = [
 ];
 // v4.2.1: 模型文件后台预缓存（不阻塞install，失败自动忽略）——首次打开即开始后台下载，
 // 下载完成后离线/弱网加载秒开；配合 fetch 的 cache-first 静态资源分支双保险
+// v8.3.3: 预缓存改为 activate 后延迟 30s 启动（不抢首屏页面下载带宽，页面 fetch 已缓存的不重复下载），
+// 并在 fetch 事件中唤醒续跑（防止 SW 空闲被浏览器终止而杀掉定时器）
 const MODEL_FILES = [
   './model/model.json',
   './model/group1-shard1of5',
@@ -52,19 +54,28 @@ const MODEL_FILES = [
   './model/mediapipe/selfie_segmentation/selfie_segmentation.binarypb'
 ];
 
+let _swWake = null;
+function _scheduleModelPrecache() {
+  // v8.3.3: 幂等——已启动则不重复；未下载项才入队，页面 fetch 已缓存的直接跳过
+  if (_swWake) return;
+  _swWake = setTimeout(function () {
+    _swWake = null;
+    caches.open(CACHE).then(function (c) {
+      return Promise.allSettled(MODEL_FILES.map(function (f) {
+        return c.match(f).then(function (hit) {
+          if (hit) return true;  // 已缓存（含页面 fetch 缓存）→ 跳过，不重复下载
+          return fetch(f, { cache: 'force-cache' }).then(function (r) {
+            if (r && r.ok) return c.put(f, r.clone());
+          }).catch(function () {});
+        }).catch(function () { return undefined; });
+      }));
+    }).catch(function () {});
+  }, 30000); // 延迟 30s：首屏页面/模型加载优先独占带宽
+}
+
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE).then((c) => c.addAll(CORE)).catch(() => {})
-  );
-  // v4.2.1: 模型后台预缓存——全部失败也不影响 install/activate（allSettled 吞错）
-  e.waitUntil(
-    caches.open(CACHE).then((c) =>
-      Promise.allSettled(MODEL_FILES.map((f) =>
-        fetch(f, { cache: 'force-cache' }).then((r) => {
-          if (r && r.ok) return c.put(f, r.clone());
-        }).catch(() => {})
-      ))
-    ).catch(() => {})
   );
   self.skipWaiting();
 });
@@ -78,13 +89,17 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
   // v8.2.2: 通知所有受控页面"新版本已就绪"，页面据此弹出刷新提示条（根治旧缓存看不到新功能）
   self.clients.matchAll({type:'window', includeUncontrolled:true}).then(function(clients){
-    clients.forEach(function(c){ c.postMessage({type:'AIC_SW_UPDATE', ver:'v8.3.2'}); });
+    clients.forEach(function(c){ c.postMessage({type:'AIC_SW_UPDATE', ver:'v8.3.3'}); });
   }).catch(function(){});
+  // v8.3.3: 模型预缓存延迟 30s 启动（不阻塞 activate）
+  _scheduleModelPrecache();
 });
 
 self.addEventListener('fetch', (e) => {
   const url = e.request.url;
   if (e.request.method !== 'GET') return;
+  // v8.3.3: 任意请求都顺带唤醒延迟预缓存（SW 空闲超时会被终止，定时器可能被杀）
+  _scheduleModelPrecache();
   // v7.8 #30: 跨域 CDN（tfjs / coco-ssd 模型权重 / mediapipe 库）运行时缓存——
   // 首次在线访问后写入 Cache，二次启动弱网/离线也能加载模型；SCF 云端 API 不在此列，不缓存
   if (url.indexOf(self.location.origin) !== 0) {
