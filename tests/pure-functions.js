@@ -49,6 +49,48 @@
       return c.map(function(v){ return Math.max(0,Math.min(50,v)); });
     }
 
+    function _objectGuard(crop, boxes){
+      var _OBJ_GUARD_BG={"dining table":1,"couch":1,"bed":1,"chair":1,"tv":1,"sink":1,"refrigerator":1,"oven":1,"microwave":1,"toaster":1};
+      if(!crop || crop.length!==4 || !(crop[0]||crop[1]||crop[2]||crop[3])) return crop;
+      if(!boxes || !boxes.length) return crop;
+      var TOL=1.0, MOVE=5.0, MINAREA=0.02, CONF=0.40;
+      var c=crop.slice();
+      var cand=[];
+      for(var i=0;i<boxes.length;i++){
+        var o=boxes[i];
+        if(!o || !o.b || o.b.length!==4) continue;
+        if(o.class==="person" || _OBJ_GUARD_BG[o.class]) continue;
+        if(typeof o.score==="number" && o.score<CONF) continue;
+        var bx1=Math.max(0,o.b[0]*100), by1=Math.max(0,o.b[1]*100),
+            bx2=Math.min(100,o.b[2]*100), by2=Math.min(100,o.b[3]*100);
+        if(!(bx2>bx1 && by2>by1)) continue;
+        var area=((bx2-bx1)*(by2-by1))/10000;
+        if(area<MINAREA) continue;
+        cand.push({bx1:bx1,by1:by1,bx2:bx2,by2:by2,area:area});
+      }
+      cand.sort(function(p,q){ return q.area-p.area; });
+      cand=cand.slice(0,2);
+      var oL=c[0],oT=c[1],oR=c[2],oB=c[3];
+      var nl=oL,nt=oT,nr=oR,nb=oB;
+      for(var k=0;k<cand.length;k++){
+        var m=cand[k];
+        var L=oL,T=oT,Rr=100-oR,Bb=100-oB;
+        var ovx=Math.min(Rr,m.bx2)-Math.max(L,m.bx1);
+        var ovy=Math.min(Bb,m.by2)-Math.max(T,m.by1);
+        if(ovx<=0||ovy<=0) continue; // 与保留区无重叠（物体本就在构图外），不护
+        if(m.bx1<L && m.bx2>L) nl=Math.min(nl,Math.round(m.bx1-TOL));            // 左边缘切穿
+        if(m.bx2>Rr && m.bx1<Rr) nr=Math.min(nr,Math.round(100-m.bx2-TOL));      // 右边缘切穿
+        if(m.by1<T && m.by2>T) nt=Math.min(nt,Math.round(m.by1-TOL));            // 上边缘切穿
+        if(m.by2>Bb && m.by1<Bb) nb=Math.min(nb,Math.round(100-m.by2-TOL));      // 下边缘切穿
+      }
+      // 只减不增（各边值只允许变小=保留区扩大），单边累计移动≤MOVE
+      c[0]=Math.max(oL-MOVE, Math.min(nl,oL));
+      c[1]=Math.max(oT-MOVE, Math.min(nt,oT));
+      c[2]=Math.max(oR-MOVE, Math.min(nr,oR));
+      c[3]=Math.max(oB-MOVE, Math.min(nb,oB));
+      return c.map(function(v){ return Math.max(0,Math.min(50,Math.round(v))); });
+    }
+
     function _figureGround(faceLum,bgLum){
       if(typeof faceLum!=='number'||!isFinite(faceLum)||typeof bgLum!=='number'||!isFinite(bgLum)) return null;
       var d=bgLum-faceLum;
@@ -108,4 +150,4 @@
           }catch(e){ return {deg:0,conf:0}; }
         }
 
-module.exports = { _deriveCrop, _jointGuard, _figureGround, _yoloNMS, _estTiltDeg };
+module.exports = { _deriveCrop, _jointGuard, _objectGuard, _figureGround, _yoloNMS, _estTiltDeg };

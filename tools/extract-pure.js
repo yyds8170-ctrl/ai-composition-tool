@@ -13,7 +13,7 @@ const SRC = path.join(ROOT, 'index.html');
 const OUT = path.join(ROOT, 'tests', 'pure-functions.js');
 
 // 需要提取的纯函数（名字需与 index.html 中一致）
-const TARGETS = ['_deriveCrop', '_jointGuard', '_figureGround', '_yoloNMS', '_estTiltDeg'];
+const TARGETS = ['_deriveCrop', '_jointGuard', '_objectGuard', '_figureGround', '_yoloNMS', '_estTiltDeg'];
 
 const src = fs.readFileSync(SRC, 'utf8');
 

@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _jointGuard, _figureGround, _yoloNMS, _estTiltDeg } = require('./pure-functions.js');
+const { _deriveCrop, _jointGuard, _objectGuard, _figureGround, _yoloNMS, _estTiltDeg } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -95,6 +95,69 @@ test('jointGuard: 只减不增', () => {
     11: [0.5, 0.22], 25: [0.5, 0.88], 15: [0.12, 0.5], 16: [0.88, 0.5]
   }), true);
   [0, 1, 2, 3].forEach(i => assert.ok(out[i] <= c[i], '边 ' + i + ' 不应增大'));
+});
+
+/* -------------------- _objectGuard（通用物体边界保护） -------------------- */
+function mkBox(cls, score, x1, y1, x2, y2) {
+  return { class: cls, score: score, b: [x1, y1, x2, y2] };
+}
+test('objectGuard: 无效 crop / 空框原样返回', () => {
+  assert.deepStrictEqual(_objectGuard([0, 0, 0, 0], [mkBox('dog', 0.9, 0.1, 0.3, 0.4, 0.7)]), [0, 0, 0, 0]);
+  assert.deepStrictEqual(_objectGuard([15, 10, 10, 10], []), [15, 10, 10, 10]);
+  assert.deepStrictEqual(_objectGuard(null, [mkBox('dog', 0.9, 0.1, 0.3, 0.4, 0.7)]), null);
+});
+test('objectGuard: 左边缘切穿非人物体 → 左沿外移纳入', () => {
+  const out = _objectGuard([15, 10, 10, 10], [mkBox('dog', 0.9, 0.10, 0.30, 0.40, 0.70)]);
+  assert.ok(out[0] < 15, '左沿裁切量应减小，实际 ' + out[0]);
+  assert.deepStrictEqual(out[1], 10); assert.deepStrictEqual(out[2], 10); assert.deepStrictEqual(out[3], 10);
+});
+test('objectGuard: 右边缘切穿 → 右沿外移', () => {
+  const out = _objectGuard([10, 10, 10, 10], [mkBox('car', 0.9, 0.60, 0.30, 0.94, 0.70)]);
+  assert.ok(out[2] < 10, '右沿裁切量应减小，实际 ' + out[2]);
+});
+test('objectGuard: 上边缘切穿 → 上沿外移', () => {
+  const out = _objectGuard([10, 13, 10, 10], [mkBox('cat', 0.9, 0.30, 0.10, 0.70, 0.40)]);
+  assert.ok(out[1] < 13, '上沿裁切量应减小，实际 ' + out[1]);
+});
+test('objectGuard: 下边缘切穿 → 下沿外移', () => {
+  const out = _objectGuard([10, 10, 10, 11], [mkBox('dog', 0.9, 0.30, 0.60, 0.70, 0.92)]);
+  assert.ok(out[3] < 11, '下沿裁切量应减小，实际 ' + out[3]);
+});
+test('objectGuard: 完全在保留区外的物体不护', () => {
+  assert.deepStrictEqual(_objectGuard([15, 10, 10, 10], [mkBox('dog', 0.9, 0.0, 0.3, 0.08, 0.7)]), [15, 10, 10, 10]);
+});
+test('objectGuard: 完整在保留区内的物体不触发', () => {
+  assert.deepStrictEqual(_objectGuard([10, 10, 10, 10], [mkBox('dog', 0.9, 0.4, 0.4, 0.6, 0.6)]), [10, 10, 10, 10]);
+});
+test('objectGuard: person 类跳过（已由关节/硬保护覆盖）', () => {
+  assert.deepStrictEqual(_objectGuard([15, 10, 10, 10], [mkBox('person', 0.95, 0.10, 0.30, 0.40, 0.70)]), [15, 10, 10, 10]);
+});
+test('objectGuard: 背景家具跳过（couch/dining table）', () => {
+  assert.deepStrictEqual(_objectGuard([15, 10, 10, 10], [mkBox('couch', 0.9, 0.10, 0.30, 0.40, 0.70)]), [15, 10, 10, 10]);
+  assert.deepStrictEqual(_objectGuard([15, 10, 10, 10], [mkBox('dining table', 0.9, 0.10, 0.30, 0.40, 0.70)]), [15, 10, 10, 10]);
+});
+test('objectGuard: 低置信度（<0.4）跳过', () => {
+  assert.deepStrictEqual(_objectGuard([15, 10, 10, 10], [mkBox('dog', 0.3, 0.10, 0.30, 0.40, 0.70)]), [15, 10, 10, 10]);
+});
+test('objectGuard: 过小物体（面积<2%）跳过', () => {
+  assert.deepStrictEqual(_objectGuard([10, 10, 10, 10], [mkBox('bottle', 0.9, 0.50, 0.50, 0.55, 0.55)]), [10, 10, 10, 10]);
+});
+test('objectGuard: 单边移动上限 5%', () => {
+  const out = _objectGuard([8, 10, 10, 10], [mkBox('dog', 0.9, 0.0, 0.30, 0.40, 0.70)]);
+  assert.deepStrictEqual(out[0], 3, '需移动8%应限幅到3%，实际 ' + out[0]);
+});
+test('objectGuard: 只减不增', () => {
+  const c = [15, 13, 12, 11];
+  const out = _objectGuard(c, [mkBox('dog', 0.9, 0.05, 0.05, 0.95, 0.95)]);
+  [0, 1, 2, 3].forEach(i => assert.ok(out[i] <= c[i], '边 ' + i + ' 不应增大'));
+});
+test('objectGuard: 右边界外溢(x2>1) clamp 后纳入到不裁', () => {
+  const out = _objectGuard([4, 3, 4, 3], [mkBox('bowl', 0.9, 0.78, 0.5, 1.005, 0.9)]);
+  assert.deepStrictEqual(out[2], 0);
+});
+test('objectGuard: 左边界外溢(x1<0) clamp 后仍保护', () => {
+  const out = _objectGuard([6, 3, 3, 3], [mkBox('cat', 0.9, -0.04, 0.2, 0.9, 0.95)]);
+  assert.ok(out[0] <= 1, '左沿应外移到限幅/0，实际 ' + out[0]);
 });
 
 /* -------------------- _figureGround（主体背景分离） -------------------- */

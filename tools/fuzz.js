@@ -1,5 +1,5 @@
 /* 临时审查脚本：对纯函数做属性/模糊测试，找真实健壮性问题。 */
-const { _deriveCrop, _jointGuard, _figureGround, _yoloNMS, _estTiltDeg } = require('../tests/pure-functions.js');
+const { _deriveCrop, _jointGuard, _objectGuard, _figureGround, _yoloNMS, _estTiltDeg } = require('../tests/pure-functions.js');
 
 let issues = 0;
 function bad(msg) { console.log('ISSUE:', msg); issues++; }
@@ -75,6 +75,35 @@ for (let i = 0; i < 3000; i++) {
   if (!validNum(out.deg) || !validNum(out.conf)) bad('estTiltDeg NaN');
   if (Math.abs(out.deg) > 10) bad('estTiltDeg deg 超 10: ' + out.deg);
   if (out.conf < 0 || out.conf > 100) bad('estTiltDeg conf 越界');
+}
+
+// 6. _objectGuard: 随机 crop + 随机检测框，检查只减不增、范围、保留面积不缩小、确定性
+const OBJ_CLS = ['dog','car','cat','bottle','person','couch','bird','horse','pizza','chair'];
+function rndBoxes() {
+  const n = Math.floor(rnd(0, 7));
+  const arr = [];
+  for (let j = 0; j < n; j++) {
+    const x1 = rnd(-0.05, 0.95), y1 = rnd(-0.05, 0.95);
+    const x2 = x1 + rnd(0.02, 0.55), y2 = y1 + rnd(0.02, 0.55);
+    arr.push({ class: OBJ_CLS[Math.floor(rnd(0, OBJ_CLS.length))], score: rnd(0.1, 0.99),
+      b: [x1, y1, x2, y2] }); // 允许略微超出 [0,1]，测生产端 clamp 健壮性
+  }
+  return arr;
+}
+function areaOf(c){ return (100-c[0]-c[2])*(100-c[1]-c[3])/10000; }
+for (let i = 0; i < 2000000; i++) {
+  const crop = [rnd(0, 50), rnd(0, 50), rnd(0, 50), rnd(0, 50)].map(v => Math.round(v));
+  const boxes = rndBoxes();
+  const out = _objectGuard(crop, boxes);
+  if (out.length !== 4) { bad('objectGuard 长度!=4'); continue; }
+  out.forEach((v,k)=>{
+    if(!validNum(v)) bad('objectGuard NaN');
+    if(v<0||v>50) bad('objectGuard 越界: '+v);
+    if(v>crop[k]) bad(`objectGuard 增大裁切边 ${k}: ${crop[k]}->${v}`);
+  });
+  if(areaOf(out) < areaOf(crop) - 1e-9) bad('objectGuard 保留面积缩小');
+  const s1=JSON.stringify(_objectGuard(crop,boxes)), s2=JSON.stringify(_objectGuard(crop,boxes));
+  if(s1!==s2) bad('objectGuard 不稳定');
 }
 
 console.log(issues === 0 ? '\n✓ 模糊测试未发现问题' : `\n发现 ${issues} 个问题`);
