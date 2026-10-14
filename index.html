@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v8.3.5 · 实景视觉构图生成工具</title>
-<meta name="description" content="AI 构图助手 Pro v8.3.5 · 实景视觉构图生成工具：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。含 YOLO11n 本地检测、智能人像裁切（不切关节·头·手·脚）、30 款滤镜、构图法则百科与云端 VLM 分析">
+<title>AI 构图助手 Pro v8.3.6 · 实景视觉构图生成工具</title>
+<meta name="description" content="AI 构图助手 Pro v8.3.6 · 实景视觉构图生成工具：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。含 YOLO11n 本地检测、智能人像裁切（不切关节·头·手·脚）、30 款滤镜、构图法则百科与云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v8.3.5 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切">
+<meta property="og:title" content="AI 构图助手 Pro v8.3.6 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切">
 <meta property="og:description" content="给不会拍照的普通人：打开相机，AI 教你怎么拍。AI 构图分析（本地像素+云端 VLM 双引擎）、人像保护裁切（不切头不切手脚）、30 款滤镜，一键出成品。默认本地运行，照片不上传。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
@@ -656,7 +656,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.3.5</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.3.6</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -1014,7 +1014,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.3.5 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.3.6 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1088,7 +1088,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v8.3.5";
+var APP_VER="v8.3.6";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -2507,6 +2507,18 @@ var APP_VER="v8.3.5";
         }
         var _tilt=_estTiltDeg(gx,gy,gradMag,w,h,edgeThresh);
         var _tiltDeg=_tilt.deg, _tiltConf=_tilt.conf;
+        // v8.3.6 16×16 粗网格：每格平均亮度。
+        // 用于人像"主体背景分离"（McCurry 第5法则 figure-to-ground）：背景比脸亮=逆光/亮背景抢走视线。
+        // 仅 256 个数，供 planFromAnalysis 按人脸/人体框采样。
+        var _GW=16,_GH=16,_lumGrid=new Float32Array(_GW*_GH),_gridN=new Int32Array(_GW*_GH);
+        for(var _gy=0;_gy<h;_gy++){
+          var _gY=Math.min(_GH-1,Math.floor(_gy/h*_GH));
+          for(var _gx=0;_gx<w;_gx++){
+            var _gX=Math.min(_GW-1,Math.floor(_gx/w*_GW)),_gi=_gY*_GW+_gX;
+            _lumGrid[_gi]+=lum[_gy*w+_gx]; _gridN[_gi]++;
+          }
+        }
+        for(var _gi2=0;_gi2<_GW*_GH;_gi2++){ if(_gridN[_gi2]) _lumGrid[_gi2]/=_gridN[_gi2]; }
         return {
           cx:cx,cy:cy,mean:mean,contrast:contrast,
           row:bestRow,rowGap:bestGap,ratio:bestRow/h,rowPeakN:rowPeakN,
@@ -2528,7 +2540,9 @@ var APP_VER="v8.3.5";
           shoreReflect:shoreReflect, blueWater:blueWater,
           vertOrtho:vertOrtho, horizOrtho:horizOrtho,
           greenRatio:greenRatio, centerManmade:centerManmade, warmRatio:warmRatio,
-          centerVert:centerVert, centerH2:centerH2
+          centerVert:centerVert, centerH2:centerH2,
+          // v8.3.6 主体背景分离网格
+          lumGrid:Array.from(_lumGrid), gridW:_GW, gridH:_GH
         };
       }catch(err){
         return null;
@@ -2554,6 +2568,17 @@ var APP_VER="v8.3.5";
       var rr=100-c[2]; // 右沿位置：仅管靠画面右侧的手（x>65）
       [16,14].forEach(function(i){ var x=kx(i); if(x!==null && x>65 && Math.abs(rr-x)<=TOL){ var t=Math.min(99,x+TOL+1); if(t-rr<=MOVE) c[2]=Math.max(0,Math.round(100-t)); } });
       return c.map(function(v){ return Math.max(0,Math.min(50,v)); });
+    }
+    // v8.3.6 主体背景分离（figure-to-ground，McCurry 第5法则 / SLR Lounge 人像背景法则）：
+    // 人眼被最亮处吸引；背景显著亮于脸时会抢视线、脸显黑（逆光/身后亮窗亮墙）。
+    // faceLum=脸部平均亮度(0-255)，bgLum=人体框外背景亮度(0-255)。阈值经 150 张真实图标定。
+    // 返回建议文案或 null；bgLum 下限防止夜景脸暗导致差值虚高（背景本身不亮不算逆光）。
+    function _figureGround(faceLum,bgLum){
+      if(typeof faceLum!=='number'||!isFinite(faceLum)||typeof bgLum!=='number'||!isFinite(bgLum)) return null;
+      var d=bgLum-faceLum;
+      if(d>=44 && bgLum>=150) return "⚠ 背景比脸亮很多（逆光/身后是亮窗亮墙），脸容易拍黑、亮背景抢走视线：换个角度让暗背景在身后，或把脸转向光源";
+      if(d>=30 && bgLum>=140) return "💡 背景略亮于脸：略微移动让暗一点的背景在身后，或把脸转向光，人物更突出";
+      return null;
     }
     function planFromAnalysis(a){
       // v4.0.1 智能构图引擎：场景分类 + 多维度评分 + 动态裁切 + 精准推荐
@@ -3117,6 +3142,57 @@ var APP_VER="v8.3.5";
         if(plan.z<1.8){ notes.push("📷 人像建议至少 1.8x 变焦（等效 85mm），避免广角脸变形"); }
         // 避免关节裁切提示
         if(personData.personBottom>0.95){ notes.push("⚠ 人物脚部被裁切，建议下移或拉远避免切脚踝"); }
+        // v8.3.6 主体背景分离（figure-to-ground）：用 16×16 亮度网格采样脸部 vs 人体框外背景
+        // 合影遍历每一张脸取最暗者（只要有人被逆光就提示）；背景排除框在合影时并入所有脸，避免把成员算进背景。
+        if(a && a.lumGrid && a.gridW && personData.faceX!=null && personData.faceY!=null){
+          try{
+            var _GW=a.gridW,_GH=a.gridH||_GW,_lg=a.lumGrid;
+            function _boxLum(x1,y1,x2,y2){
+              var gx0=Math.floor(Math.min(x1,x2)*_GW),gx1=Math.ceil(Math.max(x1,x2)*_GW),
+                  gy0=Math.floor(Math.min(y1,y2)*_GH),gy1=Math.ceil(Math.max(y1,y2)*_GH),s=0,n=0;
+              for(var gy=gy0;gy<gy1;gy++){ for(var gx=gx0;gx<gx1;gx++){
+                if(gx>=0&&gx<_GW&&gy>=0&&gy<_GH){ s+=_lg[gy*_GW+gx]; n++; }
+              } }
+              return n?s/n:null;
+            }
+            var _faceLum=null,_fbs=Array.isArray(personData.faceBoxes)?personData.faceBoxes:[];
+            if(_fbs.length){
+              var _fvals=[];
+              _fbs.forEach(function(f){
+                if(f&&f.length===4){
+                  var cxm=(f[0]+f[2])/2,cym=(f[1]+f[3])/2,fw=Math.abs(f[2]-f[0]),fh=Math.abs(f[3]-f[1]);
+                  // 只取脸框中央 60%，避开头发/背景
+                  var fl=_boxLum(cxm-fw*0.3,cym-fh*0.25,cxm+fw*0.3,cym+fh*0.35);
+                  if(fl!==null) _fvals.push(fl);
+                }
+              });
+              if(_fvals.length) _faceLum=Math.min.apply(null,_fvals); // 最暗的脸
+            }
+            if(_faceLum===null){
+              var _fxc=Math.round(personData.faceX*_GW),_fyc=Math.round(personData.faceY*_GH),_fsum=0,_fn=0;
+              for(var _yy=_fyc-1;_yy<=_fyc+1;_yy++){ for(var _xx=_fxc-1;_xx<=_fxc+1;_xx++){
+                if(_xx>=0&&_xx<_GW&&_yy>=0&&_yy<_GH){ _fsum+=_lg[_yy*_GW+_xx]; _fn++; }
+              } }
+              _faceLum=_fn?_fsum/_fn:null;
+            }
+            var _pl=(typeof personData.personLeft==='number'&&personData.personLeft>0)?personData.personLeft:personData.faceX-0.2;
+            var _pr=(typeof personData.personRight==='number'&&personData.personRight>0)?personData.personRight:personData.faceX+0.2;
+            var _pt=(typeof personData.headTop==='number'&&personData.headTop>0)?personData.headTop:personData.faceY-0.12;
+            var _pb=(typeof personData.personBottom==='number'&&personData.personBottom>0)?personData.personBottom:personData.faceY+0.55;
+            if(_fbs.length>=2){ // 合影：所有脸并集外扩并入排除框
+              var _ux0=1,_uy0=1,_ux1=0,_uy1=0;
+              _fbs.forEach(function(f){ if(f&&f.length===4){ _ux0=Math.min(_ux0,f[0]);_uy0=Math.min(_uy0,f[1]);_ux1=Math.max(_ux1,f[2]);_uy1=Math.max(_uy1,f[3]); } });
+              _pl=Math.min(_pl,_ux0-0.08); _pr=Math.max(_pr,_ux1+0.08); _pt=Math.min(_pt,_uy0-0.03); _pb=Math.max(_pb,_uy1+0.35);
+            }
+            _pl=Math.max(0,_pl);_pr=Math.min(1,_pr);_pt=Math.max(0,_pt);_pb=Math.min(1,_pb);
+            var _bsum=0,_bn=0;
+            for(var _gy2=0;_gy2<_GH;_gy2++){ for(var _gx2=0;_gx2<_GW;_gx2++){
+              var _nx=(_gx2+0.5)/_GW,_ny=(_gy2+0.5)/_GH;
+              if(_nx<_pl||_nx>_pr||_ny<_pt||_ny>_pb){ _bsum+=_lg[_gy2*_GW+_gx2]; _bn++; }
+            } }
+            if(_bn){ var _fgt=_figureGround(_faceLum,_bsum/_bn); if(_fgt && notes.length<9) notes.push(_fgt); }
+          }catch(_e){}
+        }
       }
       
       // v7.9 #35: 本地引擎多人合影——所有人脸并集落在保留区（头顶6%、左右3%、底部6%），只减裁切。本地 crop 顺序[L,T,R,B]
@@ -8405,12 +8481,14 @@ vertOrtho:state.aiData.vertOrtho,horizOrtho:state.aiData.horizOrtho,
 greenRatio:state.aiData.greenRatio,centerManmade:state.aiData.centerManmade,
 warmRatio:state.aiData.warmRatio,
 centerVert:state.aiData.centerVert,centerH2:state.aiData.centerH2,
+faceX:(state.aiData.faceX!=null?state.aiData.faceX:null),faceY:(state.aiData.faceY!=null?state.aiData.faceY:null),
+lumGrid:state.aiData.lumGrid||null,gridW:state.aiData.gridW||null,gridH:state.aiData.gridH||null,
 hSym2:state.aiData.hSym}:null; }
     ,get model(){ return {yolo:window.__yoloState||'idle',coco:window.__cocoState||'idle',ready:(window.__yoloState==='ready'||window.__cocoState==='ready')}; }
   }; }catch(e){}
 })();
   </script>
-<div id="aicUpdateBar" class="hide"><span class="ub-t">✨ 新版本 v8.3.5 已就绪：新增人像关节裁切保护，裁半身/全身不再切膝盖、手腕、脚踝</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
+<div id="aicUpdateBar" class="hide"><span class="ub-t">✨ 新版本 v8.3.6 已就绪：新增逆光/亮背景检测，背景比脸亮抢焦点时提示换角度，人脸更突出</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
 <script>
 (function(){
   // v8.2.3 新版本就绪提示条：SW 激活后广播 → 页面弹出"立即刷新"，根治旧缓存看不到新功能
