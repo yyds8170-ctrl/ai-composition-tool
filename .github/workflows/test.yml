@@ -1,0 +1,30 @@
+name: tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  unit-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 提取纯函数并校验与线上一致
+        run: |
+          node tools/extract-pure.js
+          if ! git diff --quiet -- tests/pure-functions.js; then
+            echo "::error::tests/pure-functions.js 与 index.html 不一致；请本地运行 npm run extract 并提交"
+            git --no-pager diff -- tests/pure-functions.js
+            exit 1
+          fi
+
+      - name: 运行单元测试
+        run: node tests/unit.test.js
