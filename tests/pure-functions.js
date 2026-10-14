@@ -91,6 +91,65 @@
       return c.map(function(v){ return Math.max(0,Math.min(50,Math.round(v))); });
     }
 
+    function _portraitFraming(crop, info){
+      if(!crop || crop.length!==4 || !info) return crop;
+      var pl=info.pl, pt=info.pt, pr=info.pr, pb=info.pb, ph=info.ph, aspect=info.aspect;
+      if(!(info.isPerson===true || info.isPort===true)) return crop;
+      if(info.isCloseUp===true) return crop;                 // 特写保持完整（与 needCrop 一致）
+      if(typeof pt!=='number' || !isFinite(pt) || typeof pb!=='number' || !isFinite(pb)) return crop;
+      if(typeof aspect!=='number' || !isFinite(aspect) || aspect>=0.92) return crop; // 仅竖幅
+      if(typeof ph!=='number' || !isFinite(ph) || ph<=0) ph=Math.max(0,pb-pt);
+      if(!(ph>=0.34 && ph<0.72)) return crop;                // 半身 0.50-0.72 / 七分 0.34-0.50；全身人太小不硬裁
+      if(!(pr>pl)){ pl=0.35; pr=0.65; }
+      var T0=crop[1]/100, B0=crop[3]/100, H0=Math.max(0.01,1-T0-B0);
+      var half = ph>=0.50;                                   // 半身 vs 七分
+      var eyeK  = half?0.10:0.08;                            // 眼睛在人体框顶下方约 10%/8%
+      var eyeAbs= pt + eyeK*ph;
+      var eyeNow=(eyeAbs-T0)/H0;
+      var hrNow =(pt-T0)/H0;
+      if(!(eyeNow>0.42 && hrNow>0.28)) return crop;          // 双触发：眼睛明显偏低且头顶留白过大，否则不动
+      var eyeT=0.33, headMin=0.05, bodyKeep=half?0.05:0.06, HMIN=0.60;
+      // 垂直方向：眼位锚定上三分，同时顶部不切头、底部容纳人体到正确切位（H 取各硬约束所需最大值）
+      var H=Math.max((pb+bodyKeep-eyeAbs)/(1-eyeT), (eyeK*ph+headMin)/eyeT, HMIN);
+      // 放不下就放弃（绝不靠缩小 H 去硬塞，否则会切到身体/腿）：顶边不得<0、底边不得>1
+      if(H>eyeAbs/eyeT) return crop;
+      if(H>(1-eyeAbs)/(1-eyeT)) return crop;
+      var T=eyeAbs-eyeT*H;
+      var B=1-T-H;
+      if(T<0 || B<0 || T>pt-headMin) return crop;
+      if(T+H < pb+bodyKeep-1e-9) return crop;             // 二次确认：不切身体/腿
+      // 3:4 竖幅，水平方向以人物中心居中，宽度按目标画幅换算（W 为相对原片宽度的归一化保留比例）
+      var W=H*0.75/aspect;
+      // 必须足够宽以完整容纳人体（左右各留 3%），不够就只扩不缩（减少左右裁切）
+      var Wmin=(pr-pl)+0.06;
+      if(W<Wmin) W=Wmin;
+      if(W>1) W=1;
+      var cx=(pl+pr)/2;
+      // L 的可行区间：保证左边不切(L≤pl-0.03)、右边不切(R=1-L-W≤1-pr-0.03 ⇒ L≥pr+0.03-W)
+      var Llo=pr+0.03-W, Lhi=pl-0.03;
+      var L=Math.max(0,Math.min(1-W, cx-W/2));
+      if(L<Llo) L=Llo; if(L>Lhi) L=Lhi;
+      L=Math.max(0,Math.min(1-W,L));
+      var R=1-L-W;
+      if(R<0) return crop;
+      if(L>pl-0.03+1e-9 || R>1-pr-0.03+1e-9) return crop;   // 仍切人体，放弃
+      if(H*W<0.36) return crop;                              // 保留面积下限
+      // 输出统一向下取整（Math.floor）：四边裁量只小不大，保留区只大不小，取整不会切到任何硬保护对象
+      var oL=Math.floor(L*100), oT=Math.floor(T*100), oR=Math.floor(R*100), oB=Math.floor(B*100);
+      // 取整后最终硬校验（任一不满足都放弃，宁缺毋滥）
+      var fH=1-oT/100-oB/100, fW=1-oL/100-oR/100;
+      if(fH<0.60 || fH*fW<0.36) return crop;
+      if(oT/100 > pt-0.04) return crop;
+      if(oB/100 > 1-(pb+bodyKeep)) return crop;
+      if(oL/100 > pl-0.03 || oR/100 > 1-pr-0.03) return crop;
+      var tot=oL+oT+oR+oB;
+      if(tot<5) return crop;
+      var newEye=(eyeAbs-oT/100)/Math.max(0.01,fH);
+      if(!(newEye<eyeNow-0.06)) return crop;                 // 眼睛必须明显上移才算改善
+      if((pt-oT/100)/fH<0.04) return crop;                   // 头顶至少留 4%
+      return [oL, oT, oR, oB].map(function(v){ return Math.max(0,Math.min(60,v)); });
+    }
+
     function _figureGround(faceLum,bgLum){
       if(typeof faceLum!=='number'||!isFinite(faceLum)||typeof bgLum!=='number'||!isFinite(bgLum)) return null;
       var d=bgLum-faceLum;
@@ -150,4 +209,4 @@
           }catch(e){ return {deg:0,conf:0}; }
         }
 
-module.exports = { _deriveCrop, _jointGuard, _objectGuard, _figureGround, _yoloNMS, _estTiltDeg };
+module.exports = { _deriveCrop, _jointGuard, _objectGuard, _portraitFraming, _figureGround, _yoloNMS, _estTiltDeg };

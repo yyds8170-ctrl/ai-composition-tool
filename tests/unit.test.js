@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _jointGuard, _objectGuard, _figureGround, _yoloNMS, _estTiltDeg } = require('./pure-functions.js');
+const { _deriveCrop, _jointGuard, _objectGuard, _portraitFraming, _figureGround, _yoloNMS, _estTiltDeg } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -158,6 +158,71 @@ test('objectGuard: 右边界外溢(x2>1) clamp 后纳入到不裁', () => {
 test('objectGuard: 左边界外溢(x1<0) clamp 后仍保护', () => {
   const out = _objectGuard([6, 3, 3, 3], [mkBox('cat', 0.9, -0.04, 0.2, 0.9, 0.95)]);
   assert.ok(out[0] <= 1, '左沿应外移到限幅/0，实际 ' + out[0]);
+});
+
+/* -------------------- _portraitFraming（人像近眼上三分 + 景别化裁切） -------------------- */
+function pfInfo(o){
+  return Object.assign({pl:0.30,pt:0.20,pr:0.70,pb:0.80,ph:0.60,aspect:0.5625,isCloseUp:false,isPerson:true}, o||{});
+}
+// 计算某 crop 下的眼位（eyeK 与函数内一致：半身 0.10 / 七分 0.08）
+function pfEye(out, info){
+  const eyeK=info.ph>=0.50?0.10:0.08;
+  const T=out[1]/100, H=1-T-out[3]/100;
+  return (info.pt+eyeK*info.ph-T)/H;
+}
+test('portraitFraming: 非人像/特写/横图/缺框 原样返回', () => {
+  const c=[6,1,6,2];
+  assert.deepStrictEqual(_portraitFraming(c, pfInfo({isPerson:false})), c);
+  assert.deepStrictEqual(_portraitFraming(c, pfInfo({isCloseUp:true})), c);
+  assert.deepStrictEqual(_portraitFraming(c, pfInfo({aspect:1.0})), c);
+  assert.deepStrictEqual(_portraitFraming(c, pfInfo({aspect:0.92})), c);
+  assert.deepStrictEqual(_portraitFraming(c, pfInfo({pt:NaN})), c);
+});
+test('portraitFraming: 全身(ph<0.34)与特写(ph>=0.72)不硬裁', () => {
+  const c=[0,0,0,0];
+  assert.deepStrictEqual(_portraitFraming(c, pfInfo({pt:0.62,pb:0.87,ph:0.25})), c); // 远景全身
+  assert.deepStrictEqual(_portraitFraming(c, pfInfo({pt:0.05,pb:0.95,ph:0.90})), c); // 特写
+});
+test('portraitFraming: 眼睛位置已合理(<=0.42)不触发', () => {
+  const c=[0,0,0,0];
+  // 半身，眼睛在画面 ~0.26，构图正常
+  assert.deepStrictEqual(_portraitFraming(c, pfInfo({pt:0.20,pb:0.75,ph:0.55})), c);
+});
+test('portraitFraming: 半身眼位偏低+头顶留白过大 → 触发，眼位锚定上三分', () => {
+  const c=[6,1,6,2];
+  const info=pfInfo({pl:0.30,pt:0.408,pr:0.70,pb:0.908,ph:0.50});
+  const out=_portraitFraming(c, info);
+  assert.notDeepStrictEqual(out, c);
+  const eye=pfEye(out, info);
+  assert.ok(Math.abs(eye-0.33)<0.03, '眼位应≈0.33，实际 '+eye);
+  const T=out[1]/100, H=1-T-out[3]/100, W=1-out[0]/100-out[2]/100;
+  assert.ok(H>=0.60, '长边护栏 H≥0.60，实际 '+H);
+  assert.ok(H*W>=0.36, '保留面积≥0.36，实际 '+(H*W));
+  assert.ok(T<=info.pt-0.04, '不切头顶');
+  assert.ok(T+H>=info.pb+0.04, '不切身体下沿');
+  assert.ok(out[0]/100<=info.pl-0.03, '不裁左侧人体');
+  assert.ok(out[2]/100<=1-info.pr-0.03, '不裁右侧人体');
+});
+test('portraitFraming: 七分人像眼位偏低 → 触发且不切腿', () => {
+  const c=[6,6,6,4];
+  const info=pfInfo({pl:0.31,pt:0.447,pr:0.43,pb:0.827,ph:0.38});
+  const out=_portraitFraming(c, info);
+  assert.notDeepStrictEqual(out, c);
+  const eye=pfEye(out, info);
+  assert.ok(Math.abs(eye-0.33)<0.04, '眼位应≈0.33，实际 '+eye);
+  const T=out[1]/100, H=1-T-out[3]/100;
+  assert.ok(T+H>=info.pb+0.06, '七分身底边不得切到腿');
+  assert.ok(H>=0.60, '长边护栏');
+});
+test('portraitFraming: 人物已到画面底、眼位过低 → 放弃（不切腿，宁缺毋滥）', () => {
+  const c=[6,5,5,0];
+  const info=pfInfo({pl:0.25,pt:0.582,pr:0.75,pb:1.0,ph:0.42});
+  assert.deepStrictEqual(_portraitFraming(c, info), c);
+});
+test('portraitFraming: 触发后输出确定性', () => {
+  const c=[6,1,6,2];
+  const info=pfInfo({pl:0.30,pt:0.408,pr:0.70,pb:0.908,ph:0.50});
+  assert.deepStrictEqual(_portraitFraming(c, info), _portraitFraming(c, info));
 });
 
 /* -------------------- _figureGround（主体背景分离） -------------------- */

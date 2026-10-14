@@ -1,5 +1,5 @@
 /* 临时审查脚本：对纯函数做属性/模糊测试，找真实健壮性问题。 */
-const { _deriveCrop, _jointGuard, _objectGuard, _figureGround, _yoloNMS, _estTiltDeg } = require('../tests/pure-functions.js');
+const { _deriveCrop, _jointGuard, _objectGuard, _portraitFraming, _figureGround, _yoloNMS, _estTiltDeg } = require('../tests/pure-functions.js');
 
 let issues = 0;
 function bad(msg) { console.log('ISSUE:', msg); issues++; }
@@ -104,6 +104,38 @@ for (let i = 0; i < 2000000; i++) {
   if(areaOf(out) < areaOf(crop) - 1e-9) bad('objectGuard 保留面积缩小');
   const s1=JSON.stringify(_objectGuard(crop,boxes)), s2=JSON.stringify(_objectGuard(crop,boxes));
   if(s1!==s2) bad('objectGuard 不稳定');
+}
+
+// 7. _portraitFraming: 随机人像框/画幅/crop，触发时检查不切头/不切身体/不裁人/面积/长边/眼位上移；不触发时原样
+for (let i = 0; i < 1000000; i++) {
+  const ph = rnd(0.1, 0.95);
+  let pt = rnd(0.02, 0.55), pb = Math.min(1, pt + ph);
+  let pl = rnd(0.05, 0.5), pr = Math.min(1, pl + rnd(0.15, 0.6));
+  const aspect = rnd(0.42, 1.05); // 含横图/竖图
+  const isCloseUp = Math.random() < 0.15;
+  const crop = [rnd(0, 20), rnd(0, 20), rnd(0, 20), rnd(0, 20)].map(v => Math.round(v));
+  const info = { pl, pt, pr, pb, ph, aspect, isCloseUp, isPerson: true };
+  let out;
+  try { out = _portraitFraming(crop, info); } catch(e){ bad('portraitFraming 抛错: '+e.message); continue; }
+  if (out.length !== 4) { bad('portraitFraming 长度!=4'); continue; }
+  out.forEach(v => { if (!validNum(v)) bad('portraitFraming NaN'); if (v<0||v>60) bad('portraitFraming 越界: '+v); });
+  const fired = JSON.stringify(out) !== JSON.stringify(crop);
+  if (fired) {
+    const L=out[0]/100, T=out[1]/100, R=out[2]/100, H=1-T-out[3]/100, W=1-L-R;
+    const eyeK=ph>=0.5?0.10:0.08, eyeAbs=pt+eyeK*ph;
+    const T0=crop[1]/100, H0=1-T0-crop[3]/100;
+    const eyeNow=(eyeAbs-T0)/H0, newEye=(eyeAbs-T)/H;
+    if (H < 0.60-1e-9) bad('portraitFraming 长边护栏失效 H='+H);
+    if (H*W < 0.36-1e-9) bad('portraitFraming 保留面积<0.36: '+(H*W));
+    if (T > pt-0.04+1e-9) bad('portraitFraming 切头顶 T='+T+' pt='+pt);
+    if (T+H < pb+(ph>=0.5?0.05:0.06)-1e-9) bad('portraitFraming 切身体/腿');
+    if (L > pl-0.03+1e-9 || R > 1-pr-0.03+1e-9) bad('portraitFraming 裁到左右人体');
+    if ((pt-T)/H < 0.04-1e-9) bad('portraitFraming 头顶留白<4%');
+    if (!(newEye < eyeNow)) bad('portraitFraming 眼位未上移 now='+eyeNow+' new='+newEye);
+    // 触发的前置条件一致性（竖幅/非特写/半身七分/眼位低/头留白大）
+    if (aspect>=0.92 || isCloseUp || !(ph>=0.34&&ph<0.72)) bad('portraitFraming 不该触发却触发');
+  }
+  if (JSON.stringify(_portraitFraming(crop, info)) !== JSON.stringify(out)) bad('portraitFraming 不稳定');
 }
 
 console.log(issues === 0 ? '\n✓ 模糊测试未发现问题' : `\n发现 ${issues} 个问题`);
