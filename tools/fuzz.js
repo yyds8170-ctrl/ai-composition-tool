@@ -6,15 +6,15 @@ function bad(msg) { console.log('ISSUE:', msg); issues++; }
 const rnd = (a, b) => a + Math.random() * (b - a);
 const validNum = v => typeof v === 'number' && isFinite(v);
 
-// 1. _deriveCrop: 随机 base，检查范围、NaN、三档单调
-for (let i = 0; i < 20000; i++) {
+// 1. _deriveCrop: 随机 base，检查范围、NaN、三档单调、round 后面积>=0.34（200 万次）
+for (let i = 0; i < 2000000; i++) {
   const base = [rnd(0, 45), rnd(0, 45), rnd(0, 45), rnd(0, 45)];
   for (const mode of ['loose', 'standard', 'tight']) {
     const out = _deriveCrop(base, mode);
     if (out.length !== 4) { bad('deriveCrop 长度!=4'); continue; }
     out.forEach(v => { if (!validNum(v)) bad('deriveCrop NaN: ' + v); if (v < 0 || v > 45) bad('deriveCrop 越界: ' + v); });
     const area = (100 - out[0] - out[2]) * (100 - out[1] - out[3]) / 10000;
-    if (area < 0.33) bad('deriveCrop 面积低于 0.34: ' + area.toFixed(3));
+    if (area < 0.34) bad('deriveCrop 面积低于 0.34: ' + area.toFixed(4));
   }
   const l = _deriveCrop(base, 'loose'), s = _deriveCrop(base, 'standard'), t = _deriveCrop(base, 'tight');
   for (let k = 0; k < 4; k++) {
@@ -34,7 +34,7 @@ function rndPose() {
   }
   return pose;
 }
-for (let i = 0; i < 20000; i++) {
+for (let i = 0; i < 2000000; i++) {
   const crop = [rnd(0, 50), rnd(0, 50), rnd(0, 50), rnd(0, 50)].map(v => Math.round(v));
   const pose = rndPose();
   const out = _jointGuard(crop, pose, true);

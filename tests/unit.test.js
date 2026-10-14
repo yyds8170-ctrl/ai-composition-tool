@@ -33,7 +33,7 @@ test('deriveCrop: 单边 clamp 到 45', () => {
 test('deriveCrop: 保留面积下限 0.34（裁过头会回退）', () => {
   const out = _deriveCrop([40, 40, 40, 40], 'tight');
   const area = (100 - out[0] - out[2]) / 100 * (100 - out[1] - out[3]) / 100;
-  assert.ok(area >= 0.33, '保留面积应 >= 0.34，实际 ' + area.toFixed(3));
+  assert.ok(area >= 0.34, '保留面积应 >= 0.34，实际 ' + area.toFixed(4));
 });
 
 /* -------------------- _jointGuard（关节裁切保护） -------------------- */

@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v8.3.7 · 实景视觉构图生成工具</title>
-<meta name="description" content="AI 构图助手 Pro v8.3.7 · 实景视觉构图生成工具：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。含 YOLO11n 本地检测、智能人像裁切（不切关节·头·手·脚）、30 款滤镜、构图法则百科与云端 VLM 分析">
+<title>AI 构图助手 Pro v8.3.8 · 实景视觉构图生成工具</title>
+<meta name="description" content="AI 构图助手 Pro v8.3.8 · 实景视觉构图生成工具：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。含 YOLO11n 本地检测、智能人像裁切（不切关节·头·手·脚）、30 款滤镜、构图法则百科与云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v8.3.7 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切">
+<meta property="og:title" content="AI 构图助手 Pro v8.3.8 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切">
 <meta property="og:description" content="给不会拍照的普通人：打开相机，AI 教你怎么拍。AI 构图分析（本地像素+云端 VLM 双引擎）、人像保护裁切（不切头不切手脚）、30 款滤镜，一键出成品。默认本地运行，照片不上传。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
@@ -656,7 +656,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.3.7</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.3.8</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -1014,7 +1014,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.3.7 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.3.8 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1088,7 +1088,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v8.3.7";
+var APP_VER="v8.3.8";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -1413,9 +1413,12 @@ var APP_VER="v8.3.7";
       var k=mode==="tight"?1.32:(mode==="loose"?0.55:1);
       // 保留区面积下限：沿 base 形状等比缩放，使 loose/standard/tight 三档严格单调。
       // 旧实现按 ×0.9 离散回退且在面积判断里提前 clamp，步长过大时会让紧凑档裁得比
-      // 标准档还少（对称 base≈20、或单方向极端裁切时出现）。目标面积取 0.348，给
-      // 最后的取整留余量（round 后仍 ≥0.34）。
-      var MINA=0.348;
+      // 标准档还少（对称 base≈20、或单方向极端裁切时出现）。
+      // 连续目标面积取 0.36：四边 round 各最多让保留边损失约 1（两端各 +0.5），最坏
+      // 出现在一个方向几乎无裁、另一方向被裁到约 36 时，round 后面积 ≈ 0.3465（200 万次
+      // 枚举实测最低 0.3471），严格保证 round 后 ≥0.34；取 0.348 余量不足（实测会掉到
+      // 0.336）。MINA 只在极端大裁切时多保留一点点，正常场景面积本就达标、不触发。
+      var MINA=0.36;
       function areaZ(z){
         var c=b.map(function(v){ return Math.max(0,v*z); });
         return (100-c[0]-c[2])*(100-c[1]-c[3])/10000;
@@ -8505,7 +8508,7 @@ hSym2:state.aiData.hSym}:null; }
   }; }catch(e){}
 })();
   </script>
-<div id="aicUpdateBar" class="hide"><span class="ub-t">✨ 新版本 v8.3.7 已就绪：修复宽松/标准/紧凑三档裁切在大裁切时的顺序反常、关节保护在边缘的极少数误裁切，三档切换更严谨</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
+<div id="aicUpdateBar" class="hide"><span class="ub-t">✨ 新版本 v8.3.8 已就绪：收紧裁切面积下限，紧凑/标准/宽松三档在极端大裁切下也严格保证保留面积≥34%，200 万次模糊测试验证</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
 <script>
 (function(){
   // v8.2.3 新版本就绪提示条：SW 激活后广播 → 页面弹出"立即刷新"，根治旧缓存看不到新功能
