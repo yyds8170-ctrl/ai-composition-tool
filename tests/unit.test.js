@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation } = require('./pure-functions.js');
+const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -796,6 +796,236 @@ test('orientation 负例: 横竖接近 personAspect=0.9 → null', () => {
 });
 test('orientation 负例: 人体框不可算 personAspect=0 → null', () => {
   assert.strictEqual(_guidanceOrientation({ faceCount: 4, personAspect: 0, frameAspect: 0.7, sceneType: 'waterscape' }), null);
+});
+
+/* -------------------- v9.0.0 _faceLightSplit（脸部分光采样） -------------------- */
+function mkGrid(fn) { const g = []; for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) g.push(fn(x, y)); return g; }
+test('faceLightSplit: 均匀网格 → l≈r≈t≈b', () => {
+  const out = _faceLightSplit({ lumGrid: mkGrid(() => 128), gw: 16, gh: 16, fb: [0.3, 0.3, 0.25, 0.25] });
+  assert.ok(out);
+  for (const k of ['l', 'r', 't', 'b', 'mean']) assert.ok(Math.abs(out[k] - 128) < 2, k + '=' + out[k]);
+});
+test('faceLightSplit: 左亮右暗 → l>r', () => {
+  const out = _faceLightSplit({ lumGrid: mkGrid(x => x < 8 ? 200 : 60), gw: 16, gh: 16, fb: [0.25, 0.3, 0.5, 0.25] });
+  assert.ok(out.l > out.r + 60, 'l=' + out.l + ' r=' + out.r);
+});
+test('faceLightSplit 负例: 网格非法 → null', () => {
+  assert.strictEqual(_faceLightSplit({ lumGrid: null, gw: 16, gh: 16, fb: [0.3, 0.3, 0.25, 0.25] }), null);
+  assert.strictEqual(_faceLightSplit({ lumGrid: mkGrid(() => 128), gw: 16, gh: 16, fb: [0.3, 0.3, 0.005, 0.005] }), null);
+});
+
+/* -------------------- v9.0.0 _lightPosition（光位四判） -------------------- */
+const SPLIT_UNI = { l: 120, r: 120, t: 120, b: 120, mean: 120, frameMean: 120 };
+test('lightPosition: 左右3:1 → split 硬切光', () => {
+  const out = _lightPosition({ split: { l: 200, r: 60, t: 110, b: 110, mean: 130 }, faceConf: 0.9, mean: 130, sat: 0.3 });
+  assert.strictEqual(out.key, 'split');
+});
+test('lightPosition: 左右2:1且均匀上下 → side 侧光', () => {
+  const out = _lightPosition({ split: { l: 180, r: 100, t: 110, b: 110, mean: 130 }, faceConf: 0.9, mean: 130, sat: 0.3 });
+  assert.strictEqual(out.key, 'side');
+});
+test('lightPosition: 上下1.6:1 → toplight 顶光', () => {
+  const out = _lightPosition({ split: { l: 110, r: 110, t: 176, b: 110, mean: 130 }, faceConf: 0.9, mean: 130, sat: 0.3 });
+  assert.strictEqual(out.key, 'toplight');
+});
+test('lightPosition: 全均匀 → flat 平光', () => {
+  const out = _lightPosition({ split: SPLIT_UNI, faceConf: 0.9, mean: 130, sat: 0.3 });
+  assert.strictEqual(out.key, 'flat');
+});
+test('lightPosition 负例: 左右1.45:1（接近均匀）→ null', () => {
+  const out = _lightPosition({ split: { l: 145, r: 100, t: 110, b: 110, mean: 120 }, faceConf: 0.9, mean: 120, sat: 0.3 });
+  assert.strictEqual(out, null);
+});
+test('lightPosition 负例: 左右1.6:1且上下也1.6:1（方向不明）→ null', () => {
+  const out = _lightPosition({ split: { l: 160, r: 100, t: 160, b: 100, mean: 130 }, faceConf: 0.9, mean: 130, sat: 0.3 });
+  assert.strictEqual(out, null);
+});
+test('lightPosition 负例: 低置信 faceConf=0.6 → null', () => {
+  const out = _lightPosition({ split: { l: 200, r: 60, t: 110, b: 110, mean: 130 }, faceConf: 0.6, mean: 130, sat: 0.3 });
+  assert.strictEqual(out, null);
+});
+test('lightPosition 负例: split=null → null', () => {
+  assert.strictEqual(_lightPosition({ split: null, faceConf: 0.9, mean: 130, sat: 0.3 }), null);
+});
+
+/* -------------------- v9.0.0 _warmLightHint / _windowLightHint / _lowAngleAdvice -------------------- */
+test('warmLightHint: 暖亮柔 → 正向鼓励', () => {
+  assert.ok(_warmLightHint({ wb: 0.12, mean: 150, sat: 0.3 }).txt);
+});
+test('warmLightHint 负例: 室内暖黄灯 mean=80 → null', () => {
+  assert.strictEqual(_warmLightHint({ wb: 0.12, mean: 80, sat: 0.3 }), null);
+});
+test('warmLightHint 负例: 边界 mean=100/205 → null', () => {
+  assert.strictEqual(_warmLightHint({ wb: 0.12, mean: 100, sat: 0.3 }), null);
+  assert.strictEqual(_warmLightHint({ wb: 0.12, mean: 205, sat: 0.3 }), null);
+});
+test('windowLightHint: 侧光+亮边2.2× → 窗光', () => {
+  const out = _windowLightHint({ split: { l: 180, r: 110, t: 120, b: 120, mean: 120 }, edgeColMean: 264, faceConf: 0.9, mean: 120 });
+  assert.ok(out && out.txt);
+});
+test('windowLightHint 负例: 缺 edgeColMean → null', () => {
+  assert.strictEqual(_windowLightHint({ split: { l: 180, r: 110, t: 120, b: 120, mean: 120 }, edgeColMean: null, faceConf: 0.9, mean: 120 }), null);
+});
+test('windowLightHint 负例: 无明显亮边 → null', () => {
+  assert.strictEqual(_windowLightHint({ split: { l: 180, r: 110, t: 120, b: 120, mean: 120 }, edgeColMean: 130, faceConf: 0.9, mean: 120 }), null);
+});
+test('lowAngleAdvice: 全身竖拍 → 提示', () => {
+  assert.ok(_lowAngleAdvice({ frameAspect: 0.7, personTop: 0.05, personBottom: 0.95, personHR: 0.9 }).txt);
+});
+test('lowAngleAdvice 负例: 半身 → null', () => {
+  assert.strictEqual(_lowAngleAdvice({ frameAspect: 0.7, personTop: 0.2, personBottom: 0.7, personHR: 0.5 }), null);
+});
+test('lowAngleAdvice 负例: 脚离下沿远 personBottom=0.8 → null', () => {
+  assert.strictEqual(_lowAngleAdvice({ frameAspect: 0.7, personTop: 0.1, personBottom: 0.8, personHR: 0.85 }), null);
+});
+test('lowAngleAdvice 负例: 横拍 → null', () => {
+  assert.strictEqual(_lowAngleAdvice({ frameAspect: 1.5, personTop: 0.05, personBottom: 0.95, personHR: 0.9 }), null);
+});
+
+/* -------------------- v9.0.0 _composeDiagnosis（统一诊断，只读） -------------------- */
+test('diagnosis: 侧脸朝右但脸偏右 → gaze 条（且输出绝无 crop 字段）', () => {
+  const out = _composeDiagnosis({ yaw: { state: 'three-quarter', dir: 1, r: 0.3 }, faceCx: 0.55 });
+  assert.ok(Array.isArray(out));
+  assert.strictEqual(out[0].id, 'gaze');
+  assert.strictEqual(out[0].sev, 2);
+  assert.ok(!('crop' in out[0]));
+});
+test('diagnosis: 风光地平线居中 → horizon 条', () => {
+  const out = _composeDiagnosis({ isLandscapeScene: true, horizonRatio: 0.51 });
+  assert.ok(out.some(d => d.id === 'horizon'));
+});
+test('diagnosis: toplight → light 条（sev2 优先）', () => {
+  const out = _composeDiagnosis({ isLandscapeScene: true, horizonRatio: 0.5, light: { key: 'toplight', txt: '头顶光太重' } });
+  assert.strictEqual(out[0].id, 'light');
+  assert.ok(out.some(d => d.id === 'horizon'));
+});
+test('diagnosis 负例: 正面人脸（yaw.dir=0）→ 无 gaze', () => {
+  const out = _composeDiagnosis({ yaw: { state: 'frontal', dir: 0, r: 0 }, faceCx: 0.5 });
+  assert.ok(!out.some(d => d.id === 'gaze'));
+});
+test('diagnosis 负例: 头肩像 headTop=0.12 → 无 headroom', () => {
+  const out = _composeDiagnosis({ headTop: 0.12 });
+  assert.deepStrictEqual(out, []);
+});
+test('diagnosis 负例: 所有信号舒适区 → []（不硬凑）', () => {
+  const out = _composeDiagnosis({ yaw: { dir: 0 }, faceCx: 0.33, headTop: 0.12, eyesY: 0.33, isLandscapeScene: true, horizonRatio: 0.33 });
+  assert.deepStrictEqual(out, []);
+});
+test('diagnosis: 最多3条且按 sev 降序', () => {
+  const out = _composeDiagnosis({
+    yaw: { dir: 1 }, faceCx: 0.55, headTop: 0.02, eyesY: 0.5,
+    isLandscapeScene: true, horizonRatio: 0.5, light: { key: 'flat', txt: 'x' },
+    orientation: { txt: 'y' }, rodMoved: true
+  });
+  assert.ok(out.length <= 3);
+  for (let i = 1; i < out.length; i++) assert.ok(out[i - 1].sev >= out[i].sev);
+});
+test('diagnosis: rodMoved → bgsafe 提示条', () => {
+  const out = _composeDiagnosis({ rodMoved: true });
+  assert.ok(out.some(d => d.id === 'bgsafe'));
+});
+test('diagnosis 负例: 输入缺字段不抛错且该条不出现', () => {
+  const out = _composeDiagnosis({});
+  assert.deepStrictEqual(out, []);
+  assert.deepStrictEqual(_composeDiagnosis(null), []);
+});
+
+/* -------------------- v9.0.0 _recommendFilter（滤镜推荐：硬闸门+规则） -------------------- */
+const BASE_A = { mean: 130, contrast: 40, wb: 0.005, sat: 0.24, highClip: 0, shadowClip: 0, sharpness: 60, lightScore: 0.05, brightRatio: 0.1, skinRatio: 0.02, isPersonLikely: false, warmRatio: 0.05, waterScore: 0.05, manmadeScore: 0.1, sigBox: [0.3, 0.3, 0.7, 0.7], lumGrid: mkGrid(() => 130), gridW: 16, gridH: 16 };
+function recWith(over, sig) { return _recommendFilter(Object.assign({}, BASE_A, over), sig); }
+test('filter N1: 曝光准确色温中性日常照 → NONE（原片即好）', () => {
+  assert.strictEqual(recWith({}, { personScore: 0.4 }).rule, 'NONE');
+});
+test('filter N2: 轻微暖调人像 wb=0.02 未过阈值 → NONE', () => {
+  const r = recWith({ skinRatio: 0.08, isPersonLikely: true, wb: 0.02, mean: 140 }, null);
+  assert.strictEqual(r.rule, 'NONE');
+});
+test('filter 负例: 肤色占比 8% 不足（风光/食物图误中场景）→ NONE', () => {
+  const r = recWith({ skinRatio: 0.08, isPersonLikely: true, wb: 0.10, mean: 140 }, null);
+  assert.strictEqual(r.rule, 'NONE');
+});
+test('filter N3: 逆光 highClip=0.18 → GATE', () => {
+  assert.strictEqual(recWith({ highClip: 0.18, skinRatio: 0.07, isPersonLikely: true }).rule, 'GATE');
+});
+test('filter N4: 大光比剪影 highClip=0.30 → GATE', () => {
+  assert.strictEqual(recWith({ highClip: 0.30 }).rule, 'GATE');
+});
+test('filter N5: 纯黑夜景 mean=40 → GATE（近纯黑）', () => {
+  assert.strictEqual(recWith({ mean: 40, lightScore: 0.04 }).rule, 'GATE');
+});
+test('filter N6: 色彩浓艳 sat=0.45 → GATE（已浓）', () => {
+  assert.strictEqual(recWith({ sat: 0.45, mean: 120, warmRatio: 0.5, wb: 0.08 }).rule, 'GATE');
+});
+test('filter N7: 手抖糊片 sharpness=18 → GATE', () => {
+  assert.strictEqual(recWith({ sharpness: 18 }).rule, 'GATE');
+});
+test('filter N8: 餐桌披萨 warmRatio=0.30 且 scene=美食 → NONE', () => {
+  assert.strictEqual(recWith({ warmRatio: 0.30, wb: 0.04, mean: 150 }, { scene: 'food' }).rule, 'NONE');
+});
+test('filter N9: 阴天人像轻微冷 wb=-0.02 → NONE', () => {
+  assert.strictEqual(recWith({ skinRatio: 0.07, isPersonLikely: true, wb: -0.02, mean: 120 }, null).rule, 'NONE');
+});
+test('filter N10: 三人合影光比1.3:1 → NONE', () => {
+  assert.strictEqual(recWith({ wb: 0.01 }, { personScore: 0.8, personCount: 3 }).rule, 'NONE');
+});
+test('filter N11: 舞台霓虹高饱和 sat=0.42 → GATE（night 也不救）', () => {
+  assert.strictEqual(recWith({ sat: 0.42, mean: 90, lightScore: 0.5 }).rule, 'GATE');
+});
+test('filter N12: 输入缺失 a=null / a={} → GATE', () => {
+  assert.strictEqual(_recommendFilter(null).rule, 'GATE');
+  assert.strictEqual(_recommendFilter({}).rule, 'GATE');
+});
+test('filter N13: 水面倒影 waterScore=0.8 → NONE（不发明水景分支）', () => {
+  assert.strictEqual(recWith({ waterScore: 0.8, mean: 120, sat: 0.2 }).rule, 'NONE');
+});
+test('filter 正例 R1: 暗夜景有灯光 → night', () => {
+  const r = recWith({ mean: 70, lightScore: 0.4, brightRatio: 0.2 }, null);
+  assert.strictEqual(r.filter, 'night');
+  assert.strictEqual(r.strength, 80);
+});
+test('filter 正例 R2B: 暖光人像（YOLO person 硬证据）→ portrait-warm', () => {
+  const r = recWith({ skinRatio: 0.12, isPersonLikely: true, wb: 0.06, mean: 140 }, { personScore: 0.8 });
+  assert.strictEqual(r.filter, 'portrait-warm');
+});
+test('filter 负例: 仅肤色启发式（无 YOLO person）→ NONE（自动推宁可漏推）', () => {
+  const r = recWith({ skinRatio: 0.20, isPersonLikely: true, wb: 0.10, mean: 140 }, null);
+  assert.strictEqual(r.rule, 'NONE');
+});
+test('filter 正例 R2C: 冷调户外人像（YOLO person 硬证据）→ portrait-cool', () => {
+  const r = recWith({ skinRatio: 0.03, isPersonLikely: false, wb: -0.06, mean: 120 }, { personScore: 0.7 });
+  assert.strictEqual(r.filter, 'portrait-cool');
+});
+test('filter 正例 R2A: 半侧光戏剧人像（sigBox左右2.5:1）→ portrait-mono', () => {
+  const grid = mkGrid((x) => x < 8 ? 200 : 80);
+  const r = recWith({ mean: 140, skinRatio: 0.06, isPersonLikely: true, lumGrid: grid }, { personScore: 0.8 });
+  assert.strictEqual(r.filter, 'portrait-mono');
+});
+test('filter 正例 R3: 纯灰低饱和照 → mono', () => {
+  const r = recWith({ sat: 0.02, mean: 100 }, null);
+  assert.strictEqual(r.filter, 'mono');
+});
+test('filter 正例 R4: 整幅橙黄黄昏 → sunset', () => {
+  const r = recWith({ warmRatio: 0.5, wb: 0.08, mean: 120 }, { personScore: 0.3, personCount: 0, scene: 'landscape' });
+  assert.strictEqual(r.filter, 'sunset');
+});
+test('filter 属性: strength∈[0,100]、非null id 必属现有6款', () => {
+  const ALLOW = ['night', 'portrait-warm', 'portrait-cool', 'portrait-mono', 'mono', 'sunset'];
+  const cases = [
+    recWith({ mean: 70, lightScore: 0.4 }, null),
+    recWith({ skinRatio: 0.08, isPersonLikely: true, wb: 0.06, mean: 140 }, null),
+    recWith({ sat: 0.02, mean: 100 }, null),
+    recWith({ warmRatio: 0.5, wb: 0.08, mean: 120 }, { personCount: 0 })
+  ];
+  for (const r of cases) {
+    assert.ok(r.strength >= 0 && r.strength <= 100, 'strength=' + r.strength);
+    if (r.filter) assert.ok(ALLOW.indexOf(r.filter) >= 0, '非法滤镜 id=' + r.filter);
+  }
+});
+test('filter 属性: 无副作用（入参深比较前后不变）', () => {
+  const a = Object.assign({}, BASE_A);
+  const before = JSON.stringify(a);
+  _recommendFilter(a, { personScore: 0.8 });
+  assert.strictEqual(JSON.stringify(a), before);
 });
 
 /* -------------------- 汇总 -------------------- */

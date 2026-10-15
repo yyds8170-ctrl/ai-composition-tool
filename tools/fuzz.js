@@ -1,5 +1,5 @@
 /* 临时审查脚本：对纯函数做属性/模糊测试，找真实健壮性问题。 */
-const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation } = require('../tests/pure-functions.js');
+const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter } = require('../tests/pure-functions.js');
 
 let issues = 0;
 function bad(msg) { console.log('ISSUE:', msg); issues++; }
@@ -433,5 +433,105 @@ for(let i=0;i<200000;i++){
 if(_guidanceOrientation({faceCount:4,personAspect:0,frameAspect:0.7,sceneType:'waterscape'})!==null) bad('orientation pa=0 未 null');
 if(_guidanceOrientation({faceCount:4,personAspect:-1,frameAspect:0.7,sceneType:'waterscape'})!==null) bad('orientation pa<0 未 null');
 if(_guidanceOrientation({faceCount:4,personAspect:NaN,frameAspect:0.7,sceneType:'waterscape'})!==null) bad('orientation pa=NaN 未 null');
+
+// 15. v9.0.0 _faceLightSplit: 随机网格/越界fb/畸形输入 → null 或合法四块均值（0–255）、确定性（50 万次）
+for(let i=0;i<500000;i++){
+  const gw=16, gh=16;
+  const lg=[]; for(let j=0;j<gw*gh;j++) lg.push(rnd(0,255));
+  const fb=[rnd(-0.1,1.1),rnd(-0.1,1.1),rnd(0.001,0.6),rnd(0.001,0.6)];
+  let r;
+  try{ r=_faceLightSplit({lumGrid:lg,gw,gh,fb}); }catch(e){ bad('faceLightSplit 抛错: '+e.message); continue; }
+  if(r===null) continue;
+  for(const k of ['l','r','t','b','mean','frameMean']){
+    if(!validNum(r[k])) bad('faceLightSplit NaN: '+k+'='+r[k]);
+    if(r[k]<0||r[k]>255) bad('faceLightSplit 越界: '+k+'='+r[k]);
+  }
+  const r2=_faceLightSplit({lumGrid:lg,gw,gh,fb});
+  if(JSON.stringify(r2)!==JSON.stringify(r)) bad('faceLightSplit 不稳定');
+}
+if(_faceLightSplit({lumGrid:null,gw:16,gh:16,fb:[0.3,0.3,0.2,0.2]})!==null) bad('faceLightSplit 非法网格未 null');
+if(_faceLightSplit({lumGrid:Array(256).fill(128),gw:16,gh:16,fb:[0.5,0.5,0.001,0.001]})!==null) bad('faceLightSplit 脸太小未 null');
+
+// 16. v9.0.0 _lightPosition: 随机split/低置信/畸形 → null 或 {key,txt}、分支最多一条、确定性（50 万次）
+const LP_KEYS=['split','side','toplight','flat'];
+for(let i=0;i<500000;i++){
+  const s={l:rnd(0,255),r:rnd(0,255),t:rnd(0,255),b:rnd(0,255),mean:128};
+  const fc=rnd(0,1.1);
+  let r;
+  try{ r=_lightPosition({split:s,faceConf:fc,mean:130,sat:0.3}); }catch(e){ bad('lightPosition 抛错: '+e.message); continue; }
+  if(r===null) continue;
+  if(LP_KEYS.indexOf(r.key)<0) bad('lightPosition 非法 key: '+r.key);
+  if(typeof r.txt!=='string'||!r.txt.length) bad('lightPosition 缺 txt');
+  if(JSON.stringify(_lightPosition({split:s,faceConf:fc,mean:130,sat:0.3}))!==JSON.stringify(r)) bad('lightPosition 不稳定');
+}
+if(_lightPosition({split:{l:0.0001,r:100,t:100,b:100},faceConf:0.9})!==null) bad('lightPosition min<1e-3 未 null');
+
+// 17. v9.0.0 _warmLightHint / _windowLightHint / _lowAngleAdvice: 随机输入 → null 或 {txt}、确定性（各 20 万次）
+for(let i=0;i<200000;i++){
+  const o={wb:rnd(-0.2,0.2),mean:rnd(0,260),sat:rnd(0,1)};
+  let r;
+  try{ r=_warmLightHint(o); }catch(e){ bad('warmLightHint 抛错'); continue; }
+  if(r!==null&&typeof r.txt!=='string') bad('warmLightHint 缺 txt');
+  if(JSON.stringify(_warmLightHint(o))!==JSON.stringify(r)) bad('warmLightHint 不稳定');
+}
+for(let i=0;i<200000;i++){
+  const o={split:{l:rnd(0,255),r:rnd(0,255),t:120,b:120,mean:rnd(10,200)},edgeColMean:rnd(0,300),faceConf:rnd(0,1.1),mean:rnd(0,255)};
+  let r;
+  try{ r=_windowLightHint(o); }catch(e){ bad('windowLightHint 抛错'); continue; }
+  if(r!==null&&typeof r.txt!=='string') bad('windowLightHint 缺 txt');
+  if(JSON.stringify(_windowLightHint(o))!==JSON.stringify(r)) bad('windowLightHint 不稳定');
+}
+for(let i=0;i<200000;i++){
+  const o={frameAspect:rnd(0.5,2),personTop:rnd(-0.1,1.1),personBottom:rnd(-0.1,1.1),personHR:rnd(0,1.2)};
+  let r;
+  try{ r=_lowAngleAdvice(o); }catch(e){ bad('lowAngleAdvice 抛错'); continue; }
+  if(r!==null&&typeof r.txt!=='string') bad('lowAngleAdvice 缺 txt');
+  if(JSON.stringify(_lowAngleAdvice(o))!==JSON.stringify(r)) bad('lowAngleAdvice 不稳定');
+}
+
+// 18. v9.0.0 _composeDiagnosis: 随机信号 → 数组长度≤3、元素含 id/sev/action、不抛错、无 crop 字段（50 万次）
+for(let i=0;i<500000;i++){
+  const o={
+    yaw:{dir:[-1,0,1][Math.floor(rnd(0,3))]},
+    faceCx:rnd(-0.1,1.1), headTop:rnd(-0.1,1.2), eyesY:Math.random()<0.2?null:rnd(-0.1,1.2),
+    horizonRatio:rnd(-0.1,1.2), isLandscapeScene:Math.random()<0.3,
+    light:Math.random()<0.3?{key:['split','toplight','flat','side'][Math.floor(rnd(0,4))],txt:'x'}:null,
+    orientation:Math.random()<0.3?{txt:'y'}:null, rodMoved:Math.random()<0.3
+  };
+  let r;
+  try{ r=_composeDiagnosis(o); }catch(e){ bad('composeDiagnosis 抛错: '+e.message); continue; }
+  if(!Array.isArray(r)){ bad('composeDiagnosis 非数组'); continue; }
+  if(r.length>3) bad('composeDiagnosis 超过3条: '+r.length);
+  for(const d of r){
+    if(typeof d.id!=='string'||typeof d.sev!=='number'||typeof d.action!=='string') bad('composeDiagnosis 元素结构非法');
+    if('crop' in d) bad('composeDiagnosis 评语竟带 crop（只读纪律破坏）');
+  }
+  for(let k=1;k<r.length;k++) if(r[k-1].sev<r[k].sev) bad('composeDiagnosis 未按 sev 降序');
+  if(JSON.stringify(_composeDiagnosis(o))!==JSON.stringify(r)) bad('composeDiagnosis 不稳定');
+}
+if(!Array.isArray(_composeDiagnosis(null))||_composeDiagnosis(null).length!==0) bad('composeDiagnosis null 输入未 []');
+
+// 19. v9.0.0 _recommendFilter: 随机信号 → 永远返回合法对象、strength∈[0,100]、非null id∈6款、不抛错、无副作用（50 万次）
+const FREC_ALLOW=['night','portrait-warm','portrait-cool','portrait-mono','mono','sunset'];
+for(let i=0;i<500000;i++){
+  const grid=[]; for(let j=0;j<256;j++) grid.push(rnd(0,255));
+  const a={mean:rnd(0,260),contrast:rnd(0,80),wb:rnd(-0.15,0.15),sat:rnd(0,0.6),
+    highClip:rnd(0,0.4),shadowClip:rnd(0,0.5),sharpness:rnd(0,100),lightScore:rnd(0,1),
+    brightRatio:rnd(0,0.5),skinRatio:rnd(0,0.3),isPersonLikely:Math.random()<0.3,
+    warmRatio:rnd(0,0.6),waterScore:rnd(0,1),manmadeScore:rnd(0,1),
+    sigBox:[rnd(0,0.4),rnd(0,0.4),rnd(0.5,1),rnd(0.5,1)],lumGrid:grid,gridW:16,gridH:16};
+  const sig=Math.random()<0.3?null:{personScore:rnd(0,1),personCount:Math.floor(rnd(0,4)),scene:['food','landscape','portrait',null][Math.floor(rnd(0,4))]};
+  const before=JSON.stringify(a);
+  let r;
+  try{ r=_recommendFilter(a,sig); }catch(e){ bad('recommendFilter 抛错: '+e.message); continue; }
+  if(!r||typeof r!=='object'){ bad('recommendFilter 非对象'); continue; }
+  if(!('filter' in r&&'strength' in r&&'reason' in r&&'rule' in r)) bad('recommendFilter 缺字段');
+  if(r.filter!==null&&FREC_ALLOW.indexOf(r.filter)<0) bad('recommendFilter 非法滤镜 id: '+r.filter);
+  if(!validNum(r.strength)||r.strength<0||r.strength>100) bad('recommendFilter strength 非法: '+r.strength);
+  if(JSON.stringify(a)!==before) bad('recommendFilter 污染入参');
+  if(JSON.stringify(_recommendFilter(a,sig))!==JSON.stringify(r)) bad('recommendFilter 不稳定');
+}
+if(_recommendFilter(null).rule!=='GATE') bad('recommendFilter null 未 GATE');
+if(_recommendFilter({}).rule!=='GATE') bad('recommendFilter 缺 mean 未 GATE');
 
 console.log(issues === 0 ? '\n✓ 模糊测试未发现问题' : `\n发现 ${issues} 个问题`);

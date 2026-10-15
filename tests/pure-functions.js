@@ -509,4 +509,212 @@
       return null;
     }
 
-module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation };
+    function _faceLightSplit(o){
+      try{
+        if(!o) return null;
+        var lg=o.lumGrid, gw=o.gw, gh=o.gh, fb=o.fb;
+        if(!Array.isArray(lg)||!lg.length) return null;
+        if(typeof gw!=="number"||!isFinite(gw)||gw<4) return null;
+        if(typeof gh!=="number"||!isFinite(gh)||gh<4) return null;
+        gw=Math.round(gw); gh=Math.round(gh);
+        if(lg.length<gw*gh) return null;
+        if(!Array.isArray(fb)||fb.length!==4) return null;
+        var fx=Math.min(1,Math.max(0,fb[0]||0)), fy=Math.min(1,Math.max(0,fb[1]||0));
+        var fw=Math.min(1-fx,Math.max(0,fb[2]||0)), fh=Math.min(1-fy,Math.max(0,fb[3]||0));
+        if(fw<1e-3||fh<1e-3) return null;
+        var gx0=Math.floor(fx*gw), gx1=Math.ceil((fx+fw)*gw);
+        var gy0=Math.floor(fy*gh), gy1=Math.ceil((fy+fh)*gh);
+        gx0=Math.max(0,Math.min(gw-1,gx0)); gx1=Math.max(gx0+1,Math.min(gw,gx1));
+        gy0=Math.max(0,Math.min(gh-1,gy0)); gy1=Math.max(gy0+1,Math.min(gh,gy1));
+        var midX=fx+fw/2, midY=fy+fh/2;
+        var l=0,r=0,t=0,b=0,mean=0,nl=0,nr=0,nt=0,nb=0,nm=0,fsum=0,gsum=0,gn=0;
+        for(var gy=gy0;gy<gy1;gy++){
+          for(var gx=gx0;gx<gx1;gx++){
+            var v=lg[gy*gw+gx];
+            if(typeof v!=="number"||!isFinite(v)) continue;
+            var gxc=(gx+0.5)/gw, gyc=(gy+0.5)/gh;
+            gsum+=v; gn++;
+            fsum+=v; nm++;
+            if(gxc<midX){ l+=v; nl++; } else { r+=v; nr++; }
+            if(gyc<midY){ t+=v; nt++; } else { b+=v; nb++; }
+          }
+        }
+        if(nm<4) return null; // 脸太小，格点不足
+        return {l:nl?l/nl:0, r:nr?r/nr:0, t:nt?t/nt:0, b:nb?b/nb:0, mean:fsum/nm, frameMean:gn?gsum/gn:128};
+      }catch(e){ return null; }
+    }
+
+    function _lightPosition(o){
+      try{
+        if(!o) return null;
+        var fc=o.faceConf;
+        if(typeof fc!=="number"||!isFinite(fc)||fc<0.75) return null;
+        var s=o.split;
+        if(!s||typeof s.l!=="number"||!isFinite(s.l)||typeof s.r!=="number"||!isFinite(s.r)
+           ||typeof s.t!=="number"||!isFinite(s.t)||typeof s.b!=="number"||!isFinite(s.b)) return null;
+        var minLR=Math.min(s.l,s.r), minTB=Math.min(s.t,s.b);
+        if(minLR<1e-3||minTB<1e-3) return null; // 除零保护
+        var ratioLR=Math.max(s.l,s.r)/minLR;
+        var ratioTB=Math.max(s.t,s.b)/minTB;
+        if(ratioLR>=2.6) return {key:"split",txt:"光太硬了，把人转回来一点，或给暗面补点亮"};
+        if(ratioLR>=1.7 && ratioLR<2.6 && ratioTB<1.4) return {key:"side",txt:"侧光很立体，让脸再转向亮侧一点，暗颧骨下会出现小三角光"};
+        if(ratioTB>1.5 && ratioLR<1.3) return {key:"toplight",txt:"头顶光太重，换到阴影里，或等日出后/日落前的柔光"};
+        if(ratioLR<1.4 && ratioTB<1.4) return {key:"flat",txt:"光线太平了，让人转到窗边，光从侧前方打来更立体"};
+        return null;
+      }catch(e){ return null; }
+    }
+
+    function _warmLightHint(o){
+      try{
+        if(!o) return null;
+        var wb=o.wb, mean=o.mean, sat=o.sat;
+        if(typeof wb!=="number"||!isFinite(wb)||typeof mean!=="number"||!isFinite(mean)||typeof sat!=="number"||!isFinite(sat)) return null;
+        if(wb>0.09 && mean>=110 && mean<=200 && sat>=0.15 && sat<=0.60) return {txt:"光线暖柔，趁这束光拍"};
+        return null;
+      }catch(e){ return null; }
+    }
+
+    function _windowLightHint(o){
+      try{
+        if(!o) return null;
+        var fc=o.faceConf;
+        if(typeof fc!=="number"||!isFinite(fc)||fc<0.75) return null;
+        var s=o.split, ec=o.edgeColMean, mean=o.mean;
+        if(!s||typeof s.mean!=="number"||!isFinite(s.mean)||s.mean<1e-3) return null;
+        if(typeof ec!=="number"||!isFinite(ec)) return null;
+        if(typeof mean!=="number"||!isFinite(mean)) return null;
+        if(typeof s.l!=="number"||!isFinite(s.l)||typeof s.r!=="number"||!isFinite(s.r)) return null;
+        var minLR=Math.min(s.l,s.r); if(minLR<1e-3) return null;
+        var ratioLR=Math.max(s.l,s.r)/minLR;
+        if(ratioLR<1.5||ratioLR>=2.4) return null;
+        if(ec<=s.mean*1.8) return null;
+        if(mean<60||mean>170) return null;
+        return {txt:"窗边柔光：人离窗半米、与窗成45°，相机从暗侧拍"};
+      }catch(e){ return null; }
+    }
+
+    function _lowAngleAdvice(o){
+      try{
+        if(!o) return null;
+        var fa=o.frameAspect, pt=o.personTop, pb=o.personBottom, phr=o.personHR;
+        if(typeof fa!=="number"||!isFinite(fa)||fa>=1) return null; // 竖拍
+        if(typeof pt!=="number"||!isFinite(pt)||typeof pb!=="number"||!isFinite(pb)||typeof phr!=="number"||!isFinite(phr)) return null;
+        if(phr>=0.85 && pt<0.08 && pb>0.90) return {txt:"拍全身：把机位放到腰部以下、微微仰一点，人更显高"};
+        return null;
+      }catch(e){ return null; }
+    }
+
+    function _composeDiagnosis(o){
+      try{
+        if(!o) return [];
+        var out=[];
+        function num(v){ return (typeof v==="number"&&isFinite(v))?v:null; }
+        // gaze（sev2）：侧脸且脸心明显偏离视线方向三分位
+        var yaw=o.yaw, faceCx=num(o.faceCx), gaze=false;
+        if(yaw&&yaw.dir!==0&&faceCx!==null){
+          var tx=(yaw.dir>0)?0.33:0.67;
+          if(Math.abs(faceCx-tx)>0.10){
+            out.push({id:"gaze",sev:2,title:"视线方向留白不足",action:"把脸朝向的一侧多留点空"});
+            gaze=true;
+          }
+        }
+        // headroom（sev1）
+        var ht=num(o.headTop);
+        if(ht!==null && (ht<0.04||ht>0.24)){
+          out.push({id:"headroom",sev:1,title:"头顶留白不当",action:"头顶留一拳空，别贴顶也别空太多"});
+        }
+        // eyesY（sev1，与 gaze 同源时只留 gaze）
+        var ey=num(o.eyesY);
+        if(!gaze && ey!==null && (ey>0.42||ey<0.24)){
+          out.push({id:"eyesY",sev:1,title:"眼睛不在上横线",action:"眼睛对上上方横线"});
+        }
+        // horizon（sev1）：风光类场景地平线居中
+        var hr=num(o.horizonRatio);
+        if(o.isLandscapeScene===true && hr!==null && Math.abs(hr-0.5)<0.03){
+          out.push({id:"horizon",sev:1,title:"地平线卡在正中",action:"天好就压低、地好就抬高到三分之一线"});
+        }
+        // light（sev2）：split/toplight/flat
+        if(o.light && (o.light.key==="split"||o.light.key==="toplight"||o.light.key==="flat") && typeof o.light.txt==="string"){
+          out.push({id:"light",sev:2,title:"光线可优化",action:o.light.txt});
+        }
+        // orientation（sev1）
+        if(o.orientation && typeof o.orientation.txt==="string"){
+          out.push({id:"orientation",sev:1,title:"画幅方向",action:o.orientation.txt});
+        }
+        // bgsafe（sev1 提示性）：已自动保住晚霞/水面
+        if(o.rodMoved===true){
+          out.push({id:"bgsafe",sev:1,title:"已自动保留上方背景",action:"晚霞/水面已自动保留，无需再裁"});
+        }
+        out.sort(function(a,b){ return b.sev-a.sev; });
+        return out.slice(0,3);
+      }catch(e){ return []; }
+    }
+
+    function _recommendFilter(a, sig){
+      var GATE={filter:null,strength:0,reason:"",rule:"GATE"};
+      try{
+        if(!a||typeof a!=="object"||typeof a.mean!=="number"||!isFinite(a.mean)) return GATE;
+        var mean=a.mean, wb=(typeof a.wb==="number"&&isFinite(a.wb))?a.wb:0;
+        var sat=(typeof a.sat==="number"&&isFinite(a.sat))?a.sat:0;
+        var sharpness=(typeof a.sharpness==="number"&&isFinite(a.sharpness))?a.sharpness:0;
+        var highClip=(typeof a.highClip==="number"&&isFinite(a.highClip))?a.highClip:0;
+        var shadowClip=(typeof a.shadowClip==="number"&&isFinite(a.shadowClip))?a.shadowClip:0;
+        var lightScore=(typeof a.lightScore==="number"&&isFinite(a.lightScore))?a.lightScore:0;
+        var warmRatio=(typeof a.warmRatio==="number"&&isFinite(a.warmRatio))?a.warmRatio:0;
+        var waterScore=(typeof a.waterScore==="number"&&isFinite(a.waterScore))?a.waterScore:0;
+        var manmadeScore=(typeof a.manmadeScore==="number"&&isFinite(a.manmadeScore))?a.manmadeScore:0;
+        // G1 糊片
+        if(sharpness<25) return GATE;
+        // G2 曝光断层
+        if(highClip>0.15||shadowClip>0.28) return GATE;
+        // G3 已浓
+        if(sat>0.38) return GATE;
+        // G4 近纯黑
+        if(mean<50) return GATE;
+        var ps=(sig&&typeof sig.personScore==="number"&&isFinite(sig.personScore))?sig.personScore:0;
+        var pc=(sig&&typeof sig.personCount==="number"&&isFinite(sig.personCount))?sig.personCount:0;
+        var scn=(sig&&typeof sig.scene==="string")?sig.scene:null;
+        var skinRatio=(typeof a.skinRatio==="number"&&isFinite(a.skinRatio))?a.skinRatio:0;
+        // 人像成立（150 图实测标定）：只认 YOLO person≥0.6 硬证据——肤色启发式在风光/食物/建筑/水面图上普遍误中
+        // （实测水面图 skinRatio=16% 仍被 isPersonLikely 命中），自动推滤镜宁可漏掉也不硬推。
+        var isPerson=(ps>=0.6);
+        // lightRatio：从 sigBox 左右半亮度比（与拍前光位同口径）
+        var lr=0;
+        try{
+          if(Array.isArray(a.lumGrid)&&a.gridW>=4&&a.gridH>=4&&Array.isArray(a.sigBox)&&a.sigBox.length===4){
+            var gw2=Math.round(a.gridW), gh2=Math.round(a.gridH), bx=a.sigBox;
+            var x0=Math.max(0,Math.min(1,bx[0])), x1=Math.max(x0+1e-3,Math.min(1,bx[2]));
+            var y0=Math.max(0,Math.min(1,bx[1])), y1=Math.max(y0+1e-3,Math.min(1,bx[3]));
+            var gx0=Math.floor(x0*gw2), gx1=Math.ceil(x1*gw2), gy0=Math.floor(y0*gh2), gy1=Math.ceil(y1*gh2);
+            var midX=(x0+x1)/2, sl=0,sr=0,nsl=0,nsr=0;
+            for(var gy=gy0;gy<gy1;gy++){ for(var gx=gx0;gx<gx1;gx++){
+              if(gx<0||gx>=gw2||gy<0||gy>=gh2) continue;
+              var v=a.lumGrid[gy*gw2+gx];
+              if(typeof v!=="number"||!isFinite(v)) continue;
+              if((gx+0.5)/gw2<midX){ sl+=v; nsl++; } else { sr+=v; nsr++; }
+            } }
+            if(nsl&&nsr){
+              var L=sl/nsl, R=sr/nsr;
+              if(Math.abs(L-R)>=12){ var mn=Math.min(L,R); if(mn<1e-3){ lr=0; } else { lr=Math.max(L,R)/mn; } }
+            }
+          }
+        }catch(e2){ lr=0; }
+        // R1 夜景提亮
+        if(mean>=50&&mean<85&&lightScore>=0.30) return {filter:"night",strength:80,reason:"夜景偏暗、有点光源，暗部提亮更通透",rule:"R1"};
+        // R2A 侧光黑白人像
+        if(isPerson&&lr>=2.0&&mean>=95) return {filter:"portrait-mono",strength:60,reason:"侧光人像明暗分明，黑白更衬光影",rule:"R2A"};
+        // R2B 暖调人像（wb 门槛 0.035→0.05 实测标定：普通户外暖调照片 wb≈0.03–0.05 不应推）
+        if(isPerson&&wb>0.05) return {filter:"portrait-warm",strength:80,reason:"暖光环境，肤色会更通透",rule:"R2B"};
+        // R2C 冷调人像（wb 门槛 -0.035→-0.05）
+        if(isPerson&&wb<-0.05&&mean>=105) return {filter:"portrait-cool",strength:80,reason:"冷调环境，肤色更清透",rule:"R2C"};
+        // R3 近黑白
+        if(sat<0.06&&mean>=75) return {filter:"mono",strength:90,reason:"画面本来就低饱和，黑白影调更干净",rule:"R3"};
+        // R4 黄昏暖景
+        if(pc<=1&&warmRatio>=0.42&&wb>0.05&&mean>=85&&mean<=160&&waterScore<=0.30&&manmadeScore<=0.50&&scn!=="food"&&scn!=="美食"){
+          return {filter:"sunset",strength:70,reason:"黄昏暖景，橙金氛围更浓",rule:"R4"};
+        }
+        return {filter:null,strength:0,reason:"",rule:"NONE"};
+      }catch(e){ return GATE; }
+    }
+
+module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter };

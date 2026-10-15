@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v8.9.0 · 实景视觉构图生成工具</title>
-<meta name="description" content="AI 构图助手 Pro v8.9.0 · 实景视觉构图生成工具：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。拍前实时引导（机位同高/网格眼位/距离景别/横竖拍，宁缺毋滥、只给建议不动裁切）。含 YOLO11n 本地检测、智能人像裁切（不切关节·头·手·脚）、人像近眼上三分与 3:4 景别裁切、侧脸视线留白（nose room，按脸朝向单侧留白）、边缘能量吸附（裁切刀自动避开人物轮廓与关节、藏到画面空白处，只少裁不多裁）、背景保护 RoD（被裁的晚霞/水面/高层次地面整段保留，只少裁不多裁）、通用物体边界保护（不切动物/车/食物/餐具）、30 款滤镜、构图法则百科与云端 VLM 分析">
+<title>AI 构图助手 Pro v9.0.0 · 实景视觉构图生成工具</title>
+<meta name="description" content="AI 构图助手 Pro v9.0.0 · 实景视觉构图生成工具：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。构图综合诊断（视线/头顶留白/眼位/地平线/光位/朝向，只读建议不改裁切）+ 拍后滤镜智能推荐（糊片/过曝/死黑/过浓/近纯黑一律不推，每图最多一次）。含 YOLO11n 本地检测、智能人像裁切（不切关节·头·手·脚）、人像近眼上三分与 3:4 景别裁切、侧脸视线留白（nose room，按脸朝向单侧留白）、边缘能量吸附（裁切刀自动避开人物轮廓与关节、藏到画面空白处，只少裁不多裁）、背景保护 RoD（被裁的晚霞/水面/高层次地面整段保留，只少裁不多裁）、通用物体边界保护（不切动物/车/食物/餐具）、30 款滤镜、构图法则百科与云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v8.9.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切">
+<meta property="og:title" content="AI 构图助手 Pro v9.0.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切">
 <meta property="og:description" content="给不会拍照的普通人：打开相机，AI 教你怎么拍。AI 构图分析（本地像素+云端 VLM 双引擎）、人像保护裁切（不切头不切手脚）、30 款滤镜，一键出成品。默认本地运行，照片不上传。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
@@ -405,6 +405,11 @@
   .filter-pill .sw{width:17px;height:17px;border-radius:50%;border:1px solid rgba(255,255,255,.22);flex-shrink:0;}
   .filter-pill.active{color:var(--text);border-color:var(--amber);background:var(--panel2);}
   .filter-pill.active .sw{border-color:var(--amber);}
+  /* v9.0.0 滤镜推荐横幅：仅命中时出现，沉默原则——null 不弹 */
+  .frec{display:flex;align-items:center;gap:8px;padding:8px 10px;margin:6px 0;border:1px solid var(--amber);border-radius:10px;background:var(--panel2);font-size:12px;}
+  .frec-t{flex:1;color:var(--text);line-height:1.4;}
+  .frec-b{flex-shrink:0;border:1px solid var(--amber);background:var(--amber);color:#111;font-weight:600;font-size:11.5px;padding:5px 12px;border-radius:999px;cursor:pointer;}
+  .frec-b.ghost{background:transparent;color:var(--sub);border-color:var(--line);}
   /* 副操作行 */
   .sec-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;position:relative;z-index:20;touch-action:pan-y;}
     .act-row{touch-action:pan-y;display:flex;gap:8px;align-items:center;margin-top:2px;}
@@ -656,7 +661,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.9.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v9.0.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -833,6 +838,11 @@
         <span class="ztick" data-z="2">2x</span>
         <span class="ztick" data-z="3">3x</span>
       </div>
+    </div>
+    <div class="frec" id="frecBanner" style="display:none;">
+      <span class="frec-t" id="frecText"></span>
+      <button class="frec-b" id="frecApply">应用</button>
+      <button class="frec-b ghost" id="frecReject">原片</button>
     </div>
     <div class="filters" id="filterBar">
       <button class="filter-pill active" data-f="clear"><span class="sw" style="background:linear-gradient(135deg,#6b7280,#9aa3ad)"></span>原图</button>
@@ -1014,7 +1024,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.9.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v9.0.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1088,7 +1098,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v8.9.0";
+var APP_VER="v9.0.0";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -1669,6 +1679,38 @@ var APP_VER="v8.9.0";
       var f=FILTERS[b.dataset.f];
       toastMsg("滤镜："+f.name+" · "+f.desc);
     });
+    // v9.0.0 滤镜自动推荐：裁切终检后的独立后期步骤；每图最多一次，null 时完全沉默（不弹/不 toast）。
+    function _hideFrec(){ try{ var _bn=document.getElementById("frecBanner"); if(_bn) _bn.style.display="none"; }catch(e2){} }
+    function _maybeRecommendFilter(aFinal){
+      try{
+        if(state._frecShown) return;
+        var ai=state.aiData||{};
+        var pc=0;
+        if(Array.isArray(ai.allBoxes)){ for(var _bi=0;_bi<ai.allBoxes.length;_bi++){ if(ai.allBoxes[_bi]&&ai.allBoxes[_bi].class==="person") pc++; } }
+        var sig={personScore:(typeof ai.personScore==="number")?ai.personScore:null,personCount:pc,scene:(state.plan&&state.plan.sceneType)||null};
+        var rec=_recommendFilter(aFinal||ai, sig);
+        if(!rec||!rec.filter||!FILTERS[rec.filter]) return; // 沉默：不弹横幅
+        state._frecShown=true; state._frecRec=rec;
+        var _tx=document.getElementById("frecText");
+        if(_tx) _tx.textContent="推荐「"+FILTERS[rec.filter].name+"」 · "+rec.reason;
+        var _bn=document.getElementById("frecBanner");
+        if(_bn) _bn.style.display="flex";
+      }catch(e){}
+    }
+    (function(){
+      var ap=document.getElementById("frecApply"), rj=document.getElementById("frecReject");
+      if(ap) ap.addEventListener("click",function(){
+        try{
+          var rec=state._frecRec; if(!rec||!rec.filter||!FILTERS[rec.filter]) return;
+          pushUndo();
+          setFilter(rec.filter);
+          state.strength=rec.strength; applyStrength();
+          toastMsg("已应用推荐滤镜："+FILTERS[rec.filter].name);
+          _hideFrec();
+        }catch(e){}
+      });
+      if(rj) rj.addEventListener("click",function(){ state._frecRec=null; _hideFrec(); });
+    })();
     var zoomSlid=false, zoomRaf=null;
     zoomRange.addEventListener("pointerdown",function(){ zoomSlid=false; });
     zoomRange.addEventListener("input",function(){
@@ -2827,6 +2869,221 @@ var APP_VER="v8.9.0";
         return null;
       }catch(e){ return null; }
     }
+    /* ===================== v9.0.0 光位四判 + 统一构图诊断 + 滤镜推荐（纯函数，只读建议） =====================
+     * 纪律同 v8.9：只入参 plainObj、只读字段、返回 {…}/null/固定结构；不读 document/state、不用 Math.random。
+     * 光位全部复用 16×16 lumGrid 在脸框内采样，不引入新模型。宁缺毋滥：信号不足/越界/除零一律 null。 */
+    // （零）脸部分光采样 _faceLightSplit：把脸框映射到网格，切左右/上下四块求均值 + 脸区总均值 + 全图均值。
+    // 输出 {l,r,t,b,mean,frameMean}（0–255）；脸框覆盖格点<4 或网格非法 → null。越界 fb 先裁到 [0,1]。
+    function _faceLightSplit(o){
+      try{
+        if(!o) return null;
+        var lg=o.lumGrid, gw=o.gw, gh=o.gh, fb=o.fb;
+        if(!Array.isArray(lg)||!lg.length) return null;
+        if(typeof gw!=="number"||!isFinite(gw)||gw<4) return null;
+        if(typeof gh!=="number"||!isFinite(gh)||gh<4) return null;
+        gw=Math.round(gw); gh=Math.round(gh);
+        if(lg.length<gw*gh) return null;
+        if(!Array.isArray(fb)||fb.length!==4) return null;
+        var fx=Math.min(1,Math.max(0,fb[0]||0)), fy=Math.min(1,Math.max(0,fb[1]||0));
+        var fw=Math.min(1-fx,Math.max(0,fb[2]||0)), fh=Math.min(1-fy,Math.max(0,fb[3]||0));
+        if(fw<1e-3||fh<1e-3) return null;
+        var gx0=Math.floor(fx*gw), gx1=Math.ceil((fx+fw)*gw);
+        var gy0=Math.floor(fy*gh), gy1=Math.ceil((fy+fh)*gh);
+        gx0=Math.max(0,Math.min(gw-1,gx0)); gx1=Math.max(gx0+1,Math.min(gw,gx1));
+        gy0=Math.max(0,Math.min(gh-1,gy0)); gy1=Math.max(gy0+1,Math.min(gh,gy1));
+        var midX=fx+fw/2, midY=fy+fh/2;
+        var l=0,r=0,t=0,b=0,mean=0,nl=0,nr=0,nt=0,nb=0,nm=0,fsum=0,gsum=0,gn=0;
+        for(var gy=gy0;gy<gy1;gy++){
+          for(var gx=gx0;gx<gx1;gx++){
+            var v=lg[gy*gw+gx];
+            if(typeof v!=="number"||!isFinite(v)) continue;
+            var gxc=(gx+0.5)/gw, gyc=(gy+0.5)/gh;
+            gsum+=v; gn++;
+            fsum+=v; nm++;
+            if(gxc<midX){ l+=v; nl++; } else { r+=v; nr++; }
+            if(gyc<midY){ t+=v; nt++; } else { b+=v; nb++; }
+          }
+        }
+        if(nm<4) return null; // 脸太小，格点不足
+        return {l:nl?l/nl:0, r:nr?r/nr:0, t:nt?t/nt:0, b:nb?b/nb:0, mean:fsum/nm, frameMean:gn?gsum/gn:128};
+      }catch(e){ return null; }
+    }
+    // （一）侧光/伦勃朗/顶光/平光/硬切光 _lightPosition：左右光比判侧光与硬切、上下光比判顶光。
+    // 输出 {key,txt}（key=split/side/toplight/flat）或 null；min≈0 除零保护返回 null；分支互斥最多一条。
+    function _lightPosition(o){
+      try{
+        if(!o) return null;
+        var fc=o.faceConf;
+        if(typeof fc!=="number"||!isFinite(fc)||fc<0.75) return null;
+        var s=o.split;
+        if(!s||typeof s.l!=="number"||!isFinite(s.l)||typeof s.r!=="number"||!isFinite(s.r)
+           ||typeof s.t!=="number"||!isFinite(s.t)||typeof s.b!=="number"||!isFinite(s.b)) return null;
+        var minLR=Math.min(s.l,s.r), minTB=Math.min(s.t,s.b);
+        if(minLR<1e-3||minTB<1e-3) return null; // 除零保护
+        var ratioLR=Math.max(s.l,s.r)/minLR;
+        var ratioTB=Math.max(s.t,s.b)/minTB;
+        if(ratioLR>=2.6) return {key:"split",txt:"光太硬了，把人转回来一点，或给暗面补点亮"};
+        if(ratioLR>=1.7 && ratioLR<2.6 && ratioTB<1.4) return {key:"side",txt:"侧光很立体，让脸再转向亮侧一点，暗颧骨下会出现小三角光"};
+        if(ratioTB>1.5 && ratioLR<1.3) return {key:"toplight",txt:"头顶光太重，换到阴影里，或等日出后/日落前的柔光"};
+        if(ratioLR<1.4 && ratioTB<1.4) return {key:"flat",txt:"光线太平了，让人转到窗边，光从侧前方打来更立体"};
+        return null;
+      }catch(e){ return null; }
+    }
+    // （二）黄金时刻暖光 _warmLightHint：暖(wb>0.09)+亮(mean 110–200)+柔(sat 0.15–0.60) 才正向鼓励；室内暖黄灯被亮度门槛挡掉。
+    function _warmLightHint(o){
+      try{
+        if(!o) return null;
+        var wb=o.wb, mean=o.mean, sat=o.sat;
+        if(typeof wb!=="number"||!isFinite(wb)||typeof mean!=="number"||!isFinite(mean)||typeof sat!=="number"||!isFinite(sat)) return null;
+        if(wb>0.09 && mean>=110 && mean<=200 && sat>=0.15 && sat<=0.60) return {txt:"光线暖柔，趁这束光拍"};
+        return null;
+      }catch(e){ return null; }
+    }
+    // （三）窗光 _windowLightHint：侧光(左右光比1.5–2.4)+画面一侧有明显亮边(>脸均值1.8×)+室内柔光亮度(60–170)。
+    function _windowLightHint(o){
+      try{
+        if(!o) return null;
+        var fc=o.faceConf;
+        if(typeof fc!=="number"||!isFinite(fc)||fc<0.75) return null;
+        var s=o.split, ec=o.edgeColMean, mean=o.mean;
+        if(!s||typeof s.mean!=="number"||!isFinite(s.mean)||s.mean<1e-3) return null;
+        if(typeof ec!=="number"||!isFinite(ec)) return null;
+        if(typeof mean!=="number"||!isFinite(mean)) return null;
+        if(typeof s.l!=="number"||!isFinite(s.l)||typeof s.r!=="number"||!isFinite(s.r)) return null;
+        var minLR=Math.min(s.l,s.r); if(minLR<1e-3) return null;
+        var ratioLR=Math.max(s.l,s.r)/minLR;
+        if(ratioLR<1.5||ratioLR>=2.4) return null;
+        if(ec<=s.mean*1.8) return null;
+        if(mean<60||mean>170) return null;
+        return {txt:"窗边柔光：人离窗半米、与窗成45°，相机从暗侧拍"};
+      }catch(e){ return null; }
+    }
+    // （四）低角度显高 _lowAngleAdvice：仅全身竖拍（人占比≥0.85、头<0.08、脚>0.90）才提示微仰；半身/七分不报。
+    function _lowAngleAdvice(o){
+      try{
+        if(!o) return null;
+        var fa=o.frameAspect, pt=o.personTop, pb=o.personBottom, phr=o.personHR;
+        if(typeof fa!=="number"||!isFinite(fa)||fa>=1) return null; // 竖拍
+        if(typeof pt!=="number"||!isFinite(pt)||typeof pb!=="number"||!isFinite(pb)||typeof phr!=="number"||!isFinite(phr)) return null;
+        if(phr>=0.85 && pt<0.08 && pb>0.90) return {txt:"拍全身：把机位放到腰部以下、微微仰一点，人更显高"};
+        return null;
+      }catch(e){ return null; }
+    }
+    // （五）统一构图综合诊断 _composeDiagnosis：把视线留白/头顶/眼位/地平线/光位/画幅/背景保护融成评语清单。
+    // 输出 [{id,sev,title,action}]，最多 3 条按 sev 降序；信号不足该条砍掉、绝不硬凑；绝不改 crop。
+    function _composeDiagnosis(o){
+      try{
+        if(!o) return [];
+        var out=[];
+        function num(v){ return (typeof v==="number"&&isFinite(v))?v:null; }
+        // gaze（sev2）：侧脸且脸心明显偏离视线方向三分位
+        var yaw=o.yaw, faceCx=num(o.faceCx), gaze=false;
+        if(yaw&&yaw.dir!==0&&faceCx!==null){
+          var tx=(yaw.dir>0)?0.33:0.67;
+          if(Math.abs(faceCx-tx)>0.10){
+            out.push({id:"gaze",sev:2,title:"视线方向留白不足",action:"把脸朝向的一侧多留点空"});
+            gaze=true;
+          }
+        }
+        // headroom（sev1）
+        var ht=num(o.headTop);
+        if(ht!==null && (ht<0.04||ht>0.24)){
+          out.push({id:"headroom",sev:1,title:"头顶留白不当",action:"头顶留一拳空，别贴顶也别空太多"});
+        }
+        // eyesY（sev1，与 gaze 同源时只留 gaze）
+        var ey=num(o.eyesY);
+        if(!gaze && ey!==null && (ey>0.42||ey<0.24)){
+          out.push({id:"eyesY",sev:1,title:"眼睛不在上横线",action:"眼睛对上上方横线"});
+        }
+        // horizon（sev1）：风光类场景地平线居中
+        var hr=num(o.horizonRatio);
+        if(o.isLandscapeScene===true && hr!==null && Math.abs(hr-0.5)<0.03){
+          out.push({id:"horizon",sev:1,title:"地平线卡在正中",action:"天好就压低、地好就抬高到三分之一线"});
+        }
+        // light（sev2）：split/toplight/flat
+        if(o.light && (o.light.key==="split"||o.light.key==="toplight"||o.light.key==="flat") && typeof o.light.txt==="string"){
+          out.push({id:"light",sev:2,title:"光线可优化",action:o.light.txt});
+        }
+        // orientation（sev1）
+        if(o.orientation && typeof o.orientation.txt==="string"){
+          out.push({id:"orientation",sev:1,title:"画幅方向",action:o.orientation.txt});
+        }
+        // bgsafe（sev1 提示性）：已自动保住晚霞/水面
+        if(o.rodMoved===true){
+          out.push({id:"bgsafe",sev:1,title:"已自动保留上方背景",action:"晚霞/水面已自动保留，无需再裁"});
+        }
+        out.sort(function(a,b){ return b.sev-a.sev; });
+        return out.slice(0,3);
+      }catch(e){ return []; }
+    }
+    // （六）滤镜自动推荐 _recommendFilter(a, sig)：裁切终检后的独立后期步骤，只读 analyzePixels 信号。
+    // 5 道硬闸门（糊片/过曝死黑/已浓/近纯黑）任一触发 → null；只推现有 6 款；每图最多一次由非纯层控制。
+    function _recommendFilter(a, sig){
+      var GATE={filter:null,strength:0,reason:"",rule:"GATE"};
+      try{
+        if(!a||typeof a!=="object"||typeof a.mean!=="number"||!isFinite(a.mean)) return GATE;
+        var mean=a.mean, wb=(typeof a.wb==="number"&&isFinite(a.wb))?a.wb:0;
+        var sat=(typeof a.sat==="number"&&isFinite(a.sat))?a.sat:0;
+        var sharpness=(typeof a.sharpness==="number"&&isFinite(a.sharpness))?a.sharpness:0;
+        var highClip=(typeof a.highClip==="number"&&isFinite(a.highClip))?a.highClip:0;
+        var shadowClip=(typeof a.shadowClip==="number"&&isFinite(a.shadowClip))?a.shadowClip:0;
+        var lightScore=(typeof a.lightScore==="number"&&isFinite(a.lightScore))?a.lightScore:0;
+        var warmRatio=(typeof a.warmRatio==="number"&&isFinite(a.warmRatio))?a.warmRatio:0;
+        var waterScore=(typeof a.waterScore==="number"&&isFinite(a.waterScore))?a.waterScore:0;
+        var manmadeScore=(typeof a.manmadeScore==="number"&&isFinite(a.manmadeScore))?a.manmadeScore:0;
+        // G1 糊片
+        if(sharpness<25) return GATE;
+        // G2 曝光断层
+        if(highClip>0.15||shadowClip>0.28) return GATE;
+        // G3 已浓
+        if(sat>0.38) return GATE;
+        // G4 近纯黑
+        if(mean<50) return GATE;
+        var ps=(sig&&typeof sig.personScore==="number"&&isFinite(sig.personScore))?sig.personScore:0;
+        var pc=(sig&&typeof sig.personCount==="number"&&isFinite(sig.personCount))?sig.personCount:0;
+        var scn=(sig&&typeof sig.scene==="string")?sig.scene:null;
+        var skinRatio=(typeof a.skinRatio==="number"&&isFinite(a.skinRatio))?a.skinRatio:0;
+        // 人像成立（150 图实测标定）：只认 YOLO person≥0.6 硬证据——肤色启发式在风光/食物/建筑/水面图上普遍误中
+        // （实测水面图 skinRatio=16% 仍被 isPersonLikely 命中），自动推滤镜宁可漏掉也不硬推。
+        var isPerson=(ps>=0.6);
+        // lightRatio：从 sigBox 左右半亮度比（与拍前光位同口径）
+        var lr=0;
+        try{
+          if(Array.isArray(a.lumGrid)&&a.gridW>=4&&a.gridH>=4&&Array.isArray(a.sigBox)&&a.sigBox.length===4){
+            var gw2=Math.round(a.gridW), gh2=Math.round(a.gridH), bx=a.sigBox;
+            var x0=Math.max(0,Math.min(1,bx[0])), x1=Math.max(x0+1e-3,Math.min(1,bx[2]));
+            var y0=Math.max(0,Math.min(1,bx[1])), y1=Math.max(y0+1e-3,Math.min(1,bx[3]));
+            var gx0=Math.floor(x0*gw2), gx1=Math.ceil(x1*gw2), gy0=Math.floor(y0*gh2), gy1=Math.ceil(y1*gh2);
+            var midX=(x0+x1)/2, sl=0,sr=0,nsl=0,nsr=0;
+            for(var gy=gy0;gy<gy1;gy++){ for(var gx=gx0;gx<gx1;gx++){
+              if(gx<0||gx>=gw2||gy<0||gy>=gh2) continue;
+              var v=a.lumGrid[gy*gw2+gx];
+              if(typeof v!=="number"||!isFinite(v)) continue;
+              if((gx+0.5)/gw2<midX){ sl+=v; nsl++; } else { sr+=v; nsr++; }
+            } }
+            if(nsl&&nsr){
+              var L=sl/nsl, R=sr/nsr;
+              if(Math.abs(L-R)>=12){ var mn=Math.min(L,R); if(mn<1e-3){ lr=0; } else { lr=Math.max(L,R)/mn; } }
+            }
+          }
+        }catch(e2){ lr=0; }
+        // R1 夜景提亮
+        if(mean>=50&&mean<85&&lightScore>=0.30) return {filter:"night",strength:80,reason:"夜景偏暗、有点光源，暗部提亮更通透",rule:"R1"};
+        // R2A 侧光黑白人像
+        if(isPerson&&lr>=2.0&&mean>=95) return {filter:"portrait-mono",strength:60,reason:"侧光人像明暗分明，黑白更衬光影",rule:"R2A"};
+        // R2B 暖调人像（wb 门槛 0.035→0.05 实测标定：普通户外暖调照片 wb≈0.03–0.05 不应推）
+        if(isPerson&&wb>0.05) return {filter:"portrait-warm",strength:80,reason:"暖光环境，肤色会更通透",rule:"R2B"};
+        // R2C 冷调人像（wb 门槛 -0.035→-0.05）
+        if(isPerson&&wb<-0.05&&mean>=105) return {filter:"portrait-cool",strength:80,reason:"冷调环境，肤色更清透",rule:"R2C"};
+        // R3 近黑白
+        if(sat<0.06&&mean>=75) return {filter:"mono",strength:90,reason:"画面本来就低饱和，黑白影调更干净",rule:"R3"};
+        // R4 黄昏暖景
+        if(pc<=1&&warmRatio>=0.42&&wb>0.05&&mean>=85&&mean<=160&&waterScore<=0.30&&manmadeScore<=0.50&&scn!=="food"&&scn!=="美食"){
+          return {filter:"sunset",strength:70,reason:"黄昏暖景，橙金氛围更浓",rule:"R4"};
+        }
+        return {filter:null,strength:0,reason:"",rule:"NONE"};
+      }catch(e){ return GATE; }
+    }
     // v8.6.0 nose room 视线留白：单人侧脸（非特写）沿"视线方向"留出约 2:1 空间——脸朝右则把脸放左三分(0.33)、
     // 右侧留白；脸朝左则放右三分(0.67)。只在"身后一侧"做单侧裁切（绝不在视线方向动刀），目标轻微偏离且身体完整
     // 时才动；特写/多人/正面/朝向不定/会切身体/窗宽不足/改善过小一律放弃。crop=[L,T,R,B]%，约定同 _portraitFraming。
@@ -3829,6 +4086,8 @@ var APP_VER="v8.9.0";
       try{
         if(a && a.allBoxes && a.allBoxes.length){ plan.crop=_objectGuard(plan.crop, a.allBoxes); }
       }catch(e){}
+      // v9.0.0 诊断只读标志：记录 edgeSnap / rodGuard 是否真的动过刀（供 _composeDiagnosis 评语，绝不回写 crop）
+      var _diagES=false,_diagRod=false;
       // v8.7.0 边缘能量吸附：在所有构图/主体/关节/物体决策之后，对已决定的裁切边做 ±5% 内的最低能量微移，
       // 把刀缝从主体轮廓/强边缘移到旁边的空白/平滑区。只在本地拍后静态生效；edgeSnap 只少裁、不新增边，
       // 吸附后再重跑一次关节/物体终检兜底（任何不确定都已在纯函数内原样返回）。
@@ -3848,7 +4107,7 @@ var APP_VER="v8.9.0";
           var _esBefore=plan.crop[0]+plan.crop[1]+plan.crop[2]+plan.crop[3];
           var _esCrop=_edgeSnap(plan.crop,a.edgeEnergy,_esInfo);
           if(_esCrop && (_esCrop[0]+_esCrop[1]+_esCrop[2]+_esCrop[3])!==_esBefore){
-            plan.crop=_esCrop;
+            plan.crop=_esCrop; _diagES=true;
             var _esPort=(modelPerson===true)||(a.isPerson===true)||(plan.sceneType==="portrait")||(plan.sceneType==="portrait_close");
             if(_esPort && state.aiData && state.aiData.poseReady===true && poseData){ plan.crop=_jointGuard(plan.crop,poseData,true); }
             if(a.allBoxes && a.allBoxes.length){ plan.crop=_objectGuard(plan.crop,a.allBoxes); }
@@ -3862,9 +4121,50 @@ var APP_VER="v8.9.0";
            && (plan.crop[1]||plan.crop[3])){
           var _rodCrop=_rodGuard(plan.crop,a.rod,{});
           if(_rodCrop && (_rodCrop[1]!==plan.crop[1]||_rodCrop[3]!==plan.crop[3])){
-            plan.crop=_rodCrop;
+            plan.crop=_rodCrop; _diagRod=true;
           }
         }
+      }catch(e){}
+      // v9.0.0 统一构图综合诊断：所有裁切 guard 跑完后只读追加 plan.diagnosis，绝不碰 plan.crop（外层 try/catch 兜底）。
+      try{
+        var _ad9=state.aiData||{};
+        var _yaw9=_classifyYaw(_ad9.faceLM);
+        var _eyesY9=null;
+        if(Array.isArray(_ad9.faceLM)&&_ad9.faceLM[0]&&_ad9.faceLM[1]
+           &&typeof _ad9.faceLM[0].y==="number"&&typeof _ad9.faceLM[1].y==="number"
+           &&isFinite(_ad9.faceLM[0].y)&&isFinite(_ad9.faceLM[1].y)){
+          _eyesY9=(_ad9.faceLM[0].y+_ad9.faceLM[1].y)/2;
+        }
+        var _fc9=(typeof _ad9.faceConfidence==="number"&&isFinite(_ad9.faceConfidence))?_ad9.faceConfidence:null;
+        var _split9=null;
+        if(a&&a.lumGrid&&Array.isArray(a.lumGrid)&&Array.isArray(_ad9.faceBBox)&&_ad9.faceBBox.length===4){
+          _split9=_faceLightSplit({lumGrid:a.lumGrid,gw:a.gridW,gh:a.gridH,fb:_ad9.faceBBox});
+        }
+        var _light9=_split9?_lightPosition({split:_split9,faceConf:_fc9,mean:a.mean,sat:a.sat}):null;
+        var _phr9=null,_pa9=null;
+        if(typeof _ad9.headTop==="number"&&isFinite(_ad9.headTop)&&typeof _ad9.personBottom==="number"&&isFinite(_ad9.personBottom)){
+          _phr9=_ad9.personBottom-_ad9.headTop;
+          if(typeof _ad9.personLeft==="number"&&typeof _ad9.personRight==="number"&&isFinite(_ad9.personLeft)&&isFinite(_ad9.personRight)&&_phr9>1e-3){
+            _pa9=(_ad9.personRight-_ad9.personLeft)/_phr9;
+          }
+        }
+        var _ori9=_guidanceOrientation({
+          faceCount:(typeof _ad9.faceCount==="number"&&isFinite(_ad9.faceCount))?_ad9.faceCount:0,
+          personAspect:_pa9,
+          frameAspect:(typeof a.frameAspect==="number"&&isFinite(a.frameAspect))?a.frameAspect:null,
+          sceneType:plan.sceneType||null});
+        var _diag9=_composeDiagnosis({
+          yaw:_yaw9,
+          faceCx:(typeof _ad9.faceX==="number"&&isFinite(_ad9.faceX))?_ad9.faceX:null,
+          headTop:(typeof a.headTop==="number"&&isFinite(a.headTop))?a.headTop:null,
+          eyesY:_eyesY9,
+          horizonRatio:(typeof a.ratio==="number"&&isFinite(a.ratio))?a.ratio:null,
+          isLandscapeScene:(plan.sceneType==="waterscape"||plan.sceneType==="landscape"||plan.sceneType==="architecture"),
+          edgeSnapMoved:_diagES,
+          rodMoved:_diagRod,
+          light:_light9,
+          orientation:_ori9});
+        if(_diag9&&_diag9.length) plan.diagnosis=_diag9;
       }catch(e){}
       return plan;
     }
@@ -4123,6 +4423,7 @@ var APP_VER="v8.9.0";
                   }catch(e){}
                   setZoom(p.z||1);
                   setFilter(autoFilter);
+                  try{ _maybeRecommendFilter((typeof _a2!=="undefined"&&_a2)?_a2:null); }catch(e){} // v9.0.0 滤镜推荐（独立后期，只读）
                   if(p.noCrop){
                     setStatus("已自动应用：裁切+构图优化（未裁切）· "+(_scores?_scores.grade+"级 "+_scores.total+"分":""), "done");
                     toastMsg(autoFilter==="clear"?"构图优化完成，滤镜已保持原图（"+ (FILTERS[p.f]?FILTERS[p.f].name:"") +"可手动预览）":"已应用自然滤镜，构图保持原样");
@@ -4132,7 +4433,7 @@ var APP_VER="v8.9.0";
                   }
                 }
               },50);
-              setTimeout(function(){ if(_check){ clearInterval(_check); setZoom(p.z||1); setFilter(autoFilter); setStatus("已自动应用：智能裁切+构图优化", "done"); } }, 800);
+              setTimeout(function(){ if(_check){ clearInterval(_check); setZoom(p.z||1); setFilter(autoFilter); try{ _maybeRecommendFilter(null); }catch(e){} setStatus("已自动应用：智能裁切+构图优化", "done"); } }, 800);
             } else {
               setStatus("自动应用失败，请手动点一键成品", "err");
             }
@@ -4469,6 +4770,10 @@ var APP_VER="v8.9.0";
       if(plan.notes && plan.notes.length){
         items.push({ic:'A',html:"<b>行动建议：</b>"+String(plan.notes.slice(0,3).join("；")).slice(0,120)});
       }
+      // v9.0.0 统一构图诊断（只读评语，最多3条）
+      if(plan.diagnosis && plan.diagnosis.length){
+        items.push({ic:'A',html:"<b>构图诊断：</b>"+plan.diagnosis.map(function(d){return d.title+"——"+d.action;}).join("；")});
+      }
       items.forEach(function(it,i){
         var d=document.createElement("div");
         d.className="ai-item";
@@ -4663,6 +4968,8 @@ var APP_VER="v8.9.0";
       state.aiData=null;
       state.plan=null;
       state.analyzed=false;
+      // v9.0.0 换图即重置滤镜推荐（每图最多弹一次，残留横幅必须收起）
+      state._frecShown=false; state._frecRec=null; try{ _hideFrec(); }catch(e){}
     }
 
     /* ===================== 直方图 ===================== */
@@ -5391,6 +5698,8 @@ var APP_VER="v8.9.0";
       // 重置所有状态
       state.zoom=1; state.filter="clear"; state.plan=null; state.analyzed=false;
       state.sourceKind=""; state.sourceName=""; state.cropResult=null; state.origURL=null;
+      // v9.0.0 换图即重置滤镜推荐（每图最多弹一次）
+      state._frecShown=false; state._frecRec=null; _hideFrec();
       // v1.7.0 / v8.0.4: 真正清掉进行中的倒计时（原仅置 null，旧 interval 仍会到点误拍）
       state.timer=0;
       if(state.timerInterval){ clearInterval(state.timerInterval); state.timerInterval=null; }
@@ -9163,7 +9472,7 @@ hSym2:state.aiData.hSym}:null; }
   }; }catch(e){}
 })();
   </script>
-<div id="aicUpdateBar" class="hide"><span class="ub-t">✨ 新版本 v8.9.0 已就绪：拍前实时引导——开启实时取景后，手机会在按下快门前轻声提醒你四件事：机位和眼睛同高别俯仰、眼睛对上上三分线、人在画面里别太大也别太小、竖人竖拍/合影横拍。宁缺毋滥，只有明显越界才提示，落在舒适区或人脸没对准就安静不打扰；同一句提醒连续稳住才弹出，避免画面抖动乱闪。只给建议、绝不自动裁切，v8.8.0 的成片裁切逻辑一字未动。150 张真实照片回归 0 误切、0 报错，云端 12 图真实请求 0 错误。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
+<div id="aicUpdateBar" class="hide"><span class="ub-t">✨ 新版本 v9.0.0 已就绪：拍完成片后多出两样只读建议——① 构图综合诊断：视线方向、头顶留白、眼位、地平线、光位与朝向，按严重度最多挑 3 条轻声告诉你，绝不替你动刀；② 滤镜智能推荐：糊片、过曝、死黑、已经很浓、近纯黑一律闭嘴不打扰，只有该推才弹「推荐哪款·一句话理由」，一键应用或还原片，每张图最多问一次。v8.9.0 的成片裁切逻辑一字未动，150 张真实照片回归 0 误切、0 报错，云端 12 图真实请求 0 错误。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
 <script>
 (function(){
   // v8.2.3 新版本就绪提示条：SW 激活后广播 → 页面弹出"立即刷新"，根治旧缓存看不到新功能
