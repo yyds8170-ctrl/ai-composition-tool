@@ -1183,9 +1183,165 @@ test('debangText: 2帧后反转不显示', () => {
   assert.strictEqual(st.show, false);
 });
 
+/* ==================== v9.2.0 实时取景防抖状态机逐帧断言（模拟相机帧流） ==================== */
+// 用纯函数 _debangText 模拟连续帧：引导条"连续3帧同结论才显示、换结论立即回落"。
+test('debangText: 帧1/帧2 同结论不显示，帧3 才显示', () => {
+  let st = _debangText([{id:'eyeLevel',txt:'放低手机'}], null);
+  assert.strictEqual(st.show, false); assert.strictEqual(st.count, 1);
+  st = _debangText([{id:'eyeLevel',txt:'放低手机'}], st);
+  assert.strictEqual(st.show, false); assert.strictEqual(st.count, 2);
+  st = _debangText([{id:'eyeLevel',txt:'放低手机'}], st);
+  assert.strictEqual(st.show, true); assert.strictEqual(st.txt, '放低手机');
+});
+test('debangText: 第3帧换结论→不显示（2帧后反转不show）', () => {
+  let st = _debangText([{id:'a',txt:'A'}], null);
+  st = _debangText([{id:'a',txt:'A'}], st);
+  st = _debangText([{id:'b',txt:'B'}], st); // 第3帧换结论
+  assert.strictEqual(st.show, false); assert.strictEqual(st.key, 'b');
+});
+test('debangText: 无引导帧（空序列）回落隐藏', () => {
+  let st = {key:'a',count:3,show:true,txt:'A'};
+  st = _debangText([], st);
+  assert.strictEqual(st.show, false); assert.strictEqual(st.key, null);
+});
+test('debangText: 新结论也需连续3帧才重新显示', () => {
+  let st = _debangText([{id:'a',txt:'A'}], null); // 1
+  st = _debangText([{id:'a',txt:'A'}], st);      // 2
+  st = _debangText([{id:'a',txt:'A'}], st);      // 3 show
+  assert.strictEqual(st.show, true);
+  st = _debangText([{id:'c',txt:'C'}], st);      // 1
+  assert.strictEqual(st.show, false);
+  st = _debangText([{id:'c',txt:'C'}], st);      // 2
+  assert.strictEqual(st.show, false);
+  st = _debangText([{id:'c',txt:'C'}], st);      // 3
+  assert.strictEqual(st.show, true); assert.strictEqual(st.txt, 'C');
+});
+
+/* ---- v9.2 场景防抖 _sceneDebounce 逐状态 ---- */
+test('sceneDebounce: 未稳场景3帧确认', () => {
+  let s = _sceneDebounce('landscape', null); assert.strictEqual(s.scene, null);
+  s = _sceneDebounce('landscape', s); assert.strictEqual(s.scene, null);
+  s = _sceneDebounce('landscape', s); assert.strictEqual(s.scene, 'landscape');
+});
+test('sceneDebounce: 已稳5帧后反向切换需5帧', () => {
+  let s = {scene:'portrait',pend:null,pc:0,held:10};
+  for(let i=0;i<4;i++){ s=_sceneDebounce('night',s); assert.strictEqual(s.scene,'portrait'); }
+  s = _sceneDebounce('night',s);
+  assert.strictEqual(s.scene,'night');
+});
+
+/* ---- v9.2 四条拍前引导：触发 / 沉默 正负例 ---- */
+test('guidanceOrientation: 竖长单人被横拍→竖持；宽景被竖拍→横持；否则沉默', () => {
+  assert.deepStrictEqual(_guidanceOrientation({faceCount:1,personAspect:1.5,frameAspect:1.4,sceneType:null}).rec,'portrait');
+  assert.deepStrictEqual(_guidanceOrientation({faceCount:1,personAspect:0.5,frameAspect:0.7,sceneType:'landscape'}).rec,'landscape');
+  assert.strictEqual(_guidanceOrientation({faceCount:1,personAspect:1.5,frameAspect:0.7,sceneType:null}),null); // 竖拍竖人正确
+  assert.strictEqual(_guidanceOrientation({faceCount:1,personAspect:0,frameAspect:1.4,sceneType:null}),null); // 人体框不可算
+});
+test('guidanceDistance: 人太小走近/太大后退/适中沉默/低置信沉默', () => {
+  assert.deepStrictEqual(_guidanceDistance({faceConf:0.9,personHR:0.1}).dir,'near');
+  assert.deepStrictEqual(_guidanceDistance({faceConf:0.9,personHR:0.9}).dir,'far');
+  assert.strictEqual(_guidanceDistance({faceConf:0.9,personHR:0.5}),null);
+  assert.strictEqual(_guidanceDistance({faceConf:0.5,personHR:0.1}),null); // 低置信不报
+});
+test('guidanceEyeLevel: 脸太顶下→放低/太低无眼点→举高/适中沉默', () => {
+  assert.deepStrictEqual(_guidanceEyeLevel({faceConf:0.9,headTop:0.02,faceHR:0.3,eyesY:0.2}).dir,'down');
+  assert.deepStrictEqual(_guidanceEyeLevel({faceConf:0.9,headTop:0.3,faceHR:0.3,eyesY:null}).dir,'up');
+  assert.strictEqual(_guidanceEyeLevel({faceConf:0.9,headTop:0.1,faceHR:0.3,eyesY:0.2}),null);
+});
+test('guidanceEyeOnGrid: 眼过高/过低纠正/适中沉默/低置信沉默', () => {
+  assert.ok(_guidanceEyeOnGrid({faceConf:0.9,eyesY:0.5}));
+  assert.ok(_guidanceEyeOnGrid({faceConf:0.9,eyesY:0.1}));
+  assert.strictEqual(_guidanceEyeOnGrid({faceConf:0.9,eyesY:0.3}),null);
+  assert.strictEqual(_guidanceEyeOnGrid({faceConf:0.5,eyesY:0.5}),null);
+});
+
+/* ==================== v9.2.0 滤镜规则矩阵（场景×光线×内容，≥60 用例） ==================== */
+// 一张"干净可推"的基准图：过全部闸门，落到 NONE（无特定规则）。
+function baseA(over){ return Object.assign({mean:120,sat:0.10,sharpness:60,highClip:0.05,shadowClip:0.10,
+  lightScore:0.5,wb:0,warmRatio:0.1,waterScore:0.05,manmadeScore:0.1,skinRatio:0.1}, over||{}); }
+function baseSig(over){ return Object.assign({personScore:0,personCount:0,scene:'portrait'}, over||{}); }
+let _fm=0; const FMc=(name,fn)=>{ _fm++; test('filterMatrix: '+name, fn); };
+
+// --- G1 糊片闸门（sharpness<25 恒 null） ---
+FMc('G1 糊片 sharpness=20 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({sharpness:20}),baseSig()).filter,null); });
+FMc('G1 sharpness=24 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({sharpness:24}),baseSig()).filter,null); });
+FMc('G1 sharpness=25 边界放行', ()=>{ assert.notStrictEqual(_recommendFilter(baseA({sharpness:25}),baseSig()).filter,'__GATE__'); });
+// --- G2 曝光断层 ---
+FMc('G2 高光过曝 highClip=0.2 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({highClip:0.2}),baseSig()).filter,null); });
+FMc('G2 死黑 shadowClip=0.3 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({shadowClip:0.3}),baseSig()).filter,null); });
+FMc('G2 highClip=0.15 边界放行', ()=>{ assert.strictEqual(_recommendFilter(baseA({highClip:0.15,mean:70,lightScore:0.5}),baseSig()).filter,'night'); });
+// --- G3 已浓 ---
+FMc('G3 饱和过浓 sat=0.5 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.5}),baseSig()).filter,null); });
+FMc('G3 sat=0.38 边界放行', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.38,mean:70,lightScore:0.5}),baseSig()).filter,'night'); });
+// --- G4 近纯黑 ---
+FMc('G4 mean=40 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:40}),baseSig()).filter,null); });
+FMc('G4 mean=50 边界放行', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:50,lightScore:0.5}),baseSig()).filter,'night'); });
+// --- R1 夜景提亮 ---
+FMc('R1 暗景有点光源 → night', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:70,lightScore:0.5}),baseSig()).filter,'night'); });
+FMc('R1 mean=84 仍 night', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:84,lightScore:0.5}),baseSig()).filter,'night'); });
+FMc('R1 暗但 lightScore 不足 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:70,lightScore:0.2}),baseSig()).filter,null); });
+FMc('R1 mean=85 超上限 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:85,lightScore:0.9}),baseSig()).filter,null); });
+// --- R2B 暖调人像 ---
+FMc('R2B 人像+暖wb → portrait-warm', ()=>{ assert.strictEqual(_recommendFilter(baseA({wb:0.1}),baseSig({personScore:0.9})).filter,'portrait-warm'); });
+FMc('R2B wb=0.051 刚过门槛 → portrait-warm', ()=>{ assert.strictEqual(_recommendFilter(baseA({wb:0.051,mean:120}),baseSig({personScore:0.9})).filter,'portrait-warm'); });
+FMc('R2B 无人像暖调不推人像', ()=>{ assert.strictEqual(_recommendFilter(baseA({wb:0.1}),baseSig({personScore:0})).filter,null); });
+FMc('R2B 普通户外暖调 wb=0.04 不推', ()=>{ assert.strictEqual(_recommendFilter(baseA({wb:0.04}),baseSig({personScore:0.9})).filter,null); });
+// --- R2C 冷调人像 ---
+FMc('R2C 人像+冷wb+够亮 → portrait-cool', ()=>{ assert.strictEqual(_recommendFilter(baseA({wb:-0.1,mean:120}),baseSig({personScore:0.9})).filter,'portrait-cool'); });
+FMc('R2C 冷但不够亮 mean=100 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({wb:-0.1,mean:100}),baseSig({personScore:0.9})).filter,null); });
+FMc('R2C 冷调无人像 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({wb:-0.1,mean:120}),baseSig({personScore:0})).filter,null); });
+// --- R2A 侧光黑白人像（非对称 lumGrid） ---
+function sideLightA(over){ const g=[]; for(let i=0;i<4;i++){ g.push(10,10,200,200); } return baseA(Object.assign({lumGrid:g,gridW:4,gridH:4,sigBox:[0,0,1,1]},over||{})); }
+FMc('R2A 侧光明暗人像 → portrait-mono', ()=>{ assert.strictEqual(_recommendFilter(sideLightA({mean:120}),baseSig({personScore:0.9})).filter,'portrait-mono'); });
+FMc('R2A 侧光但 mean<95 → null', ()=>{ assert.strictEqual(_recommendFilter(sideLightA({mean:90}),baseSig({personScore:0.9})).filter,null); });
+FMc('R2A 侧光无人像 → null', ()=>{ assert.strictEqual(_recommendFilter(sideLightA({}),baseSig({personScore:0})).filter,null); });
+// --- R3 近黑白 ---
+FMc('R3 极低饱和 → mono', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.03,mean:100}),baseSig()).filter,'mono'); });
+FMc('R3 sat=0.06 边界不推', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.06,mean:100}),baseSig()).filter,null); });
+FMc('R3 低饱和但 mean<75 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.03,mean:70,lightScore:0.5}),baseSig()).filter,'night'); });
+// --- R4 黄昏暖景 ---
+FMc('R4 黄昏暖景 → sunset', ()=>{ assert.strictEqual(_recommendFilter(baseA({warmRatio:0.5,wb:0.1,mean:120,waterScore:0.1,manmadeScore:0.1}),baseSig({personScore:0,personCount:0,scene:'landscape'})).filter,'sunset'); });
+FMc('R4 暖但多人 pc=2 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({warmRatio:0.5,wb:0.1,mean:120}),baseSig({personCount:2,scene:'landscape'})).filter,null); });
+FMc('R4 暖景但 high waterScore → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({warmRatio:0.5,wb:0.1,mean:120,waterScore:0.6}),baseSig({scene:'landscape'})).filter,null); });
+FMc('R4 food 场景不推 sunset', ()=>{ assert.strictEqual(_recommendFilter(baseA({warmRatio:0.5,wb:0.1,mean:120}),baseSig({scene:'food'})).filter,null); });
+FMc('R4 mean=84 不够暖景亮 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({warmRatio:0.5,wb:0.1,mean:84,lightScore:0.5}),baseSig()).filter,'night'); });
+// --- 沉默原则：非人像正常光景 → null ---
+FMc('沉默：普通人像正常光 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:130}),baseSig({personScore:0.9})).filter,null); });
+FMc('沉默：waterscape 正常光 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:130,waterScore:0.6}),baseSig({scene:'waterscape'})).filter,null); });
+FMc('沉默：food 正常光 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:130}),baseSig({scene:'food'})).filter,null); });
+FMc('沉默：architecture 正常光 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:130,manmadeScore:0.8}),baseSig({scene:'architecture'})).filter,null); });
+FMc('沉默：非法入参 → GATE', ()=>{ assert.strictEqual(_recommendFilter(null,{}).filter,null); assert.strictEqual(_recommendFilter({mean:'x'},{}).filter,null); });
+// --- 追加边界/负例（凑足三维矩阵覆盖） ---
+FMc('R1 优先于 R3：暗且低饱和 → night', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:70,sat:0.03,lightScore:0.5}),baseSig()).filter,'night'); });
+FMc('R1 mean=50 低限 → night', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:50,lightScore:0.3}),baseSig()).filter,'night'); });
+FMc('R1 lightScore=0.30 低限 → night', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:70,lightScore:0.3}),baseSig()).filter,'night'); });
+FMc('R3 sat=0.05 → mono', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.05,mean:100}),baseSig()).filter,'mono'); });
+FMc('R3 mean=75 低限（光线弱避开R1）→ mono', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.03,mean:75,lightScore:0.1}),baseSig()).filter,'mono'); });
+FMc('R2A lr=2.0 低限 → portrait-mono', ()=>{ assert.strictEqual(_recommendFilter(sideLightA({mean:120}),baseSig({personScore:0.9})).filter,'portrait-mono'); });
+FMc('R2A 优先于 R2B：侧光人像即使暖wb → portrait-mono', ()=>{ assert.strictEqual(_recommendFilter(sideLightA({mean:120,wb:0.1}),baseSig({personScore:0.9})).filter,'portrait-mono'); });
+FMc('R4 mean=160 高限 → sunset', ()=>{ assert.strictEqual(_recommendFilter(baseA({warmRatio:0.5,wb:0.1,mean:160,waterScore:0.1,manmadeScore:0.1}),baseSig({scene:'landscape'})).filter,'sunset'); });
+FMc('R4 warmRatio=0.42 低限 → sunset', ()=>{ assert.strictEqual(_recommendFilter(baseA({warmRatio:0.42,wb:0.1,mean:120}),baseSig({scene:'landscape'})).filter,'sunset'); });
+FMc('R4 manmadeScore=0.50 高限放行 → sunset', ()=>{ assert.strictEqual(_recommendFilter(baseA({warmRatio:0.5,wb:0.1,mean:120,manmadeScore:0.5}),baseSig({scene:'landscape'})).filter,'sunset'); });
+FMc('G2 shadowClip=0.28 边界放行', ()=>{ assert.strictEqual(_recommendFilter(baseA({shadowClip:0.28,mean:70,lightScore:0.5}),baseSig()).filter,'night'); });
+FMc('G1 sharpness=24 已糊 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({sharpness:24,mean:70,lightScore:0.5}),baseSig()).filter,null); });
+FMc('沉默：高饱和人像正常光 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.3,mean:130}),baseSig({personScore:0.9})).filter,null); });
+FMc('沉默：亮景 sat=0.05 mean=150 → mono', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.05,mean:150}),baseSig()).filter,'mono'); });
+FMc('沉默：manmade 高但非黄昏 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:130,manmadeScore:0.8,waterScore:0.1}),baseSig({scene:'architecture'})).filter,null); });
+FMc('R2C mean=105 低限 → portrait-cool', ()=>{ assert.strictEqual(_recommendFilter(baseA({wb:-0.06,mean:105}),baseSig({personScore:0.9})).filter,'portrait-cool'); });
+FMc('R2C wb=-0.05 严格不达标 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({wb:-0.05,mean:120}),baseSig({personScore:0.9})).filter,null); });
+FMc('R4 多人 pc=1 仍 sunset', ()=>{ assert.strictEqual(_recommendFilter(baseA({warmRatio:0.5,wb:0.1,mean:120}),baseSig({personCount:1,scene:'landscape'})).filter,'sunset'); });
+FMc('G4 mean=49 近纯黑 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:49,lightScore:0.9}),baseSig()).filter,null); });
+FMc('R1 mean=84.9 仍 night', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:84.9,lightScore:0.9}),baseSig()).filter,'night'); });
+FMc('沉默：food 黄昏暖 → 不推 sunset', ()=>{ assert.strictEqual(_recommendFilter(baseA({warmRatio:0.5,wb:0.1,mean:120}),baseSig({scene:'美食'})).filter,null); });
+FMc('沉默：face 光位对称不推 mono', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.1,mean:120}),baseSig({personScore:0.9})).filter,null); });
+FMc('R3 mean=74.9 不足 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.03,mean:74.9,lightScore:0.5}),baseSig()).filter,'night'); });
+FMc('G3 sat=0.39 过浓 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.39,mean:120}),baseSig()).filter,null); });
+FMc('沉默：waterScore=0.30 边界 R4 仍放行', ()=>{ assert.strictEqual(_recommendFilter(baseA({warmRatio:0.5,wb:0.1,mean:120,waterScore:0.3}),baseSig({scene:'landscape'})).filter,'sunset'); });
+FMc('R2A 低置信人 ps=0.59 不推', ()=>{ assert.strictEqual(_recommendFilter(sideLightA({mean:120}),baseSig({personScore:0.59})).filter,null); });
+
 /* -------------------- 汇总 -------------------- */
 if (process.exitCode) {
   console.log(`\n有测试失败：已通过 ${passed} 个`);
 } else {
-  console.log(`\n✓ 单元测试全部通过：${passed}/${passed}`);
+  console.log(`\n✓ 单元测试全部通过：${passed}/${passed}（滤镜矩阵用例 ${_fm} 条）`);
 }
