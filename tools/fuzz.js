@@ -1,5 +1,5 @@
 /* 临时审查脚本：对纯函数做属性/模糊测试，找真实健壮性问题。 */
-const { _deriveCrop, _smartCrop, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg } = require('../tests/pure-functions.js');
+const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg } = require('../tests/pure-functions.js');
 
 let issues = 0;
 function bad(msg) { console.log('ISSUE:', msg); issues++; }
@@ -196,6 +196,94 @@ for (let i=0;i<1000000;i++){
     }
   }
   if(JSON.stringify(_aspectCrop(crop,info))!==JSON.stringify(out)) bad('aspectCrop 不稳定');
+}
+
+// 10. _classifyYaw: 随机（含畸形/缺點/重叠）人脸关键点，检查状态合法、方向∈{-1,0,1}、不抛错、确定性、state 与鼻眼比一致（100 万次）
+function rndFaceYaw(){
+  if(Math.random()<0.35){
+    // 畸形/退化：点数随机、个别点缺失或坐标越界
+    const n=Math.floor(rnd(0,7));
+    const arr=[];
+    for(let i=0;i<n;i++){
+      if(Math.random()<0.2){ arr.push(null); }
+      else { arr.push({x:rnd(-0.2,1.2), y:rnd(-0.2,1.2)}); }
+    }
+    return arr;
+  }
+  const fx=rnd(0.25,0.75), span=rnd(0.04,0.14);
+  const yawO=rnd(-0.7,0.7);              // 鼻偏航系数
+  const noseX=fx+yawO*span;
+  const earHalf=rnd(0.12,0.22);
+  const earR=fx-earHalf+rnd(-0.02,0.02); // 画面右耳（解剖学右，偏左）
+  const earL=fx+earHalf+rnd(-0.02,0.02);
+  // 朝右时左耳（画面右）离鼻近、右耳远；用 yawO 同向扰动耳距
+  return [
+    {x:fx-span/2,y:rnd(0.35,0.45)},{x:fx+span/2,y:rnd(0.35,0.45)},
+    {x:noseX,y:rnd(0.42,0.48)},{x:fx,y:rnd(0.48,0.54)},
+    {x:earR+yawO*0.03,y:rnd(0.38,0.44)},{x:earL+yawO*0.03,y:rnd(0.38,0.44)}
+  ];
+}
+for(let i=0;i<1000000;i++){
+  const lm=rndFaceYaw();
+  let r;
+  try{ r=_classifyYaw(lm); }catch(e){ bad('classifyYaw 抛错: '+e.message); continue; }
+  if(!r||typeof r.dir!=='number'||[-1,0,1].indexOf(r.dir)===-1) bad('classifyYaw dir 非法: '+JSON.stringify(r));
+  if(['none','frontal','three-quarter','profile'].indexOf(r.state)===-1) bad('classifyYaw state 非法: '+r.state);
+  if(typeof r.r!=='number'||!isFinite(r.r)) bad('classifyYaw r 非数值');
+  if(r.dir!==0 && r.state!=='three-quarter' && r.state!=='profile') bad('classifyYaw dir≠0 但 state='+r.state);
+  if(r.state==='frontal'&&r.dir!==0) bad('classifyYaw frontal 但 dir≠0');
+  if(r.state==='none'&&r.dir!==0) bad('classifyYaw none 但 dir≠0');
+  // 复算鼻眼比（仅在眼点有效且不重叠时），核对 state 分档
+  if(Array.isArray(lm)&&lm[0]&&lm[1]&&lm[2]&&typeof lm[0].x==='number'&&typeof lm[1].x==='number'&&typeof lm[2].x==='number'){
+    const espan=Math.abs(lm[0].x-lm[1].x);
+    if(espan>1e-4){
+      const ar=Math.abs((lm[2].x-(lm[0].x+lm[1].x)/2)/espan);
+      const expectS=ar<0.10?'frontal':(ar<0.35?'three-quarter':'profile');
+      if(r.state!==expectS) bad('classifyYaw 分档不符 state='+r.state+' 期望='+expectS+' ar='+ar);
+    } else if(r.state!=='none'){ bad('classifyYaw 眼重叠却非 none'); }
+  } else if(r.state!=='none'){ bad('classifyYaw 点不足却非 none'); }
+  if(JSON.stringify(_classifyYaw(lm))!==JSON.stringify(r)) bad('classifyYaw 不稳定');
+}
+
+// 11. _gazeGuard: 随机 crop/info，触发时检查只改水平单侧、T/B 不变、单侧≤15%、窗宽≥0.62、不切身体/脸、确定性（100 万次）
+for(let i=0;i<1000000;i++){
+  const L=Math.floor(rnd(0,18)),R=Math.floor(rnd(0,18)),T=Math.floor(rnd(0,12)),B=Math.floor(rnd(0,12));
+  const crop=[L,T,R,B];
+  const faceCount=Math.random()<0.75?1:Math.floor(rnd(2,4));
+  const isCloseUp=Math.random()<0.2;
+  const dirPick=Math.random();
+  const yaw=dirPick<0.4?{state:'three-quarter',dir:1}:dirPick<0.8?{state:'three-quarter',dir:-1}:{state:'frontal',dir:0};
+  const info={isCloseUp:isCloseUp,faceCount:faceCount,yaw:yaw,faceCx:rnd(0.2,0.8)};
+  const fx=info.faceCx;
+  if(Math.random()<0.8){ info.pl=Math.max(0,fx-rnd(0.1,0.3)); info.pr=Math.min(1,fx+rnd(0.1,0.3)); }
+  if(Math.random()<0.6){ info.fl=Math.max(0,info.pl!==undefined?info.pl:fx-0.1); info.fr=Math.min(1,info.pr!==undefined?info.pr:fx+0.1); }
+  let out;
+  try{ out=_gazeGuard(crop,info); }catch(e){ bad('gazeGuard 抛错: '+e.message); continue; }
+  if(out.length!==4){ bad('gazeGuard 长度!=4'); continue; }
+  out.forEach(v=>{ if(!validNum(v)) bad('gazeGuard NaN'); if(v<0||v>60) bad('gazeGuard 越界: '+v); });
+  const fired=(out[0]+out[1]+out[2]+out[3])-(crop[0]+crop[1]+crop[2]+crop[3])>0;
+  if(fired){
+    if(isCloseUp||faceCount!==1||yaw.dir===0) bad('gazeGuard 不该触发却触发');
+    if(out[1]!==crop[1]||out[3]!==crop[3]) bad('gazeGuard 改动了 T/B');
+    const dL=out[0]-crop[0], dR=out[2]-crop[2];
+    if(dL>0&&dR>0) bad('gazeGuard 水平双侧裁切（对称乱裁）');
+    if(dL>15||dR>15) bad('gazeGuard 单侧超 15%: '+dL+'/'+dR);
+    if(dL<0||dR<0) bad('gazeGuard 出现反向收缩（应只增）');
+    if(yaw.dir>0&&!(dL>0)) bad('gazeGuard 脸朝右却未裁左侧');
+    if(yaw.dir<0&&!(dR>0)) bad('gazeGuard 脸朝左却未裁右侧');
+    const fW=1-out[0]/100-out[2]/100;
+    if(fW<0.62-1e-9) bad('gazeGuard 窗宽<0.62: '+fW);
+    if(typeof info.pl==='number'&&out[0]/100>info.pl-0.02+1e-9) bad('gazeGuard 切身体左');
+    if(typeof info.pr==='number'&&out[2]/100>1-info.pr-0.02+1e-9) bad('gazeGuard 切身体右');
+    if(typeof info.fl==='number'&&out[0]/100>info.fl-0.01+1e-9) bad('gazeGuard 切脸左');
+    if(typeof info.fr==='number'&&out[2]/100>1-info.fr-0.01+1e-9) bad('gazeGuard 切脸右');
+    // 方向改善：朝右脸应在窗内左移、朝左右移
+    const fxn=(fx-out[0]/100)/Math.max(0.01,1-out[0]/100-out[2]/100);
+    const fxn0=(fx-crop[0]/100)/Math.max(0.01,1-crop[0]/100-crop[2]/100);
+    if(yaw.dir>0&&!(fxn<fxn0-0.03-1e-9)) bad('gazeGuard 朝右脸未左移');
+    if(yaw.dir<0&&!(fxn>fxn0+0.03+1e-9)) bad('gazeGuard 朝左脸未右移');
+  }
+  if(JSON.stringify(_gazeGuard(crop,info))!==JSON.stringify(out)) bad('gazeGuard 不稳定');
 }
 
 console.log(issues === 0 ? '\n✓ 模糊测试未发现问题' : `\n发现 ${issues} 个问题`);

@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _smartCrop, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg } = require('./pure-functions.js');
+const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -441,6 +441,118 @@ test('aspectCrop: 小主体（<1%）忽略，大主体贴边会被切→放弃',
 test('aspectCrop: 确定性——同输入两次结果一致', () => {
   const i = acInfo({ aspect: 1.5, horizonOk: true, ratio: 0.4, boxes: [{ b: [0.25, 0.2, 0.75, 0.7] }] });
   assert.deepStrictEqual(_aspectCrop([0, 0, 0, 0], i), _aspectCrop([0, 0, 0, 0], i));
+});
+
+/* -------------------- v8.6.0 _classifyYaw 视线朝向 -------------------- */
+function mkFace6(noseX, earR, earL) {
+  return [{ x: 0.46, y: .4 }, { x: 0.54, y: .4 }, { x: noseX, y: .45 }, { x: 0.5, y: .5 },
+  { x: earR, y: .42 }, { x: earL, y: .42 }];
+}
+test('classifyYaw: 正面（鼻在眼中点）→ frontal dir=0', () => {
+  const r = _classifyYaw(mkFace6(0.50, 0.42, 0.58));
+  assert.strictEqual(r.state, 'frontal'); assert.strictEqual(r.dir, 0);
+});
+test('classifyYaw: 近正面（|r|<0.10）→ frontal', () => {
+  const r = _classifyYaw(mkFace6(0.506, 0.42, 0.58));
+  assert.strictEqual(r.state, 'frontal');
+});
+test('classifyYaw: 脸朝右 3/4（鼻偏右、耳距同号）→ dir=+1', () => {
+  const r = _classifyYaw(mkFace6(0.52, 0.40, 0.55));
+  assert.strictEqual(r.state, 'three-quarter'); assert.strictEqual(r.dir, 1);
+});
+test('classifyYaw: 脸朝左 3/4 → dir=-1', () => {
+  const r = _classifyYaw(mkFace6(0.48, 0.45, 0.60));
+  assert.strictEqual(r.state, 'three-quarter'); assert.strictEqual(r.dir, -1);
+});
+test('classifyYaw: 鼻眼比与耳距符号矛盾 → dir=0（不判朝向）', () => {
+  // 鼻偏右（rNose>0），但人为让耳距也偏成"朝左"：右耳近、左耳远
+  const r = _classifyYaw([{ x: .46, y: .4 }, { x: .54, y: .4 }, { x: .52, y: .45 },
+    { x: .5, y: .5 }, { x: .51, y: .4 }, { x: .59, y: .4 }]);
+  assert.strictEqual(r.dir, 0);
+});
+test('classifyYaw: 点不足（<3）→ none', () => {
+  assert.strictEqual(_classifyYaw([{ x: .46, y: .4 }, { x: .5, y: .45 }]).state, 'none');
+});
+test('classifyYaw: 非数组/空 → none', () => {
+  assert.strictEqual(_classifyYaw(null).state, 'none');
+  assert.strictEqual(_classifyYaw([]).state, 'none');
+});
+test('classifyYaw: 两眼重叠（espan≈0，纯侧）→ none', () => {
+  const r = _classifyYaw([{ x: .5, y: .4 }, { x: .5, y: .4 }, { x: .5, y: .45 },
+    { x: .5, y: .5 }, { x: .4, y: .42 }, { x: .6, y: .42 }]);
+  assert.strictEqual(r.state, 'none');
+});
+test('classifyYaw: 大偏航（|r|>0.35）→ profile', () => {
+  // 鼻移到 0.55：rNose=(0.55-0.5)/0.08=0.625>0.35；耳距同号
+  const r = _classifyYaw(mkFace6(0.55, 0.38, 0.52));
+  assert.strictEqual(r.state, 'profile'); assert.strictEqual(r.dir, 1);
+});
+test('classifyYaw: 缺耳点时退用鼻眼比', () => {
+  const face = [{ x: .46, y: .4 }, { x: .54, y: .4 }, { x: .52, y: .45 }, { x: .5, y: .5 }];
+  const r = _classifyYaw(face);
+  assert.strictEqual(r.state, 'three-quarter'); assert.strictEqual(r.dir, 1);
+});
+
+/* -------------------- v8.6.0 _gazeGuard nose room 视线留白 -------------------- */
+function gzInfo(o) {
+  return Object.assign({ isCloseUp: false, faceCount: 1, yaw: { state: 'three-quarter', dir: 1 }, faceCx: 0.42 }, o);
+}
+test('gazeGuard: 脸朝右、略偏右 → 裁左单侧（脸到左三分、右留白）', () => {
+  const out = _gazeGuard([0, 0, 0, 0], gzInfo({ yaw: { state: 'three-quarter', dir: 1 }, faceCx: 0.42 }));
+  assert.strictEqual(out[0], 13); assert.strictEqual(out[1], 0); assert.strictEqual(out[2], 0); assert.strictEqual(out[3], 0);
+});
+test('gazeGuard: 脸朝左、略偏左 → 裁右单侧', () => {
+  const out = _gazeGuard([0, 0, 0, 0], gzInfo({ yaw: { state: 'three-quarter', dir: -1 }, faceCx: 0.58 }));
+  assert.strictEqual(out[0], 0); assert.strictEqual(out[2], 13);
+});
+test('gazeGuard: 正面（dir=0）→ 不裁', () => {
+  assert.deepStrictEqual(_gazeGuard([0, 0, 0, 0], gzInfo({ yaw: { state: 'frontal', dir: 0 }, faceCx: 0.42 })), [0, 0, 0, 0]);
+});
+test('gazeGuard: 朝向不可信（dir=0）→ 不裁', () => {
+  assert.deepStrictEqual(_gazeGuard([0, 0, 0, 0], gzInfo({ yaw: { state: 'three-quarter', dir: 0 }, faceCx: 0.42 })), [0, 0, 0, 0]);
+});
+test('gazeGuard: 多人（faceCount≠1）→ 不裁', () => {
+  assert.deepStrictEqual(_gazeGuard([0, 0, 0, 0], gzInfo({ faceCount: 2 })), [0, 0, 0, 0]);
+});
+test('gazeGuard: 特写 → 不裁', () => {
+  assert.deepStrictEqual(_gazeGuard([0, 0, 0, 0], gzInfo({ isCloseUp: true })), [0, 0, 0, 0]);
+});
+test('gazeGuard: 居中脸朝右需裁超 15% 上限 → 放弃', () => {
+  assert.deepStrictEqual(_gazeGuard([0, 0, 0, 0], gzInfo({ faceCx: 0.5 })), [0, 0, 0, 0]);
+});
+test('gazeGuard: 脸已在目标位置（朝右脸在 0.33 更左）→ 不裁', () => {
+  assert.deepStrictEqual(_gazeGuard([0, 0, 0, 0], gzInfo({ faceCx: 0.33 })), [0, 0, 0, 0]);
+});
+test('gazeGuard: 身体会被切（身后是身体、左缘伸到裁切线内）→ 放弃', () => {
+  // 朝右裁左到 ~0.134；身体左缘 pl=0.10 落在裁切线内（会切到身后背部/肩），放弃
+  const out = _gazeGuard([0, 0, 0, 0], gzInfo({ faceCx: 0.42, pl: 0.10, pr: 0.5 }));
+  assert.deepStrictEqual(out, [0, 0, 0, 0]);
+});
+test('gazeGuard: 窗宽不足（<0.62）→ 放弃', () => {
+  // 传入已很窄的 crop（L=0.30），再裁左使窗宽跌破 0.62
+  const out = _gazeGuard([30, 0, 0, 0], gzInfo({ faceCx: 0.60, pl: 0.55, pr: 0.68 }));
+  assert.deepStrictEqual(out, [30, 0, 0, 0]);
+});
+test('gazeGuard: 改善量过小（<4%）→ 不裁', () => {
+  // 朝右目标 0.33，脸在 0.35（轻微），需裁 L=(0.35-0.33)/0.67=0.03（裁3%，<4% 放弃）
+  assert.deepStrictEqual(_gazeGuard([0, 0, 0, 0], gzInfo({ faceCx: 0.35 })), [0, 0, 0, 0]);
+});
+test('gazeGuard: 保留前序 T/B（竖幅/宽幅已设上下），只改水平', () => {
+  const out = _gazeGuard([0, 8, 0, 6], gzInfo({ faceCx: 0.42, pl: 0.35, pr: 0.5 }));
+  assert.strictEqual(out[1], 8); assert.strictEqual(out[3], 6); assert.strictEqual(out[0], 13);
+});
+test('gazeGuard: 脸框（fl/fr）会被切 → 放弃', () => {
+  // 朝右裁左到 ~0.134；身体默认安全，但脸框左缘 fl=0.10（左耳/后脑伸到身后）落在裁切线内，放弃
+  const out = _gazeGuard([0, 0, 0, 0], gzInfo({ faceCx: 0.42, fl: 0.10, fr: 0.5 }));
+  assert.deepStrictEqual(out, [0, 0, 0, 0]);
+});
+test('gazeGuard: 确定性——同输入两次一致', () => {
+  const i = gzInfo({ faceCx: 0.42 });
+  assert.deepStrictEqual(_gazeGuard([0, 0, 0, 0], i), _gazeGuard([0, 0, 0, 0], i));
+});
+test('gazeGuard: 非法输入（crop 长度错/无 info）→ 原样', () => {
+  assert.deepStrictEqual(_gazeGuard([1, 2], gzInfo()), [1, 2]);
+  assert.deepStrictEqual(_gazeGuard([0, 0, 0, 0], null), [0, 0, 0, 0]);
 });
 
 /* -------------------- 汇总 -------------------- */

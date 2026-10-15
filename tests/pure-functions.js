@@ -47,6 +47,73 @@
       return [L,T,R,B];
     }
 
+    function _classifyYaw(lm){
+      if(!Array.isArray(lm)||lm.length<3) return {state:'none',dir:0,r:0};
+      var e0=lm[0],e1=lm[1],nose=lm[2];
+      if(!e0||!e1||!nose||typeof e0.x!=="number"||typeof e1.x!=="number"||typeof nose.x!=="number") return {state:'none',dir:0,r:0};
+      var emid=(e0.x+e1.x)/2;
+      var espan=Math.abs(e0.x-e1.x);
+      if(!(espan>1e-4)) return {state:'none',dir:0,r:0};   // 纯侧面两眼投影重叠，鼻眼比失效
+      var rNose=(nose.x-emid)/espan;
+      var dir=0;
+      if(lm[4]&&lm[5]&&typeof lm[4].x==="number"&&typeof lm[5].x==="number"){
+        var dR=Math.abs(nose.x-lm[4].x), dL=Math.abs(nose.x-lm[5].x);
+        var rEar=Math.log((dR+1e-6)/(dL+1e-6));
+        if(Math.abs(rEar)>1e-6){ dir=(Math.sign(rNose)===Math.sign(rEar))?Math.sign(rNose):0; } // 两法符号矛盾→不判
+        else { dir=Math.sign(rNose); }
+      } else { dir=Math.sign(rNose); }
+      var ar=Math.abs(rNose);
+      if(ar<0.10) return {state:'frontal',dir:0,r:rNose};
+      if(dir===0) return {state:ar<0.35?'three-quarter':'profile',dir:0,r:rNose}; // 朝向不可信→不做 nose room
+      return {state:ar<0.35?'three-quarter':'profile',dir:dir,r:rNose};
+    }
+
+    function _gazeGuard(crop,info){
+      if(!crop||crop.length!==4||!info) return crop;
+      if(info.isCloseUp===true) return crop;
+      if(info.faceCount!==1) return crop;
+      var yaw=info.yaw;
+      if(!yaw||yaw.dir===0||yaw.state==='frontal'||yaw.state==='none') return crop;
+      var tx=yaw.dir>0?0.33:0.67;
+      var fx=(typeof info.faceCx==="number"&&isFinite(info.faceCx))?info.faceCx:0.5;
+      fx=Math.max(0,Math.min(1,fx));
+      var L0=crop[0]/100,T0=crop[1]/100,R0=crop[2]/100,B0=crop[3]/100;
+      var W0=Math.max(0.01,1-L0-R0);
+      var fxNow=(fx-L0)/W0;
+      if(yaw.dir>0){ if(fxNow<=tx+0.03) return crop; } else { if(fxNow>=tx-0.03) return crop; } // 已满足则不裁
+      var CAP=0.15,WMIN=0.62,nL=L0,nR=R0;
+      if(yaw.dir>0){
+        var Ln=(fx-tx+tx*R0)/(1-tx);
+        if(!(Ln>L0)||(Ln-L0)<0.04) return crop;
+        if(Ln-L0>CAP) return crop;
+        nL=Ln;
+      }else{
+        var Rn=1-L0-(fx-L0)/tx;
+        if(!(Rn>R0)||(Rn-R0)<0.04) return crop;
+        if(Rn-R0>CAP) return crop;
+        nR=Rn;
+      }
+      var pl=(typeof info.pl==="number"&&isFinite(info.pl))?info.pl:fx-0.06;
+      var pr=(typeof info.pr==="number"&&isFinite(info.pr))?info.pr:fx+0.06;
+      var wl=nL,wr=1-nR;
+      if(pl<wl-0.02||pr>wr+0.02) return crop;
+      if(typeof info.fl==="number"&&typeof info.fr==="number"){
+        if(info.fl<wl-0.01||info.fr>wr+0.01) return crop;
+      }
+      if(1-nL-nR<WMIN) return crop;
+      var oL=Math.floor(nL*100),oR=Math.floor(nR*100);
+      var fW=1-oL/100-oR/100;
+      if(fW<WMIN) return crop;
+      if(oL/100>pl-0.02||oR/100>1-pr-0.02) return crop;
+      if(typeof info.fl==="number"&&typeof info.fr==="number"){
+        if(oL/100>info.fl-0.01||oR/100>1-info.fr-0.01) return crop;
+      }
+      var fxn=(fx-oL/100)/Math.max(0.01,1-oL/100-oR/100);
+      if(yaw.dir>0){ if(!(fxn<fxNow-0.03)) return crop; } else { if(!(fxn>fxNow+0.03)) return crop; }
+      if(oL+oR-(crop[0]+crop[2])<4) return crop;
+      return [oL,crop[1],oR,crop[3]]; // 只改水平单侧；T/B 原样保留，不与竖幅/宽幅通道冲突
+    }
+
     function _jointGuard(crop, pose, isPort){
       if(!isPort || !crop || crop.length!==4 || !(crop[0]||crop[1]||crop[2]||crop[3])) return crop;
       if(!pose || pose.length<29) return crop;
@@ -286,4 +353,4 @@
           }catch(e){ return {deg:0,conf:0}; }
         }
 
-module.exports = { _deriveCrop, _smartCrop, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg };
+module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg };
