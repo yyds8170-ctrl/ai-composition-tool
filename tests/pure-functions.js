@@ -114,6 +114,78 @@
       return [oL,crop[1],oR,crop[3]]; // 只改水平单侧；T/B 原样保留，不与竖幅/宽幅通道冲突
     }
 
+    function _edgeSnap(crop,energy,info){
+      // v8.7.0 边缘能量吸附：只对【已决定裁切】的边，在目标位 ±5% 内把刀缝微移到最低能量（最干净）的列/行，
+      // 让刀缝避开主体轮廓/强边缘/关节，藏进旁边的空白或平滑区。保守原则——只允许“少裁”（刀向画面外移动、
+      // 远离主体，保留窗只增不减），绝不新增裁切边（L=0 不动）、绝不外扩多裁；主体/脸安全带、窗宽/高/面积硬限不达标，
+      // 或邻域没有“明显更干净且本身能量不高”的间隙时原样返回（宁缺毋滥）。裁切量一律 floor（只少裁）。
+      // crop=[L,T,R,B] 百分比整数（保留窗=左L/上T/右R/下B）；energy={col:[..],row:[..],w,h}（列/行归一化能量 0~1）。
+      if(!crop||crop.length!==4||!energy||!Array.isArray(energy.col)||!Array.isArray(energy.row)) return crop;
+      var L=crop[0],T=crop[1],R=crop[2],B=crop[3];
+      if(!(L||T||R||B)) return crop;
+      var colArr=energy.col,rowArr=energy.row;
+      var W=Math.min(energy.w||colArr.length, colArr.length), H=Math.min(energy.h||rowArr.length, rowArr.length);
+      if(!(W>2)||!(H>2)) return crop; // 空/过短能量图无法定位，原样返回
+      info=info||{};
+      var SNAP=0.05, GAIN=0.10, ECLEAN=0.50, WMIN=0.62, HMIN=0.62, AREA=0.50, PAD=0.02, FPAD=0.01;
+      function ok(nL,nT,nR,nB){
+        var wl=nL/100,wt=nT/100,wr=1-nR/100,wb=1-nB/100;
+        if(wr-wl<WMIN||wb-wt<HMIN) return false;
+        if((wr-wl)*(wb-wt)<AREA) return false;
+        if(wr<=wl||wb<=wt) return false;
+        if(typeof info.pl==="number"&&wl>info.pl-PAD) return false;
+        if(typeof info.pr==="number"&&wr<info.pr+PAD) return false;
+        if(typeof info.pt==="number"&&wt>info.pt-PAD) return false;
+        if(typeof info.pb==="number"&&wb<info.pb+PAD) return false;
+        if(typeof info.fl==="number"&&wl>info.fl-FPAD) return false;
+        if(typeof info.fr==="number"&&wr<info.fr+FPAD) return false;
+        if(typeof info.ft==="number"&&wt>info.ft-FPAD) return false;
+        if(typeof info.fb==="number"&&wb<info.fb+FPAD) return false;
+        return true;
+      }
+      // side: 0 左 / 1 上 / 2 右 / 3 下；只朝“少裁”方向（刀位向画面外移动）搜索
+      function move(side){
+        var isCol=(side===0||side===2);
+        var arr=isCol?colArr:rowArr;
+        var N=isCol?W:H;
+        var cur=(side===0?L:side===1?T:side===2?R:B);
+        if(!(cur>0)) return cur;
+        var curPos=(side===0?L/100:side===1?T/100:side===2?1-R/100:1-B/100);
+        var curIdx=Math.round(curPos*N);
+        if(curIdx<0)curIdx=0; if(curIdx>N-1)curIdx=N-1;
+        var curE=arr[curIdx]||0;
+        var half=Math.round(SNAP*N);
+        var dMin=(side===0||side===1)?-half:0;
+        var dMax=(side===0||side===1)?0:half;
+        var bestI=curIdx,bestE=curE;
+        for(var d=dMin;d<=dMax;d++){
+          if(d===0) continue;
+          var idx=curIdx+d; if(idx<0||idx>=N) continue;
+          var e=arr[idx]; if(e>=bestE) continue;
+          var nL=L,nT=T,nR=R,nB=B;
+          // 用整数运算消浮点（右/下从边缘数列数）；idx 已限在少裁方向，配合下方“只少裁”双保险
+          if(side===0)nL=Math.round(idx*100/N);
+          else if(side===2)nR=Math.round((N-idx)*100/N);
+          else if(side===1)nT=Math.round(idx*100/N);
+          else nB=Math.round((N-idx)*100/N);
+          if(nL>L||nT>T||nR>R||nB>B) continue; // 双保险：只少裁
+          if(!ok(nL,nT,nR,nB)) continue;
+          bestI=idx;bestE=e;
+        }
+        if(bestI===curIdx||!(curE-bestE>=GAIN)||!(bestE<ECLEAN)) return cur;
+        var out;
+        if(side===0)out=Math.round(bestI*100/N);
+        else if(side===2)out=Math.round((N-bestI)*100/N);
+        else if(side===1)out=Math.round(bestI*100/N);
+        else out=Math.round((N-bestI)*100/N);
+        return Math.max(0,out);
+      }
+      var nL=L>0?move(0):L,nT=T>0?move(1):T,nR=R>0?move(2):R,nB=B>0?move(3):B;
+      if(nL>L||nT>T||nR>R||nB>B) return crop;
+      if(!ok(nL,nT,nR,nB)) return crop;
+      return [nL,nT,nR,nB];
+    }
+
     function _jointGuard(crop, pose, isPort){
       if(!isPort || !crop || crop.length!==4 || !(crop[0]||crop[1]||crop[2]||crop[3])) return crop;
       if(!pose || pose.length<29) return crop;
@@ -353,4 +425,4 @@
           }catch(e){ return {deg:0,conf:0}; }
         }
 
-module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg };
+module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg };

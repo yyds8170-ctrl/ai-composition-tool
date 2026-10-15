@@ -1,5 +1,5 @@
 /* 临时审查脚本：对纯函数做属性/模糊测试，找真实健壮性问题。 */
-const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg } = require('../tests/pure-functions.js');
+const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg } = require('../tests/pure-functions.js');
 
 let issues = 0;
 function bad(msg) { console.log('ISSUE:', msg); issues++; }
@@ -284,6 +284,56 @@ for(let i=0;i<1000000;i++){
     if(yaw.dir<0&&!(fxn>fxn0+0.03+1e-9)) bad('gazeGuard 朝左脸未右移');
   }
   if(JSON.stringify(_gazeGuard(crop,info))!==JSON.stringify(out)) bad('gazeGuard 不稳定');
+}
+
+// 12. _edgeSnap: 随机 crop/energy/info（含空能量畸形），断言只少裁（窗只增、不新增边、越界）、不抛错、不切窗内主体/脸、确定性（100 万次）
+for(let i=0;i<1000000;i++){
+  const W=Math.floor(rnd(60,260)), H=Math.floor(rnd(60,260));
+  let col,row;
+  if(Math.random()<0.05){ col=[]; } else { col=[]; for(let x=0;x<W;x++) col.push(Math.random()<0.15?rnd(0,0.25):rnd(0.4,1)); }
+  if(Math.random()<0.05){ row=[]; } else { row=[]; for(let y=0;y<H;y++) row.push(Math.random()<0.15?rnd(0,0.25):rnd(0.4,1)); }
+  const energy={col:col,row:row,w:W,h:H};
+  const L=Math.floor(rnd(0,20)),R=Math.floor(rnd(0,20)),T=Math.floor(rnd(0,15)),B=Math.floor(rnd(0,15));
+  const crop=[L,T,R,B];
+  const info={};
+  const wl=L/100,wr=1-R/100,wt=T/100,wb=1-B/100;
+  if(wr-wl>0.45&&Math.random()<0.8){
+    const mx=Math.max(0.03,(wr-wl)*0.18);
+    info.pl=wl+rnd(0.02,mx); info.pr=wr-rnd(0.02,mx);
+    if(info.pl>=info.pr){ delete info.pl; delete info.pr; }
+  }
+  if(wb-wt>0.45&&Math.random()<0.8){
+    const my=Math.max(0.03,(wb-wt)*0.18);
+    info.pt=wt+rnd(0.02,my); info.pb=wb-rnd(0.02,my);
+    if(info.pt>=info.pb){ delete info.pt; delete info.pb; }
+  }
+  if(wr-wl>0.5&&wb-wt>0.5&&Math.random()<0.6){
+    info.fl=info.pl!==undefined?info.pl+0.01:wl+0.05;
+    info.fr=info.pr!==undefined?info.pr-0.01:wr-0.05;
+    info.ft=info.pt!==undefined?info.pt+0.01:wt+0.05;
+    info.fb=info.pb!==undefined?info.pb-0.01:wb-0.05;
+    if(info.fl>=info.fr||info.ft>=info.fb){ delete info.fl; delete info.fr; delete info.ft; delete info.fb; }
+  }
+  let out;
+  try{ out=_edgeSnap(crop,energy,info); }catch(e){ bad('edgeSnap 抛错: '+e.message); continue; }
+  if(!Array.isArray(out)||out.length!==4){ bad('edgeSnap 长度!=4'); continue; }
+  out.forEach((v,k)=>{
+    if(!validNum(v)) bad('edgeSnap NaN/非法值');
+    if(v<0||v>60) bad('edgeSnap 越界: '+v);
+    if(v>crop[k]) bad('edgeSnap 边 '+k+' 增大（多裁） in='+crop[k]+' out='+v);
+    if(crop[k]===0&&v!==0) bad('edgeSnap 新增裁切边 '+k);
+  });
+  if((1-out[0]/100-out[2]/100) < (1-crop[0]/100-crop[2]/100)-1e-9) bad('edgeSnap 窗宽缩小');
+  if((1-out[1]/100-out[3]/100) < (1-crop[1]/100-crop[3]/100)-1e-9) bad('edgeSnap 窗高缩小');
+  if(typeof info.pl==='number'&&out[0]/100>info.pl-0.02+1e-9) bad('edgeSnap 切主体左');
+  if(typeof info.pr==='number'&&out[2]/100>1-info.pr-0.02+1e-9) bad('edgeSnap 切主体右');
+  if(typeof info.pt==='number'&&out[1]/100>info.pt-0.02+1e-9) bad('edgeSnap 切主体上');
+  if(typeof info.pb==='number'&&out[3]/100>1-info.pb-0.02+1e-9) bad('edgeSnap 切主体下');
+  if(typeof info.fl==='number'&&out[0]/100>info.fl-0.01+1e-9) bad('edgeSnap 切脸左');
+  if(typeof info.fr==='number'&&out[2]/100>1-info.fr-0.01+1e-9) bad('edgeSnap 切脸右');
+  if(typeof info.ft==='number'&&out[1]/100>info.ft-0.01+1e-9) bad('edgeSnap 切脸上');
+  if(typeof info.fb==='number'&&out[3]/100>1-info.fb-0.01+1e-9) bad('edgeSnap 切脸下');
+  if(JSON.stringify(_edgeSnap(crop,energy,info))!==JSON.stringify(out)) bad('edgeSnap 不稳定');
 }
 
 console.log(issues === 0 ? '\n✓ 模糊测试未发现问题' : `\n发现 ${issues} 个问题`);

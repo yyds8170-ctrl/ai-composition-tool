@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg } = require('./pure-functions.js');
+const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -553,6 +553,73 @@ test('gazeGuard: 确定性——同输入两次一致', () => {
 test('gazeGuard: 非法输入（crop 长度错/无 info）→ 原样', () => {
   assert.deepStrictEqual(_gazeGuard([1, 2], gzInfo()), [1, 2]);
   assert.deepStrictEqual(_gazeGuard([0, 0, 0, 0], null), [0, 0, 0, 0]);
+});
+
+
+/* -------------------- _edgeSnap（v8.7.0 边缘能量吸附） -------------------- */
+function mkEnergy(W, H, low) {
+  const col = new Array(W).fill(0.8), row = new Array(H).fill(0.8);
+  if (low && low.col) for (const k in low.col) col[+k] = low.col[k];
+  if (low && low.row) for (const k in low.row) row[+k] = low.row[k];
+  return { col, row, w: W, h: H };
+}
+test('edgeSnap: 未裁切（全 0）→ 原样', () => {
+  const e = mkEnergy(100, 100, { col: { 11: 0.05 } });
+  assert.deepStrictEqual(_edgeSnap([0, 0, 0, 0], e, {}), [0, 0, 0, 0]);
+});
+test('edgeSnap: 非法输入（crop 长度错/无 energy/无 col）→ 原样', () => {
+  const e = mkEnergy(100, 100);
+  assert.deepStrictEqual(_edgeSnap([1, 2], e, {}), [1, 2]);
+  assert.deepStrictEqual(_edgeSnap([15, 0, 0, 0], null, {}), [15, 0, 0, 0]);
+  assert.deepStrictEqual(_edgeSnap([15, 0, 0, 0], { row: [], w: 0 }, {}), [15, 0, 0, 0]);
+});
+test('edgeSnap: 邻域无更低能量（全高能量）→ 原样', () => {
+  const e = mkEnergy(100, 100);
+  assert.deepStrictEqual(_edgeSnap([15, 0, 0, 0], e, {}), [15, 0, 0, 0]);
+});
+test('edgeSnap: 左边少裁方向有低能量列 → 刀左移、少裁', () => {
+  const e = mkEnergy(100, 100, { col: { 11: 0.05 } });
+  assert.deepStrictEqual(_edgeSnap([15, 0, 0, 0], e, {}), [11, 0, 0, 0]);
+});
+test('edgeSnap: 低能量只在多裁方向（外侧）→ 忽略，不吸附', () => {
+  const e = mkEnergy(100, 100, { col: { 19: 0.05 } });
+  assert.deepStrictEqual(_edgeSnap([15, 0, 0, 0], e, {}), [15, 0, 0, 0]);
+});
+test('edgeSnap: 右边少裁方向低能量 → 刀右移、少裁', () => {
+  const e = mkEnergy(100, 100, { col: { 89: 0.05 } });
+  assert.deepStrictEqual(_edgeSnap([0, 0, 15, 0], e, {}), [0, 0, 11, 0]);
+});
+test('edgeSnap: 上边、下边低能量 → 各向少裁方向内收', () => {
+  const e = mkEnergy(100, 100, { row: { 11: 0.05, 89: 0.05 } });
+  assert.deepStrictEqual(_edgeSnap([0, 15, 0, 15], e, {}), [0, 11, 0, 11]);
+});
+test('edgeSnap: 四边同裁、四边外侧均有低能量 → 四边内收', () => {
+  const e = mkEnergy(100, 100, { col: { 11: 0.05, 89: 0.05 }, row: { 11: 0.05, 89: 0.05 } });
+  assert.deepStrictEqual(_edgeSnap([15, 15, 15, 15], e, {}), [11, 11, 11, 11]);
+});
+test('edgeSnap: 低能量列进入主体安全带 → 拒绝，原样', () => {
+  const e = mkEnergy(100, 100, { col: { 11: 0.05 } });
+  // 主体左缘 pl=0.12，左侧安全带到 0.10；idx=11 刀位 0.11 进入安全带，拒绝
+  assert.deepStrictEqual(_edgeSnap([15, 0, 0, 0], e, { pl: 0.12, pr: 0.9 }), [15, 0, 0, 0]);
+});
+test('edgeSnap: 改善量不足（<0.10）→ 不吸附', () => {
+  const e = mkEnergy(100, 100, { col: { 11: 0.25 } }); // 当前 0.8? 改当前刀位为 0.30
+  e.col[15] = 0.30;
+  assert.deepStrictEqual(_edgeSnap([15, 0, 0, 0], e, {}), [15, 0, 0, 0]);
+});
+test('edgeSnap: 目标位本身能量已不高（0.3）且无更干净缝 → 原样', () => {
+  const e = mkEnergy(100, 100, { col: {} });
+  e.col[15] = 0.30;
+  assert.deepStrictEqual(_edgeSnap([15, 0, 0, 0], e, {}), [15, 0, 0, 0]);
+});
+test('edgeSnap: 只少裁——任何输出边裁切量不超过输入', () => {
+  const e = mkEnergy(100, 100, { col: { 11: 0.05, 89: 0.05 }, row: { 11: 0.05, 89: 0.05 } });
+  const c = [15, 15, 15, 15], out = _edgeSnap(c, e, {});
+  [0, 1, 2, 3].forEach(i => assert.ok(out[i] <= c[i], '边 ' + i + ' 不应增大'));
+});
+test('edgeSnap: 确定性——同输入两次一致', () => {
+  const e = mkEnergy(100, 100, { col: { 11: 0.05 } });
+  assert.deepStrictEqual(_edgeSnap([15, 0, 0, 0], e, {}), _edgeSnap([15, 0, 0, 0], e, {}));
 });
 
 /* -------------------- 汇总 -------------------- */

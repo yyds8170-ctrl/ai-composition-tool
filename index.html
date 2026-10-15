@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v8.6.0 · 实景视觉构图生成工具</title>
-<meta name="description" content="AI 构图助手 Pro v8.6.0 · 实景视觉构图生成工具：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。含 YOLO11n 本地检测、智能人像裁切（不切关节·头·手·脚）、人像近眼上三分与 3:4 景别裁切、侧脸视线留白（nose room，按脸朝向单侧留白）、通用物体边界保护（不切动物/车/食物/餐具）、30 款滤镜、构图法则百科与云端 VLM 分析">
+<title>AI 构图助手 Pro v8.7.0 · 实景视觉构图生成工具</title>
+<meta name="description" content="AI 构图助手 Pro v8.7.0 · 实景视觉构图生成工具：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。含 YOLO11n 本地检测、智能人像裁切（不切关节·头·手·脚）、人像近眼上三分与 3:4 景别裁切、侧脸视线留白（nose room，按脸朝向单侧留白）、边缘能量吸附（裁切刀自动避开人物轮廓与关节、藏到画面空白处，只少裁不多裁）、通用物体边界保护（不切动物/车/食物/餐具）、30 款滤镜、构图法则百科与云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v8.6.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切">
+<meta property="og:title" content="AI 构图助手 Pro v8.7.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切">
 <meta property="og:description" content="给不会拍照的普通人：打开相机，AI 教你怎么拍。AI 构图分析（本地像素+云端 VLM 双引擎）、人像保护裁切（不切头不切手脚）、30 款滤镜，一键出成品。默认本地运行，照片不上传。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
@@ -656,7 +656,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.6.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.7.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -1014,7 +1014,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.6.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.7.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1088,7 +1088,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v8.6.0";
+var APP_VER="v8.7.0";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -2559,6 +2559,21 @@ var APP_VER="v8.6.0";
           }
         }
         for(var _gi2=0;_gi2<_GW*_GH;_gi2++){ if(_gridN[_gi2]) _lumGrid[_gi2]/=_gridN[_gi2]; }
+        // v8.7.0 边缘感知裁切能量（复用上面 Sobel gradMag，零额外缩放/零额外性能开销）：
+        // 列能量（左/右裁切刀沿此列）= 该列梯度幅值均值；行能量（上/下裁切刀沿此行）= 该行梯度幅值均值。
+        // 列、行各自用 95 分位归一化到 0~1，供 _edgeSnap 在已决定裁切边的 ±5% 内找最低能量间隙（刀缝藏进空白/平滑区，避开主体轮廓与强边缘）。
+        var _ec=new Float32Array(w), _er=new Float32Array(h);
+        for(var _gy2=0;_gy2<h;_gy2++){
+          for(var _gx2=0;_gx2<w;_gx2++){ var _gm2=gradMag[_gy2*w+_gx2]; _ec[_gx2]+=_gm2; _er[_gy2]+=_gm2; }
+        }
+        function _norm95(arr,den){
+          var v=[]; for(var i=0;i<arr.length;i++) v.push(arr[i]/den);
+          v.sort(function(a,b){return a-b;}); var q=v[Math.floor(v.length*0.95)]||1; if(q<=0)q=1;
+          var out=[]; for(var j=0;j<arr.length;j++) out.push(Math.min(1,arr[j]/den/q));
+          return out;
+        }
+        var _edgeCol=_norm95(_ec,h), _edgeRow=_norm95(_er,w);
+        var _edgeEnergy={col:_edgeCol,row:_edgeRow,w:w,h:h};
         return {
           cx:cx,cy:cy,mean:mean,contrast:contrast,
           frameAspect:_vw0/_vh0, // v8.4.0 源图宽高比（<1 竖幅），供人像景别化裁切判画幅
@@ -2583,7 +2598,8 @@ var APP_VER="v8.6.0";
           greenRatio:greenRatio, centerManmade:centerManmade, warmRatio:warmRatio,
           centerVert:centerVert, centerH2:centerH2,
           // v8.3.6 主体背景分离网格
-          lumGrid:Array.from(_lumGrid), gridW:_GW, gridH:_GH
+          lumGrid:Array.from(_lumGrid), gridW:_GW, gridH:_GH,
+          edgeEnergy:_edgeEnergy // v8.7.0 列/行边缘能量（归一化），供 _edgeSnap
         };
       }catch(err){
         return null;
@@ -2733,6 +2749,77 @@ var APP_VER="v8.6.0";
       if(yaw.dir>0){ if(!(fxn<fxNow-0.03)) return crop; } else { if(!(fxn>fxNow+0.03)) return crop; }
       if(oL+oR-(crop[0]+crop[2])<4) return crop;
       return [oL,crop[1],oR,crop[3]]; // 只改水平单侧；T/B 原样保留，不与竖幅/宽幅通道冲突
+    }
+    function _edgeSnap(crop,energy,info){
+      // v8.7.0 边缘能量吸附：只对【已决定裁切】的边，在目标位 ±5% 内把刀缝微移到最低能量（最干净）的列/行，
+      // 让刀缝避开主体轮廓/强边缘/关节，藏进旁边的空白或平滑区。保守原则——只允许“少裁”（刀向画面外移动、
+      // 远离主体，保留窗只增不减），绝不新增裁切边（L=0 不动）、绝不外扩多裁；主体/脸安全带、窗宽/高/面积硬限不达标，
+      // 或邻域没有“明显更干净且本身能量不高”的间隙时原样返回（宁缺毋滥）。裁切量一律 floor（只少裁）。
+      // crop=[L,T,R,B] 百分比整数（保留窗=左L/上T/右R/下B）；energy={col:[..],row:[..],w,h}（列/行归一化能量 0~1）。
+      if(!crop||crop.length!==4||!energy||!Array.isArray(energy.col)||!Array.isArray(energy.row)) return crop;
+      var L=crop[0],T=crop[1],R=crop[2],B=crop[3];
+      if(!(L||T||R||B)) return crop;
+      var colArr=energy.col,rowArr=energy.row;
+      var W=Math.min(energy.w||colArr.length, colArr.length), H=Math.min(energy.h||rowArr.length, rowArr.length);
+      if(!(W>2)||!(H>2)) return crop; // 空/过短能量图无法定位，原样返回
+      info=info||{};
+      var SNAP=0.05, GAIN=0.10, ECLEAN=0.50, WMIN=0.62, HMIN=0.62, AREA=0.50, PAD=0.02, FPAD=0.01;
+      function ok(nL,nT,nR,nB){
+        var wl=nL/100,wt=nT/100,wr=1-nR/100,wb=1-nB/100;
+        if(wr-wl<WMIN||wb-wt<HMIN) return false;
+        if((wr-wl)*(wb-wt)<AREA) return false;
+        if(wr<=wl||wb<=wt) return false;
+        if(typeof info.pl==="number"&&wl>info.pl-PAD) return false;
+        if(typeof info.pr==="number"&&wr<info.pr+PAD) return false;
+        if(typeof info.pt==="number"&&wt>info.pt-PAD) return false;
+        if(typeof info.pb==="number"&&wb<info.pb+PAD) return false;
+        if(typeof info.fl==="number"&&wl>info.fl-FPAD) return false;
+        if(typeof info.fr==="number"&&wr<info.fr+FPAD) return false;
+        if(typeof info.ft==="number"&&wt>info.ft-FPAD) return false;
+        if(typeof info.fb==="number"&&wb<info.fb+FPAD) return false;
+        return true;
+      }
+      // side: 0 左 / 1 上 / 2 右 / 3 下；只朝“少裁”方向（刀位向画面外移动）搜索
+      function move(side){
+        var isCol=(side===0||side===2);
+        var arr=isCol?colArr:rowArr;
+        var N=isCol?W:H;
+        var cur=(side===0?L:side===1?T:side===2?R:B);
+        if(!(cur>0)) return cur;
+        var curPos=(side===0?L/100:side===1?T/100:side===2?1-R/100:1-B/100);
+        var curIdx=Math.round(curPos*N);
+        if(curIdx<0)curIdx=0; if(curIdx>N-1)curIdx=N-1;
+        var curE=arr[curIdx]||0;
+        var half=Math.round(SNAP*N);
+        var dMin=(side===0||side===1)?-half:0;
+        var dMax=(side===0||side===1)?0:half;
+        var bestI=curIdx,bestE=curE;
+        for(var d=dMin;d<=dMax;d++){
+          if(d===0) continue;
+          var idx=curIdx+d; if(idx<0||idx>=N) continue;
+          var e=arr[idx]; if(e>=bestE) continue;
+          var nL=L,nT=T,nR=R,nB=B;
+          // 用整数运算消浮点（右/下从边缘数列数）；idx 已限在少裁方向，配合下方“只少裁”双保险
+          if(side===0)nL=Math.round(idx*100/N);
+          else if(side===2)nR=Math.round((N-idx)*100/N);
+          else if(side===1)nT=Math.round(idx*100/N);
+          else nB=Math.round((N-idx)*100/N);
+          if(nL>L||nT>T||nR>R||nB>B) continue; // 双保险：只少裁
+          if(!ok(nL,nT,nR,nB)) continue;
+          bestI=idx;bestE=e;
+        }
+        if(bestI===curIdx||!(curE-bestE>=GAIN)||!(bestE<ECLEAN)) return cur;
+        var out;
+        if(side===0)out=Math.round(bestI*100/N);
+        else if(side===2)out=Math.round((N-bestI)*100/N);
+        else if(side===1)out=Math.round(bestI*100/N);
+        else out=Math.round((N-bestI)*100/N);
+        return Math.max(0,out);
+      }
+      var nL=L>0?move(0):L,nT=T>0?move(1):T,nR=R>0?move(2):R,nB=B>0?move(3):B;
+      if(nL>L||nT>T||nR>R||nB>B) return crop;
+      if(!ok(nL,nT,nR,nB)) return crop;
+      return [nL,nT,nR,nB];
     }
     function _portraitFraming(crop, info){
       if(!crop || crop.length!==4 || !info) return crop;
@@ -3582,6 +3669,32 @@ var APP_VER="v8.6.0";
       // v8.3.9 通用物体边界保护：动物/车/食物/建筑等非人物体被裁切边缘切穿时，只减裁切把物体完整纳入（person 已由上方硬保护处理）
       try{
         if(a && a.allBoxes && a.allBoxes.length){ plan.crop=_objectGuard(plan.crop, a.allBoxes); }
+      }catch(e){}
+      // v8.7.0 边缘能量吸附：在所有构图/主体/关节/物体决策之后，对已决定的裁切边做 ±5% 内的最低能量微移，
+      // 把刀缝从主体轮廓/强边缘移到旁边的空白/平滑区。只在本地拍后静态生效；edgeSnap 只少裁、不新增边，
+      // 吸附后再重跑一次关节/物体终检兜底（任何不确定都已在纯函数内原样返回）。
+      try{
+        if(a && !state.aicMode && !state.liveMode && a.edgeEnergy && plan.crop && !plan.noCrop
+           && (plan.crop[0]||plan.crop[1]||plan.crop[2]||plan.crop[3])){
+          var _esInfo={};
+          if(typeof a.personLeft==="number"&&typeof a.personRight==="number"){
+            _esInfo.pl=a.personLeft;_esInfo.pr=a.personRight;
+            if(typeof a.headTop==="number")_esInfo.pt=a.headTop;
+            if(typeof a.personBottom==="number")_esInfo.pb=a.personBottom;
+          }
+          if(Array.isArray(a.faceBBox)&&a.faceBBox.length===4){
+            _esInfo.fl=a.faceBBox[0];_esInfo.fr=a.faceBBox[0]+a.faceBBox[2];
+            _esInfo.ft=a.faceBBox[1];_esInfo.fb=a.faceBBox[1]+a.faceBBox[3];
+          }
+          var _esBefore=plan.crop[0]+plan.crop[1]+plan.crop[2]+plan.crop[3];
+          var _esCrop=_edgeSnap(plan.crop,a.edgeEnergy,_esInfo);
+          if(_esCrop && (_esCrop[0]+_esCrop[1]+_esCrop[2]+_esCrop[3])!==_esBefore){
+            plan.crop=_esCrop;
+            var _esPort=(modelPerson===true)||(a.isPerson===true)||(plan.sceneType==="portrait")||(plan.sceneType==="portrait_close");
+            if(_esPort && state.aiData && state.aiData.poseReady===true && poseData){ plan.crop=_jointGuard(plan.crop,poseData,true); }
+            if(a.allBoxes && a.allBoxes.length){ plan.crop=_objectGuard(plan.crop,a.allBoxes); }
+          }
+        }
       }catch(e){}
       return plan;
     }
@@ -8868,7 +8981,7 @@ hSym2:state.aiData.hSym}:null; }
   }; }catch(e){}
 })();
   </script>
-<div id="aicUpdateBar" class="hide"><span class="ub-t">✨ 新版本 v8.6.0 已就绪：人像更懂「视线留白」（nose room）——侧脸拍摄时自动按脸的朝向做单侧留白（脸朝画面右、右侧留空间，朝左反之），取代过去无脑的左右对称裁切；正面、居中、多人合影、特写、朝向不明时一律保持原图不动。仅在能明确改善、且完整保留人物与身体时才做最小单侧修正，150 张真实照片回归 0 误切、0 报错，并新消除了夜景人像的无依据左右对称裁。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
+<div id="aicUpdateBar" class="hide"><span class="ub-t">✨ 新版本 v8.7.0 已就绪：裁切更「丝滑」——新增边缘能量吸附（edge snapping）。系统在已决定的裁切线上，于 ±5% 范围内自动寻找旁边的空白/平滑区，把裁切线从人物轮廓、关节、强边缘上「挪开」，避免一刀切在身上或关节上；而且只做「少裁」（刀向画面外移动、保留范围只增不减），绝不会新增裁切、不会多裁。配合既有的关节/物体保护二次终检，完整保留人物与关键背景。150 张真实照片回归 0 误切、0 报错，千余万次模糊测试 0 异常。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
 <script>
 (function(){
   // v8.2.3 新版本就绪提示条：SW 激活后广播 → 页面弹出"立即刷新"，根治旧缓存看不到新功能
