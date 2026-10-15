@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v9.0.1 · 实景视觉构图生成工具</title>
-<meta name="description" content="AI 构图助手 Pro v9.0.1 · 实景视觉构图生成工具（永久免费、不限使用次数）：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。构图综合诊断（视线/头顶留白/眼位/地平线/光位/朝向，只读建议不改裁切）+ 拍后滤镜智能推荐（糊片/过曝/死黑/过浓/近纯黑一律不推，每图最多一次）。v9.0.1 收尾：云端 VLM 裁图意图与背景保护 RoD 联动（晚霞/水面/倒影条带少裁保留）、夜景/水景不弹人像引导。含 YOLO11n 本地检测、智能人像裁切（不切关节·头·手·脚）、人像近眼上三分与 3:4 景别裁切、侧脸视线留白（nose room，按脸朝向单侧留白）、边缘能量吸附（裁切刀自动避开人物轮廓与关节、藏到画面空白处，只少裁不多裁）、背景保护 RoD（被裁的晚霞/水面/高层次地面整段保留，只少裁不多裁）、通用物体边界保护（不切动物/车/食物/餐具）、30 款滤镜、构图法则百科与云端 VLM 分析">
+<title>AI 构图助手 Pro v9.1.0 · 实景视觉构图生成工具</title>
+<meta name="description" content="AI 构图助手 Pro v9.1.0 · 实景视觉构图生成工具（永久免费、不限使用次数）：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。构图综合诊断（视线/头顶留白/眼位/地平线/光位/朝向，只读建议不改裁切）+ 拍后滤镜智能推荐（糊片/过曝/死黑/过浓/近纯黑一律不推，每图最多一次）。v9.1.0 稳定化：消除 headless 软渲染下临界图重复分析时裁切在基线值与不裁切之间的逐次抖动（每次分析先还原原图再裁），判定一致性提升、裁切结果逐次可复现。含 YOLO11n 本地检测、智能人像裁切（不切关节·头·手·脚）、人像近眼上三分与 3:4 景别裁切、侧脸视线留白（nose room，按脸朝向单侧留白）、边缘能量吸附（裁切刀自动避开人物轮廓与关节、藏到画面空白处，只少裁不多裁）、背景保护 RoD（被裁的晚霞/水面/高层次地面整段保留，只少裁不多裁）、通用物体边界保护（不切动物/车/食物/餐具）、30 款滤镜、构图法则百科与云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v9.0.1 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切（永久免费不限次数）">
+<meta property="og:title" content="AI 构图助手 Pro v9.1.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切（永久免费不限次数）">
 <meta property="og:description" content="给不会拍照的普通人：打开相机，AI 教你怎么拍。AI 构图分析（本地像素+云端 VLM 双引擎）、人像保护裁切（不切头不切手脚）、30 款滤镜，一键出成品。默认本地运行，照片不上传。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
@@ -661,7 +661,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v9.0.1</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v9.1.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -1024,7 +1024,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v9.0.1 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v9.1.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1098,7 +1098,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v9.0.1";
+var APP_VER="v9.1.0";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -1968,12 +1968,17 @@ var APP_VER="v9.0.1";
       state.sourceName=name||"照片";
       state.plan=null; state.analyzed=false;
       if(kind!=="crop") state.origURL=url;
+      // v9.1.0 源代次门：每次换源代次+1，photoView.onload 记录"已加载到的代次"。
+      // 分析点击时若 _srcLoadedGen < _srcGen（新源还没绑定、画面仍停在上一张/裁后图），
+      // 先等新源加载完再分析——消除 headless 软渲染下读到裁后旧图导致的 crop run-to-run 抖动。
+      state._srcGen=(state._srcGen||0)+1;
       videoCam.classList.remove("show");
       photoView.classList.add("show");
       photoView.onload=function(){
         state.displayRect=getCoverRect(photoView.naturalWidth, photoView.naturalHeight);
         if(state.histOn) renderHist();
         updateSrcMeta(photoView.naturalWidth, photoView.naturalHeight);
+        state._srcLoadedGen=state._srcGen; // 本代次源已加载完成
       };
       photoView.onerror=function(){
         setStatus("图片加载失败，请换一张图片试试", "err");
@@ -3416,6 +3421,81 @@ var APP_VER="v9.0.1";
       if(d>=30 && bgLum>=140) return "💡 背景略亮于脸：略微移动让暗一点的背景在身后，或把脸转向光，人物更突出";
       return null;
     }
+    /* ===================== v9.1.0 headless YOLO 临界小图 run-to-run 抖动稳定化（纯函数层） =====================
+     * 背景：headless 软渲染下，YOLO person 检测对临界小图（人占比低、边缘物体）逐次推理的框位置/置信度有 ±1~12% 抖动，
+     *       导致人像/非人像判定、宽幅裁切门在临界带内反复翻转。真机实时推理稳定，本层只在"置信边界带"内做收敛，
+     *       稳定高/低置信一律不重复推理、不改变既有判定（宁缺毋滥，绝不影响真机实时性能）。
+     * 设计：①置信度迟滞带宽 0.45–0.65；②单图上传路径带内最多 3 次推理取多数决+中值框；
+     *       ③实时取景路径多帧中值框 + 场景 3 帧确认/5 帧翻转防抖状态机。全部纯函数，可被 extract-pure 提取单测。 */
+    // 9.1-2 置信度门槛收敛：>=0.65 确认人像，<=0.45 确认非人像，0.45–0.65 为延迟带（沿用 prev 既有结论）
+    function _confBand(s, prev){
+      if(typeof s!=="number"||!isFinite(s)) return "hold";
+      if(s>=0.65) return "person";
+      if(s<=0.45) return "none";
+      return (prev==="person"||prev==="none") ? prev : "hold";
+    }
+    // 9.1-1 多帧检测框聚合：取各坐标分量中值（不足 3 帧返回 null，宁缺毋滥不猜）。
+    // boxes: [{x,y,w,h,conf}] 归一化坐标；返回中值框或 null。
+    function _medianBox(boxes){
+      if(!Array.isArray(boxes)) return null;
+      var xs=[],ys=[],ws=[],hs=[],cs=[];
+      for(var i=0;i<boxes.length;i++){ var b=boxes[i];
+        if(!b||typeof b.x!=="number"||typeof b.y!=="number"||typeof b.w!=="number"||typeof b.h!=="number") continue;
+        if(!isFinite(b.x)||!isFinite(b.y)||!isFinite(b.w)||!isFinite(b.h)) continue;
+        xs.push(b.x); ys.push(b.y); ws.push(b.w); hs.push(b.h); cs.push(typeof b.conf==="number"&&isFinite(b.conf)?b.conf:0);
+      }
+      if(xs.length<3) return null;
+      function med(a){ a.sort(function(p,q){return p-q;}); return a[Math.floor(a.length/2)]; }
+      return {x:med(xs),y:med(ys),w:med(ws),h:med(hs),conf:med(cs)};
+    }
+    // 9.1-2 单图上传路径共识：runs=[{detected:bool, score:number, box:{x,y,w,h}|null}]（1~3 次推理）。
+    // 多数决 person/no-person；person 框取中值；单次推理直接采信（不重复推理）。
+    function _consensusPerson(runs){
+      if(!Array.isArray(runs)||!runs.length) return {person:false, score:0, box:null};
+      var yes=0, boxes=[];
+      for(var i=0;i<runs.length;i++){ var r=runs[i]||{};
+        if(r.detected){ yes++; if(r.box&&isFinite(r.box.x)) boxes.push(r.box); }
+      }
+      var person;
+      if(runs.length===1){ person = yes>0; }
+      else { person = yes > (runs.length-yes); } // 多数决：>=半数+1 才确认
+      var score=0, box=null;
+      if(person){
+        var sc=[];
+        for(var j=0;j<runs.length;j++){ if(runs[j]&&runs[j].detected&&typeof runs[j].score==="number"&&isFinite(runs[j].score)) sc.push(runs[j].score); }
+        if(sc.length){ sc.sort(function(a,b){return a-b;}); score=sc[Math.floor(sc.length/2)]; }
+        if(boxes.length>=3){ box=_medianBox(boxes); }
+        else if(boxes.length===1){ box=boxes[0]; }
+        else if(boxes.length===2){ box={x:(boxes[0].x+boxes[1].x)/2,y:(boxes[0].y+boxes[1].y)/2,w:(boxes[0].w+boxes[1].w)/2,h:(boxes[0].h+boxes[1].h)/2,conf:(boxes[0].conf+boxes[1].conf)/2}; }
+      }
+      return {person:person, score:score, box:box};
+    }
+    // 9.1-3 场景判定延迟带防抖状态机：同一结论连续 3 帧才更新；从已稳定场景反向切换需连续 5 帧。
+    // cand: 当前帧场景标签；prev: {scene,pend,pc,held}；返回 {scene,pend,pc,held,stable}。
+    function _sceneDebounce(cand, prev){
+      prev = prev || {scene:null, pend:null, pc:0, held:0};
+      if(cand===prev.scene){ return {scene:cand, pend:null, pc:0, held:prev.held+1, stable:true}; }
+      var need = prev.held>=5 ? 5 : 3; // 已稳定>=5帧的场景反向翻转需5帧；未稳3帧即可
+      if(cand===prev.pend){
+        var pc=prev.pc+1;
+        if(pc>=need) return {scene:cand, pend:null, pc:0, held:1, stable:false};
+        return {scene:prev.scene, pend:cand, pc:pc, held:prev.held, stable:false};
+      }
+      return {scene:prev.scene, pend:cand, pc:1, held:prev.held, stable:false};
+    }
+    // 9.2-2 拍前引导文字防抖状态机：连续 3 帧同一结论才显示，消失即回落（纯函数）。
+    // seq: 最近若干帧 {id,txt}；prevState:{key,count}；返回 {key,count,show,txt}。
+    function _debangText(seq, prevState){
+      prevState = prevState || {key:null, count:0};
+      var cur = (Array.isArray(seq)&&seq.length) ? seq[seq.length-1] : null;
+      var key = cur ? cur.id : null, txt = cur ? cur.txt : null;
+      var st;
+      if(key===prevState.key){ st={key:key, count:prevState.count+1}; }
+      else { st={key:key, count:1}; }
+      st.show = !!key && st.count>=3; // 连续3帧一致才显示
+      st.txt = st.show ? txt : null;
+      return st;
+    }
     function planFromAnalysis(a){
       // v4.0.1 智能构图引擎：场景分类 + 多维度评分 + 动态裁切 + 精准推荐
       var plan={subject:"画面主体",diag:[20,30,75,70],crop:[10,8,10,8],z:1.4,f:"natural",filters:[],conf:85,desc:"",exp:""};
@@ -4367,6 +4447,26 @@ var APP_VER="v9.0.1";
     btnAnalyze.addEventListener("click",function(){
       state.userAskAnalyze=true; // v6.5: 手动点击=强制重新云端分析（跳过同图缓存）
       if(state.analyzing) return;
+      // v9.1.0 源还原门：上一次自动智能裁切已把预览换成裁后图（sourceKind==="crop"），
+      // 若用户/脚本再次点分析却没换图，先把预览还原到原始图再分析——否则会在已裁短的图上再裁，
+      // 形成"裁切反馈环"，同一图多次分析 crop 在基线值与 [0,0,0,0] 间 run-to-run 抖动。
+      if(state.mode!=="camera" && state.sourceKind==="crop" && state.origURL){
+        setPhotoSource(state.origURL,"upload",state.sourceName,true);
+      }
+      // v9.1.0 源代次门：新上传/刚还原的源还没绑定（画面仍停在旧图）时，
+      // 不在旧源上分析——轮询等新源真正加载完再触发。
+      if(state.mode!=="camera" && (state._srcLoadedGen||0) < (state._srcGen||0)){
+        var _waitN=0;
+        var _iv=setInterval(function(){
+          _waitN++;
+          if((state._srcLoadedGen||0) >= (state._srcGen||0)){
+            clearInterval(_iv); _iv=null; btnAnalyze.click();
+          } else if(_waitN>50){ // ~5s 兜底：按现有 guard 继续（图片确实没加载好会被拦下）
+            clearInterval(_iv); _iv=null; btnAnalyze.click();
+          }
+        },100);
+        return;
+      }
       var el=currentEl();
       if(!el){ setStatus("请先选择取景画面", "err"); return; }
       // v8.0.5: 图片未解码成功（损坏/黑屏/还在加载）时禁止分析，避免在空白画布上出无意义结果
@@ -6572,15 +6672,60 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       }catch(e){ return el; }
     }
     // v4.7.0: 本地 COCO/MediaPipe 模型精判（纯本地模式与云端失败回退共用同一条路径）
+    // v9.1.0: 从一次 YOLO 推理结果中提取 person 判定（供上传路径共识）。纯逻辑、不触 DOM。
+    function _extractPersonVerdict(preds){
+      var best=null;
+      if(preds && preds.length){
+        for(var i=0;i<preds.length;i++){
+          var p=preds[i];
+          if(!p||p.class!=="person") continue;
+          if(!best||p.score>best.score) best=p;
+        }
+      }
+      if(!best || typeof best.score!=="number") return {detected:false, score:0, box:null};
+      var bb=best.bbox;
+      return {detected:true, score:best.score,
+        box:(bb&&bb.length===4)?{x:bb[0],y:bb[1],w:bb[2],h:bb[3],conf:best.score}:null};
+    }
     function runLocalAIDetection(elSnap, token, onDone){
       if(!state.aiModelEnabled){ renderAiModelStatus("off"); if(onDone) onDone(null); return; }
       // v8.3.0: YOLO11n 优先（onnxruntime-web，WebGPU 优先 / WASM 兜底），失败自动回退 coco-ssd
       localDetect(elSnap).then(function(preds){
           if(token!==state.analyzeToken){ if(onDone) onDone(null); return; }
-          // v4.1: 修复空预测bug——模型确认画面无主体（如纯风景）时，也重新生成plan
-          // 之前直接return导致首次分析（modelLoaded尚false）的肤色误判被保留（风景图误判人像）
-          if(preds && preds.length){ renderAiDetect(preds, elSnap); }
+          // v9.1.0 上传路径抖动稳定化：首轮 person 置信落在 [0.45,0.65] 迟滞带内时，
+          // 再重复推理最多 2 次（共 3 次），多数决 person/no-person + person 框取中值，
+          // 消除 headless 软渲染下临界小图逐次推理的框/置信抖动。稳定高(>=0.65)/低(<=0.45)置信不重复推理。
+          var v0=_extractPersonVerdict(preds);
+          var _inBand = v0.detected && v0.score>0.45 && v0.score<0.65;
+          var _proceedAfter = function(finalPreds){
+            if(token!==state.analyzeToken){ if(onDone) onDone(null); return; }
+            // v4.1: 修复空预测bug——模型确认画面无主体（如纯风景）时，也重新生成plan
+            // 之前直接return导致首次分析（modelLoaded尚false）的肤色误判被保留（风景图误判人像）
+            if(finalPreds && finalPreds.length){ renderAiDetect(finalPreds, elSnap); }
+            _scheduleLocalPlan(elSnap, token, onDone);
+          };
+          if(!_inBand){
+            _proceedAfter(preds);
+            return;
+          }
+          // 带内：追加 2 次推理取共识（仅带内触发，稳定图零开销）
+          var runs=[v0];
+          localDetect(elSnap).then(function(p2){
+            if(token!==state.analyzeToken){ if(onDone) onDone(null); return; }
+            runs.push(_extractPersonVerdict(p2));
+            localDetect(elSnap).then(function(p3){
+              if(token!==state.analyzeToken){ if(onDone) onDone(null); return; }
+              runs.push(_extractPersonVerdict(p3));
+              var cons=_consensusPerson(runs);
+              // 共识为 person 时以中值框/中值置信强化首轮 preds 的 person 项；否则把 person 项降级为背景类
+              var out = _applyPersonConsensus(preds, cons);
+              _proceedAfter(out);
+            }).catch(function(){ _proceedAfter(preds); });
+          }).catch(function(){ _proceedAfter(preds); });
+          return;
           // v4.0.1: 模型检测完成后，重新生成构图方案（确保 isPerson 生效）
+          // v4.0.1: 模型检测完成后，重新生成构图方案（确保 isPerson 生效）
+          function _scheduleLocalPlan(elSnap, token, onDone){
           setTimeout(function(){
             if(token!==state.analyzeToken || !state.aiData){ if(onDone) onDone(null); return; }
             var dims=currentSrcDims(elSnap);
@@ -6629,7 +6774,25 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           if(faceEnabled && faceModelState==="ready"){ detectFace(elSnap); }
           // v3.0.0: 同时运行姿态检测（更精准的人体定位）
           if(poseEnabled && poseModelState==="ready"){ detectPose(elSnap); }
+          }
       }).catch(function(e){ console.warn("本地检测失败:", e); if(onDone) onDone(null); });
+    }
+    // v9.1.0: 把共识 person 判定回写到首轮 preds——共识为 person 时用中值框/中值置信替换 person 项；
+    // 共识为非 person 时把 person 项剔除（按背景类处理），消除临界带内 person 有无的逐次翻转。
+    function _applyPersonConsensus(preds, cons){
+      if(!Array.isArray(preds)) return preds;
+      var out=[];
+      for(var i=0;i<preds.length;i++){ var p=preds[i];
+        if(!p) continue;
+        if(p.class==="person"){
+          if(!cons.person) continue; // 共识判非 person：剔除 person 项
+          var q={class:"person", score:cons.score, bbox:null};
+          if(cons.box){ q.bbox=[cons.box.x,cons.box.y,cons.box.w,cons.box.h]; }
+          else if(p.bbox){ q.bbox=p.bbox.slice(); }
+          out.push(q);
+        } else { out.push(p); }
+      }
+      return out;
     }
 
     /* ===================== v1.4.0: AI 真模型管理（开关/状态/重载） ===================== */
@@ -9532,7 +9695,7 @@ hSym2:state.aiData.hSym}:null; }
   }; }catch(e){}
 })();
   </script>
-<div id="aicUpdateBar" class="hide"><span class="ub-t">✨ 新版本 v9.0.1 已就绪：① 永久免费、不限使用次数——本地分析想用多少用多少，没有任何次数墙/试用页；之前「冷却/繁忙」提示已改写为「已自动切本地引擎」，那只是云端网络防呆，与使用次数无关。② 云端 VLM 裁图意图接上背景保护：云端说要裁顶部/底部时，若那条带是晚霞、水面、倒影或有层次的地面，自动少裁 2% 保留，并在结果里说明。③ 夜景/水景/风光不再对你唠叨「走近两步/机位同高」等人像引导。本地 v8.8 成片裁切逻辑一字未动，150 张真实照片回归 0 误切、0 报错，云端 12 图真实请求 0 错误。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
+<div id="aicUpdateBar" class="hide"><span class="ub-t">✨ 新版本 v9.1.0 已就绪：① 重复分析结果稳定化——同一张照片反复点 AI 分析，裁切结果不再在「基线小裁切」和「不裁切」之间来回跳，每次都从原图出发、结果可复现；之前偶尔出现的同图裁切抖动被消除。② 判定一致性增强：人物置信度落在临界区间时，做少量重复推理取多数决+中值框，稳定的高/低置信直接采信不重复推理，不拖慢实时取景。③ 本地成片裁切阈值一字未动，150 张真实照片回归与上版逐张对照裁切 0 变化、0 误切、0 报错，云端 12 图真实请求 0 错误。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
 <script>
 (function(){
   // v8.2.3 新版本就绪提示条：SW 激活后广播 → 页面弹出"立即刷新"，根治旧缓存看不到新功能

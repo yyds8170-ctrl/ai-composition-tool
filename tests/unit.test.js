@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter } = require('./pure-functions.js');
+const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -1068,6 +1068,119 @@ test('cloudCropIntentGuard: 无副作用（入参对象与rod不被改写）', (
   _cloudCropIntentGuard({ crop, rod, intent: 'crop_top' });
   assert.deepStrictEqual(crop, [0, 10, 0, 0]);
   assert.strictEqual(JSON.stringify(rod.rL), before);
+});
+
+/* -------------------- v9.1.0 _confBand（置信度迟滞带宽） -------------------- */
+test('confBand: >=0.65 确认人像', () => {
+  assert.strictEqual(_confBand(0.70, null), 'person');
+  assert.strictEqual(_confBand(0.90, 'none'), 'person');
+});
+test('confBand: <=0.45 确认非人像', () => {
+  assert.strictEqual(_confBand(0.30, null), 'none');
+  assert.strictEqual(_confBand(0.10, 'person'), 'none');
+});
+test('confBand: 0.45-0.65 带内沿用既有判定不翻转', () => {
+  assert.strictEqual(_confBand(0.55, 'person'), 'person'); // 既有人像不翻成非人像
+  assert.strictEqual(_confBand(0.50, 'none'), 'none');      // 既非人像不翻成人像
+  assert.strictEqual(_confBand(0.60, null), 'hold');        // 无既有结论时 hold
+});
+test('confBand: 非法输入 → hold', () => {
+  assert.strictEqual(_confBand(NaN, 'person'), 'hold');
+  assert.strictEqual(_confBand(undefined, 'person'), 'hold');
+});
+
+/* -------------------- v9.1.0 _medianBox（多帧框中值聚合） -------------------- */
+test('medianBox: <3 帧返回 null（宁缺毋滥不猜）', () => {
+  assert.strictEqual(_medianBox(null), null);
+  assert.strictEqual(_medianBox([]), null);
+  assert.strictEqual(_medianBox([{x:0.1,y:0.1,w:0.2,h:0.3,conf:0.5}]), null);
+  assert.strictEqual(_medianBox([{x:0.1,y:0.1,w:0.2,h:0.3,conf:0.5},{x:0.2,y:0.2,w:0.3,h:0.3,conf:0.6}]), null);
+});
+test('medianBox: 3+ 帧取各分量中值，压掉离群跳动', () => {
+  const boxes = [
+    {x:0.10,y:0.10,w:0.20,h:0.30,conf:0.50},
+    {x:0.11,y:0.11,w:0.21,h:0.31,conf:0.52},
+    {x:0.50,y:0.50,w:0.90,h:0.90,conf:0.90}, // 离群误检
+  ];
+  const m = _medianBox(boxes);
+  assert.ok(m);
+  assert.ok(Math.abs(m.x - 0.11) < 1e-9, 'x 中值应≈0.11，实得 ' + m.x);
+  assert.ok(Math.abs(m.w - 0.21) < 1e-9, 'w 中值应≈0.21，实得 ' + m.w);
+  assert.ok(Math.abs(m.conf - 0.52) < 1e-9, 'conf 中值应≈0.52，实得 ' + m.conf);
+});
+
+/* -------------------- v9.1.0 _consensusPerson（上传路径多数决+中值框） -------------------- */
+test('consensusPerson: 单次推理直接采信', () => {
+  const r = _consensusPerson([{detected:true, score:0.9, box:{x:0.1,y:0.1,w:0.2,h:0.3,conf:0.9}}]);
+  assert.strictEqual(r.person, true);
+  assert.strictEqual(r.score, 0.9);
+});
+test('consensusPerson: 3 次多数决——2次有人1次无人 → 确认人像', () => {
+  const runs = [
+    {detected:true, score:0.55, box:{x:0.1,y:0.1,w:0.2,h:0.3,conf:0.55}},
+    {detected:true, score:0.58, box:{x:0.11,y:0.11,w:0.21,h:0.31,conf:0.58}},
+    {detected:false, score:0, box:null},
+  ];
+  const r = _consensusPerson(runs);
+  assert.strictEqual(r.person, true);
+  assert.ok(r.box, '应给出中值框');
+});
+test('consensusPerson: 3 次多数决——1次有人2次无人 → 判非人像（消除单次误检翻转）', () => {
+  const runs = [
+    {detected:true, score:0.5, box:{x:0.5,y:0.5,w:0.9,h:0.9,conf:0.5}},
+    {detected:false, score:0, box:null},
+    {detected:false, score:0, box:null},
+  ];
+  const r = _consensusPerson(runs);
+  assert.strictEqual(r.person, false);
+  assert.strictEqual(r.box, null);
+});
+test('consensusPerson: 空输入 → 非人像', () => {
+  const r = _consensusPerson([]);
+  assert.strictEqual(r.person, false);
+  assert.strictEqual(r.box, null);
+});
+
+/* -------------------- v9.1.0 _sceneDebounce（场景3帧确认/5帧翻转） -------------------- */
+test('sceneDebounce: 1 帧夜景抖动不翻转既有人像', () => {
+  let st = {scene:'portrait', pend:null, pc:0, held:5};
+  st = _sceneDebounce('night', st);   // 第1帧夜景
+  assert.strictEqual(st.scene, 'portrait');
+  st = _sceneDebounce('portrait', st); // 回到人像
+  assert.strictEqual(st.scene, 'portrait');
+  assert.strictEqual(st.pend, null);
+});
+test('sceneDebounce: 连续 3 帧新场景才更新（未稳时）', () => {
+  let st = {scene:null, pend:null, pc:0, held:0};
+  st = _sceneDebounce('landscape', st); assert.strictEqual(st.scene, null); // pc=1
+  st = _sceneDebounce('landscape', st); assert.strictEqual(st.scene, null); // pc=2
+  st = _sceneDebounce('landscape', st); assert.strictEqual(st.scene, 'landscape'); // pc=3 确认
+});
+test('sceneDebounce: 已稳定场景反向翻转需 5 帧', () => {
+  let st = {scene:'portrait', pend:null, pc:0, held:10}; // 已稳定10帧
+  for (let i = 0; i < 4; i++) st = _sceneDebounce('night', st);
+  assert.strictEqual(st.scene, 'portrait'); // 4帧还不翻
+  st = _sceneDebounce('night', st);
+  assert.strictEqual(st.scene, 'night');    // 第5帧才翻
+});
+
+/* -------------------- v9.1.0 _debangText（拍前引导文字防抖状态机） -------------------- */
+test('debangText: 连续3帧同结论才显示', () => {
+  let st = {key:null, count:0};
+  st = _debangText([{id:'eye', txt:'放低手机'}], st);
+  assert.strictEqual(st.show, false);
+  st = _debangText([{id:'eye', txt:'放低手机'}], st);
+  assert.strictEqual(st.show, false);
+  st = _debangText([{id:'eye', txt:'放低手机'}], st);
+  assert.strictEqual(st.show, true);
+  assert.strictEqual(st.txt, '放低手机');
+});
+test('debangText: 2帧后反转不显示', () => {
+  let st = {key:null, count:0};
+  st = _debangText([{id:'eye', txt:'A'}], st);
+  st = _debangText([{id:'eye', txt:'A'}], st);
+  st = _debangText([{id:'dist', txt:'走近'}], st); // 第3帧换结论
+  assert.strictEqual(st.show, false);
 });
 
 /* -------------------- 汇总 -------------------- */

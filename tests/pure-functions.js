@@ -753,4 +753,69 @@
       }catch(e){ return GATE; }
     }
 
-module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter };
+    function _confBand(s, prev){
+      if(typeof s!=="number"||!isFinite(s)) return "hold";
+      if(s>=0.65) return "person";
+      if(s<=0.45) return "none";
+      return (prev==="person"||prev==="none") ? prev : "hold";
+    }
+
+    function _medianBox(boxes){
+      if(!Array.isArray(boxes)) return null;
+      var xs=[],ys=[],ws=[],hs=[],cs=[];
+      for(var i=0;i<boxes.length;i++){ var b=boxes[i];
+        if(!b||typeof b.x!=="number"||typeof b.y!=="number"||typeof b.w!=="number"||typeof b.h!=="number") continue;
+        if(!isFinite(b.x)||!isFinite(b.y)||!isFinite(b.w)||!isFinite(b.h)) continue;
+        xs.push(b.x); ys.push(b.y); ws.push(b.w); hs.push(b.h); cs.push(typeof b.conf==="number"&&isFinite(b.conf)?b.conf:0);
+      }
+      if(xs.length<3) return null;
+      function med(a){ a.sort(function(p,q){return p-q;}); return a[Math.floor(a.length/2)]; }
+      return {x:med(xs),y:med(ys),w:med(ws),h:med(hs),conf:med(cs)};
+    }
+
+    function _consensusPerson(runs){
+      if(!Array.isArray(runs)||!runs.length) return {person:false, score:0, box:null};
+      var yes=0, boxes=[];
+      for(var i=0;i<runs.length;i++){ var r=runs[i]||{};
+        if(r.detected){ yes++; if(r.box&&isFinite(r.box.x)) boxes.push(r.box); }
+      }
+      var person;
+      if(runs.length===1){ person = yes>0; }
+      else { person = yes > (runs.length-yes); } // 多数决：>=半数+1 才确认
+      var score=0, box=null;
+      if(person){
+        var sc=[];
+        for(var j=0;j<runs.length;j++){ if(runs[j]&&runs[j].detected&&typeof runs[j].score==="number"&&isFinite(runs[j].score)) sc.push(runs[j].score); }
+        if(sc.length){ sc.sort(function(a,b){return a-b;}); score=sc[Math.floor(sc.length/2)]; }
+        if(boxes.length>=3){ box=_medianBox(boxes); }
+        else if(boxes.length===1){ box=boxes[0]; }
+        else if(boxes.length===2){ box={x:(boxes[0].x+boxes[1].x)/2,y:(boxes[0].y+boxes[1].y)/2,w:(boxes[0].w+boxes[1].w)/2,h:(boxes[0].h+boxes[1].h)/2,conf:(boxes[0].conf+boxes[1].conf)/2}; }
+      }
+      return {person:person, score:score, box:box};
+    }
+
+    function _sceneDebounce(cand, prev){
+      prev = prev || {scene:null, pend:null, pc:0, held:0};
+      if(cand===prev.scene){ return {scene:cand, pend:null, pc:0, held:prev.held+1, stable:true}; }
+      var need = prev.held>=5 ? 5 : 3; // 已稳定>=5帧的场景反向翻转需5帧；未稳3帧即可
+      if(cand===prev.pend){
+        var pc=prev.pc+1;
+        if(pc>=need) return {scene:cand, pend:null, pc:0, held:1, stable:false};
+        return {scene:prev.scene, pend:cand, pc:pc, held:prev.held, stable:false};
+      }
+      return {scene:prev.scene, pend:cand, pc:1, held:prev.held, stable:false};
+    }
+
+    function _debangText(seq, prevState){
+      prevState = prevState || {key:null, count:0};
+      var cur = (Array.isArray(seq)&&seq.length) ? seq[seq.length-1] : null;
+      var key = cur ? cur.id : null, txt = cur ? cur.txt : null;
+      var st;
+      if(key===prevState.key){ st={key:key, count:prevState.count+1}; }
+      else { st={key:key, count:1}; }
+      st.show = !!key && st.count>=3; // 连续3帧一致才显示
+      st.txt = st.show ? txt : null;
+      return st;
+    }
+
+module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText };
