@@ -1,5 +1,5 @@
 /* 临时审查脚本：对纯函数做属性/模糊测试，找真实健壮性问题。 */
-const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg } = require('../tests/pure-functions.js');
+const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation } = require('../tests/pure-functions.js');
 
 let issues = 0;
 function bad(msg) { console.log('ISSUE:', msg); issues++; }
@@ -395,5 +395,43 @@ for(let i=0;i<1000000;i++){
   const r2=_rodGuard([0,0,0,10],fixed(false,true,true,0.65),{}); if(r2[3]!==0) bad('rodGuard 固定水面下边应归零, got '+r2[3]);
   const r3=_rodGuard([0,10,0,0],fixed(true,false,false,0.6),{}); if(!(r3[1]===8)) bad('rodGuard 纯蓝天应减2, got '+r3[1]);
 })();
+
+// 14. v8.9.0 拍前实时引导四件套：随机/越界/缺字段/NaN 入参 → null 或合法对象；绝不抛错、确定性
+function validGuidanceOut(o){
+  if(o===null||o===undefined) return;
+  if(typeof o!=='object'){ bad('guidance 返回非对象: '+JSON.stringify(o)); return; }
+  if(typeof o.txt!=='string'||!o.txt.length) bad('guidance 缺 txt: '+JSON.stringify(o));
+}
+for(let i=0;i<200000;i++){
+  const fc=rnd(0,1.1), ht=rnd(-0.1,1.2), fhr=rnd(0,1), ey=rnd(-0.1,1.2);
+  let r;
+  try{ r=_guidanceEyeLevel({faceConf:fc,headTop:ht,faceHR:fhr,eyesY:ey}); }catch(e){ bad('eyeLevel 抛错: '+e.message); continue; }
+  validGuidanceOut(r);
+  if(JSON.stringify(_guidanceEyeLevel({faceConf:fc,headTop:ht,faceHR:fhr,eyesY:ey}))!==JSON.stringify(r)) bad('eyeLevel 不稳定');
+  try{ r=_guidanceEyeOnGrid({faceConf:fc,eyesY:Math.random()<0.2?null:ey}); }catch(e){ bad('eyeOnGrid 抛错'); continue; }
+  validGuidanceOut(r);
+  if(JSON.stringify(_guidanceEyeOnGrid({faceConf:fc,eyesY:ey}))!==JSON.stringify(_guidanceEyeOnGrid({faceConf:fc,eyesY:ey}))) bad('eyeOnGrid 不稳定');
+}
+if(_guidanceEyeOnGrid({faceConf:0.9,eyesY:null})!==null) bad('eyeOnGrid 无眼点未 null');
+if(_guidanceEyeOnGrid({faceConf:0.9})!==null) bad('eyeOnGrid 缺眼点未 null');
+for(let i=0;i<200000;i++){
+  const fc=rnd(0,1.1), phr=rnd(-0.1,1.2), fhr=rnd(0,1);
+  let r;
+  try{ r=_guidanceDistance({faceConf:fc,personHR:phr,faceHR:fhr}); }catch(e){ bad('distance 抛错'); continue; }
+  validGuidanceOut(r);
+  if(JSON.stringify(_guidanceDistance({faceConf:fc,personHR:phr,faceHR:fhr}))!==JSON.stringify(r)) bad('distance 不稳定');
+}
+if(_guidanceDistance({faceConf:0.9,personHR:null,faceHR:null})!==null) bad('distance 双缺失未 null');
+if(_guidanceDistance({faceConf:0.9})!==null) bad('distance 全缺未 null');
+for(let i=0;i<200000;i++){
+  const fcnt=Math.floor(rnd(0,6)), pa=rnd(-0.2,2), fa=rnd(0.4,2), st=['waterscape','landscape','architecture','portrait',null,undefined][Math.floor(rnd(0,6))];
+  let r;
+  try{ r=_guidanceOrientation({faceCount:fcnt,personAspect:pa,frameAspect:fa,sceneType:st}); }catch(e){ bad('orientation 抛错'); continue; }
+  validGuidanceOut(r);
+  if(JSON.stringify(_guidanceOrientation({faceCount:fcnt,personAspect:pa,frameAspect:fa,sceneType:st}))!==JSON.stringify(r)) bad('orientation 不稳定');
+}
+if(_guidanceOrientation({faceCount:4,personAspect:0,frameAspect:0.7,sceneType:'waterscape'})!==null) bad('orientation pa=0 未 null');
+if(_guidanceOrientation({faceCount:4,personAspect:-1,frameAspect:0.7,sceneType:'waterscape'})!==null) bad('orientation pa<0 未 null');
+if(_guidanceOrientation({faceCount:4,personAspect:NaN,frameAspect:0.7,sceneType:'waterscape'})!==null) bad('orientation pa=NaN 未 null');
 
 console.log(issues === 0 ? '\n✓ 模糊测试未发现问题' : `\n发现 ${issues} 个问题`);

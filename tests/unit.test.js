@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg } = require('./pure-functions.js');
+const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -687,6 +687,115 @@ test('rodGuard: 不碰左右边——水平留白归 _gazeGuard', () => {
 test('rodGuard: 确定性——同输入两次一致', () => {
   const rod = mkRod(100, 100, (x, y) => y < 15 ? { l: x % 2 ? 150 : 220, s: 0.7 } : { l: 80, s: 0.1 });
   assert.deepStrictEqual(_rodGuard([0, 10, 0, 3], rod, {}), _rodGuard([0, 10, 0, 3], rod, {}));
+});
+
+/* -------------------- v8.9.0 _guidanceEyeLevel（机位同高） -------------------- */
+test('eyeLevel: 头顶贴顶 → 提示放低', () => {
+  const out = _guidanceEyeLevel({ faceConf: 0.9, headTop: 0.02, faceHR: 0.3, eyesY: 0.33 });
+  assert.strictEqual(out.dir, 'down');
+  assert.ok(/放低/.test(out.txt));
+});
+test('eyeLevel: 头顶明显悬空且眼掉中线以下 → 提示举高', () => {
+  const out = _guidanceEyeLevel({ faceConf: 0.9, headTop: 0.30, faceHR: 0.25, eyesY: 0.45 });
+  assert.strictEqual(out.dir, 'up');
+});
+test('eyeLevel: 无眼点时头顶悬空也举高（宁缺毋滥中的宽条件）', () => {
+  const out = _guidanceEyeLevel({ faceConf: 0.9, headTop: 0.30, faceHR: 0.25, eyesY: null });
+  assert.strictEqual(out.dir, 'up');
+});
+test('eyeLevel 负例: 正常头肩像 headTop=0.12 → null', () => {
+  assert.strictEqual(_guidanceEyeLevel({ faceConf: 0.9, headTop: 0.12, faceHR: 0.3, eyesY: 0.33 }), null);
+});
+test('eyeLevel 负例: 远景小人 faceHR=0.03 → null', () => {
+  assert.strictEqual(_guidanceEyeLevel({ faceConf: 0.9, headTop: 0.02, faceHR: 0.03, eyesY: 0.33 }), null);
+});
+test('eyeLevel 负例: 低置信 faceConf=0.6 → null', () => {
+  assert.strictEqual(_guidanceEyeLevel({ faceConf: 0.6, headTop: 0.02, faceHR: 0.3, eyesY: 0.33 }), null);
+});
+test('eyeLevel 负例: 半身正常留白 headTop=0.20 → null', () => {
+  assert.strictEqual(_guidanceEyeLevel({ faceConf: 0.9, headTop: 0.20, faceHR: 0.3, eyesY: 0.33 }), null);
+});
+test('eyeLevel 负例: 头顶悬空但眼仍在中线上(0.30) → null（不硬报仰）', () => {
+  assert.strictEqual(_guidanceEyeLevel({ faceConf: 0.9, headTop: 0.30, faceHR: 0.25, eyesY: 0.30 }), null);
+});
+
+/* -------------------- v8.9.0 _guidanceEyeOnGrid（网格眼位） -------------------- */
+test('eyeOnGrid: 眼睛掉到中线以下 → 对上横线', () => {
+  const out = _guidanceEyeOnGrid({ faceConf: 0.9, eyesY: 0.48 });
+  assert.ok(out && /上方那条横线/.test(out.txt));
+});
+test('eyeOnGrid: 眼睛太靠上 → 放低', () => {
+  const out = _guidanceEyeOnGrid({ faceConf: 0.9, eyesY: 0.20 });
+  assert.ok(out && /放低/.test(out.txt));
+});
+test('eyeOnGrid 负例: 理想眼位 0.33 → null', () => {
+  assert.strictEqual(_guidanceEyeOnGrid({ faceConf: 0.9, eyesY: 0.33 }), null);
+});
+test('eyeOnGrid 负例: 宽容带内 0.36 → null', () => {
+  assert.strictEqual(_guidanceEyeOnGrid({ faceConf: 0.9, eyesY: 0.36 }), null);
+});
+test('eyeOnGrid 负例: 无眼点 → null', () => {
+  assert.strictEqual(_guidanceEyeOnGrid({ faceConf: 0.9, eyesY: null }), null);
+});
+test('eyeOnGrid 负例: 低置信 faceConf=0.6 → null', () => {
+  assert.strictEqual(_guidanceEyeOnGrid({ faceConf: 0.6, eyesY: 0.48 }), null);
+});
+
+/* -------------------- v8.9.0 _guidanceDistance（距离/景别） -------------------- */
+test('distance: 人太小 personHR=0.20 → 走近', () => {
+  const out = _guidanceDistance({ faceConf: 0.9, personHR: 0.20, faceHR: 0.05 });
+  assert.strictEqual(out.dir, 'near');
+});
+test('distance: 人太满 personHR=0.92 → 后退', () => {
+  const out = _guidanceDistance({ faceConf: 0.9, personHR: 0.92, faceHR: 0.6 });
+  assert.strictEqual(out.dir, 'far');
+});
+test('distance 负例: 半身正常 personHR=0.45 → null', () => {
+  assert.strictEqual(_guidanceDistance({ faceConf: 0.9, personHR: 0.45, faceHR: 0.2 }), null);
+});
+test('distance 负例: 全身正常 personHR=0.33 → null', () => {
+  assert.strictEqual(_guidanceDistance({ faceConf: 0.9, personHR: 0.33, faceHR: 0.12 }), null);
+});
+test('distance 负例: 远景无人体框 faceHR=0.03 → null', () => {
+  assert.strictEqual(_guidanceDistance({ faceConf: 0.9, personHR: null, faceHR: 0.03 }), null);
+});
+test('distance 负例: 低置信 faceConf=0.65 → null', () => {
+  assert.strictEqual(_guidanceDistance({ faceConf: 0.65, personHR: 0.20, faceHR: 0.05 }), null);
+});
+test('distance: 无人体框回退脸框 faceHR=0.10 → 走近', () => {
+  assert.strictEqual(_guidanceDistance({ faceConf: 0.9, personHR: null, faceHR: 0.10 }).dir, 'near');
+});
+test('distance: 无人体框回退脸框 faceHR=0.85 → 后退', () => {
+  assert.strictEqual(_guidanceDistance({ faceConf: 0.9, personHR: null, faceHR: 0.85 }).dir, 'far');
+});
+test('distance 负例: 无人体框脸框适中 faceHR=0.5 → null', () => {
+  assert.strictEqual(_guidanceDistance({ faceConf: 0.9, personHR: null, faceHR: 0.5 }), null);
+});
+
+/* -------------------- v8.9.0 _guidanceOrientation（横竖拍） -------------------- */
+test('orientation: 单人竖长人被横拍 → 竖持', () => {
+  const out = _guidanceOrientation({ faceCount: 1, personAspect: 1.5, frameAspect: 1.5, sceneType: 'portrait' });
+  assert.strictEqual(out.rec, 'portrait');
+});
+test('orientation: 多人合影被竖拍 → 横持', () => {
+  const out = _guidanceOrientation({ faceCount: 4, personAspect: 0.6, frameAspect: 0.7, sceneType: 'general' });
+  assert.strictEqual(out.rec, 'landscape');
+});
+test('orientation: 宽场景被竖拍 → 横持', () => {
+  const out = _guidanceOrientation({ faceCount: 1, personAspect: 0.5, frameAspect: 0.7, sceneType: 'waterscape' });
+  assert.strictEqual(out.rec, 'landscape');
+});
+test('orientation 负例: 单人竖人但已竖拍 frameAspect=0.75 → null', () => {
+  assert.strictEqual(_guidanceOrientation({ faceCount: 1, personAspect: 1.5, frameAspect: 0.75, sceneType: 'portrait' }), null);
+});
+test('orientation 负例: 两人 faceCount=2 → null（不猜）', () => {
+  assert.strictEqual(_guidanceOrientation({ faceCount: 2, personAspect: 1.5, frameAspect: 1.5, sceneType: 'portrait' }), null);
+});
+test('orientation 负例: 横竖接近 personAspect=0.9 → null', () => {
+  assert.strictEqual(_guidanceOrientation({ faceCount: 1, personAspect: 0.9, frameAspect: 1.5, sceneType: 'portrait' }), null);
+});
+test('orientation 负例: 人体框不可算 personAspect=0 → null', () => {
+  assert.strictEqual(_guidanceOrientation({ faceCount: 4, personAspect: 0, frameAspect: 0.7, sceneType: 'waterscape' }), null);
 });
 
 /* -------------------- 汇总 -------------------- */

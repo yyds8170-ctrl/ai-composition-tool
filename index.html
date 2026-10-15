@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v8.8.0 · 实景视觉构图生成工具</title>
-<meta name="description" content="AI 构图助手 Pro v8.8.0 · 实景视觉构图生成工具：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。含 YOLO11n 本地检测、智能人像裁切（不切关节·头·手·脚）、人像近眼上三分与 3:4 景别裁切、侧脸视线留白（nose room，按脸朝向单侧留白）、边缘能量吸附（裁切刀自动避开人物轮廓与关节、藏到画面空白处，只少裁不多裁）、背景保护 RoD（被裁的晚霞/水面/高层次地面整段保留，只少裁不多裁）、通用物体边界保护（不切动物/车/食物/餐具）、30 款滤镜、构图法则百科与云端 VLM 分析">
+<title>AI 构图助手 Pro v8.9.0 · 实景视觉构图生成工具</title>
+<meta name="description" content="AI 构图助手 Pro v8.9.0 · 实景视觉构图生成工具：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。拍前实时引导（机位同高/网格眼位/距离景别/横竖拍，宁缺毋滥、只给建议不动裁切）。含 YOLO11n 本地检测、智能人像裁切（不切关节·头·手·脚）、人像近眼上三分与 3:4 景别裁切、侧脸视线留白（nose room，按脸朝向单侧留白）、边缘能量吸附（裁切刀自动避开人物轮廓与关节、藏到画面空白处，只少裁不多裁）、背景保护 RoD（被裁的晚霞/水面/高层次地面整段保留，只少裁不多裁）、通用物体边界保护（不切动物/车/食物/餐具）、30 款滤镜、构图法则百科与云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v8.8.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切">
+<meta property="og:title" content="AI 构图助手 Pro v8.9.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切">
 <meta property="og:description" content="给不会拍照的普通人：打开相机，AI 教你怎么拍。AI 构图分析（本地像素+云端 VLM 双引擎）、人像保护裁切（不切头不切手脚）、30 款滤镜，一键出成品。默认本地运行，照片不上传。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
@@ -656,7 +656,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.8.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.9.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -1014,7 +1014,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.8.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.9.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1088,7 +1088,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v8.8.0";
+var APP_VER="v8.9.0";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -2735,6 +2735,97 @@ var APP_VER="v8.8.0";
       if(ar<0.10) return {state:'frontal',dir:0,r:rNose};
       if(dir===0) return {state:ar<0.35?'three-quarter':'profile',dir:0,r:rNose}; // 朝向不可信→不做 nose room
       return {state:ar<0.35?'three-quarter':'profile',dir:dir,r:rNose};
+    }
+    /* ===================== v8.9.0 拍前实时引导（四条，纯函数，宁缺毋滥） =====================
+     * 共同纪律：只入参 plainObj、只读字段、返回 {…}/null；不读 document/state、不用 Math.random、不写屏。
+     * 共同前置：人脸置信 faceConf<0.75、输入缺字段/NaN/Infinity → null。误报容忍度最低，
+     * 落在死区/置信不足/缺关键点一律不弹（null）。引导只出文字建议，绝不改 plan.crop。 */
+    // （一）机位同高：头顶贴顶(<4.5%)→放低；头顶明显悬空(>24%)且眼掉中线以下→举高；其余同高不打扰。
+    function _guidanceEyeLevel(o){
+      if(!o) return null;
+      var fc=o.faceConf, ht=o.headTop, fhr=o.faceHR, ey=o.eyesY;
+      if(typeof fc!=="number"||!isFinite(fc)||fc<0.75) return null;
+      if(typeof ht!=="number"||!isFinite(ht)) return null;
+      if(typeof fhr==="number"&&isFinite(fhr)&&fhr<0.04) return null; // 远景小人不当主体
+      var hasEyes=(typeof ey==="number"&&isFinite(ey));
+      if(ht<0.045) return {dir:"down",txt:"机位偏高了，把手机放低到和对方眼睛同高"};
+      if(ht>0.24 && (!hasEyes || ey>0.40)) return {dir:"up",txt:"机位偏低了，把手机举高一点，与眼睛平齐"};
+      return null;
+    }
+    // （二）网格眼位：眼睛应对上上三分线(y≈0.33)；任一眼点缺失不靠脸框硬猜。死区[0.24,0.42]。
+    function _guidanceEyeOnGrid(o){
+      if(!o) return null;
+      var fc=o.faceConf, ey=o.eyesY;
+      if(typeof fc!=="number"||!isFinite(fc)||fc<0.75) return null;
+      if(typeof ey!=="number"||!isFinite(ey)) return null; // 任意一眼点缺失→不报
+      if(ey>0.42) return {eyesY:ey,txt:"把眼睛对上上方那条横线"};
+      if(ey<0.24) return {eyesY:ey,txt:"眼睛稍放低到横线上"};
+      return null;
+    }
+    // （三）距离/景别：优先人体框高 personHR([0.28,0.85] 死区)，无人体框回退脸框高 faceHR([0.18,0.78])。
+    function _guidanceDistance(o){
+      if(!o) return null;
+      var fc=o.faceConf, phr=o.personHR, fhr=o.faceHR;
+      if(typeof fc!=="number"||!isFinite(fc)||fc<0.75) return null;
+      if(typeof phr==="number"&&isFinite(phr)){
+        if(phr<0.28) return {dir:"near",txt:"走近两步，让人大一点"};
+        if(phr>0.85) return {dir:"far",txt:"后退半步，人别顶到边"};
+        return null;
+      }
+      if(typeof fhr==="number"&&isFinite(fhr)){
+        if(fhr<0.04) return null; // 远景小人豁免
+        if(fhr<0.18) return {dir:"near",txt:"走近两步，让人大一点"};
+        if(fhr>0.78) return {dir:"far",txt:"后退半步，人别顶到边"};
+        return null;
+      }
+      return null;
+    }
+    // （四）横竖拍跟随主体：竖长单人被横拍→竖持；多人(≥3)/宽场景被竖拍→横持。人体框不可算(personAspect<=0)一律 null。
+    function _guidanceOrientation(o){
+      if(!o) return null;
+      var fc=o.faceCount, pa=o.personAspect, fa=o.frameAspect, st=o.sceneType;
+      if(typeof pa!=="number"||!isFinite(pa)||pa<=0) return null;
+      if(typeof fa!=="number"||!isFinite(fa)) return null;
+      if(typeof fc!=="number"||!isFinite(fc)) return null;
+      if(fc===1 && pa>1.35 && fa>1.2) return {rec:"portrait",txt:"竖持手机，竖拍人像更合身"};
+      var wide=(st==="waterscape"||st==="landscape"||st==="architecture");
+      if((fc>=3 || wide) && fa<0.85) return {rec:"landscape",txt:"横持手机，横拍更合适"};
+      return null;
+    }
+    // v8.9.0 非纯装配：从 aiData/画幅/场景组装 plainObj，依次调四条纯引导，按优先级取一条（每屏只说一件事）。
+    // 只读不改 crop。优先级：画幅方向 > 距离景别 > 机位同高 > 网格眼位。
+    function _composeLiveGuidance(ad, frameAspect, sceneType){
+      try{
+        ad=ad||{};
+        var fc=(typeof ad.faceConfidence==="number"&&isFinite(ad.faceConfidence))?ad.faceConfidence:null;
+        var fbb=(Array.isArray(ad.faceBBox)&&ad.faceBBox.length===4)?ad.faceBBox:null;
+        var fhr=(fbb&&typeof fbb[3]==="number"&&isFinite(fbb[3]))?fbb[3]:null;
+        var eyesY=null;
+        if(Array.isArray(ad.faceLM)&&ad.faceLM[0]&&ad.faceLM[1]
+           &&typeof ad.faceLM[0].y==="number"&&typeof ad.faceLM[1].y==="number"
+           &&isFinite(ad.faceLM[0].y)&&isFinite(ad.faceLM[1].y)){
+          eyesY=(ad.faceLM[0].y+ad.faceLM[1].y)/2;
+        }
+        var hasHead=(typeof ad.headTop==="number"&&isFinite(ad.headTop));
+        var hasFoot=(typeof ad.personBottom==="number"&&isFinite(ad.personBottom));
+        var personHR=(hasHead&&hasFoot)?(ad.personBottom-ad.headTop):null;
+        var personAspect=null;
+        if(hasHead&&hasFoot&&typeof ad.personLeft==="number"&&typeof ad.personRight==="number"
+           &&isFinite(ad.personLeft)&&isFinite(ad.personRight)){
+          var pw=ad.personRight-ad.personLeft, ph=ad.personBottom-ad.headTop;
+          if(ph>1e-3) personAspect=pw/ph;
+        }
+        if(typeof frameAspect!=="number"||!isFinite(frameAspect)) frameAspect=null;
+        var fcNum=(typeof ad.faceCount==="number"&&isFinite(ad.faceCount))?ad.faceCount:0;
+        var order=[
+          {id:"orientation",r:_guidanceOrientation({faceCount:fcNum,personAspect:personAspect,frameAspect:frameAspect,sceneType:sceneType||null})},
+          {id:"distance",r:_guidanceDistance({faceConf:fc,personHR:personHR,faceHR:fhr})},
+          {id:"eyeLevel",r:_guidanceEyeLevel({faceConf:fc,headTop:hasHead?ad.headTop:null,faceHR:fhr,eyesY:eyesY})},
+          {id:"eyeOnGrid",r:_guidanceEyeOnGrid({faceConf:fc,eyesY:eyesY})}
+        ];
+        for(var i=0;i<order.length;i++){ if(order[i].r){ return {id:order[i].id,txt:order[i].r.txt}; } }
+        return null;
+      }catch(e){ return null; }
     }
     // v8.6.0 nose room 视线留白：单人侧脸（非特写）沿"视线方向"留出约 2:1 空间——脸朝右则把脸放左三分(0.33)、
     // 右侧留白；脸朝左则放右三分(0.67)。只在"身后一侧"做单侧裁切（绝不在视线方向动刀），目标轻微偏离且身体完整
@@ -6017,16 +6108,24 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       drawAiBox(preds[0], el);
       // v1.7.0: 实时人脸跟踪提示（仅实时取景模式下，v1.9.2: 只有足够大的人才显示）
       if(state.liveMode && state.aiData.isPerson && state.aiData.faceAvailable){
-        var faceX=state.aiData.faceX;
-        var tip="";
-        if(faceX<0.3) tip="👉 把脸移到右侧三分点";
-        else if(faceX>0.7) tip="👈 把脸移到左侧三分点";
-        // v4.0.1: 修复实时取景头顶留白判断颠倒
-        else if(state.aiData.headTop<0.04) tip="⬇ 头顶太贴边，下移机位";
-        else if(state.aiData.headTop>0.18) tip="⬆ 头顶留白过多，上移机位";
-        else tip="✓ 面部构图佳，可以拍了";
-        showLiveTip(tip);
+        // v8.9.0 拍前实时引导：先算四条纯引导，同一结论连续 3 帧才显示（防抖归此非纯循环），
+        // 引导消失即回落原有的左右三分/构图佳提示。引导只出文字，绝不改裁切。
+        var g=_composeLiveGuidance(state.aiData, state.aiData.frameAspect, state.plan&&state.plan.sceneType);
+        state._gd=state._gd||{key:null,count:0};
+        var gk=g?g.id:null;
+        if(gk===state._gd.key){ state._gd.count++; } else { state._gd.key=gk; state._gd.count=1; }
+        if(g && state._gd.count>=3){
+          showLiveTip("🎯 "+g.txt);
+        } else {
+          var faceX=state.aiData.faceX;
+          var tip="";
+          if(faceX<0.3) tip="👉 把脸移到右侧三分点";
+          else if(faceX>0.7) tip="👈 把脸移到左侧三分点";
+          else tip="✓ 面部构图佳，可以拍了";
+          showLiveTip(tip);
+        }
       } else if(state.liveMode){
+        state._gd={key:null,count:0};
         hideLiveTip();
       }
       // v1.6.1: AI 构图 模式下，AI 检测完成后重新生成 plan（使人像分析生效）
@@ -9056,11 +9155,15 @@ centerVert:state.aiData.centerVert,centerH2:state.aiData.centerH2,
 faceX:(state.aiData.faceX!=null?state.aiData.faceX:null),faceY:(state.aiData.faceY!=null?state.aiData.faceY:null),
 lumGrid:state.aiData.lumGrid||null,gridW:state.aiData.gridW||null,gridH:state.aiData.gridH||null,
 hSym2:state.aiData.hSym}:null; }
+    ,get guidance(){ // v8.9.0：拍前实时引导只读快照（不防抖、供回归审计），只反映当前帧判定
+      if(!state||!state.aiData) return null;
+      try{ return _composeLiveGuidance(state.aiData, state.aiData.frameAspect, (state.plan&&state.plan.sceneType)||null); }catch(e){ return null; }
+    }
     ,get model(){ return {yolo:window.__yoloState||'idle',coco:window.__cocoState||'idle',ready:(window.__yoloState==='ready'||window.__cocoState==='ready')}; }
   }; }catch(e){}
 })();
   </script>
-<div id="aicUpdateBar" class="hide"><span class="ub-t">✨ 新版本 v8.8.0 已就绪：背景保护（RoD，Region of Discard）——裁切时会先看一眼「即将被裁掉的上/下条带」是不是高价值背景：若晚霞、云层、水面倒影、人群、有层次的岩地等内容丰富、信息量足，就整段保留或少裁一点，不再一刀切把整片晚霞、水面裁没；而平淡单调的天空、沙滩依旧正常裁切。只作用于上下边、只做「少裁」（保留范围只增不减），绝不新增裁切、绝不挡掉本应进行的修裁。150 张真实照片回归 0 误切、0 报错，千余万次模糊测试 0 异常。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
+<div id="aicUpdateBar" class="hide"><span class="ub-t">✨ 新版本 v8.9.0 已就绪：拍前实时引导——开启实时取景后，手机会在按下快门前轻声提醒你四件事：机位和眼睛同高别俯仰、眼睛对上上三分线、人在画面里别太大也别太小、竖人竖拍/合影横拍。宁缺毋滥，只有明显越界才提示，落在舒适区或人脸没对准就安静不打扰；同一句提醒连续稳住才弹出，避免画面抖动乱闪。只给建议、绝不自动裁切，v8.8.0 的成片裁切逻辑一字未动。150 张真实照片回归 0 误切、0 报错，云端 12 图真实请求 0 错误。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
 <script>
 (function(){
   // v8.2.3 新版本就绪提示条：SW 激活后广播 → 页面弹出"立即刷新"，根治旧缓存看不到新功能

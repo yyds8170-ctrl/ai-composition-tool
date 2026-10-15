@@ -457,4 +457,56 @@
           }catch(e){ return {deg:0,conf:0}; }
         }
 
-module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg };
+    function _guidanceEyeLevel(o){
+      if(!o) return null;
+      var fc=o.faceConf, ht=o.headTop, fhr=o.faceHR, ey=o.eyesY;
+      if(typeof fc!=="number"||!isFinite(fc)||fc<0.75) return null;
+      if(typeof ht!=="number"||!isFinite(ht)) return null;
+      if(typeof fhr==="number"&&isFinite(fhr)&&fhr<0.04) return null; // 远景小人不当主体
+      var hasEyes=(typeof ey==="number"&&isFinite(ey));
+      if(ht<0.045) return {dir:"down",txt:"机位偏高了，把手机放低到和对方眼睛同高"};
+      if(ht>0.24 && (!hasEyes || ey>0.40)) return {dir:"up",txt:"机位偏低了，把手机举高一点，与眼睛平齐"};
+      return null;
+    }
+
+    function _guidanceEyeOnGrid(o){
+      if(!o) return null;
+      var fc=o.faceConf, ey=o.eyesY;
+      if(typeof fc!=="number"||!isFinite(fc)||fc<0.75) return null;
+      if(typeof ey!=="number"||!isFinite(ey)) return null; // 任意一眼点缺失→不报
+      if(ey>0.42) return {eyesY:ey,txt:"把眼睛对上上方那条横线"};
+      if(ey<0.24) return {eyesY:ey,txt:"眼睛稍放低到横线上"};
+      return null;
+    }
+
+    function _guidanceDistance(o){
+      if(!o) return null;
+      var fc=o.faceConf, phr=o.personHR, fhr=o.faceHR;
+      if(typeof fc!=="number"||!isFinite(fc)||fc<0.75) return null;
+      if(typeof phr==="number"&&isFinite(phr)){
+        if(phr<0.28) return {dir:"near",txt:"走近两步，让人大一点"};
+        if(phr>0.85) return {dir:"far",txt:"后退半步，人别顶到边"};
+        return null;
+      }
+      if(typeof fhr==="number"&&isFinite(fhr)){
+        if(fhr<0.04) return null; // 远景小人豁免
+        if(fhr<0.18) return {dir:"near",txt:"走近两步，让人大一点"};
+        if(fhr>0.78) return {dir:"far",txt:"后退半步，人别顶到边"};
+        return null;
+      }
+      return null;
+    }
+
+    function _guidanceOrientation(o){
+      if(!o) return null;
+      var fc=o.faceCount, pa=o.personAspect, fa=o.frameAspect, st=o.sceneType;
+      if(typeof pa!=="number"||!isFinite(pa)||pa<=0) return null;
+      if(typeof fa!=="number"||!isFinite(fa)) return null;
+      if(typeof fc!=="number"||!isFinite(fc)) return null;
+      if(fc===1 && pa>1.35 && fa>1.2) return {rec:"portrait",txt:"竖持手机，竖拍人像更合身"};
+      var wide=(st==="waterscape"||st==="landscape"||st==="architecture");
+      if((fc>=3 || wide) && fa<0.85) return {rec:"landscape",txt:"横持手机，横拍更合适"};
+      return null;
+    }
+
+module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation };
