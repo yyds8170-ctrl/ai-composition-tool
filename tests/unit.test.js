@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText } = require('./pure-functions.js');
+const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -1338,6 +1338,63 @@ FMc('R3 mean=74.9 不足 → null', ()=>{ assert.strictEqual(_recommendFilter(ba
 FMc('G3 sat=0.39 过浓 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.39,mean:120}),baseSig()).filter,null); });
 FMc('沉默：waterScore=0.30 边界 R4 仍放行', ()=>{ assert.strictEqual(_recommendFilter(baseA({warmRatio:0.5,wb:0.1,mean:120,waterScore:0.3}),baseSig({scene:'landscape'})).filter,'sunset'); });
 FMc('R2A 低置信人 ps=0.59 不推', ()=>{ assert.strictEqual(_recommendFilter(sideLightA({mean:120}),baseSig({personScore:0.59})).filter,null); });
+
+/* -------------------- v9.3.0 可训练偏好 _applyPref -------------------- */
+const FPc=(n,fn)=>{ test(n,fn); };
+FPc('偏好：空 history 原样返回 rec（新用户零变化）', ()=>{
+  const rec={filter:'night',strength:80,reason:'x',rule:'R1',scene:'night'};
+  const out=_applyPref(rec,[]);
+  assert.strictEqual(out.filter,'night'); assert.strictEqual(out.strength,80);
+  assert.strictEqual(out.rule,'R1'); assert.strictEqual(out,rec);
+});
+FPc('偏好：null/非法 history 不抛错原样返回', ()=>{
+  const rec={filter:'night',strength:80,reason:'x',rule:'R1'};
+  assert.strictEqual(_applyPref(rec,null),rec);
+  assert.strictEqual(_applyPref(rec,'bad'),rec);
+  assert.strictEqual(_applyPref(null,[]),null);
+  assert.strictEqual(_applyPref({filter:null},[]).filter,null);
+});
+FPc('偏好：推翻 2 次不触发（<3）', ()=>{
+  const rec={filter:'night',rule:'R1',scene:'night'};
+  const h=[{rule:'R1',scene:'night'},{rule:'R1',scene:'night'}];
+  assert.strictEqual(_applyPref(rec,h).filter,'night');
+});
+FPc('偏好：推翻 3 次 → 本场景 null', ()=>{
+  const rec={filter:'night',rule:'R1',scene:'night'};
+  const h=[{rule:'R1',scene:'night'},{rule:'R1',scene:'night'},{rule:'R1',scene:'night'}];
+  const out=_applyPref(rec,h);
+  assert.strictEqual(out.filter,null); assert.strictEqual(out.strength,0); assert.strictEqual(out.rule,'R1(PREF)');
+});
+FPc('偏好：4 次以上仍 null（有界）', ()=>{
+  const rec={filter:'night',rule:'R1',scene:'night'};
+  const h=[{rule:'R1',scene:'night'},{rule:'R1',scene:'night'},{rule:'R1',scene:'night'},{rule:'R1',scene:'night'},{rule:'R1',scene:'night'}];
+  assert.strictEqual(_applyPref(rec,h).filter,null);
+});
+FPc('偏好：跨场景不误伤——R1@night 推翻不影响 R1@landscape', ()=>{
+  const rec={filter:'night',rule:'R1',scene:'landscape'};
+  const h=[{rule:'R1',scene:'night'},{rule:'R1',scene:'night'},{rule:'R1',scene:'night'}];
+  assert.strictEqual(_applyPref(rec,h).filter,'night');
+});
+FPc('偏好：跨 rule 不误伤——R4 推翻不影响 R1', ()=>{
+  const rec={filter:'night',rule:'R1',scene:'night'};
+  const h=[{rule:'R4',scene:'night'},{rule:'R4',scene:'night'},{rule:'R4',scene:'night'}];
+  assert.strictEqual(_applyPref(rec,h).filter,'night');
+});
+FPc('偏好：rec 本就 null 时不再包装', ()=>{
+  const rec={filter:null,strength:0,rule:'GATE'};
+  const out=_applyPref(rec,[{rule:'GATE'}]);
+  assert.strictEqual(out.filter,null);
+});
+FPc('偏好：history 含坏条目被跳过', ()=>{
+  const rec={filter:'night',rule:'R1',scene:'night'};
+  const h=[null,{x:1},{rule:'R1',scene:'night'},{rule:'R1',scene:'night'}];
+  assert.strictEqual(_applyPref(rec,h).filter,'night'); // 有效2条<3
+});
+FPc('偏好：确定性——同输入两次结果一致', ()=>{
+  const rec={filter:'night',rule:'R1',scene:'night'};
+  const h=[{rule:'R1',scene:'night'},{rule:'R1',scene:'night'},{rule:'R1',scene:'night'}];
+  assert.deepStrictEqual(_applyPref(rec,h),_applyPref(rec,h));
+});
 
 /* -------------------- 汇总 -------------------- */
 if (process.exitCode) {

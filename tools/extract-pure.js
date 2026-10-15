@@ -13,7 +13,7 @@ const SRC = path.join(ROOT, 'index.html');
 const OUT = path.join(ROOT, 'tests', 'pure-functions.js');
 
 // 需要提取的纯函数（名字需与 index.html 中一致）
-const TARGETS = ['_deriveCrop', '_smartCrop', '_classifyYaw', '_gazeGuard', '_edgeSnap', '_rodGuard', '_cloudCropIntentGuard', '_jointGuard', '_objectGuard', '_portraitFraming', '_aspectCrop', '_figureGround', '_yoloNMS', '_estTiltDeg', '_guidanceEyeLevel', '_guidanceEyeOnGrid', '_guidanceDistance', '_guidanceOrientation', '_faceLightSplit', '_lightPosition', '_warmLightHint', '_windowLightHint', '_lowAngleAdvice', '_composeDiagnosis', '_recommendFilter', '_confBand', '_medianBox', '_consensusPerson', '_sceneDebounce', '_debangText'];
+const TARGETS = ['_deriveCrop', '_smartCrop', '_classifyYaw', '_gazeGuard', '_edgeSnap', '_rodGuard', '_cloudCropIntentGuard', '_jointGuard', '_objectGuard', '_portraitFraming', '_aspectCrop', '_figureGround', '_yoloNMS', '_estTiltDeg', '_guidanceEyeLevel', '_guidanceEyeOnGrid', '_guidanceDistance', '_guidanceOrientation', '_faceLightSplit', '_lightPosition', '_warmLightHint', '_windowLightHint', '_lowAngleAdvice', '_composeDiagnosis', '_recommendFilter', '_confBand', '_medianBox', '_consensusPerson', '_sceneDebounce', '_debangText', '_applyPref'];
 
 const src = fs.readFileSync(SRC, 'utf8');
 

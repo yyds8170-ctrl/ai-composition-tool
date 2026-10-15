@@ -818,4 +818,23 @@
       return st;
     }
 
-module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText };
+    function _applyPref(rec, history){
+      try{
+        if(!rec||typeof rec!=="object"||!rec.filter) return rec;
+        if(!Array.isArray(history)||history.length===0) return rec;
+        var rule=rec.rule, scene=(typeof rec.scene==="string")?rec.scene:null;
+        if(!rule) return rec;
+        var n=0;
+        for(var i=0;i<history.length;i++){
+          var e=history[i]; if(!e||typeof e!=="object") continue;
+          if(e.rule!==rule) continue;
+          // 同场景才降权（scene 为空时按 rule 全场景累计）；scene 记录与当前一致才算
+          if(scene&&e.scene&&e.scene!==scene) continue;
+          n++;
+        }
+        if(n>=3) return {filter:null,strength:0,reason:"",rule:rule+"(PREF)"};
+        return rec;
+      }catch(e){ return rec; }
+    }
+
+module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref };

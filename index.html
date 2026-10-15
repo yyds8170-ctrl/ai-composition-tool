@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v9.2.0 · 实景视觉构图生成工具</title>
-<meta name="description" content="AI 构图助手 Pro v9.2.0 · 实景视觉构图生成工具（永久免费、不限使用次数）：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。构图综合诊断（视线/头顶留白/眼位/地平线/光位/朝向，只读建议不改裁切）+ 拍后滤镜智能推荐（糊片/过曝/死黑/过浓/近纯黑一律不推，每图最多一次）。v9.2.0 真机取景自动化覆盖：实时拍前引导连续帧防抖（同一结论连续 3 帧才显示、换结论立即回落）、防抖状态机纯函数化可测，滤镜推荐规则矩阵全面回归。含 YOLO11n 本地检测、智能人像裁切（不切关节·头·手·脚）、人像近眼上三分与 3:4 景别裁切、侧脸视线留白（nose room，按脸朝向单侧留白）、边缘能量吸附（裁切刀自动避开人物轮廓与关节、藏到画面空白处，只少裁不多裁）、背景保护 RoD（被裁的晚霞/水面/高层次地面整段保留，只少裁不多裁）、通用物体边界保护（不切动物/车/食物/餐具）、30 款滤镜、构图法则百科与云端 VLM 分析">
+<title>AI 构图助手 Pro v9.3.0 · 实景视觉构图生成工具</title>
+<meta name="description" content="AI 构图助手 Pro v9.3.0 · 实景视觉构图生成工具（永久免费、不限使用次数）：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。构图综合诊断（视线/头顶留白/眼位/地平线/光位/朝向，只读建议不改裁切）+ 拍后滤镜智能推荐（糊片/过曝/死黑/过浓/近纯黑一律不推，每图最多一次）。v9.3.0 可训练偏好：点「不喜欢」忽略推荐后，本地轻量记录，同场景同规则累计 3 次后该推荐本场景自动沉默，越用越合口味；新用户零偏好、行为与上版完全一致。含 YOLO11n 本地检测、智能人像裁切（不切关节·头·手·脚）、人像近眼上三分与 3:4 景别裁切、侧脸视线留白（nose room，按脸朝向单侧留白）、边缘能量吸附（裁切刀自动避开人物轮廓与关节、藏到画面空白处，只少裁不多裁）、背景保护 RoD（被裁的晚霞/水面/高层次地面整段保留，只少裁不多裁）、通用物体边界保护（不切动物/车/食物/餐具）、30 款滤镜、构图法则百科与云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v9.2.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切（永久免费不限次数）">
+<meta property="og:title" content="AI 构图助手 Pro v9.3.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切（永久免费不限次数）">
 <meta property="og:description" content="给不会拍照的普通人：打开相机，AI 教你怎么拍。AI 构图分析（本地像素+云端 VLM 双引擎）、人像保护裁切（不切头不切手脚）、30 款滤镜，一键出成品。默认本地运行，照片不上传。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
@@ -661,7 +661,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v9.2.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v9.3.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -1024,7 +1024,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v9.2.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v9.3.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1098,7 +1098,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v9.2.0";
+var APP_VER="v9.3.0";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -1689,6 +1689,8 @@ var APP_VER="v9.2.0";
         if(Array.isArray(ai.allBoxes)){ for(var _bi=0;_bi<ai.allBoxes.length;_bi++){ if(ai.allBoxes[_bi]&&ai.allBoxes[_bi].class==="person") pc++; } }
         var sig={personScore:(typeof ai.personScore==="number")?ai.personScore:null,personCount:pc,scene:(state.plan&&state.plan.sceneType)||null};
         var rec=_recommendFilter(aFinal||ai, sig);
+        if(rec&&rec.filter&&sig.scene) rec.scene=sig.scene;
+        try{ rec=_applyPref(rec, JSON.parse(localStorage.getItem("ai_cmp_pref")||"[]")); }catch(e){}
         if(!rec||!rec.filter||!FILTERS[rec.filter]) return; // 沉默：不弹横幅
         state._frecShown=true; state._frecRec=rec;
         var _tx=document.getElementById("frecText");
@@ -1709,7 +1711,16 @@ var APP_VER="v9.2.0";
           _hideFrec();
         }catch(e){}
       });
-      if(rj) rj.addEventListener("click",function(){ state._frecRec=null; _hideFrec(); });
+      if(rj) rj.addEventListener("click",function(){
+        try{
+          var rec=state._frecRec;
+          if(rec&&rec.rule){ // 记录一次推翻（同场景同 rule 累计≥3 后该 rule 本场景沉默）
+            var h=[]; try{ h=JSON.parse(localStorage.getItem("ai_cmp_pref")||"[]"); }catch(e){ h=[]; }
+            if(Array.isArray(h)){ h.push({rule:rec.rule,scene:rec.scene||null,ts:Date.now()}); h=h.slice(-200); localStorage.setItem("ai_cmp_pref",JSON.stringify(h)); }
+          }
+        }catch(e){}
+        state._frecRec=null; _hideFrec();
+      });
     })();
     var zoomSlid=false, zoomRaf=null;
     zoomRange.addEventListener("pointerdown",function(){ zoomSlid=false; });
@@ -3092,6 +3103,27 @@ var APP_VER="v9.2.0";
         }
         return {filter:null,strength:0,reason:"",rule:"NONE"};
       }catch(e){ return GATE; }
+    }
+    // v9.3.0 可训练偏好（自研轻量）：纯函数消费"用户推翻推荐"记录 history[{rule,scene}]。
+    // 宁缺毋滥：只在【同场景同 rule】被推翻累计 ≥3 次时，把该 rule 在该场景降权为沉默（filter=null）；
+    // history=[]（新用户）原样返回 rec——行为与 v9.2.0 完全一致。绝不新增触发、绝不绕过五道硬闸门（硬闸门在 _recommendFilter 内已先执行）。
+    function _applyPref(rec, history){
+      try{
+        if(!rec||typeof rec!=="object"||!rec.filter) return rec;
+        if(!Array.isArray(history)||history.length===0) return rec;
+        var rule=rec.rule, scene=(typeof rec.scene==="string")?rec.scene:null;
+        if(!rule) return rec;
+        var n=0;
+        for(var i=0;i<history.length;i++){
+          var e=history[i]; if(!e||typeof e!=="object") continue;
+          if(e.rule!==rule) continue;
+          // 同场景才降权（scene 为空时按 rule 全场景累计）；scene 记录与当前一致才算
+          if(scene&&e.scene&&e.scene!==scene) continue;
+          n++;
+        }
+        if(n>=3) return {filter:null,strength:0,reason:"",rule:rule+"(PREF)"};
+        return rec;
+      }catch(e){ return rec; }
     }
     // v8.6.0 nose room 视线留白：单人侧脸（非特写）沿"视线方向"留出约 2:1 空间——脸朝右则把脸放左三分(0.33)、
     // 右侧留白；脸朝左则放右三分(0.67)。只在"身后一侧"做单侧裁切（绝不在视线方向动刀），目标轻微偏离且身体完整
@@ -9695,7 +9727,7 @@ hSym2:state.aiData.hSym}:null; }
   }; }catch(e){}
 })();
   </script>
-<div id="aicUpdateBar" class="hide"><span class="ub-t">✨ 新版本 v9.2.0 已就绪：① 实时取景拍前引导连续帧防抖——同一结论连续 3 帧才弹出提示、换结论立即回落，不会再因为脸/身体框逐帧小幅晃动而提示乱跳。② 防抖状态机已纯函数化并接入实时循环，可逐帧测试；稳定高/低置信帧不重复推理，不拖慢取景。③ 拍后滤镜推荐规则矩阵全面回归（场景×光线×内容 60+ 用例）。本地成片裁切阈值一字未动，150 张真实照片回归与上版逐张对照裁切 0 变化、0 误切、0 报错，云端 12 图真实请求 0 错误。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
+<div id="aicUpdateBar" class="hide"><span class="ub-t">✨ 新版本 v9.3.0 已就绪：① 可训练偏好——点推荐横幅上的「不喜欢」忽略后，本地轻量记下；同场景同规则被忽略累计 3 次，之后该场景就不再弹这条推荐，越用越合口味。② 宁缺毋滥：偏好只让推荐「闭嘴」，绝不新增触发、绝不越过糊片/过曝/死黑/过浓/近纯黑五道硬闸门，新用户零偏好、和上版完全一致。③ 全程本地、不上传、不设任何次数墙。本地成片裁切阈值一字未动，150 张真实照片回归推荐横幅逐张 0 差异、0 报错，云端 12 图真实请求 0 错误。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
 <script>
 (function(){
   // v8.2.3 新版本就绪提示条：SW 激活后广播 → 页面弹出"立即刷新"，根治旧缓存看不到新功能
