@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _jointGuard, _objectGuard, _portraitFraming, _figureGround, _yoloNMS, _estTiltDeg } = require('./pure-functions.js');
+const { _deriveCrop, _smartCrop, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -309,6 +309,138 @@ test('estTiltDeg: 弱边缘被忽略', () => {
   const gx = new Float32Array(W * H), gy = new Float32Array(W * H), gm = new Float32Array(W * H);
   for (let i = 0; i < 200; i++) { gx[i] = 0; gy[i] = 12; gm[i] = 12; }
   assert.strictEqual(_estTiltDeg(gx, gy, gm, W, H, TH).conf, 0);
+});
+
+/* -------------------- v8.5.0 _smartCrop 该裁才裁最小修正 -------------------- */
+test('smartCrop: 主体居中→完全不裁（杜绝对称乱裁）', () => {
+  assert.deepStrictEqual(_smartCrop(0.5, 0.5), [0, 0, 0, 0]);
+  assert.deepStrictEqual(_smartCrop(0.45, 0.55), [0, 0, 0, 0]);
+});
+test('smartCrop: 主体在三分点附近→不裁', () => {
+  assert.deepStrictEqual(_smartCrop(0.35, 0.65), [0, 0, 0, 0]);
+});
+test('smartCrop: 轻微偏心→不裁（小于最小触发）', () => {
+  assert.deepStrictEqual(_smartCrop(0.33, 0.67), [0, 0, 0, 0]);
+});
+test('smartCrop: 主体明显偏左→只裁右侧空白，绝不裁左侧', () => {
+  const o = _smartCrop(0.25, 0.5);
+  assert.strictEqual(o[0], 0, '左边不裁（主体在左）');
+  assert.ok(o[2] > 0, '应裁右侧空白，实际 ' + o[2]);
+  assert.strictEqual(o[1], 0); assert.strictEqual(o[3], 0);
+});
+test('smartCrop: 主体明显偏右→只裁左侧空白', () => {
+  const o = _smartCrop(0.75, 0.5);
+  assert.strictEqual(o[2], 0, '右边不裁（主体在右）');
+  assert.ok(o[0] > 0, '应裁左侧空白，实际 ' + o[0]);
+});
+test('smartCrop: 主体偏上→只裁下侧', () => {
+  const o = _smartCrop(0.5, 0.30);
+  assert.strictEqual(o[1], 0); assert.ok(o[3] > 0, '应裁下侧，实际 ' + o[3]);
+});
+test('smartCrop: 主体偏下→只裁上侧', () => {
+  const o = _smartCrop(0.5, 0.75);
+  assert.ok(o[1] > 0, '应裁上侧，实际 ' + o[1]); assert.strictEqual(o[3], 0);
+});
+test('smartCrop: 偏左修正后主体≈左三分点（未触顶时精确）', () => {
+  const cx = 0.32, o = _smartCrop(cx, 0.5);
+  const fW = 1 - o[0] - o[2];
+  assert.ok(Math.abs(cx / fW - 0.375) < 0.02, '裁后主体应≈0.375，实际 ' + (cx / fW).toFixed(3));
+});
+test('smartCrop: 极端偏左触顶时也只裁到上限，不硬凑三分', () => {
+  const cx = 0.25, o = _smartCrop(cx, 0.5);
+  const fW = 1 - o[0] - o[2];
+  assert.ok(Math.abs(o[2] - 0.18) < 1e-9, '应被限制在0.18，实际 ' + o[2]);
+  assert.ok(cx / fW < 0.35, '触顶时主体仍偏左，不强行拉回，实际 ' + (cx / fW).toFixed(3));
+});
+test('smartCrop: 裁切量受上限约束', () => {
+  const o = _smartCrop(0.05, 0.05);
+  assert.ok(o[2] <= 0.18 + 1e-9, '水平单边≤0.18，实际 ' + o[2]);
+  assert.ok(o[3] <= 0.15 + 1e-9, '垂直单边≤0.15，实际 ' + o[3]);
+});
+test('smartCrop: vCrop=false 时垂直方向不裁（风光/建筑）', () => {
+  assert.deepStrictEqual(_smartCrop(0.5, 0.25, { vCrop: false }), [0, 0, 0, 0]);
+  assert.deepStrictEqual(_smartCrop(0.5, 0.75, { vCrop: false }), [0, 0, 0, 0]);
+});
+test('smartCrop: 非数中心→当居中不裁', () => {
+  assert.deepStrictEqual(_smartCrop(NaN, undefined), [0, 0, 0, 0]);
+});
+test('smartCrop: 水平偏心但垂直在死区→只裁水平', () => {
+  const o = _smartCrop(0.28, 0.5);
+  assert.ok(o[2] > 0); assert.strictEqual(o[1], 0); assert.strictEqual(o[3], 0);
+});
+test('smartCrop: 确定性', () => {
+  assert.deepStrictEqual(_smartCrop(0.25, 0.75), _smartCrop(0.25, 0.75));
+});
+
+/* -------------------- v8.5.0 _aspectCrop 场景化 16:9 宽幅 -------------------- */
+const AC_FA = 16 / 9;
+function acInfo(over) { return Object.assign({ scene: 'landscape', isPerson: false, aspect: 1.5, tiltDeg: 0, tiltConf: 0, cx: 0.5, cy: 0.5, ratio: 0.5, horizonOk: false, boxes: [] }, over || {}); }
+function acRatio(out, aspect) { const fH = 1 - (out[1] + out[3]) / 100, fW = 1 - (out[0] + out[2]) / 100; return aspect * fW / fH; }
+test('aspectCrop: 非风光场景（人像/美食/通用）原样返回', () => {
+  assert.deepStrictEqual(_aspectCrop([0, 0, 0, 0], acInfo({ scene: 'portrait' })), [0, 0, 0, 0]);
+  assert.deepStrictEqual(_aspectCrop([0, 0, 0, 0], acInfo({ scene: 'food' })), [0, 0, 0, 0]);
+  assert.deepStrictEqual(_aspectCrop([0, 0, 0, 0], acInfo({ scene: 'general' })), [0, 0, 0, 0]);
+});
+test('aspectCrop: 竖幅/方图/超极端宽幅不触发', () => {
+  assert.deepStrictEqual(_aspectCrop([0, 0, 0, 0], acInfo({ aspect: 0.75 })), [0, 0, 0, 0]);
+  assert.deepStrictEqual(_aspectCrop([0, 0, 0, 0], acInfo({ aspect: 1.33 })), [0, 0, 0, 0]);
+  assert.deepStrictEqual(_aspectCrop([0, 0, 0, 0], acInfo({ aspect: 2.3 })), [0, 0, 0, 0]);
+});
+test('aspectCrop: 有人物交人像通道，不做宽幅', () => {
+  assert.deepStrictEqual(_aspectCrop([0, 0, 0, 0], acInfo({ isPerson: true })), [0, 0, 0, 0]);
+});
+test('aspectCrop: 明显倾斜（高置信>3°）先找平，不做宽幅', () => {
+  assert.deepStrictEqual(_aspectCrop([0, 0, 0, 0], acInfo({ tiltConf: 50, tiltDeg: 5 })), [0, 0, 0, 0]);
+  assert.deepStrictEqual(_aspectCrop([0, 0, 0, 0], acInfo({ tiltConf: 60, tiltDeg: -4 })), [0, 0, 0, 0]);
+});
+test('aspectCrop: 横拍风光 1.5 无主体→裁上下成 16:9，画幅正确', () => {
+  const out = _aspectCrop([0, 0, 0, 0], acInfo({ aspect: 1.5 }));
+  assert.ok(out[0] === 0 && out[2] === 0, '裁上下应满宽，实际 ' + JSON.stringify(out));
+  assert.ok(out[1] + out[3] >= 5, '应裁掉上下，实际 ' + JSON.stringify(out));
+  assert.ok(Math.abs(acRatio(out, 1.5) - AC_FA) <= 0.08, '裁后宽高比应≈16:9，实际 ' + acRatio(out, 1.5).toFixed(3));
+  const fH = 1 - (out[1] + out[3]) / 100;
+  assert.ok(fH >= 0.80, '裁后高占比≥0.80，实际 ' + fH);
+});
+test('aspectCrop: 横拍水景 1.955 无主体→裁左右成 16:9，画幅正确', () => {
+  const out = _aspectCrop([0, 0, 0, 0], acInfo({ scene: 'waterscape', aspect: 1.955 }));
+  assert.ok(out[1] === 0 && out[3] === 0, '裁左右应满高，实际 ' + JSON.stringify(out));
+  assert.ok(out[0] + out[2] >= 5, '应裁掉左右，实际 ' + JSON.stringify(out));
+  assert.ok(Math.abs(acRatio(out, 1.955) - AC_FA) <= 0.08, '裁后宽高比应≈16:9，实际 ' + acRatio(out, 1.955).toFixed(3));
+});
+test('aspectCrop: 夜景 1.5 同样触发', () => {
+  const out = _aspectCrop([0, 0, 0, 0], acInfo({ scene: 'night', aspect: 1.5 }));
+  assert.ok(out[1] + out[3] >= 5, '夜景应裁上下，实际 ' + JSON.stringify(out));
+  assert.ok(Math.abs(acRatio(out, 1.5) - AC_FA) <= 0.08);
+});
+test('aspectCrop: 地平线保持原相对位置（上三分）', () => {
+  const out = _aspectCrop([0, 0, 0, 0], acInfo({ aspect: 1.5, horizonOk: true, ratio: 0.35 }));
+  const T = out[1] / 100, fH = 1 - (out[1] + out[3]) / 100;
+  const ratioAfter = (0.35 - T) / fH;
+  assert.ok(Math.abs(ratioAfter - 0.35) < 0.02, '地平线相对位置应保持≈0.35，实际 ' + ratioAfter.toFixed(3));
+});
+test('aspectCrop: 居中主体装得下时不切主体', () => {
+  const out = _aspectCrop([0, 0, 0, 0], acInfo({ aspect: 1.5, boxes: [{ b: [0.3, 0.1, 0.7, 0.9] }] }));
+  const T = out[1] / 100, B = out[3] / 100;
+  assert.ok(T <= 0.1 - 0.01 + 1e-9, '上边不切主体，T=' + T);
+  assert.ok(B <= 1 - 0.9 - 0.01 + 1e-9, '下边不切主体，B=' + B);
+  assert.ok(Math.abs(acRatio(out, 1.5) - AC_FA) <= 0.08);
+});
+test('aspectCrop: 主体垂直跨度过大装不下→放弃', () => {
+  const out = _aspectCrop([0, 0, 0, 0], acInfo({ aspect: 1.5, boxes: [{ b: [0.2, 0.05, 0.8, 0.95] }] }));
+  assert.deepStrictEqual(out, [0, 0, 0, 0]);
+});
+test('aspectCrop: 主体横跨左右两端（裁左右）装不下→放弃', () => {
+  const out = _aspectCrop([0, 0, 0, 0], acInfo({ scene: 'waterscape', aspect: 1.955, boxes: [{ b: [0.02, 0.2, 0.98, 0.8] }] }));
+  assert.deepStrictEqual(out, [0, 0, 0, 0]);
+});
+test('aspectCrop: 小主体（<1%）忽略，大主体贴边会被切→放弃', () => {
+  // 大主体占满顶部（y0~0.98），裁上下必切→放弃
+  const out = _aspectCrop([0, 0, 0, 0], acInfo({ aspect: 1.5, boxes: [{ b: [0.1, 0.0, 0.9, 0.98] }] }));
+  assert.deepStrictEqual(out, [0, 0, 0, 0]);
+});
+test('aspectCrop: 确定性——同输入两次结果一致', () => {
+  const i = acInfo({ aspect: 1.5, horizonOk: true, ratio: 0.4, boxes: [{ b: [0.25, 0.2, 0.75, 0.7] }] });
+  assert.deepStrictEqual(_aspectCrop([0, 0, 0, 0], i), _aspectCrop([0, 0, 0, 0], i));
 });
 
 /* -------------------- 汇总 -------------------- */

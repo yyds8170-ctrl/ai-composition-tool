@@ -1,5 +1,5 @@
 /* 临时审查脚本：对纯函数做属性/模糊测试，找真实健壮性问题。 */
-const { _deriveCrop, _jointGuard, _objectGuard, _portraitFraming, _figureGround, _yoloNMS, _estTiltDeg } = require('../tests/pure-functions.js');
+const { _deriveCrop, _smartCrop, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg } = require('../tests/pure-functions.js');
 
 let issues = 0;
 function bad(msg) { console.log('ISSUE:', msg); issues++; }
@@ -136,6 +136,66 @@ for (let i = 0; i < 1000000; i++) {
     if (aspect>=0.92 || isCloseUp || !(ph>=0.34&&ph<0.72)) bad('portraitFraming 不该触发却触发');
   }
   if (JSON.stringify(_portraitFraming(crop, info)) !== JSON.stringify(out)) bad('portraitFraming 不稳定');
+}
+
+// 8. _smartCrop: 随机 cx/cy，检查无对称裁切、方向正确、上限、居中不裁、确定性（200 万次）
+for (let i = 0; i < 2000000; i++) {
+  const cx = rnd(-0.1, 1.1), cy = rnd(-0.1, 1.1), vCrop = Math.random() < 0.5;
+  let out;
+  try { out = _smartCrop(cx, cy, { vCrop: vCrop }); } catch(e){ bad('smartCrop 抛错: '+e.message); continue; }
+  if (out.length !== 4) { bad('smartCrop 长度!=4'); continue; }
+  const [L,T,R,B] = out;
+  [L,T,R,B].forEach(v=>{ if(!validNum(v)) bad('smartCrop NaN'); if(v<0||v>0.181) bad('smartCrop 越界: '+v); });
+  if (T>0.151+1e-9 || B>0.151+1e-9) bad('smartCrop 垂直超上限');
+  if (L>0 && R>0) bad('smartCrop 水平双侧裁切（对称乱裁）');
+  if (T>0 && B>0) bad('smartCrop 垂直双侧裁切');
+  const ccx=Math.max(0,Math.min(1,cx)), ccy=Math.max(0,Math.min(1,cy));
+  if (ccx<0.375 && L>0) bad('smartCrop 主体偏左却裁左边');
+  if (ccx>0.625 && R>0) bad('smartCrop 主体偏右却裁右边');
+  if (vCrop && ccy<0.375 && T>0) bad('smartCrop 主体偏上却裁上边');
+  if (vCrop && ccy>0.625 && B>0) bad('smartCrop 主体偏下却裁下边');
+  if (!vCrop && (T>0||B>0)) bad('smartCrop vCrop=false 仍垂直裁切');
+  if (ccx>=0.375&&ccx<=0.625&&ccy>=0.375&&ccy<=0.625 && (L+T+R+B)>0) bad('smartCrop 主体居中却裁切');
+  if (JSON.stringify(_smartCrop(cx,cy,{vCrop}))!==JSON.stringify(out)) bad('smartCrop 不稳定');
+}
+
+// 9. _aspectCrop: 随机构图信息，触发时检查画幅≈16:9、面积、不切主体；不触发原样；确定性（100 万次）
+const AC_SCENES=['waterscape','landscape','night','portrait','food','general','architecture'];
+function rndACBoxes(){
+  const n=Math.floor(rnd(0,6)); const arr=[];
+  for(let j=0;j<n;j++){
+    const x1=rnd(0,0.8), y1=rnd(0,0.8), x2=Math.min(1,x1+rnd(0.05,0.5)), y2=Math.min(1,y1+rnd(0.05,0.5));
+    arr.push({b:[x1,y1,x2,y2]});
+  }
+  return arr;
+}
+for (let i=0;i<1000000;i++){
+  const info={ scene:AC_SCENES[Math.floor(rnd(0,AC_SCENES.length))], isPerson:Math.random()<0.15,
+    aspect:rnd(0.6,2.4), tiltDeg:rnd(-12,12), tiltConf:rnd(0,80),
+    cx:rnd(0,1),cy:rnd(0,1),ratio:rnd(0.1,0.9),horizonOk:Math.random()<0.5, boxes:rndACBoxes() };
+  const crop=[0,0,0,0];
+  let out;
+  try{ out=_aspectCrop(crop,info); }catch(e){ bad('aspectCrop 抛错: '+e.message); continue; }
+  if(out.length!==4){ bad('aspectCrop 长度!=4'); continue; }
+  out.forEach(v=>{ if(!validNum(v)) bad('aspectCrop NaN'); if(v<0||v>60) bad('aspectCrop 越界: '+v); });
+  const L=out[0]/100,T=out[1]/100,R=out[2]/100,B=out[3]/100, fH=1-T-B, fW=1-L-R;
+  const fired=out.reduce((s,v)=>s+v,0)>0;
+  if(fired){
+    if(fH*fW<0.78-1e-9) bad('aspectCrop 面积<0.78: '+(fH*fW));
+    if(Math.abs(info.aspect*fW/fH-16/9)>0.08+1e-9) bad('aspectCrop 画幅偏离16:9');
+    if(info.isPerson) bad('aspectCrop 人像不应触发');
+    if(info.tiltConf>=40&&Math.abs(info.tiltDeg)>3) bad('aspectCrop 倾斜不应触发');
+    if(!(info.scene==='waterscape'||info.scene==='landscape'||info.scene==='night'||info.scene==='architecture')) bad('aspectCrop 非宽幅场景触发');
+    if(info.aspect<1.45||info.aspect>2.1) bad('aspectCrop 画幅范围外触发');
+    for(const o of info.boxes){
+      const b=o.b; if((b[2]-b[0])*(b[3]-b[1])<0.01) continue;
+      if(T>b[1]-0.01+1e-9) bad('aspectCrop 切主体上');
+      if(B>1-b[3]-0.01+1e-9) bad('aspectCrop 切主体下');
+      if(L>b[0]-0.01+1e-9) bad('aspectCrop 切主体左');
+      if(R>1-b[2]-0.01+1e-9) bad('aspectCrop 切主体右');
+    }
+  }
+  if(JSON.stringify(_aspectCrop(crop,info))!==JSON.stringify(out)) bad('aspectCrop 不稳定');
 }
 
 console.log(issues === 0 ? '\n✓ 模糊测试未发现问题' : `\n发现 ${issues} 个问题`);

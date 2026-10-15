@@ -31,6 +31,22 @@
       return b.map(function(v){ return Math.max(0,Math.min(45,Math.round(v*z))); });
     }
 
+    function _smartCrop(cx,cy,opt){
+      var L=0,T=0,R=0,B=0;
+      var o=opt||{};
+      var MIN=0.13, CAPX=0.18, CAPY=0.15, tL=0.375, tR=0.625, tT=0.375, tB=0.625;
+      if(typeof cx!=="number"||!isFinite(cx)) cx=0.5;
+      if(typeof cy!=="number"||!isFinite(cy)) cy=0.5;
+      cx=Math.max(0,Math.min(1,cx)); cy=Math.max(0,Math.min(1,cy));
+      if(cx<tL){ var r=1-cx/tL; if(r>=MIN) R=Math.min(CAPX,r); }             // 偏左→裁右
+      else if(cx>tR){ var l=(cx-tR)/(1-tR); if(l>=MIN) L=Math.min(CAPX,l); } // 偏右→裁左
+      if(o.vCrop!==false){
+        if(cy<tT){ var b=1-cy/tT; if(b>=MIN) B=Math.min(CAPY,b); }           // 偏上→裁下
+        else if(cy>tB){ var t=(cy-tB)/(1-tB); if(t>=MIN) T=Math.min(CAPY,t); } // 偏下→裁上
+      }
+      return [L,T,R,B];
+    }
+
     function _jointGuard(crop, pose, isPort){
       if(!isPort || !crop || crop.length!==4 || !(crop[0]||crop[1]||crop[2]||crop[3])) return crop;
       if(!pose || pose.length<29) return crop;
@@ -150,6 +166,67 @@
       return [oL, oT, oR, oB].map(function(v){ return Math.max(0,Math.min(60,v)); });
     }
 
+    function _aspectCrop(crop, info){
+      if(!crop||crop.length!==4||!info) return crop;
+      var scene=info.scene, aspect=info.aspect;
+      if(scene!=="waterscape"&&scene!=="landscape"&&scene!=="night"&&scene!=="architecture") return crop;
+      if(typeof aspect!=="number"||!isFinite(aspect)||aspect<1.45||aspect>2.1) return crop; // 仅横拍且不过度极端
+      if(info.isPerson===true) return crop;                       // 有人物交人像通道，不做宽幅
+      if(info.tiltConf>=40&&typeof info.tiltDeg==="number"&&isFinite(info.tiltDeg)&&Math.abs(info.tiltDeg)>3) return crop; // 明显倾斜先找平
+      var FA=16/9, H, W;
+      if(aspect<=FA){ W=1; H=aspect/FA; } else { H=1; W=FA/aspect; } // 原片偏窄→裁上下；原片更宽→裁左右
+      if(H<0.80||W<0.85) return crop;                            // 双保险：不允许裁掉过多
+      var all=[];
+      (info.boxes||[]).forEach(function(o){
+        var b=o&&o.b; if(!b||b.length!==4) return;
+        var x1=Math.max(0,Math.min(1,b[0])),y1=Math.max(0,Math.min(1,b[1])),x2=Math.max(0,Math.min(1,b[2])),y2=Math.max(0,Math.min(1,b[3]));
+        if(x2-x1<=0||y2-y1<=0) return;
+        if((x2-x1)*(y2-y1)<0.01) return;
+        all.push([x1,y1,x2,y2]);
+      });
+      var loc=all.slice().sort(function(a,b){return (b[2]-b[0])*(b[3]-b[1])-(a[2]-a[0])*(a[3]-a[1]);}).slice(0,8)
+        .filter(function(b){return (b[2]-b[0])*(b[3]-b[1])>=0.015;});
+      var T=0,L=0;
+      if(H<1){ // 裁上下
+        var lo=0,hi=1-H;
+        if(loc.length){
+          var yLo=Math.min.apply(null,loc.map(function(b){return b[1];}))-0.02, yHi=Math.max.apply(null,loc.map(function(b){return b[3];}))+0.02;
+          yLo=Math.max(0,yLo); yHi=Math.min(1,yHi);
+          lo=Math.max(0,yHi-H); hi=Math.min(1-H,yLo);
+        }
+        if(lo>hi+1e-9) return crop;                            // 主体垂直方向装不下，放弃
+        var T0;
+        if(info.horizonOk===true&&typeof info.ratio==="number"&&info.ratio>0.1&&info.ratio<0.9){ T0=info.ratio*(1-H); }
+        else { var cy=(typeof info.cy==="number"&&isFinite(info.cy))?info.cy:0.5; T0=cy-0.5*H; }
+        T=Math.max(lo,Math.min(hi,T0));
+      }
+      if(W<1){ // 裁左右
+        var llo=0,lhi=1-W;
+        if(loc.length){
+          var xLo=Math.min.apply(null,loc.map(function(b){return b[0];}))-0.02, xHi=Math.max.apply(null,loc.map(function(b){return b[2];}))+0.02;
+          xLo=Math.max(0,xLo); xHi=Math.min(1,xHi);
+          llo=Math.max(0,xHi-W); lhi=Math.min(1-W,xLo);
+        }
+        if(llo>lhi+1e-9) return crop;                          // 主体水平方向装不下，放弃
+        var cx=(typeof info.cx==="number"&&isFinite(info.cx))?info.cx:0.5;
+        L=Math.max(llo,Math.min(lhi,cx-0.5*W));
+      }
+      var B=1-T-H, R=1-L-W;
+      if(T<0||B<0||L<0||R<0||H*W<0.78) return crop;
+      var oL=Math.floor(L*100),oT=Math.floor(T*100),oR=Math.floor(R*100),oB=Math.floor(B*100); // 四边 floor：只扩不缩
+      var fH=1-oT/100-oB/100, fW=1-oL/100-oR/100;
+      if(fH<0.80||fW<0.85||fH*fW<0.78) return crop;
+      if(Math.abs(aspect*fW/fH-FA)>0.08) return crop;          // 裁后宽高比必须确实接近 16:9
+      for(var i=0;i<all.length;i++){ var b=all[i];            // 最终硬校验：任何≥1% 主体都不被切
+        if(oT/100>b[1]-0.01+1e-9) return crop;
+        if(oB/100>1-b[3]-0.01+1e-9) return crop;
+        if(oL/100>b[0]-0.01+1e-9) return crop;
+        if(oR/100>1-b[2]-0.01+1e-9) return crop;
+      }
+      if(oL+oT+oR+oB<5) return crop;
+      return [oL,oT,oR,oB].map(function(v){return Math.max(0,Math.min(60,v));});
+    }
+
     function _figureGround(faceLum,bgLum){
       if(typeof faceLum!=='number'||!isFinite(faceLum)||typeof bgLum!=='number'||!isFinite(bgLum)) return null;
       var d=bgLum-faceLum;
@@ -209,4 +286,4 @@
           }catch(e){ return {deg:0,conf:0}; }
         }
 
-module.exports = { _deriveCrop, _jointGuard, _objectGuard, _portraitFraming, _figureGround, _yoloNMS, _estTiltDeg };
+module.exports = { _deriveCrop, _smartCrop, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg };
