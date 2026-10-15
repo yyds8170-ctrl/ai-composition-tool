@@ -1,5 +1,5 @@
 /* 临时审查脚本：对纯函数做属性/模糊测试，找真实健壮性问题。 */
-const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg } = require('../tests/pure-functions.js');
+const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg } = require('../tests/pure-functions.js');
 
 let issues = 0;
 function bad(msg) { console.log('ISSUE:', msg); issues++; }
@@ -335,5 +335,65 @@ for(let i=0;i<1000000;i++){
   if(typeof info.fb==='number'&&out[3]/100>1-info.fb-0.01+1e-9) bad('edgeSnap 切脸下');
   if(JSON.stringify(_edgeSnap(crop,energy,info))!==JSON.stringify(out)) bad('edgeSnap 不稳定');
 }
+
+// 13. _rodGuard: 随机 rod 前缀和/场景（含畸形、上下双高晚霞水面、纯蓝天、夜景暗部、整片高饱和），断言只少裁上下边、
+//     不碰左右、不新增边、窗高只增、不抛错、确定性（100 万次）
+function rndRod(W,H,mode){
+  const rL=new Float64Array(H+1),rL2=new Float64Array(H+1),rS=new Float64Array(H+1);
+  const hi=Math.max(1,Math.round(H*rnd(0.08,0.20)));
+  const ne=Math.ceil(W/2), no=Math.floor(W/2);
+  for(let y=0;y<H;y++){
+    let L0,L1,s0,s1;
+    const hot = (mode===1 && y<hi) || (mode===2 && y>=H-hi);
+    if(hot){ L0=150; L1=220; s0=0.7; s1=0.7; }
+    else if(mode===4 && y>=H-hi){ L0=20; L1=20; s0=0.02; s1=0.02; }
+    else if(mode===3){ L0=88; L1=100; s0=0.5; s1=0.5; }
+    else if(mode===0){ L0=100+rnd(0,20); L1=L0; s0=0.05; s1=0.05; }
+    else { L0=rnd(0,255); L1=rnd(0,255); s0=rnd(0,0.3); s1=rnd(0,0.3); }
+    rL[y+1]=rL[y]+ne*L0+no*L1;
+    rL2[y+1]=rL2[y]+ne*L0*L0+no*L1*L1;
+    rS[y+1]=rS[y]+ne*s0+no*s1;
+  }
+  const cL=new Float64Array(W+1),cL2=new Float64Array(W+1),cS=new Float64Array(W+1);
+  return {w:W,h:H,rL,rL2,rS,cL,cL2,cS};
+}
+for(let i=0;i<1000000;i++){
+  const W=Math.floor(rnd(60,260)), H=Math.floor(rnd(60,260));
+  let rod;
+  if(Math.random()<0.05){ rod=(Math.random()<0.5?null:{w:W,h:H,rL:[],rL2:[],rS:[]}); }
+  else { rod=rndRod(W,H,Math.floor(rnd(0,6))); }
+  const L=Math.floor(rnd(0,20)),R=Math.floor(rnd(0,20)),T=Math.floor(rnd(0,15)),B=Math.floor(rnd(0,15));
+  const crop=[L,T,R,B];
+  let out;
+  try{ out=_rodGuard(crop,rod,{}); }catch(e){ bad('rodGuard 抛错: '+e.message); continue; }
+  if(!Array.isArray(out)||out.length!==4){ bad('rodGuard 长度!=4'); continue; }
+  out.forEach((v,k)=>{ if(!validNum(v)) bad('rodGuard NaN/非法值'); if(v<0||v>60) bad('rodGuard 越界: '+v); });
+  if(out[0]!==L||out[2]!==R) bad('rodGuard 改动了左右边: '+L+','+R+' -> '+out[0]+','+out[2]);
+  if(out[1]>T) bad('rodGuard 上边增大（多裁） in='+T+' out='+out[1]);
+  if(out[3]>B) bad('rodGuard 下边增大（多裁） in='+B+' out='+out[3]);
+  if(T===0&&out[1]!==0) bad('rodGuard 新增上边裁切');
+  if(B===0&&out[3]!==0) bad('rodGuard 新增下边裁切');
+  if(Math.abs(out[1]-Math.round(out[1]))>1e-9||Math.abs(out[3]-Math.round(out[3]))>1e-9) bad('rodGuard 非整数');
+  if((1-out[1]/100-out[3]/100) < (1-T/100-B/100)-1e-9) bad('rodGuard 窗高缩小');
+  if(JSON.stringify(_rodGuard(crop,rod,{}))!==JSON.stringify(out)) bad('rodGuard 不稳定');
+}
+// 固定强双高合成：顶部晚霞/底部水面必须把对应边归零；夜景暗部保持；纯蓝天只减2
+(function(){
+  const H=100,W=100;
+  const mk=(mode)=>rndRod(W,H,mode);
+  // rndRod 的 hi 随机，单独强制满高价值区构造确定性样本
+  const fixed=(hotTop,hotBot,hotVar,hotS)=>{
+    const rL=new Float64Array(H+1),rL2=new Float64Array(H+1),rS=new Float64Array(H+1);
+    for(let y=0;y<H;y++){
+      let a=80,b=80,s=0.1;
+      if((hotTop&&y<15)||(hotBot&&y>=H-15)){ a=hotVar?150:175; b=hotVar?220:175; s=hotS; }
+      rL[y+1]=rL[y]+W*(a+b)/2; rL2[y+1]=rL2[y]+W*(a*a+b*b)/2; rS[y+1]=rS[y]+W*s;
+    }
+    return {w:W,h:H,rL,rL2,rS,cL:new Float64Array(W+1),cL2:new Float64Array(W+1),cS:new Float64Array(W+1)};
+  };
+  const r1=_rodGuard([0,10,0,0],fixed(true,false,true,0.7),{}); if(r1[1]!==0) bad('rodGuard 固定晚霞上边应归零, got '+r1[1]);
+  const r2=_rodGuard([0,0,0,10],fixed(false,true,true,0.65),{}); if(r2[3]!==0) bad('rodGuard 固定水面下边应归零, got '+r2[3]);
+  const r3=_rodGuard([0,10,0,0],fixed(true,false,false,0.6),{}); if(!(r3[1]===8)) bad('rodGuard 纯蓝天应减2, got '+r3[1]);
+})();
 
 console.log(issues === 0 ? '\n✓ 模糊测试未发现问题' : `\n发现 ${issues} 个问题`);

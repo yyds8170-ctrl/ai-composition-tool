@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg } = require('./pure-functions.js');
+const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -620,6 +620,73 @@ test('edgeSnap: 只少裁——任何输出边裁切量不超过输入', () => {
 test('edgeSnap: 确定性——同输入两次一致', () => {
   const e = mkEnergy(100, 100, { col: { 11: 0.05 } });
   assert.deepStrictEqual(_edgeSnap([15, 0, 0, 0], e, {}), _edgeSnap([15, 0, 0, 0], e, {}));
+});
+
+/* -------------------- _rodGuard（v8.8.0 RoD 背景保护） -------------------- */
+// 按逐像素亮度 l(0-255)/显著性 s(0-1) 构建行/列前缀和（与 analyzePixels 输出同构）
+function mkRod(W, H, pix) {
+  const rL = new Float64Array(H + 1), rL2 = new Float64Array(H + 1), rS = new Float64Array(H + 1);
+  const cL = new Float64Array(W + 1), cL2 = new Float64Array(W + 1), cS = new Float64Array(W + 1);
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const q = pix(x, y);
+      rL[y + 1] += q.l; rL2[y + 1] += q.l * q.l; rS[y + 1] += q.s;
+      cL[x + 1] += q.l; cL2[x + 1] += q.l * q.l; cS[x + 1] += q.s;
+    }
+  }
+  for (let x = 0; x < W; x++) { cL[x + 1] += cL[x]; cL2[x + 1] += cL2[x]; cS[x + 1] += cS[x]; }
+  for (let y = 0; y < H; y++) { rL[y + 1] += rL[y]; rL2[y + 1] += rL2[y]; rS[y + 1] += rS[y]; }
+  return { w: W, h: H, rL, rL2, rS, cL, cL2, cS };
+}
+test('rodGuard: 未裁切（全 0）→ 原样', () => {
+  const rod = mkRod(100, 100, () => ({ l: 100, s: 0.05 }));
+  assert.deepStrictEqual(_rodGuard([0, 0, 0, 0], rod, {}), [0, 0, 0, 0]);
+});
+test('rodGuard: 非法输入（crop 长度错/无 rod）→ 原样', () => {
+  const rod = mkRod(100, 100, () => ({ l: 100, s: 0.05 }));
+  assert.deepStrictEqual(_rodGuard([1, 2], rod, {}), [1, 2]);
+  assert.deepStrictEqual(_rodGuard([0, 10, 0, 0], null, {}), [0, 10, 0, 0]);
+  assert.deepStrictEqual(_rodGuard([0, 10, 0, 0], { w: 1 }, {}), [0, 10, 0, 0]);
+});
+test('rodGuard: 均匀中性普通天空/地面（低饱和无层次）→ 不动', () => {
+  const rod = mkRod(100, 100, () => ({ l: 100, s: 0.05 }));
+  assert.deepStrictEqual(_rodGuard([0, 10, 0, 8], rod, {}), [0, 10, 0, 8]);
+});
+test('rodGuard: 顶部晚霞（高饱和+云层次双高）→ 上边归零保留', () => {
+  const rod = mkRod(100, 100, (x, y) => y < 15 ? { l: x % 2 ? 150 : 220, s: 0.7 } : { l: 80, s: 0.1 });
+  assert.deepStrictEqual(_rodGuard([0, 10, 0, 0], rod, {}), [0, 0, 0, 0]);
+});
+test('rodGuard: 底部水面/倒影（高饱和+波光双高）→ 下边归零保留', () => {
+  const rod = mkRod(100, 100, (x, y) => y >= 85 ? { l: x % 2 ? 140 : 210, s: 0.65 } : { l: 85, s: 0.12 });
+  assert.deepStrictEqual(_rodGuard([0, 0, 0, 10], rod, {}), [0, 0, 0, 0]);
+});
+test('rodGuard: 纯蓝天（高饱和但零层次方差）→ 仅单高，少裁 2%', () => {
+  const rod = mkRod(100, 100, (x, y) => y < 15 ? { l: 128, s: 0.6 } : { l: 80, s: 0.1 });
+  assert.deepStrictEqual(_rodGuard([0, 10, 0, 0], rod, {}), [0, 8, 0, 0]);
+});
+test('rodGuard: 夜景杂乱暗前景（低饱和无方差）→ 不动，保持宽幅裁切', () => {
+  const rod = mkRod(100, 100, (x, y) => y >= 85 ? { l: 20, s: 0.02 } : { l: 90, s: 0.15 });
+  assert.deepStrictEqual(_rodGuard([0, 0, 0, 12], rod, {}), [0, 0, 0, 12]);
+});
+test('rodGuard: 整片高饱和（全图绿植，strip 与全图密度接近）→ 密度比不足，不触发', () => {
+  const rod = mkRod(100, 100, (x, y) => ({ l: 90 + (x % 3 ? 10 : -10), s: 0.5 }));
+  const out = _rodGuard([0, 10, 0, 10], rod, {});
+  assert.deepStrictEqual(out, [0, 10, 0, 10]);
+});
+test('rodGuard: 只少裁——输出上/下边裁切量不超过输入', () => {
+  const rod = mkRod(100, 100, (x, y) => y < 15 ? { l: x % 2 ? 150 : 220, s: 0.7 } : { l: 80, s: 0.1 });
+  const c = [0, 10, 0, 9], out = _rodGuard(c, rod, {});
+  assert.ok(out[1] <= c[1] && out[3] <= c[3]);
+});
+test('rodGuard: 不碰左右边——水平留白归 _gazeGuard', () => {
+  const rod = mkRod(100, 100, (x, y) => x < 15 ? { l: x % 2 ? 150 : 220, s: 0.7 } : { l: 80, s: 0.1 });
+  const out = _rodGuard([12, 0, 0, 0], rod, {});
+  assert.strictEqual(out[0], 12);
+  assert.strictEqual(out[2], 0);
+});
+test('rodGuard: 确定性——同输入两次一致', () => {
+  const rod = mkRod(100, 100, (x, y) => y < 15 ? { l: x % 2 ? 150 : 220, s: 0.7 } : { l: 80, s: 0.1 });
+  assert.deepStrictEqual(_rodGuard([0, 10, 0, 3], rod, {}), _rodGuard([0, 10, 0, 3], rod, {}));
 });
 
 /* -------------------- 汇总 -------------------- */

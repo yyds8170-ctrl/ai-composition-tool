@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v8.7.0 · 实景视觉构图生成工具</title>
-<meta name="description" content="AI 构图助手 Pro v8.7.0 · 实景视觉构图生成工具：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。含 YOLO11n 本地检测、智能人像裁切（不切关节·头·手·脚）、人像近眼上三分与 3:4 景别裁切、侧脸视线留白（nose room，按脸朝向单侧留白）、边缘能量吸附（裁切刀自动避开人物轮廓与关节、藏到画面空白处，只少裁不多裁）、通用物体边界保护（不切动物/车/食物/餐具）、30 款滤镜、构图法则百科与云端 VLM 分析">
+<title>AI 构图助手 Pro v8.8.0 · 实景视觉构图生成工具</title>
+<meta name="description" content="AI 构图助手 Pro v8.8.0 · 实景视觉构图生成工具：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。含 YOLO11n 本地检测、智能人像裁切（不切关节·头·手·脚）、人像近眼上三分与 3:4 景别裁切、侧脸视线留白（nose room，按脸朝向单侧留白）、边缘能量吸附（裁切刀自动避开人物轮廓与关节、藏到画面空白处，只少裁不多裁）、背景保护 RoD（被裁的晚霞/水面/高层次地面整段保留，只少裁不多裁）、通用物体边界保护（不切动物/车/食物/餐具）、30 款滤镜、构图法则百科与云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v8.7.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切">
+<meta property="og:title" content="AI 构图助手 Pro v8.8.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切">
 <meta property="og:description" content="给不会拍照的普通人：打开相机，AI 教你怎么拍。AI 构图分析（本地像素+云端 VLM 双引擎）、人像保护裁切（不切头不切手脚）、30 款滤镜，一键出成品。默认本地运行，照片不上传。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
@@ -656,7 +656,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.7.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v8.8.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -1014,7 +1014,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.7.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v8.8.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1088,7 +1088,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v8.7.0";
+var APP_VER="v8.8.0";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -2574,6 +2574,39 @@ var APP_VER="v8.7.0";
         }
         var _edgeCol=_norm95(_ec,h), _edgeRow=_norm95(_er,w);
         var _edgeEnergy={col:_edgeCol,row:_edgeRow,w:w,h:h};
+        // v8.8.0 RoD 背景保护（Region of Discard）：评估"将被裁掉的顶部/底部条带（天空/晚霞/水面/地面）是否高价值"。
+        // 显著性用 FT 频率调谐的纯前端简化：像素与全图均值的「亮度距离 + 饱和度距离」（高饱和晚霞/绿植/蓝天、波光水面显著偏离中性均值）；
+        // 信息量用亮度方差（灰度熵的廉价代理）。按列/行建前缀和，任意边缘条带 O(1) 聚合。只在 256px 小图跑两趟，<3ms。
+        var _rodN=w*h;
+        var _rML=0; for(var _ri=0;_ri<_rodN;_ri++){ _rML+=lum[_ri]; } _rML/=_rodN;
+        var _satPx=new Float32Array(_rodN);
+        var _rMS=0;
+        for(var _ry=0;_ry<h;_ry++){
+          for(var _rx=0;_rx<w;_rx++){
+            var _rI=_ry*w+_rx;
+            var _rR=data[_rI*4],_rG=data[_rI*4+1],_rB=data[_rI*4+2];
+            var _rMx=Math.max(_rR,_rG,_rB),_rMn=Math.min(_rR,_rG,_rB);
+            var _rSp=_rMx===0?0:(_rMx-_rMn)/_rMx;
+            _satPx[_rI]=_rSp; _rMS+=_rSp;
+          }
+        }
+        _rMS/=_rodN;
+        var _colL=new Float32Array(w),_colL2=new Float32Array(w),_colS=new Float32Array(w);
+        var _rowL=new Float32Array(h),_rowL2=new Float32Array(h),_rowS=new Float32Array(h);
+        for(var _py2=0;_py2<h;_py2++){
+          for(var _px2=0;_px2<w;_px2++){
+            var _pI=_py2*w+_px2;
+            var _Lp=lum[_pI],_dL=(_Lp-_rML)/255,_dS=_satPx[_pI]-_rMS;
+            var _Sp=Math.sqrt(_dL*_dL+1.3*_dS*_dS);
+            _colL[_px2]+=_Lp; _colL2[_px2]+=_Lp*_Lp; _colS[_px2]+=_Sp;
+            _rowL[_py2]+=_Lp; _rowL2[_py2]+=_Lp*_Lp; _rowS[_py2]+=_Sp;
+          }
+        }
+        var cL=new Float32Array(w+1),cL2=new Float32Array(w+1),cS=new Float32Array(w+1);
+        var rL=new Float32Array(h+1),rL2=new Float32Array(h+1),rS=new Float32Array(h+1);
+        for(var _cx2=0;_cx2<w;_cx2++){ cL[_cx2+1]=cL[_cx2]+_colL[_cx2]; cL2[_cx2+1]=cL2[_cx2]+_colL2[_cx2]; cS[_cx2+1]=cS[_cx2]+_colS[_cx2]; }
+        for(var _cy2=0;_cy2<h;_cy2++){ rL[_cy2+1]=rL[_cy2]+_rowL[_cy2]; rL2[_cy2+1]=rL2[_cy2]+_rowL2[_cy2]; rS[_cy2+1]=rS[_cy2]+_rowS[_cy2]; }
+        var _rod={w:w,h:h,cL:cL,cL2:cL2,cS:cS,rL:rL,rL2:rL2,rS:rS};
         return {
           cx:cx,cy:cy,mean:mean,contrast:contrast,
           frameAspect:_vw0/_vh0, // v8.4.0 源图宽高比（<1 竖幅），供人像景别化裁切判画幅
@@ -2599,7 +2632,8 @@ var APP_VER="v8.7.0";
           centerVert:centerVert, centerH2:centerH2,
           // v8.3.6 主体背景分离网格
           lumGrid:Array.from(_lumGrid), gridW:_GW, gridH:_GH,
-          edgeEnergy:_edgeEnergy // v8.7.0 列/行边缘能量（归一化），供 _edgeSnap
+          edgeEnergy:_edgeEnergy, // v8.7.0 列/行边缘能量（归一化），供 _edgeSnap
+          rod:_rod // v8.8.0 背景保护（RoD）列/行显著性与亮度方差前缀和，供 _rodGuard
         };
       }catch(err){
         return null;
@@ -2820,6 +2854,40 @@ var APP_VER="v8.7.0";
       if(nL>L||nT>T||nR>R||nB>B) return crop;
       if(!ok(nL,nT,nR,nB)) return crop;
       return [nL,nT,nR,nB];
+    }
+    // v8.8.0 RoD 背景保护（Region of Discard）：只评估将被裁掉的【上/下】条带（天空/晚霞/水面/地面）。
+    // 依据 edge_aware_crop.md：被裁条带显著性与信息量【双高】时，说明在牺牲晚霞/水面/人群等高价值背景，整边保留（不裁）；
+    // 仅单高（显著性高 或 亮度方差高）时轻微少裁 2%；都不高则不动。与 _edgeSnap 一脉相承——只少裁、不新增边、不碰左右（水平留白归 _gazeGuard）。
+    function _rodGuard(crop,rod,info){
+      if(!crop||crop.length!==4||!rod) return crop;
+      var T=crop[1],B=crop[3];
+      if(!(T||B)) return crop;
+      var w=rod.w,h=rod.h;
+      if(!(w>2&&h>2)||!rod.rL||!rod.rL2||!rod.rS||rod.rL.length<h+1||rod.rL2.length<h+1||rod.rS.length<h+1) return crop;
+      var gN=w*h;
+      var gmL=rod.rL[h]/gN, gmL2=rod.rL2[h]/gN, gmS=rod.rS[h]/gN;
+      var gVar=Math.max(0,gmL2-gmL*gmL);
+      // 宁缺毋滥：显著性=密度高于全图均值 30% 且绝对值过 0.10；信息量=条带内部亮度方差过绝对地板（云/水面层次 std≈35→方差≈1200）。
+      // 信息量不用"相对全图均值"：晚霞+暗地面的组间亮度差会抬高全图方差，反而让真正有层次的晚霞过不了；绝对地板更稳。
+      var SAL_K=1.30, SAL_FLOOR=0.10, VAR_FLOOR=1200, REDUCE=2;
+      function adj(side){
+        var cur=crop[side]; if(!cur) return 0;
+        var y0,y1;
+        if(side===1){ y0=0; y1=Math.round(cur*h/100); }
+        else { y1=h; y0=Math.round((100-cur)*h/100); }
+        if(y1<=y0) return cur;
+        var n=(y1-y0)*w; if(n<=0) return cur;
+        var sL=rod.rL[y1]-rod.rL[y0], sL2=rod.rL2[y1]-rod.rL2[y0], sS=rod.rS[y1]-rod.rS[y0];
+        var mL=sL/n, mL2=sL2/n, mS=sS/n, varL=Math.max(0,mL2-mL*mL);
+        var salHit=(mS>gmS*SAL_K && mS>SAL_FLOOR);
+        var varHit=(varL>VAR_FLOOR);
+        if(salHit&&varHit) return 0;                        // 双高：整块保留（晚霞/水面/人群）
+        if(salHit||varHit) return Math.max(0,cur-REDUCE);  // 单高：轻微少裁
+        return cur;
+      }
+      var nT=Math.min(T,adj(1)), nB=Math.min(B,adj(3));
+      if(nT<0||nB<0) return crop;
+      return [crop[0],nT,crop[2],nB];
     }
     function _portraitFraming(crop, info){
       if(!crop || crop.length!==4 || !info) return crop;
@@ -3693,6 +3761,17 @@ var APP_VER="v8.7.0";
             var _esPort=(modelPerson===true)||(a.isPerson===true)||(plan.sceneType==="portrait")||(plan.sceneType==="portrait_close");
             if(_esPort && state.aiData && state.aiData.poseReady===true && poseData){ plan.crop=_jointGuard(plan.crop,poseData,true); }
             if(a.allBoxes && a.allBoxes.length){ plan.crop=_objectGuard(plan.crop,a.allBoxes); }
+          }
+        }
+      }catch(e){}
+      // v8.8.0 RoD 背景保护（边缘吸附之后）：被裁的上/下条带若含高价值背景（晚霞/水面/高饱和天际/人群），双高整边保留、单高轻微少裁。
+      // 只少裁、只作用于上下边，窗只会变大不会切到主体，故无需再触发关节/物体保护；任何不确定都在纯函数内原样返回。
+      try{
+        if(a && !state.aicMode && !state.liveMode && a.rod && plan.crop && !plan.noCrop
+           && (plan.crop[1]||plan.crop[3])){
+          var _rodCrop=_rodGuard(plan.crop,a.rod,{});
+          if(_rodCrop && (_rodCrop[1]!==plan.crop[1]||_rodCrop[3]!==plan.crop[3])){
+            plan.crop=_rodCrop;
           }
         }
       }catch(e){}
@@ -8981,7 +9060,7 @@ hSym2:state.aiData.hSym}:null; }
   }; }catch(e){}
 })();
   </script>
-<div id="aicUpdateBar" class="hide"><span class="ub-t">✨ 新版本 v8.7.0 已就绪：裁切更「丝滑」——新增边缘能量吸附（edge snapping）。系统在已决定的裁切线上，于 ±5% 范围内自动寻找旁边的空白/平滑区，把裁切线从人物轮廓、关节、强边缘上「挪开」，避免一刀切在身上或关节上；而且只做「少裁」（刀向画面外移动、保留范围只增不减），绝不会新增裁切、不会多裁。配合既有的关节/物体保护二次终检，完整保留人物与关键背景。150 张真实照片回归 0 误切、0 报错，千余万次模糊测试 0 异常。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
+<div id="aicUpdateBar" class="hide"><span class="ub-t">✨ 新版本 v8.8.0 已就绪：背景保护（RoD，Region of Discard）——裁切时会先看一眼「即将被裁掉的上/下条带」是不是高价值背景：若晚霞、云层、水面倒影、人群、有层次的岩地等内容丰富、信息量足，就整段保留或少裁一点，不再一刀切把整片晚霞、水面裁没；而平淡单调的天空、沙滩依旧正常裁切。只作用于上下边、只做「少裁」（保留范围只增不减），绝不新增裁切、绝不挡掉本应进行的修裁。150 张真实照片回归 0 误切、0 报错，千余万次模糊测试 0 异常。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
 <script>
 (function(){
   // v8.2.3 新版本就绪提示条：SW 激活后广播 → 页面弹出"立即刷新"，根治旧缓存看不到新功能

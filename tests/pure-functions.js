@@ -186,6 +186,38 @@
       return [nL,nT,nR,nB];
     }
 
+    function _rodGuard(crop,rod,info){
+      if(!crop||crop.length!==4||!rod) return crop;
+      var T=crop[1],B=crop[3];
+      if(!(T||B)) return crop;
+      var w=rod.w,h=rod.h;
+      if(!(w>2&&h>2)||!rod.rL||!rod.rL2||!rod.rS||rod.rL.length<h+1||rod.rL2.length<h+1||rod.rS.length<h+1) return crop;
+      var gN=w*h;
+      var gmL=rod.rL[h]/gN, gmL2=rod.rL2[h]/gN, gmS=rod.rS[h]/gN;
+      var gVar=Math.max(0,gmL2-gmL*gmL);
+      // 宁缺毋滥：显著性=密度高于全图均值 30% 且绝对值过 0.10；信息量=条带内部亮度方差过绝对地板（云/水面层次 std≈35→方差≈1200）。
+      // 信息量不用"相对全图均值"：晚霞+暗地面的组间亮度差会抬高全图方差，反而让真正有层次的晚霞过不了；绝对地板更稳。
+      var SAL_K=1.30, SAL_FLOOR=0.10, VAR_FLOOR=1200, REDUCE=2;
+      function adj(side){
+        var cur=crop[side]; if(!cur) return 0;
+        var y0,y1;
+        if(side===1){ y0=0; y1=Math.round(cur*h/100); }
+        else { y1=h; y0=Math.round((100-cur)*h/100); }
+        if(y1<=y0) return cur;
+        var n=(y1-y0)*w; if(n<=0) return cur;
+        var sL=rod.rL[y1]-rod.rL[y0], sL2=rod.rL2[y1]-rod.rL2[y0], sS=rod.rS[y1]-rod.rS[y0];
+        var mL=sL/n, mL2=sL2/n, mS=sS/n, varL=Math.max(0,mL2-mL*mL);
+        var salHit=(mS>gmS*SAL_K && mS>SAL_FLOOR);
+        var varHit=(varL>VAR_FLOOR);
+        if(salHit&&varHit) return 0;                        // 双高：整块保留（晚霞/水面/人群）
+        if(salHit||varHit) return Math.max(0,cur-REDUCE);  // 单高：轻微少裁
+        return cur;
+      }
+      var nT=Math.min(T,adj(1)), nB=Math.min(B,adj(3));
+      if(nT<0||nB<0) return crop;
+      return [crop[0],nT,crop[2],nB];
+    }
+
     function _jointGuard(crop, pose, isPort){
       if(!isPort || !crop || crop.length!==4 || !(crop[0]||crop[1]||crop[2]||crop[3])) return crop;
       if(!pose || pose.length<29) return crop;
@@ -425,4 +457,4 @@
           }catch(e){ return {deg:0,conf:0}; }
         }
 
-module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg };
+module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg };
