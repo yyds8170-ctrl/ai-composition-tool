@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v9.0.0 · 实景视觉构图生成工具</title>
-<meta name="description" content="AI 构图助手 Pro v9.0.0 · 实景视觉构图生成工具：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。构图综合诊断（视线/头顶留白/眼位/地平线/光位/朝向，只读建议不改裁切）+ 拍后滤镜智能推荐（糊片/过曝/死黑/过浓/近纯黑一律不推，每图最多一次）。含 YOLO11n 本地检测、智能人像裁切（不切关节·头·手·脚）、人像近眼上三分与 3:4 景别裁切、侧脸视线留白（nose room，按脸朝向单侧留白）、边缘能量吸附（裁切刀自动避开人物轮廓与关节、藏到画面空白处，只少裁不多裁）、背景保护 RoD（被裁的晚霞/水面/高层次地面整段保留，只少裁不多裁）、通用物体边界保护（不切动物/车/食物/餐具）、30 款滤镜、构图法则百科与云端 VLM 分析">
+<title>AI 构图助手 Pro v9.0.1 · 实景视觉构图生成工具</title>
+<meta name="description" content="AI 构图助手 Pro v9.0.1 · 实景视觉构图生成工具（永久免费、不限使用次数）：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面，快速获取富有氛围感的摄影作品。构图综合诊断（视线/头顶留白/眼位/地平线/光位/朝向，只读建议不改裁切）+ 拍后滤镜智能推荐（糊片/过曝/死黑/过浓/近纯黑一律不推，每图最多一次）。v9.0.1 收尾：云端 VLM 裁图意图与背景保护 RoD 联动（晚霞/水面/倒影条带少裁保留）、夜景/水景不弹人像引导。含 YOLO11n 本地检测、智能人像裁切（不切关节·头·手·脚）、人像近眼上三分与 3:4 景别裁切、侧脸视线留白（nose room，按脸朝向单侧留白）、边缘能量吸附（裁切刀自动避开人物轮廓与关节、藏到画面空白处，只少裁不多裁）、背景保护 RoD（被裁的晚霞/水面/高层次地面整段保留，只少裁不多裁）、通用物体边界保护（不切动物/车/食物/餐具）、30 款滤镜、构图法则百科与云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v9.0.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切">
+<meta property="og:title" content="AI 构图助手 Pro v9.0.1 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切（永久免费不限次数）">
 <meta property="og:description" content="给不会拍照的普通人：打开相机，AI 教你怎么拍。AI 构图分析（本地像素+云端 VLM 双引擎）、人像保护裁切（不切头不切手脚）、30 款滤镜，一键出成品。默认本地运行，照片不上传。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
@@ -661,7 +661,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v9.0.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v9.0.1</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -1024,7 +1024,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v9.0.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v9.0.1 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1076,7 +1076,7 @@
       <div class="mp-row" style="flex-wrap:wrap;gap:6px;">
         <input type="password" id="cloudKey" placeholder="访问口令（X-App-Token，仅保存在本机）" style="flex:1 1 100%;padding:7px 10px;border-radius:8px;border:1px solid rgba(0,0,0,.14);background:#fff;font-size:12px;color:#1A1B1C;min-width:0;box-sizing:border-box;">
       </div>
-      <div class="mp-desc" style="line-height:1.7;">共享模式：真实 Key 只保存在作者的安全代理服务端，不会进入本页代码；只需向作者获取「代理地址」和「访问口令」填入即可。</div>
+      <div class="mp-desc" style="line-height:1.7;">共享模式：真实 Key 只保存在作者的安全代理服务端，不会进入本页代码；只需向作者获取「代理地址」和「访问口令」填入即可。<b>不配置云端也可正常使用全部本地功能（永久免费、不限使用次数）。</b></div>
     </div>
     <div id="cloudByokRow" style="display:none;">
       <div class="mp-row" style="flex-wrap:wrap;gap:6px;">
@@ -1098,7 +1098,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v9.0.0";
+var APP_VER="v9.0.1";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -2859,11 +2859,15 @@ var APP_VER="v9.0.0";
         }
         if(typeof frameAspect!=="number"||!isFinite(frameAspect)) frameAspect=null;
         var fcNum=(typeof ad.faceCount==="number"&&isFinite(ad.faceCount))?ad.faceCount:0;
+        // v9.0.1 场景门控：夜景/水景/风光/建筑等非人像场景，不弹"走近两步/机位同高/眼睛对上格线"等纯人像引导
+        // （对风景照唠叨人像取景反而添乱），仍保留"横竖拍"方向引导。云端 scene 标签（cloudScene）也参与判定。
+        var _gScene=sceneType||(state.aiData&&state.aiData.cloudScene)||null;
+        var _noPortraitGuide=(_gScene==="night"||_gScene==="waterscape"||_gScene==="landscape"||_gScene==="architecture");
         var order=[
           {id:"orientation",r:_guidanceOrientation({faceCount:fcNum,personAspect:personAspect,frameAspect:frameAspect,sceneType:sceneType||null})},
-          {id:"distance",r:_guidanceDistance({faceConf:fc,personHR:personHR,faceHR:fhr})},
-          {id:"eyeLevel",r:_guidanceEyeLevel({faceConf:fc,headTop:hasHead?ad.headTop:null,faceHR:fhr,eyesY:eyesY})},
-          {id:"eyeOnGrid",r:_guidanceEyeOnGrid({faceConf:fc,eyesY:eyesY})}
+          {id:"distance",r:!_noPortraitGuide?_guidanceDistance({faceConf:fc,personHR:personHR,faceHR:fhr}):null},
+          {id:"eyeLevel",r:!_noPortraitGuide?_guidanceEyeLevel({faceConf:fc,headTop:hasHead?ad.headTop:null,faceHR:fhr,eyesY:eyesY}):null},
+          {id:"eyeOnGrid",r:!_noPortraitGuide?_guidanceEyeOnGrid({faceConf:fc,eyesY:eyesY}):null}
         ];
         for(var i=0;i<order.length;i++){ if(order[i].r){ return {id:order[i].id,txt:order[i].r.txt}; } }
         return null;
@@ -3236,6 +3240,48 @@ var APP_VER="v9.0.0";
       var nT=Math.min(T,adj(1)), nB=Math.min(B,adj(3));
       if(nT<0||nB<0) return crop;
       return [crop[0],nT,crop[2],nB];
+    }
+    // v9.0.1 云端 cropIntent ↔ RoD 联动纯函数（只入参 plainObj、只读字段、返回新对象/null）。
+    // 背景：本地 v8.8 裁切由 _rodGuard 负责（绝对双高阈值）；云端 VLM 的"裁上/下"语义意图此前不经过背景保护，
+    // 可能把晚霞/水面/高层次地面这条有价值的水平条带裁掉。本函数用【相对双与门】保守内收：
+    //   被裁水平条带的「显著性质量占全图比 > 15%」且「条带亮度方差 > 全图均值方差 ×1.2」
+    //   → 判为高价值背景，把该边内收 2%（只少裁、保留更多，绝不切主体），并给一句诊断 note。
+    // 宁缺毋滥：信号缺/越界/左右意图（rod 仅行前缀和，无列前缀和）一律返回 null；
+    // 仅作用于云端路径，本地 v8.8 裁切链路一字不动（保证本地 150 图裁切 0 变化）。
+    function _cloudCropIntentGuard(o){
+      try{
+        if(!o) return null;
+        var crop=o.crop, rod=o.rod, intent=String(o.intent||"").toLowerCase();
+        if(!crop||crop.length!==4||!rod) return null;
+        var w=rod.w,h=rod.h;
+        if(!(w>2&&h>2)||!rod.rL||!rod.rL2||!rod.rS||rod.rL.length<h+1||rod.rL2.length<h+1||rod.rS.length<h+1) return null;
+        var topHit=(intent==="crop_top"||intent==="crop_tb");
+        var botHit=(intent==="crop_bottom"||intent==="crop_tb");
+        if(!topHit&&!botHit) return null; // 左右/trim/none 无水平条带可护
+        var gN=w*h;
+        var gmL=rod.rL[h]/gN, gmL2=rod.rL2[h]/gN, gmS=rod.rS[h]/gN;
+        var gVar=Math.max(0,gmL2-gmL*gmL);
+        if(!(gmS>1e-6)||!(gVar>1e-6)) return null; // 全图近乎无显著/无层次 → 不存在高价值条带
+        var T=crop[1]||0, B=crop[3]||0;
+        var nT=T, nB=B, note=null;
+        function bandIsValuable(isTop){
+          var cur=isTop?T:B; if(!cur||cur<=0) return false;
+          var y0,y1;
+          if(isTop){ y0=0; y1=Math.round(cur*h/100); }
+          else { y1=h; y0=Math.round((100-cur)*h/100); }
+          if(y1<=y0) return false;
+          var n=(y1-y0)*w; if(n<=0) return false;
+          var sL=rod.rL[y1]-rod.rL[y0], sL2=rod.rL2[y1]-rod.rL2[y0], sS=rod.rS[y1]-rod.rS[y0];
+          var mL=sL/n, mL2=sL2/n, varL=Math.max(0,mL2-mL*mL);
+          var salMassRatio=sS/(gmS*gN); // 条带显著性质量占全图比
+          return (salMassRatio>0.15 && varL>gVar*1.2);
+        }
+        var RETRACT=2;
+        if(topHit && bandIsValuable(true)){ nT=Math.max(0,T-RETRACT); if(nT!==T) note="顶部有高价值背景（晚霞/水面层次），已少裁 2% 保留"; }
+        if(botHit && bandIsValuable(false)){ nB=Math.max(0,B-RETRACT); if(nB!==B){ note=(note?note+"；":"")+"底部有高价值背景（倒影/地面层次），已少裁 2% 保留"; } }
+        if(nT===T && nB===B) return null;
+        return {crop:[crop[0],nT,crop[2],nB], note:note||"已为高价值背景少裁"};
+      }catch(e){ return null; }
     }
     function _portraitFraming(crop, info){
       if(!crop || crop.length!==4 || !info) return crop;
@@ -6797,10 +6843,10 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         // v7.8 #32: 按失败原因给不同人话文案，不再笼统说"超时/失败"
         var rs=state._cloudFailReason||"network", info;
         if(rs==="trip"){ var _sec=Math.max(0,Math.round(((state.cloudTripUntil||0)-Date.now())/1000)); var _min=Math.ceil(_sec/60);
-          info={t:"云端暂时冷却中",d:"云端连续几次没响应，先冷却约"+_min+"分钟保护额度，这期间用<b>本地引擎</b>，过会儿再试云端即可。"};
-        } else if(rs==="timeout"){ info={t:"云端响应超时",d:"等了 35 秒还没返回，已先用<b>本地引擎</b>出结果；网络好时可点「重新分析」再试云端。"};
-        } else if(rs==="auth"){ info={t:"云端口令可能有误",d:"云端鉴权没通过，已先用<b>本地引擎</b>；请在设置里核对口令。"};
-        } else if(rs==="busy"){ info={t:"云端繁忙/额度受限",d:"云端暂时忙或额度不足，已先用<b>本地引擎</b>，稍后再试。"};
+          info={t:"云端暂时连不上",d:"云端连续几次没响应，自动先歇约"+_min+"分钟——这是防呆的可靠性保护，<b>与使用次数无关</b>；期间全程走<b>本地引擎</b>，功能不受任何影响，过会儿自动恢复云端。"};
+        } else if(rs==="timeout"){ info={t:"云端响应超时",d:"等了 35 秒还没返回，已自动切<b>本地引擎</b>出结果（本地功能照常）；网络好时点「重新分析」即可再试云端。"};
+        } else if(rs==="auth"){ info={t:"云端口令可能有误",d:"云端鉴权没通过，已自动切<b>本地引擎</b>；请在设置里核对口令。"};
+        } else if(rs==="busy"){ info={t:"云端暂时忙",d:"云端临时拥挤，已自动切<b>本地引擎</b>出结果（本地功能不受任何影响），稍后自动重试云端。"};
         } else if(rs==="cors"){ info={t:"云端厂商不支持直连或 Key 无效",d:"你选的厂商不允许浏览器跨域直连（或 API Key 不对/网络被拦）。已先用<b>本地引擎</b>；请在设置里改回「共享口令」模式，或换用支持直连的厂商（DeepSeek/通义/智谱/Kimi 等）。"}; }
         else if(rs==="blind"){ info={t:"云端视觉服务暂不可用",d:"云端模型当前<b>读不到图片</b>（服务端视觉通道异常，与口令、网络无关），已自动改用<b>本地引擎</b>分析，裁切照常生效；云端恢复后会自动用回云端。"}; }
         else { info={t:"网络不通或云端超时",d:"已自动回退<b>本地引擎</b>分析（本地照样能用）；联网后可重试云端。"}; }
@@ -6824,7 +6870,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       // 云端 VLM 构图分析（经 SCF 代理转发至 Cephalon /chat/completions）；失败或超时 → onDone(null) 回退本地首判
       // 代理模式：API Key 内置在服务端环境变量，前端只需访问口令（X-App-Token），避免 Key 泄露
       if(!el || !onDone) return;
-      // v6.1: 熔断——连续 3 次云端失败后 5 分钟内直走本地（额度/体验保护）
+      // v6.1: 失败韧性熔断（_cloudFailFuse）——连续 3 次云端失败后 5 分钟内直走本地。
+      // 【v9.0.1 澄清】这是云端网络/服务异常的防呆保护，**绝非使用次数限制**：全程本地引擎全功能可用，不读任何计数、不拦截任何本地分析。
       try{
         if(state.cloudTripUntil && Date.now()<state.cloudTripUntil){
           state._cloudFailReason="trip";
@@ -6834,7 +6881,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         state.cloudTripUntil=0;
       }catch(e){}
       // v8.1.4: 视觉通道短时熔断——上游若连续返回"读不到图"（HTTP 200 但视觉无效），60s 内直接回退本地，
-      // 避免每张图都干等多次重试（实测该故障为服务端持续性异常，非单请求丢图）；60s 后自动再探，恢复即自愈
+      // 避免每张图都干等多次重试（实测该故障为服务端持续性异常，非单请求丢图）；60s 后自动再探，恢复即自愈。
+      // 【v9.0.1 澄清】同上：属云端故障熔断，与使用次数/额度无关，本地功能不受影响。
       try{
         if(state.cloudBlindUntil && Date.now()<state.cloudBlindUntil){
           state._cloudFailReason="blind";
@@ -6870,8 +6918,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           if(_pa.vSym!==undefined) state.aiData.vSym=_pa.vSym;
         }
       }catch(e){}
-      // v6.0: 低信息图短路——纯色/大面积过曝/大面积死黑/无显著主体时，VLM 只能随机猜（浪费额度还易乱裁），
-      // 直接用本地像素分析出 plan（确定性、稳定、省额度）
+      // v6.0: 低信息图短路——纯色/大面积过曝/大面积死黑/无显著主体时，VLM 只能随机猜（白等云端往返还易乱裁），
+      // 直接用本地像素分析出 plan（确定性、稳定、更快）
       try{
         // v8.0.5 V8-3: 人像/暗调夜景豁免短路（这两类恰是云端语义优势最大的场景，原 shadowClip>0.6 会把暗调黑白人像误跳过）
         var _personHint=(_pa && ((typeof _pa.skinRatio==="number"&&_pa.skinRatio>0.04)||(state.aiData&&state.aiData.isPerson===true)));
@@ -7549,6 +7597,17 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           var _isPortJ=(_adJ.isPerson===true)||(_plJ.sceneType==="portrait")||(_plJ.sceneType==="portrait_close")||(_plJ.scene==="人像")||(_plJ.scene==="人像特写");
           if(_isPortJ && _adJ.poseReady===true && poseData){ crop=_jointGuard(crop, poseData, true); }
         }catch(e){}
+        // v9.0.1 云端 cropIntent ↔ RoD 联动：云端 VLM 裁上/下意图撞上高价值背景水平条带（晚霞/水面/倒影/高层次地面）时，
+        // 用纯函数 _cloudCropIntentGuard 保守内收 2%（只少裁、保留更多，绝不切主体）；信号不足一律 null，不劣化原裁切。
+        // 仅作用于云端路径；rod 前缀和取自本函数内 analyzePixels 结果 _pa（与本地同源）。
+        var _rodNote=null;
+        try{
+          if(_pa && _pa.rod && crop && (crop[1]||crop[3])){
+            var _ciGuard=(_aiIntentCache&&_aiIntentCache.cropIntent)?_aiIntentCache.cropIntent:String(obj.cropIntent||"none").toLowerCase();
+            var _ccg=_cloudCropIntentGuard({crop:crop, rod:_pa.rod, intent:_ciGuard});
+            if(_ccg && _ccg.crop){ crop=_ccg.crop; _rodNote=_ccg.note||null; }
+          }
+        }catch(e){}
         var keepOriginal=(obj.keepOriginal===true)||(crop[0]+crop[1]+crop[2]+crop[3]===0);        // v4.8.2: 解除"变焦+裁切"双重叠加——裁切已由 cropBox 负责构图，再叠加 CSS 变焦会二次缩画面
         // （Qwen-Max 实测：裁切后再 setZoom，最终保留面积中位数仅 60%）；云端结果一律 z=1.0
         var z=1.0;        // v4.8.0: 云端推荐滤镜中文风格 -> app 滤镜 key 映射
@@ -7592,7 +7651,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           // v8.0.6: 云端统一建议——issue 优先，ruleReason 补充，供数据面板"📌 优化建议"行展示
           notes:[
             (obj.issue&&String(obj.issue)!=="无")?("⚠ "+String(obj.issue).slice(0,46)):"",
-            (obj.ruleReason&&String(obj.ruleReason).length>2)?("📐 "+String(obj.ruleReason).slice(0,46)):""
+            (obj.ruleReason&&String(obj.ruleReason).length>2)?("📐 "+String(obj.ruleReason).slice(0,46)):"",
+            (_rodNote?("🏞 "+_rodNote):"")
           ].filter(Boolean)
         };
         // v4.8.2: 云端结果完整回写 aiData（Qwen/豆包报告：此前只写 scene/model，光学面板仍显示本地像素数据）
@@ -9472,7 +9532,7 @@ hSym2:state.aiData.hSym}:null; }
   }; }catch(e){}
 })();
   </script>
-<div id="aicUpdateBar" class="hide"><span class="ub-t">✨ 新版本 v9.0.0 已就绪：拍完成片后多出两样只读建议——① 构图综合诊断：视线方向、头顶留白、眼位、地平线、光位与朝向，按严重度最多挑 3 条轻声告诉你，绝不替你动刀；② 滤镜智能推荐：糊片、过曝、死黑、已经很浓、近纯黑一律闭嘴不打扰，只有该推才弹「推荐哪款·一句话理由」，一键应用或还原片，每张图最多问一次。v8.9.0 的成片裁切逻辑一字未动，150 张真实照片回归 0 误切、0 报错，云端 12 图真实请求 0 错误。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
+<div id="aicUpdateBar" class="hide"><span class="ub-t">✨ 新版本 v9.0.1 已就绪：① 永久免费、不限使用次数——本地分析想用多少用多少，没有任何次数墙/试用页；之前「冷却/繁忙」提示已改写为「已自动切本地引擎」，那只是云端网络防呆，与使用次数无关。② 云端 VLM 裁图意图接上背景保护：云端说要裁顶部/底部时，若那条带是晚霞、水面、倒影或有层次的地面，自动少裁 2% 保留，并在结果里说明。③ 夜景/水景/风光不再对你唠叨「走近两步/机位同高」等人像引导。本地 v8.8 成片裁切逻辑一字未动，150 张真实照片回归 0 误切、0 报错，云端 12 图真实请求 0 错误。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
 <script>
 (function(){
   // v8.2.3 新版本就绪提示条：SW 激活后广播 → 页面弹出"立即刷新"，根治旧缓存看不到新功能

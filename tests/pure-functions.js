@@ -218,6 +218,42 @@
       return [crop[0],nT,crop[2],nB];
     }
 
+    function _cloudCropIntentGuard(o){
+      try{
+        if(!o) return null;
+        var crop=o.crop, rod=o.rod, intent=String(o.intent||"").toLowerCase();
+        if(!crop||crop.length!==4||!rod) return null;
+        var w=rod.w,h=rod.h;
+        if(!(w>2&&h>2)||!rod.rL||!rod.rL2||!rod.rS||rod.rL.length<h+1||rod.rL2.length<h+1||rod.rS.length<h+1) return null;
+        var topHit=(intent==="crop_top"||intent==="crop_tb");
+        var botHit=(intent==="crop_bottom"||intent==="crop_tb");
+        if(!topHit&&!botHit) return null; // 左右/trim/none 无水平条带可护
+        var gN=w*h;
+        var gmL=rod.rL[h]/gN, gmL2=rod.rL2[h]/gN, gmS=rod.rS[h]/gN;
+        var gVar=Math.max(0,gmL2-gmL*gmL);
+        if(!(gmS>1e-6)||!(gVar>1e-6)) return null; // 全图近乎无显著/无层次 → 不存在高价值条带
+        var T=crop[1]||0, B=crop[3]||0;
+        var nT=T, nB=B, note=null;
+        function bandIsValuable(isTop){
+          var cur=isTop?T:B; if(!cur||cur<=0) return false;
+          var y0,y1;
+          if(isTop){ y0=0; y1=Math.round(cur*h/100); }
+          else { y1=h; y0=Math.round((100-cur)*h/100); }
+          if(y1<=y0) return false;
+          var n=(y1-y0)*w; if(n<=0) return false;
+          var sL=rod.rL[y1]-rod.rL[y0], sL2=rod.rL2[y1]-rod.rL2[y0], sS=rod.rS[y1]-rod.rS[y0];
+          var mL=sL/n, mL2=sL2/n, varL=Math.max(0,mL2-mL*mL);
+          var salMassRatio=sS/(gmS*gN); // 条带显著性质量占全图比
+          return (salMassRatio>0.15 && varL>gVar*1.2);
+        }
+        var RETRACT=2;
+        if(topHit && bandIsValuable(true)){ nT=Math.max(0,T-RETRACT); if(nT!==T) note="顶部有高价值背景（晚霞/水面层次），已少裁 2% 保留"; }
+        if(botHit && bandIsValuable(false)){ nB=Math.max(0,B-RETRACT); if(nB!==B){ note=(note?note+"；":"")+"底部有高价值背景（倒影/地面层次），已少裁 2% 保留"; } }
+        if(nT===T && nB===B) return null;
+        return {crop:[crop[0],nT,crop[2],nB], note:note||"已为高价值背景少裁"};
+      }catch(e){ return null; }
+    }
+
     function _jointGuard(crop, pose, isPort){
       if(!isPort || !crop || crop.length!==4 || !(crop[0]||crop[1]||crop[2]||crop[3])) return crop;
       if(!pose || pose.length<29) return crop;
@@ -717,4 +753,4 @@
       }catch(e){ return GATE; }
     }
 
-module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter };
+module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter };

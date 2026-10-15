@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter } = require('./pure-functions.js');
+const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -1026,6 +1026,48 @@ test('filter 属性: 无副作用（入参深比较前后不变）', () => {
   const before = JSON.stringify(a);
   _recommendFilter(a, { personScore: 0.8 });
   assert.strictEqual(JSON.stringify(a), before);
+});
+
+/* -------------------- _cloudCropIntentGuard（v9.0.1 云端 cropIntent↔RoD 联动） -------------------- */
+function mkRodB(W, H, pix) { return mkRod(W, H, pix); } // 复用行前缀和夹具
+test('cloudCropIntentGuard: 非法输入（null/crop长度错/无rod）→ null', () => {
+  assert.strictEqual(_cloudCropIntentGuard(null), null);
+  assert.strictEqual(_cloudCropIntentGuard({ crop: [1, 2], rod: mkRodB(100, 100, () => ({ l: 100, s: 0.1 })), intent: 'crop_top' }), null);
+  assert.strictEqual(_cloudCropIntentGuard({ crop: [0, 10, 0, 0], rod: null, intent: 'crop_top' }), null);
+  assert.strictEqual(_cloudCropIntentGuard({ crop: [0, 10, 0, 0], rod: { w: 1 }, intent: 'crop_top' }), null);
+});
+test('cloudCropIntentGuard: 左右/trim/none 意图（无水平条带）→ null', () => {
+  const rod = mkRodB(100, 100, (x, y) => y < 15 ? { l: x % 2 ? 150 : 220, s: 0.7 } : { l: 80, s: 0.1 });
+  assert.strictEqual(_cloudCropIntentGuard({ crop: [10, 0, 10, 0], rod, intent: 'crop_left' }), null);
+  assert.strictEqual(_cloudCropIntentGuard({ crop: [0, 10, 0, 0], rod, intent: 'trim' }), null);
+  assert.strictEqual(_cloudCropIntentGuard({ crop: [0, 10, 0, 0], rod, intent: 'none' }), null);
+});
+test('cloudCropIntentGuard: 顶部晚霞双高（显著性质量>15% 且方差>1.2×全图）→ 上边内收2%并给note', () => {
+  // 顶部 10% 行：高显著(s=0.7)+强明暗云交替(60/140，均值≈100)；其余低显著(s=0.05)均匀 100 灰场。
+  // 条带内部方差远大于全图（其余平坦），且显著性质量集中在条带 → 双与门命中。
+  const rod = mkRodB(100, 100, (x, y) => y < 10 ? { l: x % 2 ? 60 : 140, s: 0.7 } : { l: 100, s: 0.05 });
+  const out = _cloudCropIntentGuard({ crop: [0, 10, 0, 0], rod, intent: 'crop_top' });
+  assert.ok(out, '应返回保护结果');
+  assert.deepStrictEqual(out.crop, [0, 8, 0, 0]);
+  assert.ok(out.note && out.note.indexOf('高价值背景') >= 0, 'note 应说明保护原因');
+});
+test('cloudCropIntentGuard: 普通均匀天空（方差/显著性质量不足）→ null 不拦', () => {
+  const rod = mkRodB(100, 100, () => ({ l: 120, s: 0.05 }));
+  assert.strictEqual(_cloudCropIntentGuard({ crop: [0, 10, 0, 0], rod, intent: 'crop_top' }), null);
+});
+test('cloudCropIntentGuard: crop_tb 顶部双高+底部普通 → 只内收顶边', () => {
+  const rod = mkRodB(100, 100, (x, y) => y < 10 ? { l: x % 2 ? 60 : 140, s: 0.7 } : { l: 100, s: 0.05 });
+  const out = _cloudCropIntentGuard({ crop: [0, 10, 0, 10], rod, intent: 'crop_tb' });
+  assert.ok(out);
+  assert.deepStrictEqual(out.crop, [0, 8, 0, 10]);
+});
+test('cloudCropIntentGuard: 无副作用（入参对象与rod不被改写）', () => {
+  const rod = mkRodB(100, 100, (x, y) => y < 10 ? { l: x % 2 ? 60 : 140, s: 0.7 } : { l: 100, s: 0.05 });
+  const crop = [0, 10, 0, 0];
+  const before = JSON.stringify(rod.rL);
+  _cloudCropIntentGuard({ crop, rod, intent: 'crop_top' });
+  assert.deepStrictEqual(crop, [0, 10, 0, 0]);
+  assert.strictEqual(JSON.stringify(rod.rL), before);
 });
 
 /* -------------------- 汇总 -------------------- */

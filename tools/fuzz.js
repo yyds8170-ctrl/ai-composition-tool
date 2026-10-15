@@ -1,5 +1,5 @@
 /* 临时审查脚本：对纯函数做属性/模糊测试，找真实健壮性问题。 */
-const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter } = require('../tests/pure-functions.js');
+const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter } = require('../tests/pure-functions.js');
 
 let issues = 0;
 function bad(msg) { console.log('ISSUE:', msg); issues++; }
@@ -533,5 +533,35 @@ for(let i=0;i<500000;i++){
 }
 if(_recommendFilter(null).rule!=='GATE') bad('recommendFilter null 未 GATE');
 if(_recommendFilter({}).rule!=='GATE') bad('recommendFilter 缺 mean 未 GATE');
+
+// 20. v9.0.1 _cloudCropIntentGuard: 随机 crop/rod/intent → null 或 {crop,note}；只内收被意图命中的上下边（绝不增大、不碰左右）、
+//     整数、窗高只增、不抛错、确定性、不污染入参（100 万次）
+for(let i=0;i<1000000;i++){
+  const W=Math.floor(rnd(60,260)), H=Math.floor(rnd(60,260));
+  let rod;
+  if(Math.random()<0.05){ rod=(Math.random()<0.5?null:{w:W,h:H,rL:[],rL2:[],rS:[]}); }
+  else { rod=rndRod(W,H,Math.floor(rnd(0,6))); }
+  const L=Math.floor(rnd(0,20)),R=Math.floor(rnd(0,20)),T=Math.floor(rnd(0,15)),B=Math.floor(rnd(0,15));
+  const crop=[L,T,R,B];
+  const intent=['crop_top','crop_bottom','crop_tb','crop_left','crop_right','trim','none'][Math.floor(rnd(0,7))];
+  const rodBefore=rod?JSON.stringify(rod.rL):null;
+  let out;
+  try{ out=_cloudCropIntentGuard({crop:crop,rod:rod,intent:intent}); }catch(e){ bad('cloudCropIntentGuard 抛错: '+e.message); continue; }
+  if(out===null) continue;
+  if(!out||typeof out!=='object'||!Array.isArray(out.crop)){ bad('cloudCropIntentGuard 非合法对象'); continue; }
+  if(out.crop.length!==4){ bad('cloudCropIntentGuard crop 长度!=4'); continue; }
+  out.crop.forEach((v,k)=>{ if(!validNum(v)) bad('cloudCropIntentGuard NaN'); if(v<0||v>60) bad('cloudCropIntentGuard 越界: '+v); });
+  if(out.crop[0]!==L||out.crop[2]!==R) bad('cloudCropIntentGuard 改动了左右边');
+  if(out.crop[1]>T) bad('cloudCropIntentGuard 上边增大（多裁）');
+  if(out.crop[3]>B) bad('cloudCropIntentGuard 下边增大（多裁）');
+  if(Math.abs(out.crop[1]-Math.round(out.crop[1]))>1e-9||Math.abs(out.crop[3]-Math.round(out.crop[3]))>1e-9) bad('cloudCropIntentGuard 非整数');
+  if((1-out.crop[1]/100-out.crop[3]/100) < (1-T/100-B/100)-1e-9) bad('cloudCropIntentGuard 窗高缩小');
+  if(out.crop[1]===T && out.crop[3]===B) bad('cloudCropIntentGuard 返回未变化结果（应 null）');
+  if(typeof out.note!=='string'||!out.note.length) bad('cloudCropIntentGuard 缺 note');
+  if(rod && JSON.stringify(rod.rL)!==rodBefore) bad('cloudCropIntentGuard 污染 rod 入参');
+  if(crop[0]!==L||crop[1]!==T||crop[2]!==R||crop[3]!==B) bad('cloudCropIntentGuard 污染 crop 入参');
+  const again=_cloudCropIntentGuard({crop:crop,rod:rod,intent:intent});
+  if(JSON.stringify(again)!==JSON.stringify(out)) bad('cloudCropIntentGuard 不稳定');
+}
 
 console.log(issues === 0 ? '\n✓ 模糊测试未发现问题' : `\n发现 ${issues} 个问题`);
