@@ -1004,4 +1004,25 @@
       return out;
     }
 
-module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan };
+    function _classifyMulti(o){
+      if(!o||!Array.isArray(o.persons)) return null;
+      var ps=o.persons.filter(function(p){return p&&typeof p.h==="number"&&isFinite(p.h)&&typeof p.cx==="number"&&isFinite(p.cx)&&(typeof p.score!=="number"||p.score>=0.5);});
+      var nP=ps.length;
+      if(nP<2||nP>3) return null;
+      // 场景门控
+      var sc=o.sceneType||o.cloudScene||"";
+      if(["night","waterscape","landscape","architecture","flower","food","dessert","pet","animal"].indexOf(sc)>=0) return null;
+      // 按高度降序
+      ps.sort(function(a,b){return b.h-a.h;});
+      var mainH=ps[0].h;
+      if(mainH<0.25) return null;
+      var secH=ps[1].h;
+      if(secH/mainH<0.55) return null;
+      // 水平间距：主/次框中心距 ≥0.12
+      var gap=Math.abs(ps[0].cx-ps[1].cx);
+      if(gap<0.12) return null;
+      if(nP===2) return {kind:"duo",nP:nP,txt:"双人构图",conf:0.7};
+      return {kind:"trio",nP:nP,txt:"三人合影",conf:0.7};
+    }
+
+module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti };

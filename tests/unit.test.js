@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan } = require('./pure-functions.js');
+const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -1614,6 +1614,43 @@ test('finalPlan: filter 非 null 必带 reason（缺失补空串不崩）', () =
   const r=_finalPipelinePlan({crop:[0,0,0,0], prefRec:{filter:"film-kodak"}});
   assert.strictEqual(r.filter,"film-kodak");
   assert.strictEqual(typeof r.reason,"string");
+});
+
+/* -------------------- v11.4.0 多主体状态标签 _classifyMulti -------------------- */
+test('multi: 干净双人 → duo', () => {
+  const r = _classifyMulti({ persons: [{h:0.6,cx:0.35,score:0.9},{h:0.5,cx:0.65,score:0.9}], sceneType:"portrait" });
+  assert.ok(r && r.kind==="duo" && r.txt==="双人构图");
+});
+test('multi: 干净三人 → trio', () => {
+  const r = _classifyMulti({ persons: [{h:0.6,cx:0.3,score:0.9},{h:0.5,cx:0.5,score:0.9},{h:0.45,cx:0.7,score:0.9}], sceneType:"portrait" });
+  assert.ok(r && r.kind==="trio" && r.txt==="三人合影");
+});
+test('multi: nP=1 → null（交单人引擎）', () => {
+  assert.strictEqual(_classifyMulti({ persons: [{h:0.6,cx:0.5,score:0.9}], sceneType:"portrait" }), null);
+});
+test('multi: nP=4 人群 → null', () => {
+  assert.strictEqual(_classifyMulti({ persons: [{h:0.4,cx:0.2,score:0.9},{h:0.35,cx:0.4,score:0.9},{h:0.3,cx:0.6,score:0.9},{h:0.25,cx:0.8,score:0.9}], sceneType:"portrait" }), null);
+});
+test('multi: mainH<0.25 远人 → null', () => {
+  assert.strictEqual(_classifyMulti({ persons: [{h:0.2,cx:0.3,score:0.9},{h:0.15,cx:0.6,score:0.9}], sceneType:"portrait" }), null);
+});
+test('multi: 主次比<0.55 主+路人 → null', () => {
+  assert.strictEqual(_classifyMulti({ persons: [{h:0.6,cx:0.3,score:0.9},{h:0.2,cx:0.6,score:0.9}], sceneType:"portrait" }), null);
+});
+test('multi: hGap<0.12 叠站 → null', () => {
+  assert.strictEqual(_classifyMulti({ persons: [{h:0.6,cx:0.48,score:0.9},{h:0.5,cx:0.52,score:0.9}], sceneType:"portrait" }), null);
+});
+test('multi: sceneType=night → null', () => {
+  assert.strictEqual(_classifyMulti({ persons: [{h:0.6,cx:0.3,score:0.9},{h:0.5,cx:0.6,score:0.9}], sceneType:"night" }), null);
+});
+test('multi: sceneType=architecture → null', () => {
+  assert.strictEqual(_classifyMulti({ persons: [{h:0.6,cx:0.3,score:0.9},{h:0.5,cx:0.6,score:0.9}], sceneType:"architecture" }), null);
+});
+test('multi: score<0.5 低质框过滤 → nP=1 → null', () => {
+  assert.strictEqual(_classifyMulti({ persons: [{h:0.6,cx:0.3,score:0.9},{h:0.5,cx:0.6,score:0.3}], sceneType:"portrait" }), null);
+});
+test('multi: 空入参 → null', () => {
+  assert.strictEqual(_classifyMulti(null), null);
 });
 
 /* -------------------- 汇总 -------------------- */
