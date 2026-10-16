@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref } = require('./pure-functions.js');
+const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -1394,6 +1394,44 @@ FPc('偏好：确定性——同输入两次结果一致', ()=>{
   const rec={filter:'night',rule:'R1',scene:'night'};
   const h=[{rule:'R1',scene:'night'},{rule:'R1',scene:'night'},{rule:'R1',scene:'night'}];
   assert.deepStrictEqual(_applyPref(rec,h),_applyPref(rec,h));
+});
+
+/* -------------------- v9.4.0 光位/视线补强 -------------------- */
+test('bgFace: 逆光黑脸（脸0.4背景）+平光 → 提示', ()=>{
+  assert.strictEqual(_lightDiagnosisPro({frameMean:150,faceMean:50,lightKey:'flat'}).id,'bgFace');
+});
+test('bgFace: 死区（ratio≈1）不报', ()=>{
+  assert.strictEqual(_lightDiagnosisPro({frameMean:120,faceMean:110,lightKey:'flat'}),null);
+});
+test('bgFace: 脸<0.6背景但侧光不报（只提示平光逆光）', ()=>{
+  assert.strictEqual(_lightDiagnosisPro({frameMean:150,faceMean:50,lightKey:'split'}),null);
+});
+test('bgFace: 非法入参不抛错返回null', ()=>{
+  assert.strictEqual(_lightDiagnosisPro(null),null);
+  assert.strictEqual(_lightDiagnosisPro({frameMean:0,faceMean:5}),null);
+  assert.strictEqual(_lightDiagnosisPro({frameMean:'x',faceMean:5}),null);
+});
+test('gazePro: 死区 |rNose|<0.05 不做', ()=>{
+  assert.strictEqual(_gazeGuardPro({rNose:0.03,eyeSpan:0.3}),null);
+});
+test('gazePro: 浅侧 0.07 → 1.5:1', ()=>{
+  const r=_gazeGuardPro({rNose:0.07,eyeSpan:0.3});
+  assert.strictEqual(r.dir,1); assert.strictEqual(r.noseRoomRatio,1.5);
+});
+test('gazePro: 明显侧脸 0.15 → 2:1', ()=>{
+  const r=_gazeGuardPro({rNose:-0.15,eyeSpan:0.3});
+  assert.strictEqual(r.dir,-1); assert.strictEqual(r.noseRoomRatio,2.0);
+});
+test('gazePro: 耳距符号矛盾 → 回退居中null', ()=>{
+  // rNose 朝右(+)，earLR 右耳距大(lg>0 应为朝右)——构造矛盾：rNose正 earLR<1(lg<0 朝左)
+  assert.strictEqual(_gazeGuardPro({rNose:0.15,earLR:0.5,eyeSpan:0.3}),null);
+});
+test('gazePro: 耳距符号一致 → 正常判向', ()=>{
+  assert.strictEqual(_gazeGuardPro({rNose:0.15,earLR:2.0,eyeSpan:0.3}).dir,1);
+});
+test('gazePro: eyeSpan 过小 → null不抛错', ()=>{
+  assert.strictEqual(_gazeGuardPro({rNose:0.2,eyeSpan:1e-5}),null);
+  assert.strictEqual(_gazeGuardPro(null),null);
 });
 
 /* -------------------- 汇总 -------------------- */

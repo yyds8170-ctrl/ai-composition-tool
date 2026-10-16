@@ -681,6 +681,11 @@
         if(o.rodMoved===true){
           out.push({id:"bgsafe",sev:1,title:"已自动保留上方背景",action:"晚霞/水面已自动保留，无需再裁"});
         }
+        // bgFace（sev1 只读提示）：背景-脸亮度分离——脸明显比背景暗且平光 → 提示
+        try{
+          var bgp=_lightDiagnosisPro({frameMean:num(o.frameMean),faceMean:num(o.faceMean),lightKey:(o.light&&o.light.key)||null});
+          if(bgp) out.push(bgp);
+        }catch(e){}
         out.sort(function(a,b){ return b.sev-a.sev; });
         return out.slice(0,3);
       }catch(e){ return []; }
@@ -837,4 +842,37 @@
       }catch(e){ return rec; }
     }
 
-module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref };
+    function _lightDiagnosisPro(o){
+      try{
+        if(!o||typeof o.frameMean!=="number"||typeof o.faceMean!=="number"||!isFinite(o.frameMean)||!isFinite(o.faceMean)) return null;
+        if(o.frameMean<=0) return null;
+        var ratio=o.faceMean/o.frameMean;
+        if(ratio>=0.8&&ratio<=1.25) return null; // 均匀棚拍死区不误报
+        if(ratio<0.6&&(o.lightKey==="flat"||o.lightKey==null||o.lightKey===undefined)){
+          return {id:"bgFace",sev:1,title:"背景比脸亮",action:"换个人站的位置，或让光先打到脸上"};
+        }
+        return null;
+      }catch(e){ return null; }
+    }
+
+    function _gazeGuardPro(o){
+      try{
+        if(!o||typeof o.rNose!=="number"||!isFinite(o.rNose)) return null;
+        if(typeof o.eyeSpan!=="number"||!isFinite(o.eyeSpan)||o.eyeSpan<1e-4) return null;
+        var rn=o.rNose;
+        // 耳距交叉校验：|log(earLR)|>0.15 且符号矛盾 → 不判方向、回退居中
+        if(typeof o.earLR==="number"&&isFinite(o.earLR)&&o.earLR>1e-3){
+          var lg=Math.log(o.earLR);
+          if(Math.abs(lg)>0.15){
+            var earDir=(lg>0)?1:-1; var noseDir=(rn>0)?1:-1;
+            if(earDir!==noseDir) return null; // 符号矛盾 → 居中，不做 nose room
+          }
+        }
+        var ar=Math.abs(rn);
+        if(ar<0.05) return null;                 // 死区：轻微正面不做
+        if(ar<0.10) return {dir:(rn>0)?1:-1,noseRoomRatio:1.5}; // 浅侧渐进 1.5:1
+        return {dir:(rn>0)?1:-1,noseRoomRatio:2.0};             // 明显侧脸 2:1
+      }catch(e){ return null; }
+    }
+
+module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro };

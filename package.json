@@ -1,6 +1,6 @@
 {
   "name": "ai-composition-tool",
-  "version": "9.3.0",
+  "version": "9.4.0",
   "description": "AI 构图助手 Pro · 实景视觉构图生成工具（PWA，本地+云端双引擎）",
   "private": true,
   "scripts": {
