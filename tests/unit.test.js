@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay } = require('./pure-functions.js');
+const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -1580,6 +1580,40 @@ test('overlay: crop 越界裁到 [0,1]', () => {
 });
 test('overlay: 空入参 → 空结构', () => {
   assert.deepStrictEqual(_composeOverlay(null),{gridLines:[],protectBands:[],cropBox:null,anchors:[]});
+});
+
+/* -------------------- v11.2.0 拍后即成片规划 _finalPipelinePlan -------------------- */
+test('finalPlan: 有滤镜推荐 → 输出成片', () => {
+  const r = _finalPipelinePlan({crop:[0.05,0.05,0.95,0.95], prefRec:{filter:"portrait-warm",strength:80,reason:"暖光环境，肤色更通透"}});
+  assert.deepStrictEqual(r.crop,[0.05,0.05,0.95,0.95]);
+  assert.strictEqual(r.filter,"portrait-warm");
+  assert.strictEqual(r.strength,80);
+  assert.ok(r.reason.indexOf("暖光")>=0);
+  assert.deepStrictEqual(r.views,{compare:true,final:true});
+  assert.ok(r.applyNote.indexOf("已自动裁切")>=0);
+});
+test('finalPlan: 无滤镜推荐 → 只裁切不套', () => {
+  const r = _finalPipelinePlan({crop:[0,0,0,0], prefRec:{filter:null,strength:0,reason:""}});
+  assert.strictEqual(r.filter,null);
+  assert.strictEqual(r.strength,0);
+  assert.strictEqual(r.reason,"");
+  assert.ok(r.applyNote.indexOf("无合适滤镜")>=0);
+});
+test('finalPlan: crop 原样透传不改入参', () => {
+  const c=[0.1,0.2,0.9,0.8];
+  const r=_finalPipelinePlan({crop:c, prefRec:{filter:null}});
+  r.crop[0]=0.99;
+  assert.deepStrictEqual(c,[0.1,0.2,0.9,0.8]);
+});
+test('finalPlan: 空入参 → 默认结构', () => {
+  const r=_finalPipelinePlan(null);
+  assert.deepStrictEqual(r.crop,[0,0,0,0]);
+  assert.strictEqual(r.filter,null);
+});
+test('finalPlan: filter 非 null 必带 reason（缺失补空串不崩）', () => {
+  const r=_finalPipelinePlan({crop:[0,0,0,0], prefRec:{filter:"film-kodak"}});
+  assert.strictEqual(r.filter,"film-kodak");
+  assert.strictEqual(typeof r.reason,"string");
 });
 
 /* -------------------- 汇总 -------------------- */

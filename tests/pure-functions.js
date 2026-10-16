@@ -989,4 +989,19 @@
       return out;
     }
 
-module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay };
+    function _finalPipelinePlan(o){
+      if(!o) return {crop:[0,0,0,0],filter:null,strength:0,reason:"",views:{compare:true,final:true},applyNote:""};
+      var pref=o.prefRec||{};
+      var f=pref.filter||null;
+      var out={
+        crop:Array.isArray(o.crop)&&o.crop.length===4?o.crop.slice():[0,0,0,0],
+        filter:f,
+        strength:f?(pref.strength||80):0,
+        reason:f?(pref.reason||""):"",
+        views:{compare:true,final:true},
+        applyNote:f?("已自动裁切＋套「"+f+"」，点原片可一键回到原图"):"已自动裁切，无合适滤镜（宁缺毋滥），点原片可回到原图"
+      };
+      return out;
+    }
+
+module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan };
