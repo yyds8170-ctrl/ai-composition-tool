@@ -885,4 +885,79 @@
       }catch(e){ return null; }
     }
 
-module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro };
+    function _guidanceDistancePro(o){
+      if(!o) return null;
+      var fc=o.faceConf;
+      if(typeof fc!=="number"||!isFinite(fc)||fc<0.75) return null;
+      var phr=o.personHR, fhr=o.faceHR;
+      if(typeof phr==="number"&&isFinite(phr)){
+        if(phr<0.12) return null; // 远景小人豁免
+        if(phr>0.90) return {dir:"near",txt:"距离太近，后退一些，人物会更完整"};
+        if(phr<0.25) return {dir:"far",txt:"走近一些，人物再大一点"};
+        return null;
+      }
+      if(typeof fhr==="number"&&isFinite(fhr)){
+        if(fhr<0.04) return null;
+        if(fhr>0.80) return {dir:"near",txt:"距离太近，后退一些，人物会更完整"};
+        if(fhr<0.15) return {dir:"far",txt:"走近一些，人物再大一点"};
+        return null;
+      }
+      return null;
+    }
+
+    function _guidanceWaistLevel(o){
+      if(!o) return null;
+      var fc=o.faceConf;
+      if(typeof fc!=="number"||!isFinite(fc)||fc<0.75) return null;
+      var phr=o.personHR, ht=o.headTop, pb=o.personBottom;
+      if(typeof phr!=="number"||!isFinite(phr)||phr<0.85) return null;
+      if(typeof ht!=="number"||!isFinite(ht)) return null;
+      if(typeof pb!=="number"||!isFinite(pb)) return null;
+      var cy=(ht+pb)/2;
+      if(!isFinite(cy)) return null;
+      if(cy>0.58) return {dir:"down",txt:"机位放低，与腰部齐平，人更显高"};
+      if(cy<0.42) return {dir:"up",txt:"机位举高一点，别贴地仰拍"};
+      return null;
+    }
+
+    function _singlePersonGate(o){
+      if(!o) return null;
+      var fc=o.faceCount, pc=o.personCount;
+      if(typeof fc!=="number"||!isFinite(fc)||typeof pc!=="number"||!isFinite(pc)) return null;
+      if(fc>=2||pc>=2) return {applicable:false,txt:"仅适用于单人构图"};
+      return {applicable:true};
+    }
+
+    function _classifyComposition(o){
+      if(!o) return null;
+      var fc=o.faceConf;
+      if(typeof fc!=="number"||!isFinite(fc)||fc<0.75) return null;
+      var phr=o.personHR, fhr=o.faceHR, cx=o.personCx;
+      if(typeof phr!=="number"||!isFinite(phr)) return null;
+      if(typeof cx!=="number"||!isFinite(cx)) return null;
+      if(phr<0.12) return null;
+      if(typeof fhr==="number"&&isFinite(fhr)&&fhr<0.04) return null;
+      var fcnt=o.faceCount, pcnt=o.personCount;
+      if(typeof fcnt==="number"&&fcnt>=2) return null;
+      if(typeof pcnt==="number"&&pcnt>=2) return null;
+      var yaw=o.yawDir, earOK=o.earSpanOK;
+      if((typeof yaw!=="number"||yaw===0)&&!earOK) return null;
+      // 景别
+      var shot=null;
+      if(typeof fhr==="number"&&isFinite(fhr)&&fhr>=0.45) shot="close";
+      else if(phr>=0.85 && typeof o.headTop==="number"&&o.headTop<0.08 && typeof o.personBottom==="number"&&o.personBottom>0.92) shot="full";
+      else if(phr>=0.45) shot="half";
+      else return null; // open 远景不判
+      // 类型
+      var sym=o.sym, type=null;
+      if(typeof sym==="number"&&isFinite(sym)&&sym>=0.75) type="sym";
+      else if(cx>=0.30&&cx<=0.42) type="thirds-left";
+      else if(cx>=0.58&&cx<=0.70) type="thirds-right";
+      else if(cx>=0.46&&cx<=0.54) type="center";
+      else return null; // 落缝
+      var cn={full:"全身",half:"半身",close:"特写"}[shot]||"";
+      var tcn={"sym":"对称构图","thirds-left":"左三分法","thirds-right":"右三分法","center":"中心构图"}[type];
+      return {type:type,shotSize:shot,conf:0.7,txt:tcn+"·"+cn+"构图"};
+    }
+
+module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition };

@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro } = require('./pure-functions.js');
+const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -1481,6 +1481,77 @@ test('采纳偏好：旧记录无 type 按推翻处理', ()=>{
   const rec={filter:'night',strength:80,rule:'R1',scene:'night'};
   const h=[{rule:'R1',scene:'night'},{rule:'R1',scene:'night'},{rule:'R1',scene:'night'}];
   assert.strictEqual(_applyPref(rec,h).filter,null);
+});
+
+/* -------------------- v11.0.0 实时引导精化 + 构图类型判定 -------------------- */
+test('distancePro: personHR=0.95 → 太近后退', () => {
+  const r = _guidanceDistancePro({faceConf:0.9, personHR:0.95, faceHR:0.6});
+  assert.ok(r && r.dir==='near' && r.txt.indexOf('后退')>=0);
+});
+test('distancePro: personHR=0.18 → 走近', () => {
+  const r = _guidanceDistancePro({faceConf:0.9, personHR:0.18, faceHR:0.1});
+  assert.ok(r && r.dir==='far' && r.txt.indexOf('走近')>=0);
+});
+test('distancePro: personHR=0.45 半身正常 → null', () => {
+  assert.strictEqual(_guidanceDistancePro({faceConf:0.9, personHR:0.45, faceHR:0.2}), null);
+});
+test('distancePro: personHR=0.85 特写头肩死区内 → null', () => {
+  assert.strictEqual(_guidanceDistancePro({faceConf:0.9, personHR:0.85, faceHR:0.5}), null);
+});
+test('distancePro: faceConf=0.6 低置信 → null', () => {
+  assert.strictEqual(_guidanceDistancePro({faceConf:0.6, personHR:0.95}), null);
+});
+test('distancePro: 无人体框回退 faceHR=0.85 → 太近', () => {
+  const r = _guidanceDistancePro({faceConf:0.9, faceHR:0.85});
+  assert.ok(r && r.dir==='near');
+});
+test('waistLevel: 全身 personCY=0.62 → 放低', () => {
+  const r = _guidanceWaistLevel({faceConf:0.9, personHR:0.85, headTop:0.20, personBottom:1.05});
+  assert.ok(r && r.dir==='down');
+});
+test('waistLevel: 全身 personCY=0.38 → 举高', () => {
+  const r = _guidanceWaistLevel({faceConf:0.9, personHR:0.85, headTop:-0.05, personBottom:0.80});
+  assert.ok(r && r.dir==='up');
+});
+test('waistLevel: 半身 shotSize 不足 → null', () => {
+  assert.strictEqual(_guidanceWaistLevel({faceConf:0.9, personHR:0.5, headTop:0.1, personBottom:0.6}), null);
+});
+test('waistLevel: 全身 personCY=0.50 居中死区 → null', () => {
+  assert.strictEqual(_guidanceWaistLevel({faceConf:0.9, personHR:0.85, headTop:0.08, personBottom:0.93}), null);
+});
+test('waistLevel: personBottom 缺失 → null', () => {
+  assert.strictEqual(_guidanceWaistLevel({faceConf:0.9, personHR:0.85, headTop:0.20, personBottom:null}), null);
+});
+test('singlePersonGate: faceCount=3 → applicable:false', () => {
+  const r = _singlePersonGate({faceCount:3, personCount:1});
+  assert.ok(r && r.applicable===false);
+});
+test('singlePersonGate: 单人 → applicable:true', () => {
+  const r = _singlePersonGate({faceCount:1, personCount:1});
+  assert.ok(r && r.applicable===true);
+});
+test('singlePersonGate: 人数缺失 → null', () => {
+  assert.strictEqual(_singlePersonGate({faceCount:null}), null);
+});
+test('classifyComposition: 单人全身右三分 → 右三分法·全身构图', () => {
+  const r = _classifyComposition({faceConf:0.9, personHR:0.9, faceHR:0.3, personCx:0.63, yawDir:1, earSpanOK:true, sym:0.2, faceCount:1, personCount:1, headTop:0.05, personBottom:0.95});
+  assert.ok(r && r.type==='thirds-right' && r.shotSize==='full' && r.txt.indexOf('右三分法')>=0);
+});
+test('classifyComposition: 强对称 → 对称构图', () => {
+  const r = _classifyComposition({faceConf:0.9, personHR:0.6, faceHR:0.3, personCx:0.5, yawDir:0, earSpanOK:true, sym:0.8, faceCount:1, personCount:1, headTop:0.1, personBottom:0.7});
+  assert.ok(r && r.type==='sym');
+});
+test('classifyComposition: personCx=0.45 落缝 → null', () => {
+  assert.strictEqual(_classifyComposition({faceConf:0.9, personHR:0.6, faceHR:0.3, personCx:0.45, yawDir:1, earSpanOK:true, sym:0.2, faceCount:1, personCount:1, headTop:0.1, personBottom:0.7}), null);
+});
+test('classifyComposition: 两人合影 → null', () => {
+  assert.strictEqual(_classifyComposition({faceConf:0.9, personHR:0.6, faceHR:0.3, personCx:0.33, yawDir:1, earSpanOK:true, sym:0.2, faceCount:2, personCount:2, headTop:0.1, personBottom:0.7}), null);
+});
+test('classifyComposition: yawDir=0 且 earSpanOK=false → null', () => {
+  assert.strictEqual(_classifyComposition({faceConf:0.9, personHR:0.6, faceHR:0.3, personCx:0.33, yawDir:0, earSpanOK:false, sym:0.2, faceCount:1, personCount:1, headTop:0.1, personBottom:0.7}), null);
+});
+test('classifyComposition: faceHR=0.03 远景 → null', () => {
+  assert.strictEqual(_classifyComposition({faceConf:0.9, personHR:0.1, faceHR:0.03, personCx:0.33, yawDir:1, earSpanOK:true, sym:0.2, faceCount:1, personCount:1, headTop:0.4, personBottom:0.5}), null);
 });
 
 /* -------------------- 汇总 -------------------- */
