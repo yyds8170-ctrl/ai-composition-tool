@@ -960,4 +960,33 @@
       return {type:type,shotSize:shot,conf:0.7,txt:tcn+"·"+cn+"构图"};
     }
 
-module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition };
+    function _composeOverlay(o){
+      var out={gridLines:[],protectBands:[],cropBox:null,anchors:[]};
+      if(!o) return out;
+      var crop=o.crop;
+      if(Array.isArray(crop)&&crop.length===4&&crop.every(function(x){return typeof x==="number"&&isFinite(x);})){
+        out.cropBox=[Math.max(0,Math.min(1,crop[0])),Math.max(0,Math.min(1,crop[1])),Math.max(0,Math.min(1,crop[2])),Math.max(0,Math.min(1,crop[3]))];
+      }
+      var g=o.grid; // thirds/center/sym
+      if(g==="thirds-left"||g==="thirds-right"){ out.gridLines=["v1/3","v2/3","h1/3","h2/3"]; }
+      else if(g==="center"){ out.gridLines=["center-v","center-h"]; }
+      else if(g==="sym"){ out.gridLines=["sym-axis"]; }
+      // 保护带（头/脚 6%，仅视觉提示）
+      if(o.personBox){
+        out.protectBands.push({edge:"top",pct:0.06,label:"头顶留白"});
+        out.protectBands.push({edge:"bottom",pct:0.06,label:"脚不贴边"});
+      }
+      // 锚点：主体重心落在三分交点 ±0.04 → ✓
+      var pcx=o.personCx, pcy=o.personCY;
+      if(typeof pcx==="number"&&isFinite(pcx)&&typeof pcy==="number"&&isFinite(pcy)){
+        var pts=[[1/3,1/3],[2/3,1/3],[1/3,2/3],[2/3,2/3]];
+        for(var i=0;i<pts.length;i++){
+          if(Math.abs(pcx-pts[i][0])<=0.04&&Math.abs(pcy-pts[i][1])<=0.04){
+            out.anchors.push({x:pts[i][0],y:pts[i][1],label:"✓"}); break;
+          }
+        }
+      }
+      return out;
+    }
+
+module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay };

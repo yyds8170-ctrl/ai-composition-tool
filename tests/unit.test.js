@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition } = require('./pure-functions.js');
+const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -1552,6 +1552,34 @@ test('classifyComposition: yawDir=0 且 earSpanOK=false → null', () => {
 });
 test('classifyComposition: faceHR=0.03 远景 → null', () => {
   assert.strictEqual(_classifyComposition({faceConf:0.9, personHR:0.1, faceHR:0.03, personCx:0.33, yawDir:1, earSpanOK:true, sym:0.2, faceCount:1, personCount:1, headTop:0.4, personBottom:0.5}), null);
+});
+
+/* -------------------- v11.1.0 叠加层声明 _composeOverlay -------------------- */
+test('overlay: 三分+人框+锚点命中', () => {
+  const r = _composeOverlay({crop:[0.05,0.05,0.95,0.95], grid:"thirds-right", personBox:{x0:0.3,y0:0.1,x1:0.4,y1:0.9}, personCx:0.66, personCY:0.66});
+  assert.deepStrictEqual(r.gridLines,["v1/3","v2/3","h1/3","h2/3"]);
+  assert.strictEqual(r.protectBands.length,2);
+  assert.deepStrictEqual(r.cropBox,[0.05,0.05,0.95,0.95]);
+  assert.ok(r.anchors.length===1 && r.anchors[0].label==="✓");
+});
+test('overlay: center → 中心线', () => {
+  const r = _composeOverlay({crop:[0,0,1,1], grid:"center"});
+  assert.deepStrictEqual(r.gridLines,["center-v","center-h"]);
+  assert.strictEqual(r.protectBands.length,0);
+});
+test('overlay: sym → 对称轴', () => {
+  assert.deepStrictEqual(_composeOverlay({crop:[0,0,1,1], grid:"sym"}).gridLines,["sym-axis"]);
+});
+test('overlay: crop 非法 → 空结构不抛错', () => {
+  const r = _composeOverlay({crop:[NaN,0,1,1], grid:"thirds-right"});
+  assert.deepStrictEqual(r.cropBox,null);
+  assert.deepStrictEqual(r.anchors,[]);
+});
+test('overlay: crop 越界裁到 [0,1]', () => {
+  assert.deepStrictEqual(_composeOverlay({crop:[-0.2,0.5,1.2,0.95]}).cropBox,[0,0.5,1,0.95]);
+});
+test('overlay: 空入参 → 空结构', () => {
+  assert.deepStrictEqual(_composeOverlay(null),{gridLines:[],protectBands:[],cropBox:null,anchors:[]});
 });
 
 /* -------------------- 汇总 -------------------- */
