@@ -1061,6 +1061,16 @@ test('cloudCropIntentGuard: crop_tb 顶部双高+底部普通 → 只内收顶�
   assert.ok(out);
   assert.deepStrictEqual(out.crop, [0, 8, 0, 10]);
 });
+test('cloudCropIntentGuard v9.6: 组间反差抬高全图方差→相对门漏保时绝对方差地板仍护', () => {
+  // 条带内 l 40/160 交替（var=3600>800 绝对地板）；全图下半也大幅明暗交替抬高 gVar，使 varL>gVar*1.2 不成立。
+  const rod = mkRodB(100, 100, (x, y) => {
+    if (y < 10) return { l: x % 2 ? 40 : 160, s: 0.7 };
+    return { l: x % 2 ? 20 : 180, s: 0.05 }; // 下半也强反差 → gVar 高
+  });
+  const out = _cloudCropIntentGuard({ crop: [0, 10, 0, 0], rod, intent: 'crop_top' });
+  assert.ok(out, '绝对方差地板应兜底保护');
+  assert.deepStrictEqual(out.crop, [0, 8, 0, 0]);
+});
 test('cloudCropIntentGuard: 无副作用（入参对象与rod不被改写）', () => {
   const rod = mkRodB(100, 100, (x, y) => y < 10 ? { l: x % 2 ? 60 : 140, s: 0.7 } : { l: 100, s: 0.05 });
   const crop = [0, 10, 0, 0];

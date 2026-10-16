@@ -244,7 +244,10 @@
           var sL=rod.rL[y1]-rod.rL[y0], sL2=rod.rL2[y1]-rod.rL2[y0], sS=rod.rS[y1]-rod.rS[y0];
           var mL=sL/n, mL2=sL2/n, varL=Math.max(0,mL2-mL*mL);
           var salMassRatio=sS/(gmS*gN); // 条带显著性质量占全图比
-          return (salMassRatio>0.15 && varL>gVar*1.2);
+          // v9.6.0 绝对地板：相对门 varL>gVar*1.2 在"组间反差抬高全图方差"时会漏保晚霞；
+          // 追加绝对方差地板（条带自身方差>800 即有层次）作为另一条保护路径——只多护一点、仍只少裁。
+          var ABS_VAR=800;
+          return (salMassRatio>0.15 && (varL>gVar*1.2 || varL>ABS_VAR));
         }
         var RETRACT=2;
         if(topHit && bandIsValuable(true)){ nT=Math.max(0,T-RETRACT); if(nT!==T) note="顶部有高价值背景（晚霞/水面层次），已少裁 2% 保留"; }
