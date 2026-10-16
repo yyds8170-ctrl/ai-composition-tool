@@ -740,6 +740,8 @@
             }
           }
         }catch(e2){ lr=0; }
+        // R6 夜景暖调（v9.5 候选池扩展）：暗景且暖色占比高（城市霓虹/夜市暖光）→ 暖金，压过 R1 冷提亮
+        if(mean>=50&&mean<85&&lightScore>=0.30&&warmRatio>=0.45&&scn!=="food"&&scn!=="美食") return {filter:"warm",strength:75,reason:"夜色里有暖光，暖金调更有氛围",rule:"R6"};
         // R1 夜景提亮
         if(mean>=50&&mean<85&&lightScore>=0.30) return {filter:"night",strength:80,reason:"夜景偏暗、有点光源，暗部提亮更通透",rule:"R1"};
         // R2A 侧光黑白人像
@@ -750,6 +752,8 @@
         if(isPerson&&wb<-0.05&&mean>=105) return {filter:"portrait-cool",strength:80,reason:"冷调环境，肤色更清透",rule:"R2C"};
         // R3 近黑白
         if(sat<0.06&&mean>=75) return {filter:"mono",strength:90,reason:"画面本来就低饱和，黑白影调更干净",rule:"R3"};
+        // R5 风光清新通透（v9.5 候选池扩展）：明亮低饱和的风光/街景、非暖黄昏非人像非水面 → 160c 通透
+        if(!isPerson&&(scn==="landscape"||scn==="general"||scn==="sunset"||scn==="street")&&mean>=100&&mean<=170&&sat<0.22&&warmRatio<0.30&&waterScore<=0.30&&manmadeScore<=0.50) return {filter:"160c",strength:65,reason:"明亮干净的风光，通透一档天空更蓝",rule:"R5"};
         // R4 黄昏暖景
         if(pc<=1&&warmRatio>=0.42&&wb>0.05&&mean>=85&&mean<=160&&waterScore<=0.30&&manmadeScore<=0.50&&scn!=="food"&&scn!=="美食"){
           return {filter:"sunset",strength:70,reason:"黄昏暖景，橙金氛围更浓",rule:"R4"};
@@ -829,15 +833,18 @@
         if(!Array.isArray(history)||history.length===0) return rec;
         var rule=rec.rule, scene=(typeof rec.scene==="string")?rec.scene:null;
         if(!rule) return rec;
-        var n=0;
+        var rej=0, ado=0;
         for(var i=0;i<history.length;i++){
           var e=history[i]; if(!e||typeof e!=="object") continue;
           if(e.rule!==rule) continue;
-          // 同场景才降权（scene 为空时按 rule 全场景累计）；scene 记录与当前一致才算
           if(scene&&e.scene&&e.scene!==scene) continue;
-          n++;
+          if(e.type==='adopt') ado++; else rej++; // 兼容 v9.3 无 type 的旧记录按推翻处理
         }
-        if(n>=3) return {filter:null,strength:0,reason:"",rule:rule+"(PREF)"};
+        if(rej>=3) return {filter:null,strength:0,reason:"",rule:rule+"(PREF)"};
+        if(ado>=3){
+          var st=(typeof rec.strength==="number"&&isFinite(rec.strength))?rec.strength:0;
+          return {filter:rec.filter,strength:Math.min(100,st+10),reason:rec.reason,rule:rule+"(PREF+)"};
+        }
         return rec;
       }catch(e){ return rec; }
     }

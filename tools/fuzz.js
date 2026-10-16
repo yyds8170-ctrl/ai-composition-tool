@@ -512,7 +512,7 @@ for(let i=0;i<500000;i++){
 if(!Array.isArray(_composeDiagnosis(null))||_composeDiagnosis(null).length!==0) bad('composeDiagnosis null 输入未 []');
 
 // 19. v9.0.0 _recommendFilter: 随机信号 → 永远返回合法对象、strength∈[0,100]、非null id∈6款、不抛错、无副作用（50 万次）
-const FREC_ALLOW=['night','portrait-warm','portrait-cool','portrait-mono','mono','sunset'];
+const FREC_ALLOW=['night','portrait-warm','portrait-cool','portrait-mono','mono','sunset','warm','160c'];
 for(let i=0;i<500000;i++){
   const grid=[]; for(let j=0;j<256;j++) grid.push(rnd(0,255));
   const a={mean:rnd(0,260),contrast:rnd(0,80),wb:rnd(-0.15,0.15),sat:rnd(0,0.6),
