@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti } = require('./pure-functions.js');
+const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -1486,14 +1486,15 @@ test('采纳偏好：旧记录无 type 按推翻处理', ()=>{
 /* -------------------- v11.0.0 实时引导精化 + 构图类型判定 -------------------- */
 test('distancePro: personHR=0.95 → 太近后退', () => {
   const r = _guidanceDistancePro({faceConf:0.9, personHR:0.95, faceHR:0.6});
-  assert.ok(r && r.dir==='near' && r.txt.indexOf('后退')>=0);
+  assert.ok(r && r.dir==='near' && r.txt.indexOf('半步')>=0);
 });
 test('distancePro: personHR=0.18 → 走近', () => {
   const r = _guidanceDistancePro({faceConf:0.9, personHR:0.18, faceHR:0.1});
   assert.ok(r && r.dir==='far' && r.txt.indexOf('走近')>=0);
 });
-test('distancePro: personHR=0.45 半身正常 → null', () => {
-  assert.strictEqual(_guidanceDistancePro({faceConf:0.9, personHR:0.45, faceHR:0.2}), null);
+test('distancePro: personHR=0.45 半身舒适带 → ok-hold', () => {
+  const r = _guidanceDistancePro({faceConf:0.9, personHR:0.45, faceHR:0.2});
+  assert.ok(r && r.dir==='ok-hold');
 });
 test('distancePro: personHR=0.85 特写头肩死区内 → null', () => {
   assert.strictEqual(_guidanceDistancePro({faceConf:0.9, personHR:0.85, faceHR:0.5}), null);
@@ -1651,6 +1652,81 @@ test('multi: score<0.5 低质框过滤 → nP=1 → null', () => {
 });
 test('multi: 空入参 → null', () => {
   assert.strictEqual(_classifyMulti(null), null);
+});
+
+/* -------------------- v11.6.0 新纯函数 -------------------- */
+test('v116 distPro: 舒适带 [0.35,0.75] → ok-hold', () => {
+  var r=_guidanceDistancePro({faceConf:0.9,personHR:0.5});
+  assert.strictEqual(r.dir,'ok-hold'); assert.ok(r.txt.indexOf('保持')>=0);
+});
+test('v116 distPro: 太近 >0.90 → near 步进话术', () => {
+  var r=_guidanceDistancePro({faceConf:0.9,personHR:0.95});
+  assert.strictEqual(r.dir,'near'); assert.ok(r.txt.indexOf('半步')>=0);
+});
+test('v116 distPro: 死区 [0.25,0.35) → null', () => {
+  assert.strictEqual(_guidanceDistancePro({faceConf:0.9,personHR:0.30}), null);
+});
+test('v116 distPro: 低置信 → null', () => {
+  assert.strictEqual(_guidanceDistancePro({faceConf:0.5,personHR:0.5}), null);
+});
+test('v116 sceneTip: 人+地标上下分区', () => {
+  var r=_sceneComposeTip({faceConf:0.9,sceneType:"architecture",hasLandmark:true,personHR:0.4,personCY:0.6});
+  assert.strictEqual(r.id,'landmark-split');
+});
+test('v116 sceneTip: 引导线单人', () => {
+  var r=_sceneComposeTip({faceConf:0.9,sceneType:"street",leadingLine:true,personCount:1});
+  assert.strictEqual(r.id,'leading-line');
+});
+test('v116 sceneTip: 建筑对称居中建议', () => {
+  var r=_sceneComposeTip({faceConf:0.9,sceneType:"architecture",sym:0.8,personHR:0.3});
+  assert.strictEqual(r.id,'center-vs-thirds');
+});
+test('v116 sceneTip: 夜景 → null', () => {
+  assert.strictEqual(_sceneComposeTip({faceConf:0.9,sceneType:"night",hasLandmark:true,personHR:0.4,personCY:0.6}), null);
+});
+test('v116 sceneTip: 特写 personHR>0.7 → null', () => {
+  assert.strictEqual(_sceneComposeTip({faceConf:0.9,sceneType:"portrait",personHR:0.8}), null);
+});
+test('v116 aimAlign: 全在死区 → locked', () => {
+  var r=_aimAlign({faceConf:0.9,personCx:0.66,personCY:0.34,alignTarget:{x:0.67,y:0.33}});
+  assert.strictEqual(r.dir,'locked');
+});
+test('v116 aimAlign: 人偏右 → left', () => {
+  var r=_aimAlign({faceConf:0.9,personCx:0.80,personCY:0.33,alignTarget:{x:0.67,y:0.33}});
+  assert.strictEqual(r.dir,'left');
+});
+test('v116 aimAlign: 偏差在死区 → locked', () => {
+  var r=_aimAlign({faceConf:0.9,personCx:0.70,personCY:0.33,alignTarget:{x:0.67,y:0.33}});
+  assert.strictEqual(r.dir,'locked');
+});
+test('v116 aimAlign: 多人 → null', () => {
+  assert.strictEqual(_aimAlign({faceConf:0.9,personCx:0.80,personCY:0.33,faceCount:2,alignTarget:{x:0.67,y:0.33}}), null);
+});
+test('v116 aimAlign: 人偏低 → up', () => {
+  var r=_aimAlign({faceConf:0.9,personCx:0.67,personCY:0.50,alignTarget:{x:0.67,y:0.33}});
+  assert.strictEqual(r.dir,'up');
+});
+test('v116 variants: 单人舒适带 → 2 方案', () => {
+  var r=_composeVariants({faceConf:0.9,personHR:0.5,sceneType:"portrait",yawDir:"right",faceCount:1});
+  assert.strictEqual(r.length,2);
+});
+test('v116 variants: 多人 → null', () => {
+  assert.strictEqual(_composeVariants({faceConf:0.9,personHR:0.5,sceneType:"portrait",faceCount:2}), null);
+});
+test('v116 variants: 太远 personHR=0.2 → null', () => {
+  assert.strictEqual(_composeVariants({faceConf:0.9,personHR:0.2,sceneType:"portrait"}), null);
+});
+test('v116 variants: 夜景 → null', () => {
+  assert.strictEqual(_composeVariants({faceConf:0.9,personHR:0.5,sceneType:"night"}), null);
+});
+test('v116 scenePrefix: portrait 前缀', () => {
+  assert.strictEqual(_scenePrefix("portrait",0.1),"阳光人像·");
+});
+test('v116 scenePrefix: night 前缀', () => {
+  assert.strictEqual(_scenePrefix("night",0.1),"夜景·");
+});
+test('v116 scenePrefix: 未知无前缀', () => {
+  assert.strictEqual(_scenePrefix("food",0.1),"");
 });
 
 /* -------------------- 汇总 -------------------- */

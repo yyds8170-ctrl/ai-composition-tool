@@ -707,6 +707,8 @@
         var warmRatio=(typeof a.warmRatio==="number"&&isFinite(a.warmRatio))?a.warmRatio:0;
         var waterScore=(typeof a.waterScore==="number"&&isFinite(a.waterScore))?a.waterScore:0;
         var manmadeScore=(typeof a.manmadeScore==="number"&&isFinite(a.manmadeScore))?a.manmadeScore:0;
+        var pf=_scenePrefix((sig&&typeof sig.scene==="string")?sig.scene:"", wb);
+        function mkR(f,s,r,rule){ return {filter:f,strength:s,reason:pf+r,rule:rule}; }
         // G1 糊片
         if(sharpness<25) return GATE;
         // G2 曝光断层
@@ -744,22 +746,22 @@
           }
         }catch(e2){ lr=0; }
         // R6 夜景暖调（v9.5 候选池扩展）：暗景且暖色占比高（城市霓虹/夜市暖光）→ 暖金，压过 R1 冷提亮
-        if(mean>=50&&mean<85&&lightScore>=0.30&&warmRatio>=0.45&&scn!=="food"&&scn!=="美食") return {filter:"warm",strength:75,reason:"夜色里有暖光，暖金调更有氛围",rule:"R6"};
+        if(mean>=50&&mean<85&&lightScore>=0.30&&warmRatio>=0.45&&scn!=="food"&&scn!=="美食") return mkR("warm",75,"夜色里有暖光，暖金调更有氛围","R6");
         // R1 夜景提亮
-        if(mean>=50&&mean<85&&lightScore>=0.30) return {filter:"night",strength:80,reason:"夜景偏暗、有点光源，暗部提亮更通透",rule:"R1"};
+        if(mean>=50&&mean<85&&lightScore>=0.30) return mkR("night",80,"夜景偏暗、有点光源，暗部提亮更通透","R1");
         // R2A 侧光黑白人像
-        if(isPerson&&lr>=2.0&&mean>=95) return {filter:"portrait-mono",strength:60,reason:"侧光人像明暗分明，黑白更衬光影",rule:"R2A"};
+        if(isPerson&&lr>=2.0&&mean>=95) return mkR("portrait-mono",60,"侧光人像明暗分明，黑白更衬光影","R2A");
         // R2B 暖调人像（wb 门槛 0.035→0.05 实测标定：普通户外暖调照片 wb≈0.03–0.05 不应推）
-        if(isPerson&&wb>0.05) return {filter:"portrait-warm",strength:80,reason:"暖光环境，肤色会更通透",rule:"R2B"};
+        if(isPerson&&wb>0.05) return mkR("portrait-warm",80,"暖光环境，肤色会更通透","R2B");
         // R2C 冷调人像（wb 门槛 -0.035→-0.05）
-        if(isPerson&&wb<-0.05&&mean>=105) return {filter:"portrait-cool",strength:80,reason:"冷调环境，肤色更清透",rule:"R2C"};
+        if(isPerson&&wb<-0.05&&mean>=105) return mkR("portrait-cool",80,"冷调环境，肤色更清透","R2C");
         // R3 近黑白
-        if(sat<0.06&&mean>=75) return {filter:"mono",strength:90,reason:"画面本来就低饱和，黑白影调更干净",rule:"R3"};
+        if(sat<0.06&&mean>=75) return mkR("mono",90,"画面本来就低饱和，黑白影调更干净","R3");
         // R5 风光清新通透（v9.5 候选池扩展）：明亮低饱和的风光/街景、非暖黄昏非人像非水面 → 160c 通透
-        if(!isPerson&&(scn==="landscape"||scn==="general"||scn==="sunset"||scn==="street")&&mean>=100&&mean<=170&&sat<0.22&&warmRatio<0.30&&waterScore<=0.30&&manmadeScore<=0.50) return {filter:"160c",strength:65,reason:"明亮干净的风光，通透一档天空更蓝",rule:"R5"};
+        if(!isPerson&&(scn==="landscape"||scn==="general"||scn==="sunset"||scn==="street")&&mean>=100&&mean<=170&&sat<0.22&&warmRatio<0.30&&waterScore<=0.30&&manmadeScore<=0.50) return mkR("160c",65,"明亮干净的风光，通透一档天空更蓝","R5");
         // R4 黄昏暖景
         if(pc<=1&&warmRatio>=0.42&&wb>0.05&&mean>=85&&mean<=160&&waterScore<=0.30&&manmadeScore<=0.50&&scn!=="food"&&scn!=="美食"){
-          return {filter:"sunset",strength:70,reason:"黄昏暖景，橙金氛围更浓",rule:"R4"};
+          return mkR("sunset",70,"黄昏暖景，橙金氛围更浓","R4");
         }
         return {filter:null,strength:0,reason:"",rule:"NONE"};
       }catch(e){ return GATE; }
@@ -892,13 +894,14 @@
       var phr=o.personHR, fhr=o.faceHR;
       if(typeof phr==="number"&&isFinite(phr)){
         if(phr<0.12) return null; // 远景小人豁免
-        if(phr>0.90) return {dir:"near",txt:"距离太近，后退一些，人物会更完整"};
+        if(phr>0.90) return {dir:"near",txt:"再退半步，给人物周围留点空间，构图会更松弛"};
         if(phr<0.25) return {dir:"far",txt:"走近一些，人物再大一点"};
+        if(phr>=0.35&&phr<=0.75) return {dir:"ok-hold",txt:"距离合适，保持一下"};
         return null;
       }
       if(typeof fhr==="number"&&isFinite(fhr)){
         if(fhr<0.04) return null;
-        if(fhr>0.80) return {dir:"near",txt:"距离太近，后退一些，人物会更完整"};
+        if(fhr>0.80) return {dir:"near",txt:"再退半步，给人物周围留点空间，构图会更松弛"};
         if(fhr<0.15) return {dir:"far",txt:"走近一些，人物再大一点"};
         return null;
       }
@@ -1025,4 +1028,71 @@
       return {kind:"trio",nP:nP,txt:"三人合影",conf:0.7};
     }
 
-module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti };
+    function _scenePrefix(scn, wb){
+      if(scn==="portrait"||scn==="portrait_close"||(scn==="general"&&typeof wb==="number"&&wb>0)) return "阳光人像·";
+      if(scn==="landscape"||scn==="waterscape"||scn==="sunset") return "户外绿意·";
+      if(scn==="street") return "秋日街道·";
+      if(scn==="night") return "夜景·";
+      return "";
+    }
+
+    function _sceneComposeTip(o){
+      if(!o) return null;
+      var fc=o.faceConf;
+      if(typeof fc==="number"&&isFinite(fc)&&fc<0.75) return null;
+      var sc=o.sceneType||"";
+      if(sc==="night") return null;
+      var phr=o.personHR;
+      if(typeof phr==="number"&&isFinite(phr)&&phr>0.7) return null;
+      if((sc==="architecture"||sc==="landscape")&&o.hasLandmark){
+        if(typeof phr==="number"&&isFinite(phr)&&phr>=0.25&&phr<=0.55
+          &&typeof o.personCY==="number"&&isFinite(o.personCY)&&o.personCY>0.55){
+          return {id:"landmark-split",txt:"人站下三分之一，地标放上半交点，两侧留空"};
+        }
+      }
+      if(o.leadingLine&&(typeof o.personCount!=="number"||o.personCount===1)){
+        return {id:"leading-line",txt:"顺着这根线条引导视线，人落在三分交点上"};
+      }
+      if(sc==="architecture"&&typeof o.sym==="number"&&isFinite(o.sym)&&o.sym>=0.7&&!o.hasSideEdge){
+        return {id:"center-vs-thirds",txt:"建筑正对你，居中更稳；有侧景再用三分法"};
+      }
+      return null;
+    }
+
+    function _aimAlign(o){
+      if(!o) return null;
+      if(typeof o.faceConf==="number"&&isFinite(o.faceConf)&&o.faceConf<0.75) return null;
+      if(typeof o.faceCount==="number"&&o.faceCount>1) return null;
+      var cx=o.personCx, cy=o.personCY;
+      if(typeof cx!=="number"||!isFinite(cx)||typeof cy!=="number"||!isFinite(cy)) return null;
+      var t=o.alignTarget;
+      if(!t||typeof t.x!=="number"||!isFinite(t.x)||typeof t.y!=="number"||!isFinite(t.y)) return null;
+      cx=Math.min(1,Math.max(0,cx)); cy=Math.min(1,Math.max(0,cy));
+      var dx=cx-t.x, dy=cy-t.y;
+      if(Math.abs(dx)<0.05&&Math.abs(dy)<0.06){
+        return {dir:"locked",dx:dx,dy:dy,txt:"对准了，稳住手机"};
+      }
+      if(dx>0.08) return {dir:"left",dx:dx,dy:dy,txt:"向左移一点，让人落在三分线上"};
+      if(-dx>0.08) return {dir:"right",dx:dx,dy:dy,txt:"向右移一点，让人落在三分线上"};
+      if(dy>0.10) return {dir:"up",dx:dx,dy:dy,txt:"手机举高一点，人再往上走一点"};
+      if(-dy>0.10) return {dir:"down",dx:dx,dy:dy,txt:"手机放低一点，给头顶留空"};
+      return null;
+    }
+
+    function _composeVariants(o){
+      if(!o) return null;
+      if(typeof o.faceConf==="number"&&isFinite(o.faceConf)&&o.faceConf<0.75) return null;
+      if(typeof o.faceCount==="number"&&o.faceCount>1) return null;
+      var sc=o.sceneType||"";
+      if(sc==="night") return null;
+      var phr=o.personHR;
+      if(typeof phr!=="number"||!isFinite(phr)||phr<0.3||phr>0.8) return null;
+      var thirds=(o.yawDir==="right")?"left":"right";
+      var thirds2=(thirds==="left")?"right":"left";
+      return [
+        {shot:"half",thirds:thirds,txt:"半身·"+(thirds==="left"?"左三分":"右三分")},
+        {shot:"seven-tenths",thirds:thirds2,txt:"七分身·"+(thirds2==="left"?"左三分":"右三分")}
+      ];
+    }
+
+module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants };
