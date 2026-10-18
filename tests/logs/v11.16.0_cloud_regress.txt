@@ -1,0 +1,19 @@
+模型 ready，云端已开启，开始测 18 张
+arch_4.jpg | CLOUD scene=architecture rule=center crop=[0,11,0,3] noCrop=false | ☁️ 云端 · 居中构图 · 82% | 已自动应用：智能裁切+构图优化 · A级 85分800×53
+arch_6.jpg | CLOUD scene=architecture rule=thirds crop=[0,7,0,7] noCrop=false | ☁️ 云端 · 三分法 · 82% | 已自动应用：智能裁切+构图优化 · A级 87分800×45
+leading_2.jpg | CLOUD scene=architecture rule=center crop=[0,11,0,3] noCrop=false | ☁️ 云端 · 居中构图 · 82% | 已自动应用：智能裁切+构图优化 · A级 86分800×45
+leading_3.jpg | CLOUD scene=architecture rule=center crop=[0,6,0,8] noCrop=false | ☁️ 云端 · 居中构图 · 82% | 已自动应用：智能裁切+构图优化 · A级 84分800×45
+night_1.jpg | CLOUD scene=architecture rule=sym crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 对称构图 · 95% | 已自动应用：裁切+构图优化（未裁切）· A级 84分800×
+night_10.jpg | CLOUD scene=general rule=thirds crop=[22,15,1,8] noCrop=false | ☁️ 云端 · 三分法 · 72% | 已自动应用：智能裁切+构图优化 · A级 83分616×41
+night_5.jpg | CLOUD scene=portrait rule=thirds crop=[9,2,12,16] noCrop=false | ☁️ 云端 · 三分法 · 78% | 已自动应用：智能裁切+构图优化 · S级 90分632×43
+night_6.jpg | CLOUD scene=landscape rule=diag crop=[0,0,0,4] noCrop=false | ☁️ 云端 · 对角线构图 · 82% | 已自动应用：智能裁切+构图优化 · A级 86分800×51
+night_7.jpg | CLOUD scene=architecture rule=sym crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 对称构图 · 92% | 已自动应用：裁切+构图优化（未裁切）· A级 85分800×
+night_9.jpg | CLOUD scene=food rule=lead crop=[4,0,17,0] noCrop=false | ☁️ 云端 · 引导线 · 82% | 已自动应用：智能裁切+构图优化 · A级 82分632×53
+sky_11.jpg | CLOUD scene=landscape rule=diag crop=[0,3,0,0] noCrop=false | ☁️ 云端 · 对角线构图 · 86% | 已自动应用：智能裁切+构图优化 · A级 85分800×48
+sky_12.jpg | CLOUD scene=landscape rule=sym crop=[3,12,22,0] noCrop=false | ☁️ 云端 · 对称构图 · 92% | 已自动应用：智能裁切+构图优化 · A级 88分600×10
+sky_2.jpg | CLOUD scene=animal rule=center crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 居中构图 · 85% | 已自动应用：裁切+构图优化（未裁切）· A级 81分800×
+sky_5.jpg | CLOUD scene=portrait rule=center crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 居中构图 · 85% | 已自动应用：裁切+构图优化（未裁切）· A级 80分800×
+water_3.jpg | CLOUD scene=general rule=center crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 居中构图 · 85% | 已自动应用：裁切+构图优化（未裁切）· C级 64分800×
+water_4.jpg | CLOUD scene=landscape rule=sym crop=[3,12,22,0] noCrop=false | ☁️ 云端 · 对称构图 · 92% | 已自动应用：智能裁切+构图优化 · A级 88分600×10
+water_5.jpg | CLOUD scene=architecture rule=sym crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 对称构图 · 92% | 已自动应用：裁切+构图优化（未裁切）· A级 85分800×
+water_7.jpg | CLOUD scene=architecture rule=sym crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 对称构图 · 92% | 已自动应用：裁切+构图优化（未裁切）· A级 85分800×

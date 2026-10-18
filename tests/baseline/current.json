@@ -60,15 +60,15 @@
       "conf": 86,
       "subject": "冷调场景",
       "f": "cool",
-      "noCrop": true,
+      "noCrop": false,
       "crop": [
         0,
         0,
         0,
-        0
+        5
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_bottom"
     },
     "data": {
       "bodyRatio": 0.0906,
@@ -77,7 +77,7 @@
       "sym": 0.3127,
       "modelLoaded": true
     },
-    "status": "已自动应用：裁切+构图优化（未裁切）· S级 90分1280×600 · 32:15",
+    "status": "已自动应用：智能裁切+构图优化 · A级 87分1280×570 · 128:57",
     "activeFilter": "clear"
   },
   "arch_4.png": {
@@ -115,15 +115,15 @@
       "conf": 87,
       "subject": "暗光场景",
       "f": "night",
-      "noCrop": true,
+      "noCrop": false,
       "crop": [
         0,
         0,
         0,
-        0
+        5
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_bottom"
     },
     "data": {
       "bodyRatio": 0.0807,
@@ -132,7 +132,7 @@
       "sym": 0.3157,
       "modelLoaded": true
     },
-    "status": "已自动应用：裁切+构图优化（未裁切）· A级 89分1280×600 · 32:15",
+    "status": "已自动应用：智能裁切+构图优化 · A级 89分1280×570 · 128:57",
     "activeFilter": "clear"
   },
   "food_1.png": {
@@ -296,15 +296,15 @@
       "conf": 86,
       "subject": "暗光场景",
       "f": "night",
-      "noCrop": true,
+      "noCrop": false,
       "crop": [
         0,
         0,
         0,
-        0
+        6
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_bottom"
     },
     "data": {
       "detectedClasses": [
@@ -318,7 +318,7 @@
       "sym": 0.4009,
       "modelLoaded": true
     },
-    "status": "已自动应用：裁切+构图优化（未裁切）· S级 92分1280×600 · 32:15",
+    "status": "已自动应用：智能裁切+构图优化 · S级 91分1280×564 · 320:141",
     "activeFilter": "clear"
   },
   "portrait_1.png": {
@@ -484,15 +484,15 @@
       "conf": 89,
       "subject": "暗光场景",
       "f": "night",
-      "noCrop": true,
+      "noCrop": false,
       "crop": [
         0,
         0,
         0,
-        0
+        5
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_bottom"
     },
     "data": {
       "detectedClasses": [
@@ -509,7 +509,7 @@
       "sym": 0.3469,
       "modelLoaded": true
     },
-    "status": "已自动应用：裁切+构图优化（未裁切）· A级 89分1280×600 · 32:15",
+    "status": "已自动应用：智能裁切+构图优化 · S级 90分1280×570 · 128:57",
     "activeFilter": "clear"
   },
   "street_2.png": {
@@ -519,15 +519,15 @@
       "conf": 86,
       "subject": "暗光场景",
       "f": "night",
-      "noCrop": true,
+      "noCrop": false,
       "crop": [
         0,
         0,
         0,
-        0
+        5
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_bottom"
     },
     "data": {
       "detectedClasses": [
@@ -541,7 +541,7 @@
       "sym": 0.3248,
       "modelLoaded": true
     },
-    "status": "已自动应用：裁切+构图优化（未裁切）· S级 91分1280×600 · 32:15",
+    "status": "已自动应用：智能裁切+构图优化 · S级 91分1280×570 · 128:57",
     "activeFilter": "clear"
   },
   "street_3.png": {
@@ -652,15 +652,15 @@
       "conf": 87,
       "subject": "暗光场景",
       "f": "night",
-      "noCrop": true,
+      "noCrop": false,
       "crop": [
         0,
         0,
         0,
-        0
+        5
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_bottom"
     },
     "data": {
       "bodyRatio": 0.0819,
@@ -669,7 +669,7 @@
       "sym": 0.3321,
       "modelLoaded": true
     },
-    "status": "已自动应用：裁切+构图优化（未裁切）· S级 91分1280×600 · 32:15",
+    "status": "已自动应用：智能裁切+构图优化 · S级 91分1280×570 · 128:57",
     "activeFilter": "clear"
   },
   "water_2.png": {
@@ -679,15 +679,15 @@
       "conf": 88,
       "subject": "暗光场景",
       "f": "night",
-      "noCrop": true,
+      "noCrop": false,
       "crop": [
         0,
         0,
         0,
-        0
+        5
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_bottom"
     },
     "data": {
       "bodyRatio": 0.0795,
@@ -696,7 +696,7 @@
       "sym": 0.2776,
       "modelLoaded": true
     },
-    "status": "已自动应用：裁切+构图优化（未裁切）· A级 82分1280×600 · 32:15",
+    "status": "已自动应用：智能裁切+构图优化 · A级 82分1280×570 · 128:57",
     "activeFilter": "clear"
   },
   "water_3.png": {
@@ -706,15 +706,15 @@
       "conf": 85,
       "subject": "暗光场景",
       "f": "night",
-      "noCrop": true,
+      "noCrop": false,
       "crop": [
         0,
         0,
         0,
-        0
+        5
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_bottom"
     },
     "data": {
       "bodyRatio": 0.0712,
@@ -723,7 +723,7 @@
       "sym": 0.2764,
       "modelLoaded": true
     },
-    "status": "已自动应用：裁切+构图优化（未裁切）· A级 82分1280×600 · 32:15",
+    "status": "已自动应用：智能裁切+构图优化 · A级 80分1280×570 · 128:57",
     "activeFilter": "clear"
   },
   "water_4.png": {
@@ -760,15 +760,15 @@
       "conf": 87,
       "subject": "暗光场景",
       "f": "night",
-      "noCrop": true,
+      "noCrop": false,
       "crop": [
         0,
         0,
         0,
-        0
+        5
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_bottom"
     },
     "data": {
       "bodyRatio": 0.085,
@@ -777,7 +777,7 @@
       "sym": 0.2348,
       "modelLoaded": true
     },
-    "status": "已自动应用：裁切+构图优化（未裁切）· S级 91分1280×600 · 32:15",
+    "status": "已自动应用：智能裁切+构图优化 · S级 91分1280×570 · 128:57",
     "activeFilter": "clear"
   },
   "ancient_1.jpg": {
@@ -915,7 +915,7 @@
       "noCrop": false,
       "crop": [
         0,
-        13,
+        0,
         0,
         0
       ],
@@ -929,7 +929,7 @@
       "sym": 0.1789,
       "modelLoaded": true
     },
-    "status": "已自动应用：智能裁切+构图优化 · A级 88分800×464 · 50:29",
+    "status": "已自动应用：智能裁切+构图优化 · A级 86分800×533 · 800:533",
     "activeFilter": "clear"
   },
   "ancient_5.jpg": {
@@ -942,12 +942,12 @@
       "noCrop": false,
       "crop": [
         0,
-        5,
         0,
-        5
+        0,
+        0
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_top"
     },
     "data": {
       "bodyRatio": 0.0785,
@@ -956,7 +956,7 @@
       "sym": 0.7406,
       "modelLoaded": true
     },
-    "status": "已自动应用：智能裁切+构图优化 · A级 84分800×458 · 400:229",
+    "status": "已自动应用：智能裁切+构图优化 · A级 84分800×509 · 800:509",
     "activeFilter": "clear"
   },
   "ancient_6.jpg": {
@@ -1007,7 +1007,7 @@
         7
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_bottom"
     },
     "data": {
       "bodyRatio": 0.0952,
@@ -1026,7 +1026,7 @@
       "conf": 95,
       "subject": "高饱和场景",
       "f": "vivid",
-      "noCrop": true,
+      "noCrop": false,
       "crop": [
         0,
         0,
@@ -1034,7 +1034,7 @@
         0
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_top"
     },
     "data": {
       "bodyRatio": 0.0832,
@@ -1043,7 +1043,7 @@
       "sym": 0.4208,
       "modelLoaded": true
     },
-    "status": "已自动应用：裁切+构图优化（未裁切）· A级 88分800×600 · 4:3",
+    "status": "已自动应用：智能裁切+构图优化 · A级 88分800×600 · 4:3",
     "activeFilter": "clear"
   },
   "arch_1.jpg": {
@@ -1086,7 +1086,7 @@
       "conf": 95,
       "subject": "高饱和场景",
       "f": "vivid",
-      "noCrop": true,
+      "noCrop": false,
       "crop": [
         0,
         0,
@@ -1094,7 +1094,7 @@
         0
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_top"
     },
     "data": {
       "bodyRatio": 0.0832,
@@ -1103,7 +1103,7 @@
       "sym": 0.4208,
       "modelLoaded": true
     },
-    "status": "已自动应用：裁切+构图优化（未裁切）· A级 88分800×600 · 4:3",
+    "status": "已自动应用：智能裁切+构图优化 · A级 88分800×600 · 4:3",
     "activeFilter": "clear"
   },
   "arch_2.jpg": {
@@ -1243,7 +1243,7 @@
         7
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_bottom"
     },
     "data": {
       "bodyRatio": 0.0952,
@@ -1384,7 +1384,7 @@
         0
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_top"
     },
     "data": {
       "detectedClasses": [
@@ -1579,11 +1579,11 @@
   },
   "backlit_9.jpg": {
     "plan": {
-      "rule": "center",
-      "sceneType": "waterscape",
-      "conf": 90,
-      "subject": "冷调场景",
-      "f": "cool",
+      "rule": "thirds",
+      "sceneType": "portrait",
+      "conf": 82,
+      "subject": "人像",
+      "f": "natural",
       "noCrop": true,
       "crop": [
         0,
@@ -1607,7 +1607,7 @@
         "chair",
         "chair"
       ],
-      "isPerson": false,
+      "isPerson": true,
       "bodyRatio": 0.079,
       "mean": 148.4056,
       "sharpness": 63.6282,
@@ -1615,7 +1615,7 @@
       "modelLoaded": true
     },
     "status": "已自动应用：裁切+构图优化（未裁切）· A级 85分800×500 · 8:5",
-    "activeFilter": "clear"
+    "activeFilter": "natural"
   },
   "food_1.jpg": {
     "plan": {
@@ -2111,12 +2111,12 @@
       "noCrop": false,
       "crop": [
         0,
-        13,
+        0,
         0,
         0
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_top"
     },
     "data": {
       "detectedClasses": [
@@ -2135,7 +2135,7 @@
       "sym": 0.1406,
       "modelLoaded": true
     },
-    "status": "已自动应用：智能裁切+构图优化 · A级 87分800×463 · 800:463",
+    "status": "已自动应用：智能裁切+构图优化 · A级 80分800×532 · 200:133",
     "activeFilter": "clear"
   },
   "group_5.jpg": {
@@ -2500,15 +2500,15 @@
       "conf": 86,
       "subject": "低饱和场景",
       "f": "fclassic",
-      "noCrop": true,
+      "noCrop": false,
       "crop": [
-        0,
+        10,
         0,
         0,
         0
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_left"
     },
     "data": {
       "bodyRatio": 0.0886,
@@ -2517,7 +2517,7 @@
       "sym": 0.5385,
       "modelLoaded": true
     },
-    "status": "已自动应用：裁切+构图优化（未裁切）· C级 61分800×615 · 160:123",
+    "status": "已自动应用：智能裁切+构图优化 · C级 61分720×615 · 48:41",
     "activeFilter": "clear"
   },
   "indoor_4.jpg": {
@@ -2530,12 +2530,12 @@
       "noCrop": false,
       "crop": [
         0,
-        7,
+        0,
         0,
         6
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_top"
     },
     "data": {
       "bodyRatio": 0.09,
@@ -2544,7 +2544,7 @@
       "sym": 0.0726,
       "modelLoaded": true
     },
-    "status": "已自动应用：智能裁切+构图优化 · A级 83分800×464 · 50:29",
+    "status": "已自动应用：智能裁切+构图优化 · A级 82分800×501 · 800:501",
     "activeFilter": "clear"
   },
   "indoor_5.jpg": {
@@ -2744,7 +2744,7 @@
       "conf": 95,
       "subject": "高饱和场景",
       "f": "vivid",
-      "noCrop": true,
+      "noCrop": false,
       "crop": [
         0,
         0,
@@ -2752,7 +2752,7 @@
         0
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_top"
     },
     "data": {
       "bodyRatio": 0.0832,
@@ -2761,7 +2761,7 @@
       "sym": 0.4208,
       "modelLoaded": true
     },
-    "status": "已自动应用：裁切+构图优化（未裁切）· A级 88分800×600 · 4:3",
+    "status": "已自动应用：智能裁切+构图优化 · A级 88分800×600 · 4:3",
     "activeFilter": "clear"
   },
   "leading_2.jpg": {
@@ -2833,7 +2833,7 @@
         7
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_bottom"
     },
     "data": {
       "bodyRatio": 0.0952,
@@ -3010,12 +3010,12 @@
       "noCrop": false,
       "crop": [
         0,
-        5,
         0,
-        5
+        0,
+        0
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_top"
     },
     "data": {
       "bodyRatio": 0.0785,
@@ -3024,7 +3024,7 @@
       "sym": 0.7406,
       "modelLoaded": true
     },
-    "status": "已自动应用：智能裁切+构图优化 · A级 84分800×458 · 400:229",
+    "status": "已自动应用：智能裁切+构图优化 · A级 84分800×509 · 800:509",
     "activeFilter": "clear"
   },
   "night_10.jpg": {
@@ -3034,15 +3034,15 @@
       "conf": 87,
       "subject": "低饱和场景",
       "f": "fclassic",
-      "noCrop": true,
+      "noCrop": false,
       "crop": [
-        0,
+        9,
         0,
         0,
         0
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_top"
     },
     "data": {
       "detectedClasses": [
@@ -3055,7 +3055,7 @@
       "sym": 0.4919,
       "modelLoaded": true
     },
-    "status": "已自动应用：裁切+构图优化（未裁切）· A级 86分800×533 · 800:533",
+    "status": "已自动应用：智能裁切+构图优化 · A级 83分728×533 · 56:41",
     "activeFilter": "clear"
   },
   "night_11.jpg": {
@@ -3308,15 +3308,15 @@
       "conf": 83,
       "subject": "人像",
       "f": "portrait-warm",
-      "noCrop": true,
+      "noCrop": false,
       "crop": [
         0,
-        0,
+        8,
         0,
         0
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_top"
     },
     "data": {
       "detectedClasses": [
@@ -3330,7 +3330,7 @@
       "sym": 0.2896,
       "modelLoaded": true
     },
-    "status": "已自动应用：裁切+构图优化（未裁切）· A级 84分800×600 · 4:3",
+    "status": "已自动应用：智能裁切+构图优化 · A级 84分800×552 · 100:69",
     "activeFilter": "clear"
   },
   "pet_11.jpg": {
@@ -3522,11 +3522,11 @@
   },
   "pet_9.jpg": {
     "plan": {
-      "rule": "thirds",
-      "sceneType": "portrait",
-      "conf": 83,
-      "subject": "人像",
-      "f": "portrait-warm",
+      "rule": "center",
+      "sceneType": "animal",
+      "conf": 90,
+      "subject": "狗",
+      "f": "vivid",
       "noCrop": true,
       "crop": [
         0,
@@ -3542,7 +3542,7 @@
         "dog",
         "dog"
       ],
-      "isPerson": true,
+      "isPerson": false,
       "bodyRatio": 0.1546,
       "mean": 115.8044,
       "sharpness": 53.3585,
@@ -3554,11 +3554,11 @@
   },
   "pet_extra1.jpg": {
     "plan": {
-      "rule": "thirds",
-      "sceneType": "portrait_close",
-      "conf": 80,
-      "subject": "人像",
-      "f": "portrait-warm",
+      "rule": "center",
+      "sceneType": "animal",
+      "conf": 92,
+      "subject": "狗",
+      "f": "natural",
       "noCrop": true,
       "crop": [
         0,
@@ -3573,7 +3573,7 @@
       "detectedClasses": [
         "dog"
       ],
-      "isPerson": true,
+      "isPerson": false,
       "bodyRatio": 0.4276,
       "mean": 136.9675,
       "sharpness": 59.5834,
@@ -3581,14 +3581,14 @@
       "modelLoaded": true
     },
     "status": "已自动应用：裁切+构图优化（未裁切）· A级 83分800×533 · 800:533",
-    "activeFilter": "clear"
+    "activeFilter": "natural"
   },
   "pet_extra2.jpg": {
     "plan": {
       "rule": "thirds",
-      "sceneType": "portrait",
-      "conf": 86,
-      "subject": "人像",
+      "sceneType": "animal",
+      "conf": 82,
+      "subject": "狗",
       "f": "natural",
       "noCrop": true,
       "crop": [
@@ -3605,7 +3605,7 @@
         "dog",
         "bed"
       ],
-      "isPerson": true,
+      "isPerson": false,
       "bodyRatio": 0.4645,
       "mean": 183.4164,
       "sharpness": 56.4049,
@@ -4325,11 +4325,11 @@
   },
   "sky_11.jpg": {
     "plan": {
-      "rule": "thirds",
-      "sceneType": "portrait",
-      "conf": 82,
-      "subject": "人像",
-      "f": "natural",
+      "rule": "center",
+      "sceneType": "waterscape",
+      "conf": 90,
+      "subject": "冷调场景",
+      "f": "cool",
       "noCrop": true,
       "crop": [
         0,
@@ -4353,7 +4353,7 @@
         "chair",
         "chair"
       ],
-      "isPerson": true,
+      "isPerson": false,
       "bodyRatio": 0.079,
       "mean": 148.4056,
       "sharpness": 63.6282,
@@ -4361,15 +4361,15 @@
       "modelLoaded": true
     },
     "status": "已自动应用：裁切+构图优化（未裁切）· A级 85分800×500 · 8:5",
-    "activeFilter": "natural"
+    "activeFilter": "clear"
   },
   "sky_12.jpg": {
     "plan": {
-      "rule": "thirds",
-      "sceneType": "portrait",
-      "conf": 86,
-      "subject": "人像",
-      "f": "natural",
+      "rule": "diag",
+      "sceneType": "landscape",
+      "conf": 95,
+      "subject": "冷调场景",
+      "f": "cool",
       "noCrop": true,
       "crop": [
         0,
@@ -4381,7 +4381,6 @@
       "cropIntent": "none"
     },
     "data": {
-      "isPerson": true,
       "bodyRatio": 0.078,
       "mean": 107.6114,
       "sharpness": 57.2745,
@@ -4389,15 +4388,15 @@
       "modelLoaded": true
     },
     "status": "已自动应用：裁切+构图优化（未裁切）· A级 82分800×1200 · 2:3",
-    "activeFilter": "natural"
+    "activeFilter": "clear"
   },
   "sky_2.jpg": {
     "plan": {
-      "rule": "thirds",
-      "sceneType": "portrait",
-      "conf": 91,
-      "subject": "人像",
-      "f": "portrait-warm",
+      "rule": "diag",
+      "sceneType": "food",
+      "conf": 93,
+      "subject": "甜甜圈",
+      "f": "warm",
       "noCrop": true,
       "crop": [
         0,
@@ -4412,7 +4411,7 @@
       "detectedClasses": [
         "donut"
       ],
-      "isPerson": true,
+      "isPerson": false,
       "bodyRatio": 0.2792,
       "mean": 93.9727,
       "sharpness": 60.1539,
@@ -4424,12 +4423,12 @@
   },
   "sky_3.jpg": {
     "plan": {
-      "rule": "thirds",
-      "sceneType": "portrait",
-      "conf": 83,
-      "subject": "人像",
-      "f": "natural",
-      "noCrop": true,
+      "rule": "sym",
+      "sceneType": "waterscape",
+      "conf": 92,
+      "subject": "高饱和场景",
+      "f": "vivid",
+      "noCrop": false,
       "crop": [
         0,
         0,
@@ -4437,26 +4436,25 @@
         0
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_top"
     },
     "data": {
-      "isPerson": true,
       "bodyRatio": 0.1002,
       "mean": 85.1984,
       "sharpness": 64.9178,
       "sym": 0.3476,
       "modelLoaded": true
     },
-    "status": "已自动应用：裁切+构图优化（未裁切）· A级 84分800×373 · 800:373",
-    "activeFilter": "natural"
+    "status": "已自动应用：智能裁切+构图优化 · A级 84分800×373 · 800:373",
+    "activeFilter": "clear"
   },
   "sky_5.jpg": {
     "plan": {
-      "rule": "thirds",
-      "sceneType": "portrait",
-      "conf": 89,
-      "subject": "人像",
-      "f": "portrait-warm",
+      "rule": "golden",
+      "sceneType": "general",
+      "conf": 87,
+      "subject": "黑白影像",
+      "f": "mono",
       "noCrop": true,
       "crop": [
         0,
@@ -4468,7 +4466,6 @@
       "cropIntent": "none"
     },
     "data": {
-      "isPerson": true,
       "bodyRatio": 0.0791,
       "mean": 133.0614,
       "sharpness": 57.4935,
@@ -4480,11 +4477,11 @@
   },
   "sky_6.jpg": {
     "plan": {
-      "rule": "thirds",
-      "sceneType": "portrait",
-      "conf": 91,
-      "subject": "人像",
-      "f": "portrait-warm",
+      "rule": "diag",
+      "sceneType": "food",
+      "conf": 93,
+      "subject": "甜甜圈",
+      "f": "warm",
       "noCrop": true,
       "crop": [
         0,
@@ -4499,7 +4496,7 @@
       "detectedClasses": [
         "donut"
       ],
-      "isPerson": true,
+      "isPerson": false,
       "bodyRatio": 0.2792,
       "mean": 93.9727,
       "sharpness": 60.1539,
@@ -4511,12 +4508,12 @@
   },
   "sky_8.jpg": {
     "plan": {
-      "rule": "thirds",
-      "sceneType": "portrait",
-      "conf": 83,
-      "subject": "人像",
-      "f": "natural",
-      "noCrop": true,
+      "rule": "sym",
+      "sceneType": "waterscape",
+      "conf": 92,
+      "subject": "高饱和场景",
+      "f": "vivid",
+      "noCrop": false,
       "crop": [
         0,
         0,
@@ -4524,18 +4521,17 @@
         0
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_top"
     },
     "data": {
-      "isPerson": true,
       "bodyRatio": 0.1002,
       "mean": 85.1984,
       "sharpness": 64.9178,
       "sym": 0.3476,
       "modelLoaded": true
     },
-    "status": "已自动应用：裁切+构图优化（未裁切）· A级 84分800×373 · 800:373",
-    "activeFilter": "natural"
+    "status": "已自动应用：智能裁切+构图优化 · A级 84分800×373 · 800:373",
+    "activeFilter": "clear"
   },
   "street_1.jpg": {
     "plan": {
@@ -4670,7 +4666,7 @@
       "noCrop": false,
       "crop": [
         0,
-        13,
+        0,
         0,
         0
       ],
@@ -4684,7 +4680,7 @@
       "sym": 0.1789,
       "modelLoaded": true
     },
-    "status": "已自动应用：智能裁切+构图优化 · A级 88分800×464 · 50:29",
+    "status": "已自动应用：智能裁切+构图优化 · A级 86分800×533 · 800:533",
     "activeFilter": "clear"
   },
   "street_4.jpg": {
@@ -4797,15 +4793,15 @@
       "conf": 87,
       "subject": "低饱和场景",
       "f": "fclassic",
-      "noCrop": true,
+      "noCrop": false,
       "crop": [
-        0,
+        9,
         0,
         0,
         0
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_top"
     },
     "data": {
       "detectedClasses": [
@@ -4818,7 +4814,7 @@
       "sym": 0.4919,
       "modelLoaded": true
     },
-    "status": "已自动应用：裁切+构图优化（未裁切）· A级 86分800×533 · 800:533",
+    "status": "已自动应用：智能裁切+构图优化 · A级 83分728×533 · 56:41",
     "activeFilter": "clear"
   },
   "street_8.jpg": {
@@ -5058,7 +5054,7 @@
         0
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_top"
     },
     "data": {
       "detectedClasses": [
@@ -5092,15 +5088,15 @@
       "conf": 90,
       "subject": "暖调场景",
       "f": "warm",
-      "noCrop": true,
+      "noCrop": false,
       "crop": [
         0,
-        0,
+        8,
         0,
         0
       ],
       "selfReviewed": false,
-      "cropIntent": "none"
+      "cropIntent": "crop_top"
     },
     "data": {
       "bodyRatio": 0.0719,
@@ -5109,7 +5105,7 @@
       "sym": 0.2985,
       "modelLoaded": true
     },
-    "status": "已自动应用：裁切+构图优化（未裁切）· A级 85分800×449 · 800:449",
+    "status": "已自动应用：智能裁切+构图优化 · A级 82分800×413 · 800:413",
     "activeFilter": "clear"
   },
   "water_8.jpg": {

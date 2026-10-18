@@ -47,6 +47,51 @@
       return [L,T,R,B];
     }
 
+    function _landscapeCrop(energy, cx, cy, opt){
+      var L=0,T=0,R=0,B=0;
+      if(!energy||!Array.isArray(energy.col)||!Array.isArray(energy.row)) return [L,T,R,B];
+      var col=energy.col, row=energy.row;
+      var W=Math.min(energy.w||col.length, col.length), H=Math.min(energy.h||row.length, row.length);
+      if(!(W>10)||!(H>10)) return [L,T,R,B];
+      if(typeof cx!=="number"||!isFinite(cx)) cx=0.5;
+      if(typeof cy!=="number"||!isFinite(cy)) cy=0.5;
+      cx=Math.max(0,Math.min(1,cx)); cy=Math.max(0,Math.min(1,cy));
+      var o=opt||{};
+      var STRIP=0.16, CAP=0.16, STEP=0.01, RATIO=0.42, PROBE=0.03, MINDEP=0.03; // 边带能量<中心42%才判死区；单边最多裁16%
+      function avg(arr,from,to){
+        var s=0,c=0,fi=Math.max(0,Math.floor(from*arr.length)),ti=Math.min(arr.length,Math.ceil(to*arr.length));
+        for(var i=fi;i<ti;i++){ s+=(arr[i]||0); c++; }
+        return c? s/c:0;
+      }
+      var cL=avg(col,0.30,0.70), cT=avg(row,0.30,0.70); // 中心带参考能量
+      // 边界深度：用 3% 窄探针从边向里逐行扫，一旦探针碰到内容（屋顶/树/天际线）立即停，
+      // 避免宽窗口把紧贴边缘的屋顶/树冠能量平均掉而切到主体（v11.16 修正）。
+      function depth(arr,fromEdge,thr){
+        var d=0,N=arr.length;
+        for(var i=0;i<Math.floor(CAP*N);i++){
+          var lo=fromEdge? i/ N: i/N, hi=lo+PROBE;
+          var e=avg(arr,lo,Math.min(1,hi));
+          if(e>=thr) break;
+          d=(i+1)/N;
+        }
+        return d>=MINDEP?Math.min(CAP,d):0;
+      }
+      // 水平（左/右）：边带能量低 + 重心偏另一侧才裁
+      var eL=avg(col,0,STRIP), eR=avg(col,1-STRIP,1);
+      if(eL<cL*RATIO && cx>0.50){ L=depth(col,false,cL*RATIO); }
+      if(eR<cL*RATIO && cx<0.50){ R=depth(col,true,cL*RATIO); }
+      // 垂直（上/下）：天空/黑前景通常是大死区
+      var eT=avg(row,0,STRIP), eB=avg(row,1-STRIP,1);
+      if(o.v!==false){
+        if(eT<cT*RATIO && cy>0.50){ T=depth(row,false,cT*RATIO); }
+        if(eB<cT*RATIO && cy<0.50){ B=depth(row,true,cT*RATIO); }
+      }
+      // 保留窗约束：至少保留 64% 宽高，不四面齐裁
+      if(1-L-R<0.66){ var k=(L+R-0.34)/Math.max(L+R,0.001); L-=L*k; R-=R*k; }
+      if(1-T-B<0.66){ var k2=(T+B-0.34)/Math.max(T+B,0.001); T-=T*k2; B-=B*k2; }
+      return [Math.max(0,L),Math.max(0,T),Math.max(0,R),Math.max(0,B)];
+    }
+
     function _classifyYaw(lm){
       if(!Array.isArray(lm)||lm.length<3) return {state:'none',dir:0,r:0};
       var e0=lm[0],e1=lm[1],nose=lm[2];
@@ -198,6 +243,10 @@
       // 宁缺毋滥：显著性=密度高于全图均值 30% 且绝对值过 0.10；信息量=条带内部亮度方差过绝对地板（云/水面层次 std≈35→方差≈1200）。
       // 信息量不用"相对全图均值"：晚霞+暗地面的组间亮度差会抬高全图方差，反而让真正有层次的晚霞过不了；绝对地板更稳。
       var SAL_K=1.30, SAL_FLOOR=0.10, VAR_FLOOR=1200, REDUCE=2;
+      // v11.16.0 绝对高彩保护：戏剧性晚霞/天空即便平滑渐变（亮度方差低、相对全图不突出），
+      // 只要条带绝对显著性高且非中性（高饱和），就整块保留——避免误裁漂亮的粉紫晚霞/宝石蓝天。
+      var COLOR_SAL=0.30, COLOR_SAT=0.25;
+      var hasSat=!!(rod.rSat&&rod.rSat.length===h+1);
       function adj(side){
         var cur=crop[side]; if(!cur) return 0;
         var y0,y1;
@@ -207,8 +256,11 @@
         var n=(y1-y0)*w; if(n<=0) return cur;
         var sL=rod.rL[y1]-rod.rL[y0], sL2=rod.rL2[y1]-rod.rL2[y0], sS=rod.rS[y1]-rod.rS[y0];
         var mL=sL/n, mL2=sL2/n, mS=sS/n, varL=Math.max(0,mL2-mL*mL);
+        var mSat=hasSat?(rod.rSat[y1]-rod.rSat[y0])/n:0;
         var salHit=(mS>gmS*SAL_K && mS>SAL_FLOOR);
         var varHit=(varL>VAR_FLOOR);
+        var colorHit=(mS>COLOR_SAL && mSat>COLOR_SAT); // 绝对高彩：鲜艳非中性
+        if(colorHit) return 0;                                    // 高彩天空/晚霞：整块保留
         if(salHit&&varHit) return 0;                        // 双高：整块保留（晚霞/水面/人群）
         if(salHit||varHit) return Math.max(0,cur-REDUCE);  // 单高：轻微少裁
         return cur;
@@ -227,12 +279,13 @@
         if(!(w>2&&h>2)||!rod.rL||!rod.rL2||!rod.rS||rod.rL.length<h+1||rod.rL2.length<h+1||rod.rS.length<h+1) return null;
         var topHit=(intent==="crop_top"||intent==="crop_tb");
         var botHit=(intent==="crop_bottom"||intent==="crop_tb");
-        if(!topHit&&!botHit) return null; // 左右/trim/none 无水平条带可护
         var gN=w*h;
         var gmL=rod.rL[h]/gN, gmL2=rod.rL2[h]/gN, gmS=rod.rS[h]/gN;
         var gVar=Math.max(0,gmL2-gmL*gmL);
-        if(!(gmS>1e-6)||!(gVar>1e-6)) return null; // 全图近乎无显著/无层次 → 不存在高价值条带
         var T=crop[1]||0, B=crop[3]||0;
+        if(!T&&!B) return null; // 没有任何水平边被裁（纯左右/trim/none）→ 无水平条带可护
+        if(!(gmS>1e-6)||!(gVar>1e-6)) return null; // 全图近乎无显著/无层次 → 不存在高价值条带
+        var hasSat=!!(rod.rSat&&rod.rSat.length===h+1);
         var nT=T, nB=B, note=null;
         function bandIsValuable(isTop){
           var cur=isTop?T:B; if(!cur||cur<=0) return false;
@@ -242,16 +295,26 @@
           if(y1<=y0) return false;
           var n=(y1-y0)*w; if(n<=0) return false;
           var sL=rod.rL[y1]-rod.rL[y0], sL2=rod.rL2[y1]-rod.rL2[y0], sS=rod.rS[y1]-rod.rS[y0];
-          var mL=sL/n, mL2=sL2/n, varL=Math.max(0,mL2-mL*mL);
+          var mL=sL/n, mL2=sL2/n, mS=sS/n, varL=Math.max(0,mL2-mL*mL);
+          var mSat=hasSat?(rod.rSat[y1]-rod.rSat[y0])/n:0;
+          // v11.16.0 绝对高彩：鲜艳晚霞/宝石蓝天即便平滑渐变也整条保留（云端同样不得误裁戏剧性天空）
+          if(mS>0.30 && mSat>0.25) return "full";
           var salMassRatio=sS/(gmS*gN); // 条带显著性质量占全图比
           // v9.6.0 绝对地板：相对门 varL>gVar*1.2 在"组间反差抬高全图方差"时会漏保晚霞；
           // 追加绝对方差地板（条带自身方差>800 即有层次）作为另一条保护路径——只多护一点、仍只少裁。
           var ABS_VAR=800;
-          return (salMassRatio>0.15 && (varL>gVar*1.2 || varL>ABS_VAR));
+          return (salMassRatio>0.15 && (varL>gVar*1.2 || varL>ABS_VAR)) ? "partial" : false;
         }
         var RETRACT=2;
-        if(topHit && bandIsValuable(true)){ nT=Math.max(0,T-RETRACT); if(nT!==T) note="顶部有高价值背景（晚霞/水面层次），已少裁 2% 保留"; }
-        if(botHit && bandIsValuable(false)){ nB=Math.max(0,B-RETRACT); if(nB!==B){ note=(note?note+"；":"")+"底部有高价值背景（倒影/地面层次），已少裁 2% 保留"; } }
+        var _vTop=bandIsValuable(true), _vBot=bandIsValuable(false);
+        // v11.16.0 收尾强化：高彩"整条保留(full)"不再被 VLM 声明的 intent 门控——
+        // 只要某条水平边正在被裁、且该条带是戏剧性高彩晚霞/宝石蓝天/艳彩水面(mS>0.30且mSat>0.25)，
+        // 无论 VLM 把 intent 报成 crop_right/trim 还是别的，都整条保留（宁缺毋滥，绝不切氛围）。
+        // "partial"（显著性方差层次）仍按 intent 门控，尊重 VLM 的取景方向判断。
+        if(_vTop==="full"){ nT=0; note="顶部为高彩天空/晚霞，保留不裁"; }
+        else if(topHit && _vTop==="partial"){ nT=Math.max(0,T-RETRACT); note="顶部有高价值背景（晚霞/水面层次），已少裁 2% 保留"; }
+        if(_vBot==="full"){ nB=0; note=(note?note+"；":"")+"底部为高彩水面/倒影，保留不裁"; }
+        else if(botHit && _vBot==="partial"){ nB=Math.max(0,B-RETRACT); note=(note?note+"；":"")+"底部有高价值背景（倒影/地面层次），已少裁 2% 保留"; }
         if(nT===T && nB===B) return null;
         return {crop:[crop[0],nT,crop[2],nB], note:note||"已为高价值背景少裁"};
       }catch(e){ return null; }
@@ -1095,4 +1158,4 @@
       ];
     }
 
-module.exports = { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants };
+module.exports = { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants };

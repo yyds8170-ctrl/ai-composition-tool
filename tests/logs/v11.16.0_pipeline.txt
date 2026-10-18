@@ -1,0 +1,16 @@
+=== v11.16.0 全流水线验证 ===
+时间: 2026-10-18T22:29:12+08:00
+
+[extract]
+已生成 tests/pure-functions.js ，函数： _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants
+
+[unit]
+
+✓ 单元测试全部通过：415/415（滤镜矩阵用例 63 条）
+
+[fuzz]
+
+✓ 模糊测试未发现问题
+
+[sw syntax]
+sw.js syntax OK

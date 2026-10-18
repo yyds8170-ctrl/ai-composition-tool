@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _smartCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants } = require('./pure-functions.js');
+const { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -370,6 +370,64 @@ test('smartCrop: 水平偏心但垂直在死区→只裁水平', () => {
 });
 test('smartCrop: 确定性', () => {
   assert.deepStrictEqual(_smartCrop(0.25, 0.75), _smartCrop(0.25, 0.75));
+});
+
+/* -------------------- v11.16.0 _landscapeCrop 边缘能量死区裁切 -------------------- */
+// 构造能量图：fn(比例位置)→能量，0~1
+function mkLcEnergy(colFn, rowFn, w, h) {
+  w = w || 100; h = h || 100;
+  const col = [], row = [];
+  for (let i = 0; i < w; i++) col.push(colFn(i / w));
+  for (let j = 0; j < h; j++) row.push(rowFn(j / h));
+  return { col, row, w, h };
+}
+test('landscapeCrop: 无效能量图→全零', () => {
+  assert.deepStrictEqual(_landscapeCrop(null, 0.5, 0.5), [0, 0, 0, 0]);
+  assert.deepStrictEqual(_landscapeCrop({ col: [], row: [] }, 0.5, 0.5), [0, 0, 0, 0]);
+});
+test('landscapeCrop: 全画面均匀高能量→不裁（无死区）', () => {
+  const e = mkLcEnergy(() => 0.8, () => 0.8);
+  assert.deepStrictEqual(_landscapeCrop(e, 0.5, 0.5), [0, 0, 0, 0]);
+});
+test('landscapeCrop: 左侧大面积死区+重心偏右→裁左', () => {
+  // 左 30% 几乎无能量，右侧丰富
+  const e = mkLcEnergy(x => x < 0.3 ? 0.02 : 0.9, y => 0.8);
+  const o = _landscapeCrop(e, 0.62, 0.5);
+
+  assert.ok(o[0] > 0, '应裁左侧死区，实际 ' + o[0]);
+  assert.strictEqual(o[2], 0, '右侧有内容不裁');
+});
+test('landscapeCrop: 顶部大片空白天空+重心偏下→裁上', () => {
+  const e = mkLcEnergy(x => 0.8, y => y < 0.3 ? 0.02 : 0.9);
+  const o = _landscapeCrop(e, 0.5, 0.62);
+  assert.ok(o[1] > 0, '应裁顶部死区，实际 ' + o[1]);
+  assert.strictEqual(o[3], 0, '底部有内容不裁');
+});
+test('landscapeCrop: 单边裁切不超过上限 16%', () => {
+  const e = mkLcEnergy(x => x < 0.5 ? 0.01 : 0.95, y => 0.8);
+  const o = _landscapeCrop(e, 0.7, 0.5);
+  assert.ok(o[0] <= 0.16 + 1e-9, '左裁上限0.16，实际 ' + o[0]);
+});
+test('landscapeCrop: 保留窗宽高均不低于 66%', () => {
+  const e = mkLcEnergy(x => (x < 0.3 ? 0.01 : x > 0.75 ? 0.01 : 0.9), y => 0.8);
+  const o = _landscapeCrop(e, 0.5, 0.5);
+  assert.ok(1 - o[0] - o[2] >= 0.659, '保留宽≥66%，实际 ' + (1 - o[0] - o[2]).toFixed(3));
+  assert.ok(1 - o[1] - o[3] >= 0.659, '保留高≥66%，实际 ' + (1 - o[1] - o[3]).toFixed(3));
+});
+test('landscapeCrop: 死区但重心在中央→不裁（避免误切平衡构图）', () => {
+  // 左侧虽低能量但重心在正中 0.5，不应触发水平裁
+  const e = mkLcEnergy(x => x < 0.16 ? 0.02 : 0.9, y => 0.8);
+  const o = _landscapeCrop(e, 0.5, 0.5);
+  assert.strictEqual(o[0], 0, '重心居中不裁水平');
+});
+test('landscapeCrop: v=false 时垂直方向不裁', () => {
+  const e = mkLcEnergy(x => 0.8, y => y < 0.3 ? 0.02 : 0.9);
+  const o = _landscapeCrop(e, 0.5, 0.62, { v: false });
+  assert.strictEqual(o[1], 0); assert.strictEqual(o[3], 0);
+});
+test('landscapeCrop: 裁切值均非负', () => {
+  const e = mkLcEnergy(x => x < 0.3 ? 0.02 : 0.9, y => y < 0.3 ? 0.02 : 0.9);
+  _landscapeCrop(e, 0.6, 0.6).forEach(v => assert.ok(v >= 0));
 });
 
 /* -------------------- v8.5.0 _aspectCrop 场景化 16:9 宽幅 -------------------- */
@@ -1078,6 +1136,29 @@ test('cloudCropIntentGuard: 无副作用（入参对象与rod不被改写）', (
   _cloudCropIntentGuard({ crop, rod, intent: 'crop_top' });
   assert.deepStrictEqual(crop, [0, 10, 0, 0]);
   assert.strictEqual(JSON.stringify(rod.rL), before);
+});
+// v11.16.0 收尾：rod 带饱和度前缀和(rSat)的夹具
+function mkRodSat(W, H, pix) {
+  const rL = new Float64Array(H + 1), rL2 = new Float64Array(H + 1), rS = new Float64Array(H + 1), rSat = new Float64Array(H + 1);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const q = pix(x, y); rL[y + 1] += q.l; rL2[y + 1] += q.l * q.l; rS[y + 1] += q.s; rSat[y + 1] += (q.sat || 0); }
+  for (let y = 0; y < H; y++) { rL[y + 1] += rL[y]; rL2[y + 1] += rL2[y]; rS[y + 1] += rS[y]; rSat[y + 1] += rSat[y]; }
+  return { w: W, h: H, rL, rL2, rS, rSat };
+}
+test('cloudCropIntentGuard v11.16: 高彩晚霞顶边不再被 intent 门控（intent=crop_right 也整条保留）', () => {
+  // 顶部12%戏剧性粉霞：高显著(s=0.7)+高饱和(sat=0.5)；其余绿林/湖水中等显著(s=0.1,l=100)。
+  const rod = mkRodSat(100, 100, (x, y) => y < 12 ? { l: 180, s: 0.7, sat: 0.5 } : { l: 100, s: 0.1, sat: 0.05 });
+  // 即便 VLM 把 intent 报成 crop_right（非 crop_top），高彩顶边也应整条保留(nT=0)
+  const out = _cloudCropIntentGuard({ crop: [3, 12, 22, 0], rod, intent: 'crop_right' });
+  assert.ok(out, '高彩晚霞应被整条保留');
+  assert.strictEqual(out.crop[1], 0, '顶边应归零保留');
+  assert.strictEqual(out.crop[0], 3, '非水平边(左)不动');
+  assert.strictEqual(out.crop[2], 22, '非水平边(右)不动');
+});
+test('cloudCropIntentGuard v11.16: 低饱和顶边即使 crop_right intent 也不护（宁缺毋滥）', () => {
+  // 顶部12%灰白过曝天空：高显著但低饱和(sat=0.05) → 不满足 full 高彩门，且 intent=crop_right 时 partial 也不护 → 原样
+  const rod = mkRodSat(100, 100, (x, y) => y < 12 ? { l: 200, s: 0.7, sat: 0.05 } : { l: 100, s: 0.1, sat: 0.05 });
+  const out = _cloudCropIntentGuard({ crop: [3, 12, 22, 0], rod, intent: 'crop_right' });
+  assert.strictEqual(out, null, '低饱和灰白天空不因门控放宽而误护');
 });
 
 /* -------------------- v9.1.0 _confBand（置信度迟滞带宽） -------------------- */
