@@ -1,0 +1,632 @@
+[
+  {
+    "file": "night/night_01.jpg",
+    "category": "night",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "leading/leading_01.jpg",
+    "category": "leading",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "leading/leading_02.jpg",
+    "category": "leading",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "leading/leading_03.jpg",
+    "category": "leading",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "dead_foreground/dead_foreground_01.jpg",
+    "category": "dead_foreground",
+    "review_status": "ok",
+    "expect_crop": "yes"
+  },
+  {
+    "file": "sky_dead/sky_dead_01.jpg",
+    "category": "sky_dead",
+    "review_status": "ok",
+    "expect_crop": "borderline"
+  },
+  {
+    "file": "leading/leading_04.jpg",
+    "category": "leading",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "leading/leading_05.jpg",
+    "category": "leading",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "leading/leading_07.jpg",
+    "category": "leading",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "water_reflection/water_reflection_01.jpg",
+    "category": "water_reflection",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "food/food_01.jpg",
+    "category": "food",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "night/night_02.jpg",
+    "category": "night",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "leading/leading_08.jpg",
+    "category": "leading",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "night/night_05.jpg",
+    "category": "night",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "night/night_06.jpg",
+    "category": "night",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "water_reflection/sky_sunset_01.jpg",
+    "category": "water_reflection",
+    "review_status": "corrected",
+    "expect_crop": "no"
+  },
+  {
+    "file": "water_reflection/sky_sunset_02.jpg",
+    "category": "water_reflection",
+    "review_status": "corrected",
+    "expect_crop": "no"
+  },
+  {
+    "file": "landscape/sky_sunset_03.jpg",
+    "category": "landscape",
+    "review_status": "corrected",
+    "expect_crop": "no"
+  },
+  {
+    "file": "sky_sunset/sky_sunset_05.jpg",
+    "category": "sky_sunset",
+    "review_status": "ok",
+    "expect_crop": "borderline"
+  },
+  {
+    "file": "sky_sunset/sky_sunset_06.jpg",
+    "category": "sky_sunset",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "sky_sunset/sky_sunset_07.jpg",
+    "category": "sky_sunset",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "sky_sunset/sky_sunset_08.jpg",
+    "category": "sky_sunset",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "sky_sunset/sky_sunset_09.jpg",
+    "category": "sky_sunset",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "portrait_group/portrait_group_01.jpg",
+    "category": "portrait_group",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "portrait_group/portrait_group_02.jpg",
+    "category": "portrait_group",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "portrait_detail/portrait_group_03.jpg",
+    "category": "portrait_detail",
+    "review_status": "corrected",
+    "expect_crop": "no"
+  },
+  {
+    "file": "portrait_group/portrait_group_04.jpg",
+    "category": "portrait_group",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "portrait_group/portrait_group_05.jpg",
+    "category": "portrait_group",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "portrait_group/portrait_group_06.jpg",
+    "category": "portrait_group",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "portrait_group/portrait_group_07.jpg",
+    "category": "portrait_group",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "street/street_01.jpg",
+    "category": "street",
+    "review_status": "ok",
+    "expect_crop": "borderline"
+  },
+  {
+    "file": "food/food_02.jpg",
+    "category": "food",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "food/food_03.jpg",
+    "category": "food",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "food/food_04.jpg",
+    "category": "food",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "food/food_05.jpg",
+    "category": "food",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "food/food_06.jpg",
+    "category": "food",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "food/food_07.jpg",
+    "category": "food",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "food/food_08.jpg",
+    "category": "food",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "food/food_09.jpg",
+    "category": "food",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "food/food_10.jpg",
+    "category": "food",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "food/food_11.jpg",
+    "category": "food",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "food/food_12.jpg",
+    "category": "food",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "food/food_13.jpg",
+    "category": "food",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "food/food_14.jpg",
+    "category": "food",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "dead_foreground/dead_foreground_03.jpg",
+    "category": "dead_foreground",
+    "review_status": "ok",
+    "expect_crop": "yes"
+  },
+  {
+    "file": "water_reflection/water_reflection_02.jpg",
+    "category": "water_reflection",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "dead_foreground/dead_foreground_04.jpg",
+    "category": "dead_foreground",
+    "review_status": "ok",
+    "expect_crop": "yes"
+  },
+  {
+    "file": "sky_dead/sky_dead_02.jpg",
+    "category": "sky_dead",
+    "review_status": "ok",
+    "expect_crop": "yes"
+  },
+  {
+    "file": "architecture/architecture_01.jpg",
+    "category": "architecture",
+    "review_status": "ok",
+    "expect_crop": "borderline"
+  },
+  {
+    "file": "night/night_07.jpg",
+    "category": "night",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "architecture/architecture_02.jpg",
+    "category": "architecture",
+    "review_status": "ok",
+    "expect_crop": "borderline"
+  },
+  {
+    "file": "symmetry/symmetry_01.jpg",
+    "category": "symmetry",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "symmetry/symmetry_02.jpg",
+    "category": "symmetry",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "architecture/architecture_04.jpg",
+    "category": "architecture",
+    "review_status": "ok",
+    "expect_crop": "borderline"
+  },
+  {
+    "file": "architecture/architecture_05.jpg",
+    "category": "architecture",
+    "review_status": "ok",
+    "expect_crop": "borderline"
+  },
+  {
+    "file": "street/street_02.jpg",
+    "category": "street",
+    "review_status": "ok",
+    "expect_crop": "borderline"
+  },
+  {
+    "file": "cluttered_ground/cluttered_ground_02.jpg",
+    "category": "cluttered_ground",
+    "review_status": "ok",
+    "expect_crop": "yes"
+  },
+  {
+    "file": "architecture/street_03.jpg",
+    "category": "architecture",
+    "review_status": "corrected",
+    "expect_crop": "borderline"
+  },
+  {
+    "file": "portrait_closeup/portrait_closeup_01.jpg",
+    "category": "portrait_closeup",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "portrait_closeup/portrait_closeup_02.jpg",
+    "category": "portrait_closeup",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "portrait_closeup/portrait_closeup_03.jpg",
+    "category": "portrait_closeup",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "portrait_closeup/portrait_closeup_04.jpg",
+    "category": "portrait_closeup",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "portrait_closeup/portrait_closeup_05.jpg",
+    "category": "portrait_closeup",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "portrait_closeup/portrait_closeup_06.jpg",
+    "category": "portrait_closeup",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "portrait_closeup/portrait_closeup_07.jpg",
+    "category": "portrait_closeup",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "portrait_closeup/portrait_closeup_08.jpg",
+    "category": "portrait_closeup",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "portrait_closeup/portrait_closeup_09.jpg",
+    "category": "portrait_closeup",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "portrait_closeup/portrait_closeup_10.jpg",
+    "category": "portrait_closeup",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "portrait_closeup/portrait_closeup_11.jpg",
+    "category": "portrait_closeup",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "portrait_closeup/portrait_closeup_12.jpg",
+    "category": "portrait_closeup",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "architecture/architecture_06.jpg",
+    "category": "architecture",
+    "review_status": "ok",
+    "expect_crop": "borderline"
+  },
+  {
+    "file": "street/street_04.jpg",
+    "category": "street",
+    "review_status": "ok",
+    "expect_crop": "borderline"
+  },
+  {
+    "file": "water_reflection/water_reflection_03.jpg",
+    "category": "water_reflection",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "water_reflection/water_reflection_04.jpg",
+    "category": "water_reflection",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "pet/pet_01.jpg",
+    "category": "pet",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "pet/pet_02.jpg",
+    "category": "pet",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "pet/pet_03.jpg",
+    "category": "pet",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "pet/pet_04.jpg",
+    "category": "pet",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "pet/pet_05.jpg",
+    "category": "pet",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "pet/pet_06.jpg",
+    "category": "pet",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "pet/pet_07.jpg",
+    "category": "pet",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "pet/pet_08.jpg",
+    "category": "pet",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "pet/pet_09.jpg",
+    "category": "pet",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "pet/pet_10.jpg",
+    "category": "pet",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "pet/pet_11.jpg",
+    "category": "pet",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "pet/pet_12.jpg",
+    "category": "pet",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "pet/pet_13.jpg",
+    "category": "pet",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "pet/pet_14.jpg",
+    "category": "pet",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "symmetry/symmetry_04.jpg",
+    "category": "symmetry",
+    "review_status": "corrected",
+    "expect_crop": "no"
+  },
+  {
+    "file": "sky_sunset/water_reflection_08.jpg",
+    "category": "sky_sunset",
+    "review_status": "corrected",
+    "expect_crop": "no"
+  },
+  {
+    "file": "dead_foreground/dead_foreground_06.jpg",
+    "category": "dead_foreground",
+    "review_status": "corrected",
+    "expect_crop": "yes"
+  },
+  {
+    "file": "sky_sunset/street_06.jpg",
+    "category": "sky_sunset",
+    "review_status": "corrected",
+    "expect_crop": "borderline"
+  },
+  {
+    "file": "symmetry/symmetry_06.jpg",
+    "category": "symmetry",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "symmetry/symmetry_08.jpg",
+    "category": "symmetry",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "landscape/landscape_01.jpg",
+    "category": "landscape",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "landscape/landscape_02.jpg",
+    "category": "landscape",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "landscape/landscape_03.jpg",
+    "category": "landscape",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "landscape/landscape_04.jpg",
+    "category": "landscape",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "landscape/landscape_05.jpg",
+    "category": "landscape",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "sky_dead/sky_dead_11.jpg",
+    "category": "sky_dead",
+    "review_status": "ok",
+    "expect_crop": "borderline"
+  },
+  {
+    "file": "cluttered_ground/cluttered_ground_05.jpg",
+    "category": "cluttered_ground",
+    "review_status": "ok",
+    "expect_crop": "yes"
+  },
+  {
+    "file": "street/street_10.jpg",
+    "category": "street",
+    "review_status": "ok",
+    "expect_crop": "borderline"
+  },
+  {
+    "file": "street/street_11.jpg",
+    "category": "street",
+    "review_status": "ok",
+    "expect_crop": "borderline"
+  },
+  {
+    "file": "landscape/landscape_06.jpg",
+    "category": "landscape",
+    "review_status": "ok",
+    "expect_crop": "no"
+  },
+  {
+    "file": "street/street_12.jpg",
+    "category": "street",
+    "review_status": "ok",
+    "expect_crop": "borderline"
+  }
+]

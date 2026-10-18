@@ -1264,7 +1264,26 @@
             if(!exempt) C.hasReflection=false; else { C.hasReflection=true; }
           } else { C.hasReflection=true; }
         }
-        if(o.symmetry==="h"||o.symmetry==="v") C.symmetry=o.symmetry;
+        // v11.18.0：新结构化字段枚举白名单校验
+        var symAllow=["none","horizontal","vertical","both"];
+        C.symmetry=(symAllow.indexOf(o.symmetry)>=0)?o.symmetry:"none";
+        if(o.symmetry==="h") C.symmetry="horizontal";
+        else if(o.symmetry==="v") C.symmetry="vertical";
+        var atmAllow=["none","sunset_sky","blue_sky","water_reflection","neon_night","cloud_sea","clean_dead"];
+        C.atmosphere=(atmAllow.indexOf(o.atmosphere)>=0)?o.atmosphere:"none";
+        var csAllow=["light","medium","heavy"];
+        C.cropStrength=(csAllow.indexOf(o.cropStrength)>=0)?o.cropStrength:"medium";
+        // checklist 五保护项（任一 true → 仲裁器据此保守）
+        var chk=o.checklist||{};
+        C.checklist={
+          cut_head: chk.cut_head===true, cut_limb: chk.cut_limb===true,
+          cut_reflection: chk.cut_reflection===true, break_symmetry: chk.break_symmetry===true,
+          cut_guiding_line: chk.cut_guiding_line===true
+        };
+        // 跨字段一致校验：氛围类（非 clean_dead）→ 云端强保留，抬 keepConf
+        if(!keepOriginal && C.atmosphere!=="none" && C.atmosphere!=="clean_dead"){
+          C.hasValueAtmosphere=true;
+        }
         // 矛盾字段：cropIntent 与 keepOriginal 冲突时 keepOriginal 优先
         if(keepOriginal && ci!=="none"){ C.cropIntent="none"; }
         return C;
