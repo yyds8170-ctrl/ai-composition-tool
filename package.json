@@ -1,11 +1,15 @@
 {
   "name": "ai-composition-tool",
-  "version": "11.7.1",
+  "version": "11.8.0",
   "description": "AI 构图助手 Pro · 实景视觉构图生成工具（PWA，本地+云端双引擎）",
   "private": true,
   "scripts": {
     "extract": "node tools/extract-pure.js",
-    "test": "node tools/extract-pure.js && node tests/unit.test.js"
+    "test": "node tools/extract-pure.js && node tests/unit.test.js",
+    "regress": "node tools/regress.js"
   },
-  "license": "PolyForm-Noncommercial-1.0.0"
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "devDependencies": {
+    "puppeteer": "^25.14.0"
+  }
 }

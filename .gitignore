@@ -1,2 +1,6 @@
 ROADMAP_v839_to_v901.md
 AI-Composition-Assistant-Pro_v*.html
+node_modules/
+package-lock.json
+probe*.js
+smoke.js
