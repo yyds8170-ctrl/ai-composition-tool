@@ -1,5 +1,5 @@
-/* AI 构图助手 · Service Worker v11.11.0 —— 离线缓存，让应用像原生 App 一样秒开 */
-const CACHE = 'ai-compose-v11110';
+/* AI 构图助手 · Service Worker v11.12.0 —— 离线缓存，让应用像原生 App 一样秒开 */
+const CACHE = 'ai-compose-v11120';
 const CORE = [
   './',
   './index.html',
@@ -89,7 +89,7 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
   // v8.2.2: 通知所有受控页面"新版本已就绪"，页面据此弹出刷新提示条（根治旧缓存看不到新功能）
   self.clients.matchAll({type:'window', includeUncontrolled:true}).then(function(clients){
-    clients.forEach(function(c){ c.postMessage({type:'AIC_SW_UPDATE', ver:"v11.11.0"}); });
+    clients.forEach(function(c){ c.postMessage({type:'AIC_SW_UPDATE', ver:"v11.12.0"}); });
   }).catch(function(){});
   // v8.3.3: 模型预缓存延迟 30s 启动（不阻塞 activate）
   _scheduleModelPrecache();
