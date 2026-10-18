@@ -628,5 +628,23 @@
     "category": "street",
     "review_status": "ok",
     "expect_crop": "borderline"
+  },
+  {
+    "file": "sky_dead/sky_dead_12.jpg",
+    "category": "sky_dead",
+    "review_status": "round4",
+    "expect_crop": "yes"
+  },
+  {
+    "file": "sky_dead/sky_dead_13.jpg",
+    "category": "sky_dead",
+    "review_status": "round4",
+    "expect_crop": "yes"
+  },
+  {
+    "file": "cluttered_ground/cluttered_ground_06.jpg",
+    "category": "cluttered_ground",
+    "review_status": "round4",
+    "expect_crop": "yes"
   }
 ]
