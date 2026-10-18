@@ -1158,4 +1158,171 @@
       ];
     }
 
-module.exports = { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants };
+    function _deadZoneStrength(energy, h){
+      var E_DEAD=0.12;
+      var out={top:{strength:0,strip:0}, bottom:{strength:0,strip:0}};
+      if(!energy || !h || energy.length<h) return out;
+      // 全空白图（整体无内容）→ 不是"边条死区"，strength 置 0
+      var maxE=0; for(var k=0;k<energy.length;k++){ if(energy[k]>maxE) maxE=energy[k]; }
+      if(maxE<E_DEAD) return out;
+      var dt=0; while(dt<h && energy[dt]<E_DEAD) dt++;
+      var db=0; while(db<h && energy[h-1-db]<E_DEAD) db++;
+      out.top.strength=dt/h; out.top.strip=dt/h;
+      out.bottom.strength=db/h; out.bottom.strip=db/h;
+      return out;
+    }
+
+    function _cropIntentFromBox(crop){
+      if(!crop||crop.length!==4) return "none";
+      var L=crop[0]/100,T=crop[1]/100,R=crop[2]/100,B=crop[3]/100;
+      var vL=L,vT=T,vR=R,vB=B, vSum=vL+vT+vR+vB, vMax=Math.max(vL,vT,vR,vB);
+      if(vSum<0.015) return "none";
+      var vH=vL+vR, vV=vT+vB;
+      if(vV>vH*1.6 && vT>0.01 && vB>0.01) return "crop_tb";
+      if(vH>vV*1.6 && vL>0.01 && vR>0.01) return "crop_lr";
+      if(vMax<0.03) return "trim";
+      var map=["crop_left","crop_top","crop_right","crop_bottom"], arr=[vL,vT,vR,vB];
+      return map[arr.indexOf(vMax)];
+    }
+
+    function _directionsOppose(a,b){
+      if(!a||!b) return false;
+      var top=["crop_top"],bot=["crop_bottom"],left=["crop_left"],right=["crop_right"];
+      function has(s,x){ return s.indexOf(x)>=0; }
+      return ( (has(top,a)&&has(bot,b)) || (has(bot,a)&&has(top,b)) ||
+               (has(left,a)&&has(right,b)) || (has(right,a)&&has(left,b)) );
+    }
+
+    function _hardProtectionHit(L, aiData){
+      try{
+        var d=aiData||{};
+        var flags=d.flags||{};
+        if(flags.cutFace||flags.cutJoint||flags.cutObject||flags.cutHighSat) return true;
+        return false;
+      }catch(e){ return false; }
+    }
+
+    function _localConf(L){
+      try{
+        var s=L||0;
+        var base=50;
+        if(L && L.tier==="strong") base=80;
+        else if(L && L.tier==="weak") base=62;
+        else base=45;
+        return Math.max(30, Math.min(95, Math.round(base)));
+      }catch(e){ return 50; }
+    }
+
+    function _extractIntentLocal(a, plan){
+      try{
+        var p=plan||{};
+        var crop=(p.crop||[0,0,0,0]).map(function(v){return Math.round(v);});
+        var dz=_deadZoneStrength((a&&a.rowEnergy)||[], (a&&a.h)||0);
+        var topS=dz.top.strength, botS=dz.bottom.strength;
+        var maxS=Math.max(topS,botS);
+        var tier = maxS>=0.5 ? "strong" : (maxS>=0.25 ? "weak" : "none");
+        var direction=_cropIntentFromBox(crop);
+        return {
+          version:"v1117",
+          deadZone:dz, tier:tier,
+          topTier: topS>=0.5?"strong":(topS>=0.25?"weak":"none"),
+          bottomTier: botS>=0.5?"strong":(botS>=0.25?"weak":"none"),
+          direction:direction, lCrop:crop,
+          rule:p.ruleKey, conf:_localConf(null), sceneType:p.sceneType,
+          hardProtection:false,
+          signals:{ hSym:(a&&a.hSym)||0, vSym:(a&&a.vSym)||0, mean:(a&&a.mean)||0, sat:(a&&a.sat)||0 }
+        };
+      }catch(e){
+        return {version:"v1117",deadZone:{top:{strength:0,strip:0},bottom:{strength:0,strip:0}},tier:"none",direction:"none",lCrop:[0,0,0,0],signals:{},hardProtection:false};
+      }
+    }
+
+    function _parseIntentCloud(obj, L){
+      try{
+        var o=obj||{};
+        var keepOriginal=(o.keepOriginal===true);
+        var ci=o.cropIntent||"none";
+        var allow=["crop_top","crop_bottom","crop_tb","crop_left","crop_right","crop_lr","trim","none"];
+        if(allow.indexOf(ci)<0) ci="none";
+        // P1-5：裁/不裁置信拆分
+        var decisionConf=o.decisionConf!=null?o.decisionConf:(o.conf!=null?o.conf:50);
+        decisionConf=Math.max(0,Math.min(100,decisionConf));
+        var cropConf, keepConf, confMissing=(o.decisionConf==null);
+        if(keepOriginal){ cropConf=0; keepConf=decisionConf; }
+        else { keepConf=0; cropConf=decisionConf; }
+        var C={
+          keepOriginal:keepOriginal, cropIntent:ci,
+          cropConf:cropConf, keepConf:keepConf, confMissing:confMissing,
+          hasReflection:false, symmetry:"none", flags:{},
+          checklist:[]
+        };
+        // P1-6：hasReflection 像素否决豁免（water/底部高色带不否决）
+        if(o.hasReflection===true){
+          var hSym=(L&&L.signals&&L.signals.hSym)||0;
+          if(hSym<0.15){
+            var exempt=(L&&L.sceneType==="waterscape")||((L&&L.signals&&L.signals.bottomRod)===true);
+            if(!exempt) C.hasReflection=false; else { C.hasReflection=true; }
+          } else { C.hasReflection=true; }
+        }
+        if(o.symmetry==="h"||o.symmetry==="v") C.symmetry=o.symmetry;
+        // 矛盾字段：cropIntent 与 keepOriginal 冲突时 keepOriginal 优先
+        if(keepOriginal && ci!=="none"){ C.cropIntent="none"; }
+        return C;
+      }catch(e){
+        return {keepOriginal:true,cropIntent:"none",cropConf:0,keepConf:50,confMissing:true,hasReflection:false,symmetry:"none",flags:{},checklist:[]};
+      }
+    }
+
+    function _negotiateBox(lCrop, cCrop, aiData){
+      try{
+        function retain(c){ return 1-((c[0]+c[1]+c[2]+c[3])/100); }
+        var lr=retain(lCrop), cr=retain(cCrop);
+        if(Math.abs(lr-cr)<0.05){
+          // 打平：取裁得更少者（更保守）
+          var ls=lCrop[0]+lCrop[1]+lCrop[2]+lCrop[3], cs=cCrop[0]+cCrop[1]+cCrop[2]+cCrop[3];
+          return {crop:(ls<=cs?lCrop:cCrop), reason:"双脑分歧折中，取保留面积大者"};
+        }
+        return {crop:(lr>=cr?lCrop:cCrop), reason:"双脑分歧折中，取保留面积大者"};
+      }catch(e){ return {crop:lCrop, reason:"折中兜底"}; }
+    }
+
+    function _arbitrateCrop(L, C, cCrop, aiData){
+      var Z=[0,0,0,0];
+      function abstain(reason){ return {crop:Z, tag:"⏸", source:"abstain", reason:reason, abstained:true}; }
+      function pickLocal(reason){ return {crop:(L.lCrop||Z), tag:"📷", source:"local", reason:reason, abstained:false}; }
+      function pickCloud(cc,reason){ return {crop:(cc||Z), tag:"☁️", source:"cloud", reason:reason, abstained:false}; }
+      function negotiate(){ var r=_negotiateBox(L.lCrop||Z, cCrop||Z, aiData); return {crop:r.crop, tag:"⚖️", source:"negotiate", reason:r.reason, abstained:false}; }
+      try{
+        if(!L||!C) return abstain("本地或云端意图缺失，保留原图");
+        // 0) 硬保护前置（P1-4）
+        if(_hardProtectionHit(L, aiData)) return abstain("硬保护命中（人脸/关节/物体/高彩），保留原图");
+        var lStrong=(L.tier==="strong");
+        var lWeak=(L.tier==="weak");
+        var cKeep=(C.keepOriginal===true||C.cropIntent==="none"||C.cropIntent==="keep");
+        var cCropB=(!cKeep);
+        var opp=_directionsOppose(L.direction, C.cropIntent);
+        // R1：本地强死区，云端高确认同向（cropConf>=50 且非缺失）→ 听本地
+        if(lStrong && cCropB && !opp && C.cropConf>=50 && !C.confMissing) return pickLocal("本地强死区，云端同向确认");
+        // R2：本地弱/无死区，云端强裁（cropConf>=60）→ 听云端框
+        if(!lStrong && cCropB && C.cropConf>=60) return pickCloud(cCrop,"本地弱证据，云端强裁确认");
+        // R3：本地强死区 vs 云端反对/反方向
+        if(lStrong && (cKeep||opp)){
+          // R3a：云端强保留（keepConf>=70，含方向相反）→ 弃权保原图（不裁可逆）
+          if(C.keepConf>=70) return abstain("本地强裁 vs 云端强保留，保留原图");
+          return negotiate();
+        }
+        // R4：双不裁
+        if((L.tier==="none"||lWeak) && cKeep) return {crop:Z, tag:"⚖️", source:"agree", reason:"双不裁", abstained:false};
+        // R-conf：云端返回但置信缺失 → 本地框力度减半
+        if(lStrong && cCropB && C.confMissing){
+          return {crop:L.lCrop.map(function(v){return Math.round(v*0.5);}), tag:"⚖️", source:"negotiate", reason:"本地强死区，云端置信缺失，力度减半", abstained:false};
+        }
+        // R7：本地强死区，云端低置信（非缺失）→ 本地框×0.5
+        if(lStrong && cCropB && C.cropConf<50){
+          return {crop:L.lCrop.map(function(v){return Math.round(v*0.5);}), tag:"⚖️", source:"negotiate", reason:"本地强死区，云端低置信，力度减半", abstained:false};
+        }
+        return abstain("未匹配仲裁规则，默认不裁");
+      }catch(e){ return abstain("仲裁异常，保留原图"); }
+    }
+
+module.exports = { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop };

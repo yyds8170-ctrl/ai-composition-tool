@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants } = require('./pure-functions.js');
+const { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -1808,6 +1808,152 @@ test('v116 scenePrefix: night 前缀', () => {
 });
 test('v116 scenePrefix: 未知无前缀', () => {
   assert.strictEqual(_scenePrefix("food",0.1),"");
+});
+
+/* -------------------- v11.17 双脑共识仲裁（31 例） -------------------- */
+// 夹具
+function mkL(tier, dir, lCrop, extra){
+  return Object.assign({version:"v1117",deadZone:{top:{strength:0,strip:0},bottom:{strength:0,strip:0}},tier:tier,topTier:tier,bottomTier:tier,direction:dir,lCrop:lCrop,rule:"x",conf:60,sceneType:"landscape",hardProtection:false,signals:{hSym:0.1,vSym:0,mean:0.5,sat:0.2}}, extra||{});
+}
+function mkC(o){
+  return Object.assign({keepOriginal:false,cropIntent:"crop_top",cropConf:60,keepConf:0,confMissing:false,hasReflection:false,symmetry:"none",flags:{},checklist:[]}, o||{});
+}
+
+// 死区强度（2）
+test('v117 deadZone: 死白顶 strength≈0.9', () => {
+  var e=[]; for(var i=0;i<100;i++) e.push(i<90?0.01:0.6);
+  var r=_deadZoneStrength(e,100);
+  assert.ok(r.top.strength>=0.85 && r.top.strength<=0.95, "top strength="+r.top.strength);
+});
+test('v117 deadZone: 内容铺满 strength≈0', () => {
+  var e=[]; for(var i=0;i<100;i++) e.push(0.6);
+  var r=_deadZoneStrength(e,100);
+  assert.strictEqual(r.top.strength,0);
+});
+// 硬保护（3+反例1）
+test('v117 hardProtect: 人脸被切→true', () => { assert.strictEqual(_hardProtectionHit(null,{flags:{cutFace:true}}), true); });
+test('v117 hardProtect: 关节被切→true', () => { assert.strictEqual(_hardProtectionHit(null,{flags:{cutJoint:true}}), true); });
+test('v117 hardProtect: 高彩带被切→true', () => { assert.strictEqual(_hardProtectionHit(null,{flags:{cutHighSat:true}}), true); });
+test('v117 hardProtect: 无命中→false（反例）', () => { assert.strictEqual(_hardProtectionHit(null,{flags:{}}), false); });
+// R1 本地强死区云端同向（3）
+test('v117 R1: 本地强死区云端同向→本地框', () => {
+  var r=_arbitrateCrop(mkL("strong","crop_top",[0,15,0,0]), mkC({cropIntent:"crop_top",cropConf:80}), [0,10,0,0], {flags:{}});
+  assert.deepStrictEqual(r.crop,[0,15,0,0]);
+});
+test('v117 R1: 晚霞强死区云端crop_tb→本地框', () => {
+  var r=_arbitrateCrop(mkL("strong","crop_tb",[0,12,0,12]), mkC({cropIntent:"crop_tb",cropConf:70}), [0,10,0,10], {flags:{}});
+  assert.deepStrictEqual(r.crop,[0,12,0,12]);
+});
+test('v117 R1: 硬保护前置即使同向也否决不裁', () => {
+  var r=_arbitrateCrop(mkL("strong","crop_top",[0,15,0,0]), mkC({cropIntent:"crop_top",cropConf:80}), [0,10,0,0], {flags:{cutFace:true}});
+  assert.deepStrictEqual(r.crop,[0,0,0,0]);
+});
+// R2 本地弱/无死区云端强裁（3）
+test('v117 R2: 本地弱+云端cropConf80→云端框', () => {
+  var r=_arbitrateCrop(mkL("weak","none",[0,0,0,0]), mkC({cropIntent:"crop_top",cropConf:80}), [0,10,0,0], {flags:{}});
+  assert.deepStrictEqual(r.crop,[0,10,0,0]);
+});
+test('v117 R2: 本地none+云端cropConf70→云端框', () => {
+  var r=_arbitrateCrop(mkL("none","none",[0,0,0,0]), mkC({cropIntent:"crop_bottom",cropConf:70}), [0,0,0,8], {flags:{}});
+  assert.deepStrictEqual(r.crop,[0,0,0,8]);
+});
+test('v117 R2: 本地trim+云端强裁→云端框', () => {
+  var r=_arbitrateCrop(mkL("weak","trim",[0,2,0,0]), mkC({cropIntent:"crop_top",cropConf:90}), [0,12,0,0], {flags:{}});
+  assert.deepStrictEqual(r.crop,[0,12,0,0]);
+});
+// R3a 本地强裁 vs 云端强保留（2）
+test('v117 R3a: 本地强裁云端keepConf85→弃权', () => {
+  var r=_arbitrateCrop(mkL("strong","crop_top",[0,15,0,0]), mkC({keepOriginal:true,cropIntent:"none",cropConf:0,keepConf:85}), [0,10,0,0], {flags:{}});
+  assert.strictEqual(r.abstained,true); assert.deepStrictEqual(r.crop,[0,0,0,0]);
+});
+test('v117 R3a: 本地强裁云端反方向keepConf60→走R3b不弃权', () => {
+  var r=_arbitrateCrop(mkL("strong","crop_top",[0,15,0,0]), mkC({cropIntent:"crop_bottom",cropConf:60,keepConf:60}), [0,0,0,10], {flags:{}});
+  assert.notStrictEqual(r.abstained,true);
+});
+// R3b negotiate（2）
+test('v117 R3b: 取保留面积大者', () => {
+  var r=_negotiateBox([0,15,0,0],[0,5,0,0],{});
+  assert.deepStrictEqual(r.crop,[0,5,0,0]);
+});
+test('v117 R3b: 打平取裁得更少者', () => {
+  var r=_negotiateBox([0,8,0,0],[0,8,0,0],{});
+  assert.deepStrictEqual(r.crop,[0,8,0,0]);
+});
+// R4 双不裁（3）
+test('v117 R4: 本地none云端keepOriginal→Z', () => {
+  var r=_arbitrateCrop(mkL("none","none",[0,0,0,0]), mkC({keepOriginal:true,cropIntent:"none",cropConf:0,keepConf:50}), [0,0,0,0], {flags:{}});
+  assert.deepStrictEqual(r.crop,[0,0,0,0]);
+});
+test('v117 R4: 本地weak云端none→Z', () => {
+  var r=_arbitrateCrop(mkL("weak","none",[0,0,0,0]), mkC({keepOriginal:true,cropIntent:"none",cropConf:0,keepConf:40}), [0,0,0,0], {flags:{}});
+  assert.deepStrictEqual(r.crop,[0,0,0,0]);
+});
+test('v117 R4: 本地none云端keep+主体大→Z', () => {
+  var r=_arbitrateCrop(mkL("none","none",[0,0,0,0],{signals:{hSym:0.1,bodyRatio:0.8}}), mkC({keepOriginal:true,cropIntent:"none",cropConf:0,keepConf:50}), [0,0,0,0], {flags:{}});
+  assert.deepStrictEqual(r.crop,[0,0,0,0]);
+});
+// R-conf 置信缺失（2）
+test('v117 Rconf: 云端置信缺失→本地框×0.5', () => {
+  var r=_arbitrateCrop(mkL("strong","crop_top",[0,16,0,0]), mkC({cropIntent:"crop_top",cropConf:50,keepConf:0,confMissing:true}), [0,10,0,0], {flags:{}});
+  assert.deepStrictEqual(r.crop,[0,8,0,0]);
+});
+test('v117 Rconf: cropConf=49<50且缺失→×0.5', () => {
+  var r=_arbitrateCrop(mkL("strong","crop_top",[0,14,0,0]), mkC({cropIntent:"crop_top",cropConf:49,keepConf:0,confMissing:true}), [0,10,0,0], {flags:{}});
+  assert.deepStrictEqual(r.crop,[0,7,0,0]);
+});
+// R7 低置信（2）
+test('v117 R7: 本地强裁云端cropConf30→×0.5', () => {
+  var r=_arbitrateCrop(mkL("strong","crop_top",[0,16,0,0]), mkC({cropIntent:"crop_top",cropConf:30,keepConf:0,confMissing:false}), [0,10,0,0], {flags:{}});
+  assert.deepStrictEqual(r.crop,[0,8,0,0]);
+});
+test('v117 R7: 本地强裁云端cropConf40→×0.5', () => {
+  var r=_arbitrateCrop(mkL("strong","crop_top",[0,12,0,0]), mkC({cropIntent:"crop_top",cropConf:40,keepConf:0,confMissing:false}), [0,10,0,0], {flags:{}});
+  assert.deepStrictEqual(r.crop,[0,6,0,0]);
+});
+// 解析校验（4）
+test('v117 parse: 枚举越界回退none', () => {
+  var C=_parseIntentCloud({cropIntent:"banana"}, null);
+  assert.strictEqual(C.cropIntent,"none");
+});
+test('v117 parse: hasReflection+hSym0.1非豁免→false', () => {
+  var L=mkL("none","none",[0,0,0,0],{sceneType:"portrait",signals:{hSym:0.1,bottomRod:false}});
+  var C=_parseIntentCloud({hasReflection:true}, L);
+  assert.strictEqual(C.hasReflection,false);
+});
+test('v117 parse: waterscape豁免→保留true', () => {
+  var L=mkL("none","none",[0,0,0,0],{sceneType:"waterscape",signals:{hSym:0.1,bottomRod:true}});
+  var C=_parseIntentCloud({hasReflection:true}, L);
+  assert.strictEqual(C.hasReflection,true);
+});
+test('v117 parse: cropConf拆为云端裁置信', () => {
+  var C=_parseIntentCloud({keepOriginal:false,cropIntent:"crop_top",decisionConf:72}, null);
+  assert.strictEqual(C.cropConf,72); assert.strictEqual(C.keepConf,0);
+});
+// 矛盾字段（2）
+test('v117 conflict: cropIntent=crop_top但keepOriginal→keep优先', () => {
+  var C=_parseIntentCloud({keepOriginal:true,cropIntent:"crop_top",decisionConf:80}, null);
+  assert.strictEqual(C.keepOriginal,true); assert.strictEqual(C.cropIntent,"none");
+});
+test('v117 conflict: cropConf越界夹到0..100', () => {
+  var C=_parseIntentCloud({keepOriginal:false,cropIntent:"crop_top",decisionConf:150}, null);
+  assert.strictEqual(C.cropConf,100);
+});
+// 置信边界（2）
+test('v117 boundary: cropConf=60(inclusive)→R2', () => {
+  var r=_arbitrateCrop(mkL("weak","none",[0,0,0,0]), mkC({cropIntent:"crop_top",cropConf:60}), [0,9,0,0], {flags:{}});
+  assert.deepStrictEqual(r.crop,[0,9,0,0]);
+});
+test('v117 boundary: keepConf=70(inclusive)→R3a弃权', () => {
+  var r=_arbitrateCrop(mkL("strong","crop_top",[0,15,0,0]), mkC({keepOriginal:true,cropIntent:"none",cropConf:0,keepConf:70}), [0,10,0,0], {flags:{}});
+  assert.strictEqual(r.abstained,true);
+});
+// 极端图（2）
+test('v117 extreme: 全白→tier=none', () => {
+  var L=_extractIntentLocal({rowEnergy:[0.0001,0.0001],h:2}, {crop:[0,0,0,0],sceneType:"landscape"});
+  assert.strictEqual(L.tier,"none");
+});
+test('v117 extreme: _cropIntentFromBox满裁→crop_tb', () => {
+  assert.strictEqual(_cropIntentFromBox([0,15,0,15]),"crop_tb");
 });
 
 /* -------------------- 汇总 -------------------- */
