@@ -69,9 +69,11 @@ async function runImage(page, imgPath) {
   await new Promise(r => setTimeout(r, 2000));
   // 点分析
   await page.evaluate(() => document.getElementById('btnAnalyze').click());
-  // 轮询等 plan
+  // 轮询等 plan——必须等 YOLO 检测回调完成（状态栏出现"已自动应用"），
+  // 否则读到的是像素初判 plan（sceneType 可能误标 waterscape）
   const deadline = Date.now() + WAIT_ANALYZE_MS;
   let snap = null;
+  let sawCrop = false;
   while (Date.now() < deadline) {
     await new Promise(r => setTimeout(r, POLL_MS));
     snap = await page.evaluate(() => {
@@ -79,6 +81,8 @@ async function runImage(page, imgPath) {
       const d = window.__ai && window.__ai.data;
       if (!p) return null;
       const r4 = v => (typeof v === 'number' && isFinite(v)) ? Number(v.toFixed(4)) : v;
+      const statusEl = document.getElementById('statusbar');
+      const status = statusEl ? statusEl.textContent : '';
       return {
         plan: {
           rule: p.rule, sceneType: p.sceneType, conf: p.conf,
@@ -95,14 +99,17 @@ async function runImage(page, imgPath) {
           sym: r4(d.sym),
           modelLoaded: d.modelLoaded
         } : null,
+        status: status,
         activeFilter: (() => {
           const el = document.querySelector('.filter-pill.active');
           return el ? el.getAttribute('data-f') : null;
         })()
       };
     });
-    // plan 出来就算完（即使 crop=[0,0,0,0]）
-    if (snap && snap.plan && snap.plan.crop) break;
+    if (!snap || !snap.plan || !snap.plan.crop) continue;
+    sawCrop = true;
+    // 等到 YOLO 完成：状态栏出现"已自动应用"，或已等满 20s 兜底
+    if (sawCrop && snap.status && snap.status.indexOf('已自动应用') >= 0) break;
   }
   return snap;
 }
