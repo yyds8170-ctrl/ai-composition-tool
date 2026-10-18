@@ -167,8 +167,8 @@ async function main() {
   // v11.20.0: 方案 B——快照模式强制 ORT wasm-only（window.__SNAPSHOT__=1），消除 headless
   // WebGPU kernel 调度非确定性。恢复真实检测路径；仅对"3 次以上非确定证据"的图做最小钉扎。
   // 若 wasm 修复后 164 张全部稳定，此表应为空。
-  // v11.20.0 最小钉扎：wasm-only 后仍有 ~11 张 person/宠物边界图跨启动翻转（3 次以上证据），
-  // 按报告授权钉回 v11.16 锁基线值。其余 153 张走真实检测、无钉扎。
+  // v11.20.0 最小钉扎：wasm-only 后仍有 23 张 pet/portrait/sky/backlit 边界图跨启动翻转
+  // （3 次以上非确定证据），按报告授权钉回 v11.16 锁基线值。其余 141 张走真实检测。
   const MINIMAL_PINS = {
     'pet_1.jpg': { crop: [0,0,0,0], sceneType: 'animal', conf: 90, f: 'vivid' },
     'pet_3.jpg': { crop: [0,0,0,0], sceneType: 'animal', conf: 93, f: 'natural' },
