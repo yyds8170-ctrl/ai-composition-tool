@@ -3712,7 +3712,7 @@ var APP_VER="v12.1.0";
       if(nT<0||nB<0) return crop;
       return [crop[0],nT,crop[2],nB];
     }
-    // v12.0.0 本地三护栏（只减不增，接 _rodGuard 之后）
+    // v12.1.0 本地三护栏（只减不增，接 _rodGuard 之后）
     function _hueInWarmBand(h,lo,hi){ if(h==null) return false; h=((h%360)+360)%360; return h>=lo||h<=hi; }
     function _sunsetWarmGuard(crop,info){
       if(!crop||!crop.length||!crop[1]) return crop;
@@ -6429,7 +6429,7 @@ var APP_VER="v12.1.0";
       }
       var vw=el.naturalWidth||el.videoWidth, vh=el.naturalHeight||el.videoHeight;
       if(!vw||!vh) return false;
-      // v12.0.0 修复：AI 裁切后 state.cropResult 是裁切后的图，若把它当"原图层"，
+      // v12.1.0 修复：AI 裁切后 state.cropResult 是裁切后的图，若把它当"原图层"，
       // cmpBase 与 photoView 两层像素相同 → 拖动分割线画面无变化。
       // 对比层应装【裁切前原始图】：kind="crop" 时 setPhotoSource 不覆盖 state.origURL，
       // 它保留的就是裁切前原图；state.cropResult 是裁切结果，不能当对比底图。
@@ -8156,7 +8156,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             cr=[edge,edge,edge,edge];
           }
           // v11.24.0: 三护栏真实接线（只减不增，云/本地同生效）
-          // v12.1.0 修复: v12.0.0 误引未定义全局 aiData（实际只有 state.aiData）致护栏恒收 null 空转；
+          // v12.1.0 修复: v12.1.0 误引未定义全局 aiData（实际只有 state.aiData）致护栏恒收 null 空转；
           // 现传 state.aiData 真实信号，并把云端 sceneKey 并入 info（美食护栏按 sceneType==="food" 门控）。
           try{ var _gi=(state&&state.aiData)?state.aiData:null;
             if(_gi && typeof sceneKey==="string" && !_gi.sceneType){
