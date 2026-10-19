@@ -641,3 +641,21 @@ https://yyds8170-ctrl.github.io/ai-composition-tool/
 - ✅ **可以**：阅读、学习、分析、修改代码；个人学习 / 研究 / 实验 / 爱好等非商业用途；非商业组织（学校、公益机构、政府机构等）使用。
 - ❌ **不可以**：任何**商业用途**——包括销售、集成进商业产品 / 服务、用于**训练商业 AI 模型**等。
 - 分发时须保留本许可文本与版权声明（`Required Notice: Copyright 2026 yyds8170-ctrl`）。
+
+## 版本历史矩阵
+
+| 版本 | 核心改动 | 状态 |
+|---|---|---|
+| v12.0.0 | 修复裁切引擎 ReferenceError 崩溃；修复对比滑块误用裁切后图当原图层；三护栏接入 guardChain | ✅ 已发布 |
+| v12.1.0 | 对比滑块 puppeteer 实测 PASS（固化 tools/verify_compare.js）；G审计P0修复（关云重渲染+AbortController）；三护栏接真实信号（_bandSatSignal/_symEdgeSignal/_foodEvidenceSignal） | ✅ 已发布 |
+| v12.2.0 | 显著性质心（Sobel边缘质心）加中心偏置高斯加权 | ✅ 已发布 |
+| v12.3.0 | cloud-regress 分批≤40张/批重启浏览器解决OOM；imgs/regression/extra/ 新增24张难例图；修正模型加载话术 | ✅ 已发布 |
+| v12.4.0 | 对称护栏保护垂直对称（真对称时顶/底裁减半）；难例图画框验收 | ✅ 已发布 |
+| v12.5.0 | 云端全量回归139张跑完（69裁/70不裁/0失败） | ✅ 已发布 |
+| v12.6.0 | 收敛版：边界输入测试、弱网断网降级、死代码清理、功能矩阵定稿 | ✅ 最终版 |
+
+### 已知限制
+- 本地像素裁切保守（vs 云端VLM）：本地~27/139裁切，云端~69/139，分歧属预期
+- iOS Safari 直到 iOS 26 才有 WebGPU，旧设备走 wasm 兜底
+- GitHub Pages 无 COOP/COEP，wasm 多线程不激活
+- 12MP 大图内存逼近 256MB，入口已降采样到长边≤2048px
