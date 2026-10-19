@@ -51,7 +51,17 @@ async function snap(page){
 }
 
 async function runDir(page, dir, cloudOn){
-  const files=fs.readdirSync(dir).filter(f=>/\.(jpe?g|png)$/i.test(f)).sort();
+  // v11.22.0: 递归收集子目录图片（regression_r2 按类分目录）
+  function collect(d, base){
+    const res=[];
+    for(const e of fs.readdirSync(d,{withFileTypes:true})){
+      const p=path.join(d,e.name);
+      if(e.isDirectory()) res.push(...collect(p, base));
+      else if(/\.(jpe?g|png)$/i.test(e.name)) res.push(path.relative(base,p));
+    }
+    return res;
+  }
+  const files=collect(dir,dir).sort();
   const out=[];
   for(const f of files){
     // 切换云端开关
