@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v12.0.0 · 实景视觉构图生成工具</title>
-<meta name="description" content="AI 构图助手 Pro v12.0.0 · 实景视觉构图生成工具（永久免费、不限使用次数）：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面。构图综合诊断+拍后滤镜智能推荐。v11.16.0 新手引导悬浮按钮可拖动换位+位置记忆+双击复位。含 YOLO11n 本地检测、智能人像裁切、30 款滤镜、云端 VLM 分析">
+<title>AI 构图助手 Pro v12.1.0 · 实景视觉构图生成工具</title>
+<meta name="description" content="AI 构图助手 Pro v12.1.0 · 实景视觉构图生成工具（永久免费、不限使用次数）：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面。构图综合诊断+拍后滤镜智能推荐。v11.16.0 新手引导悬浮按钮可拖动换位+位置记忆+双击复位。含 YOLO11n 本地检测、智能人像裁切、30 款滤镜、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v12.0.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切（永久免费不限次数）">
+<meta property="og:title" content="AI 构图助手 Pro v12.1.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切（永久免费不限次数）">
 <meta property="og:description" content="给不会拍照的普通人：打开相机，AI 教你怎么拍。AI 构图分析（本地像素+云端 VLM 双引擎）、人像保护裁切（不切头不切手脚）、30 款滤镜，一键出成品。默认本地运行，照片不上传。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
@@ -671,7 +671,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v12.0.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v12.1.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -1040,7 +1040,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v12.0.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v12.1.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1114,7 +1114,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v12.0.0";
+var APP_VER="v12.1.0";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -2818,24 +2818,22 @@ var APP_VER="v12.0.0";
           vertOrtho:vertOrtho, horizOrtho:horizOrtho,
           greenRatio:greenRatio, centerManmade:centerManmade, warmRatio:warmRatio,
           centerVert:centerVert, centerH2:centerH2,
-          // v11.24.0 三护栏信号生产（真实）
+          // v11.24.0 三护栏信号生产（真实）——topBandHsv 由上方 IIFE 实算；
+          // v12.1.0 bandSat/symEdge/hasFoodEvidence 接真实纯函数（此前为防 ReferenceError 的安全占位）
           topBandHsv:(function(){ try{ var frac=0.40,y1=Math.round(h*frac),n=0,sv=0,warm=0;
             for(var y=0;y<y1;y++){ for(var x=0;x<w;x++){ var i=(y*w+x)*4,r=data[i]/255,g=data[i+1]/255,b=data[i+2]/255;
               var mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn; n++; sv+=mx;
               if(d>0){ var hh2=mx===r?((g-b)/d%6):mx===g?(b-r)/d+2:(r-g)/d+4; hh2=(hh2*60+360)%360; if((hh2>=330||hh2<=30)&&mx>0.55) warm++; } } }
             if(!n) return null; return {h:warm/n>0.3?350:200, v:sv/n, ratio:warm/n}; }catch(e){ return null; } })(),
-          bandSat:(function(){ try{ return 0.15; }catch(e){ return 0.25; } })(),
-          symEdge:(function(){ try{ return {ncc:0.5,eRatio:1.0,var:5000}; }catch(e){ return null; } })(),
+          bandSat:_bandSatSignal(data,w,h,0.40),
+          symEdge:_symEdgeSignal(_lumGrid,_GW,_GH,_edgeEnergy.col,w,lum,h),
           // v8.3.6 主体背景分离网格
           lumGrid:Array.from(_lumGrid), gridW:_GW, gridH:_GH,
           edgeEnergy:_edgeEnergy, // v8.7.0 列/行边缘能量（归一化），供 _edgeSnap
           rod:_rod, // v8.8.0 背景保护（RoD）列/行显著性与亮度方差前缀和，供 _rodGuard
-          // v11.24.0 三护栏输入信号：topBandHsv/bandSat/symEdge 已在上方 IIFE 计算；
-          // 之前误调 _topBandHsv()/_bandSat()/_symEdge()/_hasFoodEvidence() 四个未定义函数，
-          // 导致 analyzePixels 抛 ReferenceError 被外层 catch 吞成 null、下游退化成几乎全不裁（noCrop 23→132）。
-          // 先用安全默认（hasFoodEvidence=false）止血；bandSat=0.15 配合 hasFoodEvidence=false 不触发美食护栏，
-          // symEdge 默认 ncc=0.5/var=5000 不达阈值不触发对称护栏；真实 topBandHsv 由上方 IIFE 提供。
-          hasFoodEvidence:false
+          // v12.1.0 三护栏信号真实接线：bandSat/symEdge/hasFoodEvidence 已接真实纯函数（_bandSatSignal/_symEdgeSignal/_foodEvidenceSignal）；
+          // topBandHsv 由上方 IIFE 实算。阈值从严：只减裁切、绝不增裁。
+          hasFoodEvidence:_foodEvidenceSignal(warmRatio,lum,w,h)
         };
       }catch(err){
         return null;
@@ -3738,6 +3736,72 @@ var APP_VER="v12.0.0";
       if(s.var<=8000) return crop;
       if(s.ncc<=0.60) return crop;
       return [0,crop[1],0,crop[3]]; // 真对称：左右不裁（保对称轴）
+    }
+    // v12.1.0 G审计P0-1: 关云后把云端 plan 降级为本地口径（纯函数：浅拷贝新对象，不改原对象）。
+    // 删除 cloudPending（云端等待卡）/ cloudSkipped（云端跳过卡），cloud=false，其余字段原样保留。
+    function _decloudPlan(p){
+      if(!p||typeof p!=="object") return p;
+      var o={}; for(var k in p){ if(Object.prototype.hasOwnProperty.call(p,k)) o[k]=p[k]; }
+      o.cloud=false; delete o.cloudPending; delete o.cloudSkipped;
+      return o;
+    }
+    // v12.1.0 三护栏真实信号①：顶部 frac（默认40%）条带平均饱和度（0~1，HSV 式 S=(mx-mn)/mx）。
+    // 供 _foodMisClassGuard：bandSat<0.25 才配合美食证据触发——低饱和顶带=白桌布/窗光背景。
+    function _bandSatSignal(data,w,h,frac){
+      try{
+        frac=frac||0.40;
+        if(!data||!(data.length>=4)||!(w>1)||!(h>1)) return 0.25;
+        var y1=Math.round(h*frac), n=0, s=0;
+        for(var y=0;y<y1;y++){ for(var x=0;x<w;x++){
+          var i=(y*w+x)*4, r=data[i]/255, g=data[i+1]/255, b=data[i+2]/255;
+          var mx=Math.max(r,g,b), mn=Math.min(r,g,b);
+          n++; s+=(mx>1e-6?(mx-mn)/mx:0);
+        } }
+        return n? s/n : 0.25;
+      }catch(e){ return 0.25; }
+    }
+    // v12.1.0 三护栏真实信号②：对称度信号——lumGrid 左右镜像半区 NCC + 左右边缘能量均衡比 + 左半区像素亮度方差。
+    // 供 _symmetryGuard：ncc>0.60（真镜像相关）且 eRatio∈[0.5,2.0]（左右能量均衡）且 var>8000（有纹理，非空白天空巧合对称）。
+    function _symEdgeSignal(lumGrid,gw,gh,edgeCol,w,lum,h){
+      try{
+        if(!lumGrid||!(gw>=4)||!(gh>=2)) return {ncc:0,eRatio:1,var:0};
+        var hw=Math.floor(gw/2), nP=0, sL=0, sR=0, sLL=0, sRR=0, sLR=0;
+        for(var gy=0;gy<gh;gy++){ for(var gx=0;gx<hw;gx++){
+          var L=lumGrid[gy*gw+gx], R=lumGrid[gy*gw+(gw-1-gx)];
+          nP++; sL+=L; sR+=R; sLL+=L*L; sRR+=R*R; sLR+=L*R;
+        } }
+        if(!nP) return {ncc:0,eRatio:1,var:0};
+        var mL=sL/nP, mR=sR/nP;
+        var vL=Math.max(0,sLL/nP-mL*mL), vR=Math.max(0,sRR/nP-mR*mR);
+        var cov=Math.max(0,sLR/nP-mL*mR);
+        var ncc=(vL>1&&vR>1)?cov/Math.sqrt(vL*vR):0;
+        var eRatio=1;
+        if(edgeCol&&w>1){
+          var hw2=Math.floor(w/2), eL=0, eR=0;
+          for(var ex=0;ex<w;ex++){ if(ex<hw2) eL+=edgeCol[ex]; else eR+=edgeCol[ex]; }
+          eRatio=eR>1e-6?eL/eR:1;
+        }
+        var gVar=0;
+        if(lum&&w>1&&h>1){
+          var hw3=Math.floor(w/2), c=0, s1=0, s2=0;
+          for(var yy=0;yy<h;yy++){ for(var xx=0;xx<hw3;xx++){ var vv=lum[yy*w+xx]; c++; s1+=vv; s2+=vv*vv; } }
+          gVar=c? Math.max(0,s2/c-(s1/c)*(s1/c)) : 0;
+        }
+        return {ncc:ncc,eRatio:eRatio,var:gVar};
+      }catch(e){ return {ncc:0,eRatio:1,var:0}; }
+    }
+    // v12.1.0 三护栏真实信号③：真美食证据——暖色占比足（橙/棕食物色，warmRatio≥0.12）
+    // 且下半55%区域有桌面/食物纹理（亮度方差 800~9000：太匀=空白桌布/纯色背景，太剧烈=非美食场景）。从严。
+    function _foodEvidenceSignal(warmRatio,lum,w,h){
+      try{
+        if(!(warmRatio>=0.12)) return false;
+        if(!lum||!(w>1)||!(h>1)) return false;
+        var y0=Math.round(h*0.45), c=0, s1=0, s2=0;
+        for(var y=y0;y<h;y++){ for(var x=0;x<w;x++){ var vv=lum[y*w+x]; c++; s1+=vv; s2+=vv*vv; } }
+        if(!c) return false;
+        var lv=Math.max(0,s2/c-(s1/c)*(s1/c));
+        return lv>=800 && lv<=9000;
+      }catch(e){ return false; }
     }
     // v9.0.1 云端 cropIntent ↔ RoD 联动纯函数（只入参 plainObj、只读字段、返回新对象/null）。
     // 背景：本地 v8.8 裁切由 _rodGuard 负责（绝对双高阈值）；云端 VLM 的"裁上/下"语义意图此前不经过背景保护，
@@ -5483,7 +5547,8 @@ var APP_VER="v12.0.0";
         setTimeout(function(){ _off.classList.add("show"); }, 60);
       }
       // v4.7.0 云端 VLM 分析标记卡（v4.8.0 加强：醒目云端徽章，明确"这是云端分析的"）
-      if(plan.cloudSkipped){
+      // v12.1.0 G审计P0-1纵深: cloudSkipped 卡渲染处叠加 _cloudReady() 守卫——关云后不残留"云端已智能跳过"
+      if(plan.cloudSkipped && (typeof _cloudReady!=="undefined" && _cloudReady())){
         // v6.0: 低信息图云端主动短路——明确告知用户为何没走云端（透明，不假装是云端结果）
         var _sd=document.createElement("div");
         _sd.className="ai-suggest cloud-badge";
@@ -5596,8 +5661,9 @@ var APP_VER="v12.0.0";
         A:'<path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/>'
       };
       var items;
-      if(plan.cloud){
+      if(plan.cloud && (typeof _cloudReady!=="undefined" && _cloudReady())){
         // v4.8.0: 云端 VLM 分析按 4 步流程展示：画面描述→构图分析→滤镜建议→裁切方案（先看懂画面再给方案）
+        // v12.1.0 G审计P0-1纵深: 分支门控叠加 _cloudReady()——关云后迟到云端 plan 落本地五段式，不渲染云端四步版式
         var _esc=function(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); };
         var _ci_disp=function(x){ return (x==null?false:String(x).trim().length>0); };
         var _steps=[
@@ -7674,6 +7740,23 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             for(var i=0;i<localStorage.length;i++){ var _k=localStorage.key(i); if(_k&&_k.indexOf("ai_cmp_cc_")===0) _keys.push(_k); }
             _keys.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
           }catch(e){}
+          // v12.1.0 G审计P0-2: 关云即中止在途云端请求——abort 后 catch 走 _cloudKilled 早退，
+          // 迟到响应不写状态栏/不渲染/不回写裁切；_cloudKilled 与外层30s兜底同语义（不二次下载本地模型）
+          try{
+            if(state._cloudAbort){ try{ state._cloudAbort.abort(); }catch(eab){} }
+            state._cloudAbort=null;
+            state._cloudKilled=true;
+          }catch(eabort){}
+          // v12.1.0 G审计P0-1: 立即重渲染结果页——旧"☁️ 云端"规则标签/云端徽章/云端四步卡立刻变本地口径
+          try{
+            if(state.aiData) state.aiData.cloudScene=null;
+            if(state.plan){
+              if(typeof _decloudPlan==="function") state.plan=_decloudPlan(state.plan);
+              else{ delete state.plan.cloudPending; state.plan.cloud=false; delete state.plan.cloudSkipped; }
+              if(typeof presentAnalysis==="function") presentAnalysis(state.plan);
+            }
+            if(typeof setStatus==="function") setStatus("已切换回本地分析引擎","idle");
+          }catch(epr){}
         }
         // v4.7.0: 关闭云端切回本地时，若本地模型尚未加载则补加载；开启云端时不卸载已加载模型，避免重复下载
         if(!state.cloud.on && state.aiModelEnabled && (typeof aiModelState==="undefined"||aiModelState==="idle") && typeof tryLoadModel==="function"){
@@ -8073,7 +8156,13 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             cr=[edge,edge,edge,edge];
           }
           // v11.24.0: 三护栏真实接线（只减不增，云/本地同生效）
-          try{ var _gi=(typeof aiData!=='undefined'&&aiData)?aiData:null;
+          // v12.1.0 修复: v12.0.0 误引未定义全局 aiData（实际只有 state.aiData）致护栏恒收 null 空转；
+          // 现传 state.aiData 真实信号，并把云端 sceneKey 并入 info（美食护栏按 sceneType==="food" 门控）。
+          try{ var _gi=(state&&state.aiData)?state.aiData:null;
+            if(_gi && typeof sceneKey==="string" && !_gi.sceneType){
+              var _giM={}; for(var _gk in _gi){ if(Object.prototype.hasOwnProperty.call(_gi,_gk)) _giM[_gk]=_gi[_gk]; }
+              _giM.sceneType=sceneKey; _gi=_giM;
+            }
             cr=_sunsetWarmGuard(cr,_gi); cr=_foodMisClassGuard(cr,_gi); cr=_symmetryGuard(cr,_gi);
           }catch(e){}
           return cr.map(function(v){ return Math.max(0,Math.min(50,v)); });
@@ -8602,6 +8691,9 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             (_rodNote?("🏞 "+_rodNote):"")
           ].filter(Boolean)
         };
+        // v12.1.0 G审计P0-2: 迟到响应防线——响应到达前用户已关云/清凭证，整包丢弃：
+        // 不写 aiData/缓存、不回写 state.plan、不 presentAnalysis、不 onDone；本地初判已由开关处理器渲染落地
+        if(typeof _cloudReady==="function" && !_cloudReady()){ console.warn("云端响应到达时已关云，丢弃迟到结果"); return; }
         // v4.8.2: 云端结果完整回写 aiData（Qwen/豆包报告：此前只写 scene/model，光学面板仍显示本地像素数据）
         if(state.aiData){
           state.aiData.cloudScene=sceneKey;
@@ -8643,10 +8735,11 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             localStorage.setItem("ai_cmp_cc_"+_ccKey, JSON.stringify({t:Date.now(), plan:plan}));
           }catch(e){}
         }
-        // v5.0: 分析耗时反馈
+        // v5.0: 分析耗时反馈；v12.1.0 G审计P0-2: 响应到达前用户已关云/清凭证时不报"云端分析完成"
         try{
           var _el2=((Date.now()-_t0)/1000).toFixed(1);
-          setStatus("云端分析完成（"+_el2+"s）","done");
+          var _cloudStillOn=(typeof _cloudReady==="function"&&_cloudReady());
+          setStatus(_cloudStillOn?("云端分析完成（"+_el2+"s）"):("分析完成（本地引擎）"),"done");
         }catch(e){}
         try{ presentAnalysis(plan); }catch(e){ console.warn("云端结果渲染异常:",e); }
         try{ state.cloudFailCount=0; }catch(e){}
@@ -8675,7 +8768,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             var finish=function(fp){ if(done) return; done=true; cb(fp); };
             var tm=setTimeout(function(){ finish(p); }, 14000);
             // v8.0.5 B5: 自审请求也挂主 AbortController，换图/重分析时立即中止，不再白飞一次请求
-            try{ setStatus("云端分析完成·正在做人物完整性二次审查…","done"); }catch(e){}
+            // v12.1.0 G审计P0-2: 关云后迟到响应不报"云端分析完成·二次审查"
+            try{ setStatus((typeof _cloudReady==="function"&&_cloudReady())?"云端分析完成·正在做人物完整性二次审查…":"分析完成（本地引擎）","done"); }catch(e){}
             fetch(base+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","X-App-Token":appToken},body:JSON.stringify(rbody),signal:ctrl?ctrl.signal:undefined})
               .then(function(r){ return r.json(); })
               .then(function(j){
@@ -10481,7 +10575,7 @@ hSym2:state.aiData.hSym}:null; }
   }; }catch(e){}
 })();
   </script>
-<div id="aicUpdateBar" class="hide"><span class="ub-t">🔧 v12.0.0：修复裁切引擎崩溃导致大面积不裁；修复对比滑块拖动无反应；三护栏防误裁。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
+<div id="aicUpdateBar" class="hide"><span class="ub-t">🔧 v12.1.0：G审计P0修复（关云立即重渲染+中止在途请求）；三护栏接真实信号（顶带饱和度/NCC对称/美食证据）。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
 <script>
 (function(){
   // v8.2.3 新版本就绪提示条：SW 激活后广播 → 页面弹出"立即刷新"，根治旧缓存看不到新功能

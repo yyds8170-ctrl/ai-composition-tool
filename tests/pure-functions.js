@@ -1372,4 +1372,66 @@
       return [0,crop[1],0,crop[3]]; // 真对称：左右不裁（保对称轴）
     }
 
-module.exports = { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard };
+    function _decloudPlan(p){
+      if(!p||typeof p!=="object") return p;
+      var o={}; for(var k in p){ if(Object.prototype.hasOwnProperty.call(p,k)) o[k]=p[k]; }
+      o.cloud=false; delete o.cloudPending; delete o.cloudSkipped;
+      return o;
+    }
+
+    function _bandSatSignal(data,w,h,frac){
+      try{
+        frac=frac||0.40;
+        if(!data||!(data.length>=4)||!(w>1)||!(h>1)) return 0.25;
+        var y1=Math.round(h*frac), n=0, s=0;
+        for(var y=0;y<y1;y++){ for(var x=0;x<w;x++){
+          var i=(y*w+x)*4, r=data[i]/255, g=data[i+1]/255, b=data[i+2]/255;
+          var mx=Math.max(r,g,b), mn=Math.min(r,g,b);
+          n++; s+=(mx>1e-6?(mx-mn)/mx:0);
+        } }
+        return n? s/n : 0.25;
+      }catch(e){ return 0.25; }
+    }
+
+    function _symEdgeSignal(lumGrid,gw,gh,edgeCol,w,lum,h){
+      try{
+        if(!lumGrid||!(gw>=4)||!(gh>=2)) return {ncc:0,eRatio:1,var:0};
+        var hw=Math.floor(gw/2), nP=0, sL=0, sR=0, sLL=0, sRR=0, sLR=0;
+        for(var gy=0;gy<gh;gy++){ for(var gx=0;gx<hw;gx++){
+          var L=lumGrid[gy*gw+gx], R=lumGrid[gy*gw+(gw-1-gx)];
+          nP++; sL+=L; sR+=R; sLL+=L*L; sRR+=R*R; sLR+=L*R;
+        } }
+        if(!nP) return {ncc:0,eRatio:1,var:0};
+        var mL=sL/nP, mR=sR/nP;
+        var vL=Math.max(0,sLL/nP-mL*mL), vR=Math.max(0,sRR/nP-mR*mR);
+        var cov=Math.max(0,sLR/nP-mL*mR);
+        var ncc=(vL>1&&vR>1)?cov/Math.sqrt(vL*vR):0;
+        var eRatio=1;
+        if(edgeCol&&w>1){
+          var hw2=Math.floor(w/2), eL=0, eR=0;
+          for(var ex=0;ex<w;ex++){ if(ex<hw2) eL+=edgeCol[ex]; else eR+=edgeCol[ex]; }
+          eRatio=eR>1e-6?eL/eR:1;
+        }
+        var gVar=0;
+        if(lum&&w>1&&h>1){
+          var hw3=Math.floor(w/2), c=0, s1=0, s2=0;
+          for(var yy=0;yy<h;yy++){ for(var xx=0;xx<hw3;xx++){ var vv=lum[yy*w+xx]; c++; s1+=vv; s2+=vv*vv; } }
+          gVar=c? Math.max(0,s2/c-(s1/c)*(s1/c)) : 0;
+        }
+        return {ncc:ncc,eRatio:eRatio,var:gVar};
+      }catch(e){ return {ncc:0,eRatio:1,var:0}; }
+    }
+
+    function _foodEvidenceSignal(warmRatio,lum,w,h){
+      try{
+        if(!(warmRatio>=0.12)) return false;
+        if(!lum||!(w>1)||!(h>1)) return false;
+        var y0=Math.round(h*0.45), c=0, s1=0, s2=0;
+        for(var y=y0;y<h;y++){ for(var x=0;x<w;x++){ var vv=lum[y*w+x]; c++; s1+=vv; s2+=vv*vv; } }
+        if(!c) return false;
+        var lv=Math.max(0,s2/c-(s1/c)*(s1/c));
+        return lv>=800 && lv<=9000;
+      }catch(e){ return false; }
+    }
+
+module.exports = { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard, _decloudPlan, _bandSatSignal, _symEdgeSignal, _foodEvidenceSignal };

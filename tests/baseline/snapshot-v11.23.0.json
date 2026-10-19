@@ -1,0 +1,1829 @@
+{
+  "arch_1.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "arch_2.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "arch_3.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "arch_4.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "arch_5.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "food_1.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "food_2.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "food_3.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "food_4.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "food_5.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "portrait_1.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "portrait_2.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "portrait_3.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "portrait_4.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "portrait_5.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "street_1.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "street_2.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "street_3.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "street_4.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "street_5.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "water_1.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "water_2.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "water_3.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "water_4.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "water_5.png": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "ancient_1.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "ancient_10.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "ancient_11.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "ancient_12.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "ancient_4.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "ancient_5.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "ancient_6.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "ancient_7.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "ancient_9.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "arch_1.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "arch_11.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "arch_2.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "arch_3.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "arch_4.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "arch_5.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "arch_6.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "arch_7.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "arch_8.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "arch_9.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "backlit_10.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "backlit_11.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "backlit_3.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "backlit_4.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "backlit_5.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "backlit_7.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "backlit_8.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "backlit_9.jpg": {
+    "crop": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneType": "portrait",
+    "conf": 82,
+    "f": "natural",
+    "snapHash": "sha256:21725bf32c601d4a"
+  },
+  "food_1.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "food_11.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "food_12.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "food_2.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "food_3.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "food_4.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "food_5.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "food_6.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "food_7.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "food_8.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "food_9.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "group_1.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "group_2.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "group_3.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "group_4.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "group_5.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "group_6.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "group_7.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "group_8.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "group_9.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "indoor_1.jpg": {
+    "crop": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneType": "portrait",
+    "conf": 87,
+    "f": "portrait-warm",
+    "snapHash": "sha256:2a6eb0fa1a0c0c62"
+  },
+  "indoor_10.jpg": {
+    "crop": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneType": "portrait_close",
+    "conf": 79,
+    "f": "portrait-warm",
+    "snapHash": "sha256:c2a33561d98b8bb1"
+  },
+  "indoor_11.jpg": {
+    "crop": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneType": "portrait_close",
+    "conf": 80,
+    "f": "portrait-warm",
+    "snapHash": "sha256:fc65f4faf34f6e39"
+  },
+  "indoor_12.jpg": {
+    "crop": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneType": "food",
+    "conf": 92,
+    "f": "vivid",
+    "snapHash": "sha256:7e8e404fd1a613b1"
+  },
+  "indoor_2.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "indoor_3.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "indoor_4.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "indoor_5.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "indoor_6.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "indoor_7.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "indoor_8.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "leading_1.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "leading_10.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "leading_12.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "leading_2.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "leading_3.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "leading_4.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "leading_5.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "leading_6.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "leading_7.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "leading_8.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "leading_9.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "night_1.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "night_10.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "night_11.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "night_12.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "night_5.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "night_6.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "night_7.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "night_8.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "night_9.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "pet_1.jpg": {
+    "crop": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneType": "animal",
+    "conf": 90,
+    "f": "vivid",
+    "snapHash": "sha256:787b84ad796945c4"
+  },
+  "pet_11.jpg": {
+    "crop": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneType": "animal",
+    "conf": 93,
+    "f": "natural",
+    "snapHash": "sha256:77cacce8a5e57eba"
+  },
+  "pet_12.jpg": {
+    "crop": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneType": "animal",
+    "conf": 85,
+    "f": "natural",
+    "snapHash": "sha256:8555dc5ae95354c6"
+  },
+  "pet_3.jpg": {
+    "crop": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneType": "animal",
+    "conf": 93,
+    "f": "natural",
+    "snapHash": "sha256:77cacce8a5e57eba"
+  },
+  "pet_4.jpg": {
+    "crop": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneType": "animal",
+    "conf": 85,
+    "f": "natural",
+    "snapHash": "sha256:8555dc5ae95354c6"
+  },
+  "pet_5.jpg": {
+    "crop": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneType": "animal",
+    "conf": 92,
+    "f": "natural",
+    "snapHash": "sha256:5555e83adbfb687f"
+  },
+  "pet_7.jpg": {
+    "crop": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneType": "animal",
+    "conf": 82,
+    "f": "natural",
+    "snapHash": "sha256:f31246f803b98bd0"
+  },
+  "pet_9.jpg": {
+    "crop": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneType": "animal",
+    "conf": 90,
+    "f": "vivid",
+    "snapHash": "sha256:787b84ad796945c4"
+  },
+  "pet_extra1.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "pet_extra2.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "portrait_front_1.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "portrait_front_10.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "portrait_front_11.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "portrait_front_12.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "portrait_front_2.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "portrait_front_3.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "portrait_front_4.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "portrait_front_5.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "portrait_front_7.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "portrait_front_8.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "portrait_front_9.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "portrait_side_10.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "portrait_side_11.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "portrait_side_12.jpg": {
+    "crop": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneType": "portrait",
+    "conf": 83,
+    "f": "natural",
+    "snapHash": "sha256:3c796cfdb761cc10"
+  },
+  "portrait_side_2.jpg": {
+    "crop": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneType": "portrait",
+    "conf": 87,
+    "f": "natural",
+    "snapHash": "sha256:72cac2b2f3f6e0ed"
+  },
+  "portrait_side_3.jpg": {
+    "crop": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneType": "portrait",
+    "conf": 82,
+    "f": "portrait-warm",
+    "snapHash": "sha256:91b0b2ba1904a91b"
+  },
+  "portrait_side_5.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "portrait_side_7.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "portrait_side_8.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "portrait_side_9.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "portrait_side_extra3.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "sky_10.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "sky_11.jpg": {
+    "crop": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneType": "waterscape",
+    "conf": 90,
+    "f": "cool",
+    "snapHash": "sha256:51cadca8547c83f6"
+  },
+  "sky_12.jpg": {
+    "crop": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneType": "landscape",
+    "conf": 95,
+    "f": "cool",
+    "snapHash": "sha256:3a3fed8e25019443"
+  },
+  "sky_2.jpg": {
+    "crop": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneType": "food",
+    "conf": 93,
+    "f": "warm",
+    "snapHash": "sha256:4d88c1d8c0c7974b"
+  },
+  "sky_3.jpg": {
+    "crop": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneType": "waterscape",
+    "conf": 92,
+    "f": "vivid",
+    "snapHash": "sha256:3df7fa0db44e47a9"
+  },
+  "sky_5.jpg": {
+    "crop": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneType": "general",
+    "conf": 87,
+    "f": "mono",
+    "snapHash": "sha256:ac9ba669b7499cb8"
+  },
+  "sky_6.jpg": {
+    "crop": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneType": "food",
+    "conf": 93,
+    "f": "warm",
+    "snapHash": "sha256:4d88c1d8c0c7974b"
+  },
+  "sky_8.jpg": {
+    "crop": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sceneType": "waterscape",
+    "conf": 92,
+    "f": "vivid",
+    "snapHash": "sha256:3df7fa0db44e47a9"
+  },
+  "street_1.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "street_10.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "street_11.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "street_2.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "street_3.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "street_4.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "street_5.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "street_6.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "street_7.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "street_8.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "street_9.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "water_1.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "water_11.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "water_2.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "water_3.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "water_4.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "water_5.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "water_7.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "water_8.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "water_9.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "water_extra1.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  },
+  "water_extra3.jpg": {
+    "crop": [
+      12,
+      10,
+      14,
+      14
+    ],
+    "conf": 80,
+    "f": "natural",
+    "snapHash": "sha256:7abba285a0bc75d1"
+  }
+}

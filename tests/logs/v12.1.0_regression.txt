@@ -1,0 +1,245 @@
+=== 回归开始：139 张图 ===
+等待 YOLO 模型加载...
+模型 ready: {"yolo":"ready","coco":"idle","ready":true}
+  ancient_1.jpg ... crop=[4,0,0,0] scene=animal conf=86% person=false
+  ancient_10.jpg ... crop=[0,9,0,1] scene=architecture conf=92% person=undefined
+  ancient_11.jpg ... crop=[0,0,0,0] scene=animal conf=94% person=false
+  ancient_12.jpg ... crop=[0,0,0,0] scene=general conf=90% person=false
+  ancient_4.jpg ... crop=[0,0,0,0] scene=landscape conf=82% person=undefined
+  ancient_5.jpg ... crop=[0,0,0,0] scene=waterscape conf=90% person=undefined
+  ancient_6.jpg ... crop=[0,0,0,0] scene=waterscape conf=86% person=false
+  ancient_7.jpg ... crop=[0,7,0,7] scene=architecture conf=87% person=undefined
+  ancient_9.jpg ... crop=[0,0,0,0] scene=night conf=95% person=undefined
+  arch_1.jpg ... crop=[0,0,0,0] scene=general conf=90% person=false
+  arch_11.jpg ... crop=[0,0,0,0] scene=night conf=95% person=undefined
+  arch_2.jpg ... crop=[0,0,0,0] scene=waterscape conf=86% person=false
+  arch_3.jpg ... crop=[0,0,0,0] scene=street conf=95% person=false
+  arch_4.jpg ... crop=[0,9,0,1] scene=architecture conf=92% person=undefined
+  arch_5.jpg ... crop=[0,0,0,0] scene=animal conf=94% person=false
+  arch_6.jpg ... crop=[0,7,0,7] scene=architecture conf=87% person=undefined
+  arch_7.jpg ... crop=[0,0,0,0] scene=general conf=89% person=undefined
+  arch_8.jpg ... crop=[0,0,0,0] scene=general conf=91% person=undefined
+  arch_9.jpg ... crop=[0,0,0,0] scene=waterscape conf=86% person=false
+  backlit_10.jpg ... crop=[0,0,0,0] scene=landscape conf=95% person=undefined
+  backlit_11.jpg ... crop=[0,15,0,0] scene=landscape conf=91% person=false
+  backlit_3.jpg ... crop=[0,0,0,0] scene=general conf=83% person=false
+  backlit_4.jpg ... crop=[0,0,0,0] scene=street conf=91% person=false
+  backlit_5.jpg ... crop=[0,0,0,0] scene=portrait conf=85% person=true
+  backlit_7.jpg ... crop=[0,0,0,0] scene=portrait_close conf=81% person=true
+  backlit_8.jpg ... crop=[0,0,0,0] scene=portrait conf=82% person=true
+  backlit_9.jpg ... crop=[0,0,0,0] scene=portrait conf=82% person=true
+  food_1.jpg ... crop=[0,0,0,0] scene=food conf=92% person=false
+  food_11.jpg ... crop=[0,0,0,0] scene=food conf=91% person=false
+  food_12.jpg ... crop=[0,0,0,0] scene=food conf=92% person=false
+  food_2.jpg ... crop=[0,0,0,0] scene=food conf=92% person=false
+  food_3.jpg ... crop=[0,0,0,0] scene=food conf=90% person=false
+  food_4.jpg ... crop=[0,0,0,0] scene=food conf=90% person=false
+  food_5.jpg ... crop=[0,0,0,0] scene=food conf=91% person=false
+  food_6.jpg ... crop=[0,0,0,0] scene=food conf=89% person=false
+  food_7.jpg ... crop=[0,0,0,0] scene=food conf=82% person=false
+  food_8.jpg ... crop=[0,0,0,0] scene=food conf=88% person=false
+  food_9.jpg ... crop=[0,0,0,0] scene=food conf=93% person=false
+  group_1.jpg ... crop=[0,0,0,0] scene=portrait conf=70% person=true
+  group_2.jpg ... crop=[0,9,0,0] scene=general conf=89% person=false
+  group_3.jpg ... crop=[0,0,0,0] scene=landscape conf=93% person=undefined
+  group_4.jpg ... crop=[0,0,0,0] scene=architecture conf=90% person=false
+  group_5.jpg ... crop=[0,0,0,0] scene=portrait conf=76% person=true
+  group_6.jpg ... crop=[4,0,0,0] scene=animal conf=86% person=false
+  group_7.jpg ... crop=[0,4,0,9] scene=waterscape conf=86% person=false
+  group_8.jpg ... crop=[0,0,0,0] scene=portrait_close conf=78% person=true
+  group_9.jpg ... crop=[0,0,0,0] scene=portrait conf=83% person=true
+  indoor_1.jpg ... crop=[0,0,0,7] scene=general conf=89% person=false
+  indoor_10.jpg ... crop=[0,0,0,0] scene=food conf=93% person=false
+  indoor_11.jpg ... crop=[0,0,0,0] scene=food conf=92% person=false
+  indoor_12.jpg ... crop=[0,0,0,0] scene=food conf=92% person=false
+  indoor_2.jpg ... crop=[0,8,7,0] scene=general conf=89% person=false
+  indoor_3.jpg ... crop=[10,0,0,0] scene=waterscape conf=86% person=undefined
+  indoor_4.jpg ... crop=[0,0,0,6] scene=landscape conf=90% person=undefined
+  indoor_5.jpg ... crop=[0,0,10,0] scene=animal conf=92% person=false
+  indoor_6.jpg ... crop=[0,0,0,0] scene=food conf=89% person=false
+  indoor_7.jpg ... crop=[0,0,0,0] scene=food conf=92% person=false
+  indoor_8.jpg ... crop=[0,0,0,0] scene=food conf=88% person=false
+  leading_1.jpg ... crop=[0,0,0,0] scene=general conf=89% person=undefined
+  leading_10.jpg ... crop=[0,0,0,0] scene=street conf=95% person=false
+  leading_12.jpg ... crop=[0,0,0,0] scene=night conf=95% person=undefined
+  leading_2.jpg ... crop=[0,9,0,1] scene=architecture conf=92% person=undefined
+  leading_3.jpg ... crop=[0,0,0,5] scene=architecture conf=89% person=undefined
+  leading_4.jpg ... crop=[0,7,0,7] scene=architecture conf=87% person=undefined
+  leading_5.jpg ... crop=[0,0,0,0] scene=street conf=89% person=false
+  leading_6.jpg ... crop=[0,0,0,0] scene=general conf=90% person=false
+  leading_7.jpg ... crop=[0,0,0,0] scene=waterscape conf=86% person=false
+  leading_8.jpg ... crop=[0,0,0,0] scene=animal conf=94% person=false
+  leading_9.jpg ... crop=[0,0,0,0] scene=general conf=91% person=undefined
+  night_1.jpg ... crop=[0,0,0,0] scene=waterscape conf=90% person=undefined
+  night_10.jpg ... crop=[9,0,0,0] scene=waterscape conf=87% person=false
+  night_11.jpg ... crop=[0,0,0,0] scene=food conf=86% person=false
+  night_12.jpg ... crop=[0,0,0,0] scene=portrait conf=85% person=true
+  night_5.jpg ... crop=[0,0,0,0] scene=portrait_close conf=84% person=true
+  night_6.jpg ... crop=[0,0,0,0] scene=portrait conf=85% person=true
+  night_7.jpg ... crop=[0,0,0,0] scene=portrait conf=86% person=true
+  night_8.jpg ... crop=[0,0,0,0] scene=portrait conf=83% person=true
+  night_9.jpg ... crop=[0,0,0,0] scene=portrait conf=84% person=true
+  pet_1.jpg ... crop=[0,8,0,0] scene=portrait conf=83% person=true
+  pet_11.jpg ... crop=[0,0,0,0] scene=portrait conf=78% person=true
+  pet_12.jpg ... crop=[0,0,0,0] scene=portrait conf=89% person=true
+  pet_3.jpg ... crop=[0,0,0,0] scene=portrait conf=78% person=true
+  pet_4.jpg ... crop=[0,0,0,0] scene=portrait conf=89% person=true
+  pet_5.jpg ... crop=[0,0,0,0] scene=portrait_close conf=80% person=true
+  pet_7.jpg ... crop=[0,0,0,0] scene=portrait conf=86% person=true
+  pet_9.jpg ... crop=[0,0,0,0] scene=animal conf=90% person=false
+  pet_extra1.jpg ... crop=[0,0,0,0] scene=animal conf=92% person=false
+  pet_extra2.jpg ... crop=[0,0,0,0] scene=animal conf=82% person=false
+  portrait_front_1.jpg ... crop=[0,0,0,0] scene=portrait_close conf=77% person=true
+  portrait_front_10.jpg ... crop=[0,0,0,0] scene=portrait_close conf=80% person=true
+  portrait_front_11.jpg ... crop=[0,0,0,0] scene=portrait_close conf=78% person=true
+  portrait_front_12.jpg ... crop=[0,0,0,0] scene=portrait_close conf=85% person=true
+  portrait_front_2.jpg ... crop=[0,0,0,0] scene=portrait_close conf=81% person=true
+  portrait_front_3.jpg ... crop=[0,0,0,0] scene=portrait_close conf=95% person=true
+  portrait_front_4.jpg ... crop=[0,0,0,0] scene=portrait conf=95% person=true
+  portrait_front_5.jpg ... crop=[0,0,0,0] scene=portrait conf=83% person=true
+  portrait_front_7.jpg ... crop=[0,0,0,0] scene=portrait_close conf=79% person=true
+  portrait_front_8.jpg ... crop=[0,0,0,0] scene=portrait_close conf=83% person=true
+  portrait_front_9.jpg ... crop=[0,0,0,0] scene=portrait_close conf=82% person=true
+  portrait_side_10.jpg ... crop=[0,0,0,0] scene=portrait_close conf=80% person=true
+  portrait_side_11.jpg ... crop=[0,0,0,0] scene=portrait_close conf=78% person=true
+  portrait_side_12.jpg ... crop=[0,0,0,0] scene=waterscape conf=88% person=false
+  portrait_side_2.jpg ... crop=[0,0,0,0] scene=general conf=83% person=false
+  portrait_side_3.jpg ... crop=[0,0,0,0] scene=street conf=91% person=false
+  portrait_side_5.jpg ... crop=[0,0,0,0] scene=portrait conf=85% person=true
+  portrait_side_7.jpg ... crop=[0,0,0,0] scene=portrait_close conf=81% person=true
+  portrait_side_8.jpg ... crop=[0,0,0,0] scene=portrait_close conf=83% person=true
+  portrait_side_9.jpg ... crop=[0,0,0,0] scene=portrait_close conf=85% person=true
+  portrait_side_extra3.jpg ... crop=[0,0,0,0] scene=portrait_close conf=83% person=true
+  sky_10.jpg ... crop=[0,0,0,0] scene=portrait conf=82% person=true
+  sky_11.jpg ... crop=[0,0,0,0] scene=waterscape conf=90% person=false
+  sky_12.jpg ... crop=[0,0,0,0] scene=landscape conf=95% person=undefined
+  sky_2.jpg ... crop=[0,0,0,0] scene=food conf=93% person=false
+  sky_3.jpg ... crop=[0,0,0,0] scene=waterscape conf=92% person=undefined
+  sky_5.jpg ... crop=[0,0,0,0] scene=general conf=87% person=undefined
+  sky_6.jpg ... crop=[0,0,0,0] scene=food conf=93% person=false
+  sky_8.jpg ... crop=[0,0,0,0] scene=waterscape conf=92% person=undefined
+  street_1.jpg ... crop=[0,0,0,0] scene=general conf=90% person=undefined
+  street_10.jpg ... crop=[0,0,0,0] scene=architecture conf=90% person=false
+  street_11.jpg ... crop=[0,0,0,0] scene=portrait conf=86% person=true
+  street_2.jpg ... crop=[0,0,0,5] scene=architecture conf=89% person=undefined
+  street_3.jpg ... crop=[0,0,0,0] scene=landscape conf=82% person=undefined
+  street_4.jpg ... crop=[0,15,0,0] scene=general conf=95% person=undefined
+  street_5.jpg ... crop=[0,0,0,0] scene=portrait conf=85% person=true
+  street_6.jpg ... crop=[0,0,0,0] scene=food conf=86% person=false
+  street_7.jpg ... crop=[9,0,0,0] scene=waterscape conf=87% person=false
+  street_8.jpg ... crop=[0,0,0,0] scene=general conf=90% person=undefined
+  street_9.jpg ... crop=[0,0,0,0] scene=portrait conf=84% person=true
+  water_1.jpg ... crop=[0,0,0,0] scene=portrait conf=82% person=true
+  water_11.jpg ... crop=[0,0,0,0] scene=general conf=91% person=undefined
+  water_2.jpg ... crop=[0,0,0,0] scene=waterscape conf=90% person=false
+  water_3.jpg ... crop=[0,0,0,0] scene=street conf=89% person=false
+  water_4.jpg ... crop=[0,0,0,0] scene=landscape conf=95% person=undefined
+  water_5.jpg ... crop=[0,15,0,0] scene=landscape conf=91% person=false
+  water_7.jpg ... crop=[0,8,0,0] scene=architecture conf=90% person=undefined
+  water_8.jpg ... crop=[0,0,0,0] scene=street conf=89% person=false
+  water_9.jpg ... crop=[0,0,0,0] scene=general conf=88% person=undefined
+  water_extra1.jpg ... crop=[0,0,0,0] scene=general conf=88% person=undefined
+  water_extra3.jpg ... crop=[0,0,0,0] scene=street conf=89% person=false
+
+=== 结果摘要（不落盘，加 --set-baseline 保存）===
+{
+  "ancient_1.jpg": {
+    "plan": {
+      "rule": "thirds",
+      "sceneType": "animal",
+      "conf": 86,
+      "subject": "鸟",
+      "f": "vivid",
+      "noCrop": false,
+      "crop": [
+        4,
+        0,
+        0,
+        0
+      ],
+      "selfReviewed": false,
+      "cropIntent": "crop_left"
+    },
+    "data": {
+      "detectedClasses": [
+        "bird",
+        "bird",
+        "bird",
+        "bird"
+      ],
+      "isPerson": false,
+      "bodyRatio": 0.3361,
+      "mean": 80.5022,
+      "sharpness": 58.7957,
+      "sym": 0.2475,
+      "modelLoaded": true
+    },
+    "status": "已自动应用：智能裁切+构图优化 · A级 81分800×533 · 800:533",
+    "activeFilter": "clear"
+  },
+  "ancient_10.jpg": {
+    "plan": {
+      "rule": "center",
+      "sceneType": "architecture",
+      "conf": 92,
+      "subject": "暖调场景",
+      "f": "warm",
+      "noCrop": false,
+      "crop": [
+        0,
+        9,
+        0,
+        1
+      ],
+      "selfReviewed": false,
+      "cropIntent": "none"
+    },
+    "data": {
+      "bodyRatio": 0.0879,
+      "mean": 151.7741,
+      "sharpness": 65.6541,
+      "sym": 0.0441,
+      "modelLoaded": true
+    },
+    "status": "已自动应用：智能裁切+构图优化 · A级 86分800×478 · 400:239",
+    "activeFilter": "clear"
+  },
+  "ancient_11.jpg": {
+    "plan": {
+      "rule": "center",
+      "sceneType": "animal",
+      "conf": 94,
+      "subject": "猫",
+      "f": "natural",
+      "noCrop": true,
+      "crop": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "selfReviewed": false,
+      "cropIntent": "none"
+    },
+    "data": {
+      "detectedClasses": [
+        "cat"
+      ],
+      "isPerson": false,
+      "bodyRatio": 0.8579,
+      "mean": 121.2362,
+      "sharpness": 62.3616,
+      "sym": 0.2386,
+      "modelLoaded": true
+    },
+    "status": "已自动应用：裁切+构图优化（未裁切）· A级 84分800×1200 · 2:3",
+    "activeFilter": "natural"
+  },
+  "ancient_12.jpg": {
+    "plan": {
+      "rule": "center",
+      "sceneType": "general",
+      "conf": 90,
+      "subject": "冷调场景",
+      "f": "cool",
+      "n

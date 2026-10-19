@@ -1,0 +1,10 @@
+=== 对比滑块 puppeteer 验收 ===
+测试图: backlit_11.jpg
+本地服务端口: 8771
+模型就绪，上传图片…
+裁切结果 crop = [0,15,0,0]
+对比开启: {"cmpBaseDisplay":"block","cmpBaseSrc":"b:http://localhost:8771/5285fa4b-22d3-45b0-8a6c-94c2bc44704f","pvClip":"inset(0px 0px 0px 50%)"}
+cmpPos readback: 20%→ 50%  80%→ 20%
+frame@20% md5 = 98fdf6dd606dca81db3ff760655cede6
+frame@80% md5 = 4c4fd484978e6eca15eb54ae299eb091
+PASS: cmpX=20% vs 80% 两帧像素不同，对比滑块正常工作

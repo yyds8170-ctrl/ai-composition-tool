@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard } = require('./pure-functions.js');
+const { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard, _decloudPlan, _bandSatSignal, _symEdgeSignal, _foodEvidenceSignal } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -1970,6 +1970,114 @@ test('g',function(){ var c=_foodMisClassGuard([0,10,0,5],{sceneType:'food',bandS
 test('g',function(){ var c=_symmetryGuard([10,5,10,5],{symEdge:{ncc:0.7,eRatio:1.0,var:10000}}); assert.deepStrictEqual(c,[0,5,0,5]); });
 test('g',function(){ var c=_symmetryGuard([10,5,10,5],{symEdge:{ncc:0.7,eRatio:0.3,var:10000}}); assert.deepStrictEqual(c,[10,5,10,5]); });
 test('g',function(){ var c=_symmetryGuard([10,5,10,5],{symEdge:{ncc:0.5,eRatio:1.0,var:10000}}); assert.deepStrictEqual(c,[10,5,10,5]); });
+
+/* -------------------- v12.1.0 G审计P0: _decloudPlan（关云降级） -------------------- */
+test('decloudPlan: 剥离 cloud/cloudPending/cloudSkipped，保留业务字段', () => {
+  var p={rule:'thirds',crop:[1,2,3,4],conf:80,cloud:true,cloudPending:true,cloudSkipped:true,sceneType:'portrait'};
+  var o=_decloudPlan(p);
+  assert.strictEqual(o.cloud,false);
+  assert.strictEqual('cloudPending' in o,false);
+  assert.strictEqual('cloudSkipped' in o,false);
+  assert.strictEqual(o.rule,'thirds');
+  assert.deepStrictEqual(o.crop,[1,2,3,4]);
+  assert.strictEqual(o.conf,80);
+  assert.strictEqual(o.sceneType,'portrait');
+  // 原对象不被污染
+  assert.strictEqual(p.cloud,true);
+  assert.strictEqual(!!p.cloudPending,true);
+});
+test('decloudPlan: null/undefined 安全返回', () => {
+  assert.strictEqual(_decloudPlan(null),null);
+  assert.strictEqual(_decloudPlan(undefined),undefined);
+});
+test('decloudPlan: 降级后结果页不再携带任何云端标记位', () => {
+  var o=_decloudPlan({cloud:true,cloudPending:true,cloudSkipped:true,cloudSkipReason:'x'});
+  assert.strictEqual(o.cloud,false);
+  assert.strictEqual('cloudPending' in o,false);
+  assert.strictEqual('cloudSkipped' in o,false);
+});
+
+/* -------------------- v12.1.0 信号①: _bandSatSignal（顶带平均饱和度） -------------------- */
+function mkRgba(px,w,h){ var d=Buffer.alloc(w*h*4); px.forEach(function(c,i){ d[i*4]=c[0]; d[i*4+1]=c[1]; d[i*4+2]=c[2]; d[i*4+3]=255; }); return d; }
+test('bandSatSignal: 纯灰图饱和度≈0', () => {
+  var d=mkRgba([[128,128,128],[128,128,128],[128,128,128],[128,128,128]],2,2);
+  var s=_bandSatSignal(d,2,2,0.40);
+  assert.ok(s<0.02,'灰图饱和度应≈0，实际 '+s);
+});
+test('bandSatSignal: 高饱和纯色→接近1', () => {
+  // 4x2 图，顶50%=第一行：纯红(255,0,0) 与纯蓝(0,0,255)，S=(mx-mn)/mx=1
+  var px=[[255,0,0],[255,0,0],[0,0,255],[0,0,255], [128,128,128],[128,128,128],[128,128,128],[128,128,128]];
+  var d=mkRgba(px,4,2);
+  var s=_bandSatSignal(d,4,2,0.50);
+  assert.ok(s>0.9,'高饱和顶带饱和度应接近1，实际 '+s);
+});
+test('bandSatSignal: 非法输入回退 0.25', () => {
+  assert.strictEqual(_bandSatSignal(null,2,2,0.4),0.25);
+  assert.strictEqual(_bandSatSignal([],0,0,0.4),0.25);
+});
+
+/* -------------------- v12.1.0 信号②: _symEdgeSignal（NCC 对称度） -------------------- */
+test('symEdgeSignal: 完全镜像对称→ncc≈1 且 eRatio≈1', () => {
+  // 4x2 网格严格镜像：行0 [10,20,20,10] 行1 [30,40,40,30]
+  var grid=[10,20,20,10, 30,40,40,30];
+  var edgeCol=[0.2,0.2,0.2,0.2];
+  var r=_symEdgeSignal(grid,4,2,edgeCol,4,null,0);
+  assert.ok(Math.abs(r.ncc-1)<1e-6,'镜像对称 ncc 应=1，实际 '+r.ncc);
+  assert.ok(Math.abs(r.eRatio-1)<1e-6,'左右能量应均衡，实际 '+r.eRatio);
+});
+test('symEdgeSignal: 左右反差镜像→ncc≈0', () => {
+  var grid=[10,20,80,90, 30,40,50,60];
+  var r=_symEdgeSignal(grid,4,2,[0.2,0.2,0.2,0.2],4,null,0);
+  assert.ok(r.ncc<0.05,'反相关镜像 ncc 应≈0，实际 '+r.ncc);
+});
+test('symEdgeSignal: 有纹理左半区 var 达标', () => {
+  var grid=[10,20,20,10, 30,40,40,30];
+  // lum 4x2：左半两列用 0/255 交替（右半平涂128）→ 左半 var=16256
+  var lum=[0,255,128,128, 0,255,128,128];
+  var r=_symEdgeSignal(grid,4,2,[0.2,0.2,0.2,0.2],4,lum,2);
+  assert.ok(r.var>8000,'强纹理左半 var 应>8000，实际 '+r.var);
+});
+test('symEdgeSignal: 非法输入→ncc=0 不触发护栏', () => {
+  var r=_symEdgeSignal(null,0,0,null,0,null,0);
+  assert.strictEqual(r.ncc,0);
+  assert.strictEqual(r.var,0);
+});
+
+/* -------------------- v12.1.0 信号③: _foodEvidenceSignal（真美食证据） -------------------- */
+test('foodEvidenceSignal: 暖色占比不足直接 false', () => {
+  var lum=[128,128,128,128, 100,150,100,150];
+  assert.strictEqual(_foodEvidenceSignal(0.05,lum,4,2),false);
+});
+test('foodEvidenceSignal: 暖调+下半纹理适中→true', () => {
+  // 4x4：下半两行 y=2,3 用 80/180 交替（方差=2500，落在 800~9000）
+  var lum=[128,128,128,128, 128,128,128,128, 80,180,80,180, 80,180,80,180];
+  assert.strictEqual(_foodEvidenceSignal(0.20,lum,4,4),true);
+});
+test('foodEvidenceSignal: 暖调但下半空白平涂→false', () => {
+  var lum=[128,128,128,128, 128,128,128,128, 128,128,128,128, 128,128,128,128];
+  assert.strictEqual(_foodEvidenceSignal(0.20,lum,4,4),false);
+});
+test('foodEvidenceSignal: 暖调但下半对比过烈→false（非美食场景）', () => {
+  // 0/255 交替 → var=16256 >9000
+  var lum=[128,128,128,128, 128,128,128,128, 0,255,0,255, 0,255,0,255];
+  assert.strictEqual(_foodEvidenceSignal(0.20,lum,4,4),false);
+});
+test('foodEvidenceSignal: null lum 安全 false', () => {
+  assert.strictEqual(_foodEvidenceSignal(0.2,null,4,4),false);
+});
+
+/* -------------------- v12.1.0 三护栏×真实信号联动（只减不增） -------------------- */
+test('guard链: 真对称信号只减左右边、不动顶底边', () => {
+  var c=[12,8,12,8];
+  var out=_symmetryGuard(c,{symEdge:{ncc:0.85,eRatio:1.05,var:12000}});
+  assert.deepStrictEqual(out,[0,8,0,8]);
+  assert.ok(out[1]===8&&out[3]===8,'顶底边不应被对称护栏动');
+});
+test('guard链: food真证据+低饱和顶带→只减顶底边', () => {
+  var out=_foodMisClassGuard([12,8,12,8],{sceneType:'food',bandSat:0.18,hasFoodEvidence:true});
+  assert.deepStrictEqual(out,[12,0,12,0]);
+});
+
 if (process.exitCode) {
   console.log(`\n有测试失败：已通过 ${passed} 个`);
 } else {
