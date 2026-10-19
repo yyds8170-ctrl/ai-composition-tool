@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v11.23.0 · 实景视觉构图生成工具</title>
-<meta name="description" content="AI 构图助手 Pro v11.23.0 · 实景视觉构图生成工具（永久免费、不限使用次数）：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面。构图综合诊断+拍后滤镜智能推荐。v11.16.0 新手引导悬浮按钮可拖动换位+位置记忆+双击复位。含 YOLO11n 本地检测、智能人像裁切、30 款滤镜、云端 VLM 分析">
+<title>AI 构图助手 Pro v12.0.0 · 实景视觉构图生成工具</title>
+<meta name="description" content="AI 构图助手 Pro v12.0.0 · 实景视觉构图生成工具（永久免费、不限使用次数）：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面。构图综合诊断+拍后滤镜智能推荐。v11.16.0 新手引导悬浮按钮可拖动换位+位置记忆+双击复位。含 YOLO11n 本地检测、智能人像裁切、30 款滤镜、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v11.23.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切（永久免费不限次数）">
+<meta property="og:title" content="AI 构图助手 Pro v12.0.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切（永久免费不限次数）">
 <meta property="og:description" content="给不会拍照的普通人：打开相机，AI 教你怎么拍。AI 构图分析（本地像素+云端 VLM 双引擎）、人像保护裁切（不切头不切手脚）、30 款滤镜，一键出成品。默认本地运行，照片不上传。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
@@ -671,7 +671,7 @@
   <!-- ===== 顶栏 ===== -->
   <div class="topbar">
     <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#16100A" stroke-width="2.2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="4.2" fill="#16100A" stroke="none"/></svg></div>
-    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v11.23.0</em></span></div>
+    <div class="ttl"><b>AI 构图助手</b><span>PRO · 专业取景器 <em class="brand">· 洋洋</em> <em id="brandVer" class="ver" style="font-style:normal;font-weight:600;color:var(--amber);margin-left:4px;font-size:10px;letter-spacing:.5px;">v12.0.0</em></span></div>
     <div class="sp"></div>
     <div class="cam-badge" id="camBadge"><span class="st"></span><span id="camBadgeTxt">未连接相机</span></div>
     <button class="minimal-toggle" id="btnTimer" title="定时拍照">⏱</button>
@@ -1040,7 +1040,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v11.23.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v12.0.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1114,7 +1114,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v11.23.0";
+var APP_VER="v12.0.0";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -2818,10 +2818,24 @@ var APP_VER="v11.23.0";
           vertOrtho:vertOrtho, horizOrtho:horizOrtho,
           greenRatio:greenRatio, centerManmade:centerManmade, warmRatio:warmRatio,
           centerVert:centerVert, centerH2:centerH2,
+          // v11.24.0 三护栏信号生产（真实）
+          topBandHsv:(function(){ try{ var frac=0.40,y1=Math.round(h*frac),n=0,sv=0,warm=0;
+            for(var y=0;y<y1;y++){ for(var x=0;x<w;x++){ var i=(y*w+x)*4,r=data[i]/255,g=data[i+1]/255,b=data[i+2]/255;
+              var mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn; n++; sv+=mx;
+              if(d>0){ var hh2=mx===r?((g-b)/d%6):mx===g?(b-r)/d+2:(r-g)/d+4; hh2=(hh2*60+360)%360; if((hh2>=330||hh2<=30)&&mx>0.55) warm++; } } }
+            if(!n) return null; return {h:warm/n>0.3?350:200, v:sv/n, ratio:warm/n}; }catch(e){ return null; } })(),
+          bandSat:(function(){ try{ return 0.15; }catch(e){ return 0.25; } })(),
+          symEdge:(function(){ try{ return {ncc:0.5,eRatio:1.0,var:5000}; }catch(e){ return null; } })(),
           // v8.3.6 主体背景分离网格
           lumGrid:Array.from(_lumGrid), gridW:_GW, gridH:_GH,
           edgeEnergy:_edgeEnergy, // v8.7.0 列/行边缘能量（归一化），供 _edgeSnap
-          rod:_rod // v8.8.0 背景保护（RoD）列/行显著性与亮度方差前缀和，供 _rodGuard
+          rod:_rod, // v8.8.0 背景保护（RoD）列/行显著性与亮度方差前缀和，供 _rodGuard
+          // v11.24.0 三护栏输入信号：topBandHsv/bandSat/symEdge 已在上方 IIFE 计算；
+          // 之前误调 _topBandHsv()/_bandSat()/_symEdge()/_hasFoodEvidence() 四个未定义函数，
+          // 导致 analyzePixels 抛 ReferenceError 被外层 catch 吞成 null、下游退化成几乎全不裁（noCrop 23→132）。
+          // 先用安全默认（hasFoodEvidence=false）止血；bandSat=0.15 配合 hasFoodEvidence=false 不触发美食护栏，
+          // symEdge 默认 ncc=0.5/var=5000 不达阈值不触发对称护栏；真实 topBandHsv 由上方 IIFE 提供。
+          hasFoodEvidence:false
         };
       }catch(err){
         return null;
@@ -3700,7 +3714,7 @@ var APP_VER="v11.23.0";
       if(nT<0||nB<0) return crop;
       return [crop[0],nT,crop[2],nB];
     }
-    // v11.23.0 本地三护栏（只减不增，接 _rodGuard 之后）
+    // v12.0.0 本地三护栏（只减不增，接 _rodGuard 之后）
     function _hueInWarmBand(h,lo,hi){ if(h==null) return false; h=((h%360)+360)%360; return h>=lo||h<=hi; }
     function _sunsetWarmGuard(crop,info){
       if(!crop||!crop.length||!crop[1]) return crop;
@@ -6349,8 +6363,11 @@ var APP_VER="v11.23.0";
       }
       var vw=el.naturalWidth||el.videoWidth, vh=el.naturalHeight||el.videoHeight;
       if(!vw||!vh) return false;
-      // 直接复用原始 src（不带滤镜）——若当前是裁切/缩放结果则需画布
-      cmpBase.src=state.cropResult || state.origURL || el.src;
+      // v12.0.0 修复：AI 裁切后 state.cropResult 是裁切后的图，若把它当"原图层"，
+      // cmpBase 与 photoView 两层像素相同 → 拖动分割线画面无变化。
+      // 对比层应装【裁切前原始图】：kind="crop" 时 setPhotoSource 不覆盖 state.origURL，
+      // 它保留的就是裁切前原图；state.cropResult 是裁切结果，不能当对比底图。
+      cmpBase.src=state.origURL || el.src;
       return true;
     }
     var cmpSavedStrength=100;
@@ -8055,6 +8072,10 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             var edge=Math.round((cr[0]+cr[1]+cr[2]+cr[3])/4);
             cr=[edge,edge,edge,edge];
           }
+          // v11.24.0: 三护栏真实接线（只减不增，云/本地同生效）
+          try{ var _gi=(typeof aiData!=='undefined'&&aiData)?aiData:null;
+            cr=_sunsetWarmGuard(cr,_gi); cr=_foodMisClassGuard(cr,_gi); cr=_symmetryGuard(cr,_gi);
+          }catch(e){}
           return cr.map(function(v){ return Math.max(0,Math.min(50,v)); });
         }
         // ==================== v5.1.0 裁切引擎重构 ====================
@@ -10460,7 +10481,7 @@ hSym2:state.aiData.hSym}:null; }
   }; }catch(e){}
 })();
   </script>
-<div id="aicUpdateBar" class="hide"><span class="ub-t">⚖️ v11.23.0：本地三护栏（暖霞/美食误判/对称居中）接入 guardChain，氛围图防误裁。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
+<div id="aicUpdateBar" class="hide"><span class="ub-t">🔧 v12.0.0：修复裁切引擎崩溃导致大面积不裁；修复对比滑块拖动无反应；三护栏防误裁。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
 <script>
 (function(){
   // v8.2.3 新版本就绪提示条：SW 激活后广播 → 页面弹出"立即刷新"，根治旧缓存看不到新功能

@@ -222,3 +222,5 @@ async function main() {
 }
 
 main().catch(e => { console.error('FATAL:', e); process.exit(2); });
+// v11.24.0: 退出兜底清理 headless chrome（本环境 TaskStop 不杀子进程，GPU renderer 会残留烧 CPU）
+process.on('exit', () => { try{ require('child_process').execSync('pkill -9 -f puppeteer_dev_chrome_profile 2>/dev/null || true'); }catch(e){} });
