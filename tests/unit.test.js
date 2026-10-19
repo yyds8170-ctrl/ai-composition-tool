@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop } = require('./pure-functions.js');
+const { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -1957,6 +1957,19 @@ test('v117 extreme: _cropIntentFromBox满裁→crop_tb', () => {
 });
 
 /* -------------------- 汇总 -------------------- */
+
+// v11.23.0 三护栏单测
+test('g',function(){ assert.strictEqual(_hueInWarmBand(350,330,30), true); });
+test('g',function(){ assert.strictEqual(_hueInWarmBand(200,330,30), false); });
+test('g',function(){ var c=_sunsetWarmGuard([0,10,0,0],{topBandHsv:{h:350,v:0.8,ratio:0.6}}); assert.deepStrictEqual(c,[0,0,0,0]); });
+test('g',function(){ var c=_sunsetWarmGuard([0,10,0,0],{topBandHsv:{h:200,v:0.8,ratio:0.6}}); assert.deepStrictEqual(c,[0,10,0,0]); });
+test('g',function(){ var c=_sunsetWarmGuard([0,10,0,0],{topBandHsv:{h:350,v:0.4,ratio:0.6}}); assert.deepStrictEqual(c,[0,10,0,0]); });
+test('g',function(){ var c=_foodMisClassGuard([0,10,0,5],{sceneType:'food',bandSat:0.2,hasFoodEvidence:true}); assert.deepStrictEqual(c,[0,0,0,0]); });
+test('g',function(){ var c=_foodMisClassGuard([0,10,0,5],{sceneType:'portrait',bandSat:0.2,hasFoodEvidence:true}); assert.deepStrictEqual(c,[0,10,0,5]); });
+test('g',function(){ var c=_foodMisClassGuard([0,10,0,5],{sceneType:'food',bandSat:0.4,hasFoodEvidence:true}); assert.deepStrictEqual(c,[0,10,0,5]); });
+test('g',function(){ var c=_symmetryGuard([10,5,10,5],{symEdge:{ncc:0.7,eRatio:1.0,var:10000}}); assert.deepStrictEqual(c,[0,5,0,5]); });
+test('g',function(){ var c=_symmetryGuard([10,5,10,5],{symEdge:{ncc:0.7,eRatio:0.3,var:10000}}); assert.deepStrictEqual(c,[10,5,10,5]); });
+test('g',function(){ var c=_symmetryGuard([10,5,10,5],{symEdge:{ncc:0.5,eRatio:1.0,var:10000}}); assert.deepStrictEqual(c,[10,5,10,5]); });
 if (process.exitCode) {
   console.log(`\n有测试失败：已通过 ${passed} 个`);
 } else {

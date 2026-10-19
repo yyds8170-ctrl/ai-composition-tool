@@ -1344,4 +1344,32 @@
       }catch(e){ return abstain("仲裁异常，保留原图"); }
     }
 
-module.exports = { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop };
+    function _hueInWarmBand(h,lo,hi){ if(h==null) return false; h=((h%360)+360)%360; return h>=lo||h<=hi; }
+
+    function _sunsetWarmGuard(crop,info){
+      if(!crop||!crop.length||!crop[1]) return crop;
+      var b=info&&info.topBandHsv; if(!b) return crop;
+      if(!_hueInWarmBand(b.h,330,30)) return crop;
+      if(b.v<0.55) return crop;
+      if(b.ratio<=0.40) return crop;
+      return [crop[0],0,crop[2],crop[3]]; // 暖霞顶带保留：顶边不裁
+    }
+
+    function _foodMisClassGuard(crop,info){
+      if(!crop||!crop.length) return crop;
+      if(!info||info.sceneType!=="food") return crop;
+      if(!info.bandSat||info.bandSat>=0.25) return crop;
+      if(!info.hasFoodEvidence) return crop;
+      return [crop[0],0,crop[2],0]; // food 弱证据：顶/底边不裁（防桌面误当死区）
+    }
+
+    function _symmetryGuard(crop,info){
+      if(!crop||!crop.length) return crop;
+      var s=info&&info.symEdge; if(!s) return crop;
+      if(s.eRatio<0.5||s.eRatio>2.0) return crop;
+      if(s.var<=8000) return crop;
+      if(s.ncc<=0.60) return crop;
+      return [0,crop[1],0,crop[3]]; // 真对称：左右不裁（保对称轴）
+    }
+
+module.exports = { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard };
