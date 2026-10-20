@@ -4612,6 +4612,15 @@ var APP_VER="v12.13.0";
         if(_scEn&&!_fill){
           var _scx=(typeof a.cx==="number"&&isFinite(a.cx))?a.cx:0.5,
               _scy=(typeof a.cy==="number"&&isFinite(a.cy))?a.cy:0.5, _mb=null;
+          // v12.14.0 三分法微调：质心离三分交点远时，最多往交点方向挪1%
+          try{
+            var _tf=_thirdsFitScore(_scx,_scy);
+            if(_tf<0.4){
+              var _tx=Math.abs(_scx-1/3)<Math.abs(_scx-2/3)?1/3:2/3;
+              var _ty=Math.abs(_scy-1/3)<Math.abs(_scy-2/3)?1/3:2/3;
+              _scx+=(_tx-_scx)*0.02; _scy+=(_ty-_scy)*0.02; // 最多挪2%
+            }
+          }catch(_e){}
           if(a.allBoxes&&a.allBoxes.length){
             for(var _bi=0;_bi<a.allBoxes.length;_bi++){
               var _o=a.allBoxes[_bi], _bb=_o&&_o.b;
