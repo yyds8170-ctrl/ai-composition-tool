@@ -4612,7 +4612,7 @@ var APP_VER="v12.13.0";
         if(_scEn&&!_fill){
           var _scx=(typeof a.cx==="number"&&isFinite(a.cx))?a.cx:0.5,
               _scy=(typeof a.cy==="number"&&isFinite(a.cy))?a.cy:0.5, _mb=null;
-          // v12.15.0 三分法微调：质心离三分交点远时，最多往交点方向挪1%
+          // v12.16.0 三分法微调：质心离三分交点远时，最多往交点方向挪1%
           try{
             var _tf=_thirdsFitScore(_scx,_scy);
             if(_tf<0.4){
@@ -6569,7 +6569,7 @@ var APP_VER="v12.13.0";
       a.href=shotImg.src;
       a.download="ai-composition-"+Date.now()+".jpg";
       document.body.appendChild(a); a.click(); a.remove();
-      toastMsg("照片已保存到相册/下载");
+      toastMsg("照片已保存到相册/下载，可点分享发到社交平台");
       setStatus("照片已保存", "done");
     });
     // v1.6.0: 分享按钮
