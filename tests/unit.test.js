@@ -1967,7 +1967,7 @@ test('g',function(){ var c=_sunsetWarmGuard([0,10,0,0],{topBandHsv:{h:350,v:0.4,
 test('g',function(){ var c=_foodMisClassGuard([0,10,0,5],{sceneType:'food',bandSat:0.2,hasFoodEvidence:true}); assert.deepStrictEqual(c,[0,0,0,0]); });
 test('g',function(){ var c=_foodMisClassGuard([0,10,0,5],{sceneType:'portrait',bandSat:0.2,hasFoodEvidence:true}); assert.deepStrictEqual(c,[0,10,0,5]); });
 test('g',function(){ var c=_foodMisClassGuard([0,10,0,5],{sceneType:'food',bandSat:0.4,hasFoodEvidence:true}); assert.deepStrictEqual(c,[0,10,0,5]); });
-test('g',function(){ var c=_symmetryGuard([10,5,10,5],{symEdge:{ncc:0.7,eRatio:1.0,var:10000}}); assert.deepStrictEqual(c,[0,5,0,5]); });
+test('g',function(){ var c=_symmetryGuard([10,5,10,5],{symEdge:{ncc:0.7,eRatio:1.0,var:10000}}); assert.deepStrictEqual(c,[0,2,0,2]); });
 test('g',function(){ var c=_symmetryGuard([10,5,10,5],{symEdge:{ncc:0.7,eRatio:0.3,var:10000}}); assert.deepStrictEqual(c,[10,5,10,5]); });
 test('g',function(){ var c=_symmetryGuard([10,5,10,5],{symEdge:{ncc:0.5,eRatio:1.0,var:10000}}); assert.deepStrictEqual(c,[10,5,10,5]); });
 
@@ -2067,11 +2067,12 @@ test('foodEvidenceSignal: null lum 安全 false', () => {
 });
 
 /* -------------------- v12.1.0 三护栏×真实信号联动（只减不增） -------------------- */
-test('guard链: 真对称信号只减左右边、不动顶底边', () => {
+test('guard链: 真对称信号左右不裁、顶底裁减半(护垂直对称)', () => {
   var c=[12,8,12,8];
   var out=_symmetryGuard(c,{symEdge:{ncc:0.85,eRatio:1.05,var:12000}});
-  assert.deepStrictEqual(out,[0,8,0,8]);
-  assert.ok(out[1]===8&&out[3]===8,'顶底边不应被对称护栏动');
+  assert.deepStrictEqual(out,[0,3,0,3]);
+  assert.ok(out[0]===0&&out[2]===0,'左右边不应裁（保对称轴）');
+  assert.ok(out[1]===3&&out[3]===3,'顶底裁减半为原0.4，护倒影/建筑垂直对称');
 });
 test('guard链: food真证据+低饱和顶带→只减顶底边', () => {
   var out=_foodMisClassGuard([12,8,12,8],{sceneType:'food',bandSat:0.18,hasFoodEvidence:true});

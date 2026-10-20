@@ -659,3 +659,4 @@ https://yyds8170-ctrl.github.io/ai-composition-tool/
 - iOS Safari 直到 iOS 26 才有 WebGPU，旧设备走 wasm 兜底
 - GitHub Pages 无 COOP/COEP，wasm 多线程不激活
 - 12MP 大图内存逼近 256MB，入口已降采样到长边≤2048px
+| v12.9.0 | 对比滑块真因修复：z-index叠层顺序（原图盖住效果层）；verify_stacking.js 真实验收 | ✅ 最终版 |

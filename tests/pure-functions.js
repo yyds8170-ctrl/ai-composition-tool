@@ -1369,7 +1369,8 @@
       if(s.eRatio<0.5||s.eRatio>2.0) return crop;
       if(s.var<=8000) return crop;
       if(s.ncc<=0.60) return crop;
-      return [0,crop[1],0,crop[3]]; // 真对称：左右不裁（保对称轴）
+      // 真对称：左右不裁（保对称轴）；顶/底裁减半（倒影/建筑垂直对称也保护）
+      return [0, Math.round(crop[1]*0.4), 0, Math.round(crop[3]*0.4)];
     }
 
     function _decloudPlan(p){
