@@ -943,6 +943,7 @@
     </div>
     <!-- v1.2.0: 成品操作栏 -->
     <div class="act-row">
+      <button class="btn act" id="btnAutoEnhance" disabled title="一键自动优化亮度/对比度/饱和度"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>增强</button>
       <button class="btn act" id="btnTone" title="专业调色 / 品牌水印 / 导出尺寸设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z"/><circle cx="12" cy="12" r="4"/><path d="M12 8v8M8 12h8" opacity=".6"/></svg>调色</button>
       <button class="btn act" id="btnUndo" disabled title="撤销上一步操作（滤镜/变焦/裁切/清除）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-4"/></svg>撤销</button>
       <button class="btn act pri" id="btnExport" disabled title="导出当前成品图（含滤镜/变焦/裁切）为高清 PNG"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>导出</button>
@@ -4612,7 +4613,7 @@ var APP_VER="v12.13.0";
         if(_scEn&&!_fill){
           var _scx=(typeof a.cx==="number"&&isFinite(a.cx))?a.cx:0.5,
               _scy=(typeof a.cy==="number"&&isFinite(a.cy))?a.cy:0.5, _mb=null;
-          // v12.18.0 三分法微调：质心离三分交点远时，最多往交点方向挪1%
+          // v12.19.0 三分法微调：质心离三分交点远时，最多往交点方向挪1%
           try{
             var _tf=_thirdsFitScore(_scx,_scy);
             if(_tf<0.4){
@@ -10155,6 +10156,21 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       a.style.display="none"; document.body.appendChild(a); a.click();
       setTimeout(function(){ document.body.removeChild(a); }, 120);
     }
+    // v12.19.0 一键自动增强
+    var btnAutoEnhance=document.getElementById('btnAutoEnhance');
+    if(btnAutoEnhance){
+      btnAutoEnhance.addEventListener("click",function(){
+        try{
+          var d=state.aiData||{};
+          var b=128/(d.mean||128); // 曝光归一
+          var c=(d.contrast||0.3)>0.4?1.05:1.15; // 对比度
+          var s=(d.sat||0.2)<0.25?1.2:1.05; // 饱和度
+          var filterStr="brightness("+b.toFixed(2)+") contrast("+c.toFixed(2)+") saturate("+s.toFixed(2)+")";
+          photoView.style.filter=filterStr;
+          toastMsg("已自动优化亮度/对比度/饱和度");
+        }catch(e){ toastMsg("自动增强失败","err"); }
+      });
+    }
     btnExport.addEventListener("click",function(){
       var d=exportCanvas(); if(!d) return;
       downloadPng(d, "构图助手成品_"+new Date().getTime()+".png");
@@ -10244,6 +10260,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
     function updateActBtns(){
       var has = state.mode==="photo" ? !!photoView.src : !!videoCam.videoWidth;
       if(btnExport){ btnExport.disabled=!has; }
+      if(btnAutoEnhance){ btnAutoEnhance.disabled=!has; }
       if(btnShare){ btnShare.disabled=!has; }
       if(btnUndo){ btnUndo.disabled=undoStack.length===0; }
     }
