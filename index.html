@@ -1422,6 +1422,8 @@ var APP_VER="v12.13.0";
       cyber:{name:"赛博霓虹",css:"saturate(1.42) contrast(1.2) brightness(0.96) hue-rotate(12deg)",desc:"霓虹高饱和，赛博都市感"},
       morandi:{name:"莫兰迪",css:"saturate(0.72) contrast(0.95) brightness(1.05) sepia(0.08)",desc:"低饱和高级灰，柔和雅致"},
       fade:{name:"褪色胶片",css:"saturate(0.78) contrast(0.88) brightness(1.07) sepia(0.14)",desc:"褪色做旧，怀旧胶片感"},
+      provia:{name:"富士Provia",css:"saturate(0.94) contrast(1.02) brightness(1.01) hue-rotate(-2deg) sepia(0.03)",desc:"专业反转片，中性还原，绿色通透"},
+      silver:{name:"银盐黑白",css:"grayscale(1) contrast(1.22) brightness(0.98) sepia(0.08)",desc:"银盐颗粒感黑白，高反差纪实"},
       vivid:{name:"重彩",css:"saturate(1.5) contrast(1.1) brightness(1.01)",desc:"极致浓郁，色彩爆炸"},
       soft:{name:"柔焦",css:"blur(0.5px) brightness(1.05) saturate(0.94) contrast(0.93)",desc:"轻微柔光，梦幻氛围"},
       aurora:{name:"极光青紫",css:"saturate(1.24) contrast(1.06) brightness(1.03) hue-rotate(18deg) sepia(0.06)",desc:"青紫冷调，极光氛围"},
@@ -4614,7 +4616,7 @@ var APP_VER="v12.13.0";
         if(_scEn&&!_fill){
           var _scx=(typeof a.cx==="number"&&isFinite(a.cx))?a.cx:0.5,
               _scy=(typeof a.cy==="number"&&isFinite(a.cy))?a.cy:0.5, _mb=null;
-          // v12.20.0 三分法微调：质心离三分交点远时，最多往交点方向挪1%
+          // v12.21.0 三分法微调：质心离三分交点远时，最多往交点方向挪1%
           try{
             var _tf=_thirdsFitScore(_scx,_scy);
             if(_tf<0.4){
@@ -10157,7 +10159,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       a.style.display="none"; document.body.appendChild(a); a.click();
       setTimeout(function(){ document.body.removeChild(a); }, 120);
     }
-    // v12.20.0 一键自动增强
+    // v12.21.0 一键自动增强
     var btnAutoEnhance=document.getElementById('btnAutoEnhance');
     if(btnAutoEnhance){
       btnAutoEnhance.addEventListener("click",function(){
@@ -10172,7 +10174,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         }catch(e){ toastMsg("自动增强失败","err"); }
       });
     }
-    // v12.20.0 水平校正
+    // v12.21.0 水平校正
     var btnTiltFix=document.getElementById('btnTiltFix');
     if(btnTiltFix){
       btnTiltFix.addEventListener("click",function(){
