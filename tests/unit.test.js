@@ -2107,3 +2107,17 @@ if (process.exitCode) {
   assert.ok(bad >= 0 && bad <= 60, '差构图分在合理范围: '+bad);
   console.log('  ✓ v12.10 _contentGuard + aestheticScore（9条）');
 }
+
+// -------------------- v12.11.0: _thirdsFitScore --------------------
+{
+  const { _thirdsFitScore } = require('./pure-functions.js');
+  // 完美落在三分交点
+  assert.ok(_thirdsFitScore(1/3, 1/3) > 0.9, '交点应接近1: '+_thirdsFitScore(1/3,1/3));
+  // 正中应较低
+  assert.ok(_thirdsFitScore(0.5, 0.5) < 0.6, '正中应<0.5: '+_thirdsFitScore(0.5,0.5));
+  // 右上角2/3,1/3也是交点
+  assert.ok(_thirdsFitScore(2/3, 1/3) > 0.9, '右上交点应>0.9');
+  // null安全
+  assert.ok(_thirdsFitScore(-1, -1) === 0.5, 'null安全');
+  console.log('  ✓ v12.11.0 _thirdsFitScore（4条）');
+}
