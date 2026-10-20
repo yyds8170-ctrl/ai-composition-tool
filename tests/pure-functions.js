@@ -1435,38 +1435,36 @@
       }catch(e){ return false; }
     }
 
-module.exports = { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard, _decloudPlan, _bandSatSignal, _symEdgeSignal, _foodEvidenceSignal, _contentGuard, aestheticScore, _thirdsFitScore };
+    function _contentGuard(mean, sat, edgeDensity){
+      try{
+        if(!(mean>=0)) return false;
+        if(mean<25) return true; // 极暗图（夜景氛围）不裁
+        if(sat<0.03 && edgeDensity<0.02) return true; // 纯色/灰图不裁
+        if(edgeDensity>0.35 && sat<0.08) return true; // 截图/UI不裁
+        return false;
+      }catch(e){ return false; }
+    }
 
-// v12.10 内容防御
-function _contentGuard(mean, sat, edgeDensity){
-  try{
-    if(!(mean>=0)) return false;
-    if(mean<25) return true;
-    if(sat<0.03 && edgeDensity<0.02) return true;
-    if(edgeDensity>0.35 && sat<0.08) return true;
-    return false;
-  }catch(e){ return false; }
-}
-// v12.10 轻量美学评分
-function aestheticScore(contrast, sat, edgeDensity, thirdsFit, goldenRatioFit){
-  try{
-    var s=0;
-    s+=Math.min(1,Math.max(0,(contrast||0.3)))*20;
-    s+=Math.min(1,Math.max(0,(sat||0.2)))*15;
-    s+=Math.min(1,Math.max(1-(edgeDensity||0.1)))*20;
-    s+=Math.min(1,Math.max(0,(thirdsFit||0.5)))*25;
-    s+=Math.min(1,Math.max(0,(goldenRatioFit||0.5)))*20;
-    return Math.round(s);
-  }catch(e){ return 50; }
-}
+    function _thirdsFitScore(cx, cy){
+      try{
+        if(!(cx>=0)||!(cy>=0)) return 0.5;
+        var dx=Math.min(Math.abs(cx-1/3),Math.abs(cx-2/3));
+        var dy=Math.min(Math.abs(cy-1/3),Math.abs(cy-2/3));
+        var dist=Math.sqrt(dx*dx+dy*dy);
+        return Math.max(0, 1-dist/0.5); // 距中心0.5归一化为0
+      }catch(e){ return 0.5; }
+    }
 
-// v12.11.0 三分法贴合度
-function _thirdsFitScore(cx, cy){
-  try{
-    if(!(cx>=0)||!(cy>=0)) return 0.5;
-    var dx=Math.min(Math.abs(cx-1/3),Math.abs(cx-2/3));
-    var dy=Math.min(Math.abs(cy-1/3),Math.abs(cy-2/3));
-    var dist=Math.sqrt(dx*dx+dy*dy);
-    return Math.max(0, 1-dist/0.5);
-  }catch(e){ return 0.5; }
-}
+    function aestheticScore(contrast, sat, edgeDensity, thirdsFit, goldenRatioFit){
+      try{
+        var s=0;
+        s+=Math.min(1,Math.max(0,(contrast||0.3)))*20; // 对比度
+        s+=Math.min(1,Math.max(0,(sat||0.2)))*15; // 饱和度和谐
+        s+=Math.min(1,Math.max(1-(edgeDensity||0.1)))*20; // 边缘密度适中
+        s+=Math.min(1,Math.max(0,(thirdsFit||0.5)))*25; // 三分法贴合
+        s+=Math.min(1,Math.max(0,(goldenRatioFit||0.5)))*20; // 黄金分割
+        return Math.round(s);
+      }catch(e){ return 50; }
+    }
+
+module.exports = { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard, _decloudPlan, _bandSatSignal, _symEdgeSignal, _foodEvidenceSignal, _contentGuard, _thirdsFitScore, aestheticScore };
