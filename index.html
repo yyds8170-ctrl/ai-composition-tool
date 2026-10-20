@@ -4612,7 +4612,7 @@ var APP_VER="v12.13.0";
         if(_scEn&&!_fill){
           var _scx=(typeof a.cx==="number"&&isFinite(a.cx))?a.cx:0.5,
               _scy=(typeof a.cy==="number"&&isFinite(a.cy))?a.cy:0.5, _mb=null;
-          // v12.14.0 三分法微调：质心离三分交点远时，最多往交点方向挪1%
+          // v12.15.0 三分法微调：质心离三分交点远时，最多往交点方向挪1%
           try{
             var _tf=_thirdsFitScore(_scx,_scy);
             if(_tf<0.4){
@@ -8087,7 +8087,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       var ctrl=(typeof AbortController!=="undefined")?new AbortController():null;
       state._cloudAbort=ctrl;
       // v4.7.0: 云端超时28s（25张实测p90=23.9s，25s会误杀约8%的25-28s临界慢响应；外层runAnalysis云端兜底30s仍为最后保险）
-      var timer=setTimeout(function(){ if(ctrl) ctrl.abort(); }, 28000); // v8.0.5 B-02: 35s→28s，短于外层30s兜底，先自然超时走重试/回退，消除竞态窗口
+      var timer=setTimeout(function(){ if(ctrl) ctrl.abort(); }, 12000); // v8.0.5 B-02: 35s→28s，短于外层30s兜底，先自然超时走重试/回退，消除竞态窗口
       // v8.0.5: 弱网韧性——瞬时 5xx/429/网络错误自动重试 2 次（退避 2s/5s），4xx 与超时 abort 不重试；
       // 连续失败熔断：3 次失败后 5 分钟内直走本地（避免免费期额度/体验双重恶化）
       var _tryN=0;
@@ -8103,7 +8103,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       }
       function _retryReq(){
         if(token!==state.analyzeToken) return;
-        var timer2=setTimeout(function(){ if(ctrl) ctrl.abort(); }, 28000); // v8.0.5: 与主请求一致28s
+        var timer2=setTimeout(function(){ if(ctrl) ctrl.abort(); }, 12000); // v8.0.5: 与主请求一致28s
         _req().then(function(res2){
           clearTimeout(timer2);
           _handleCloudRes(res2);
