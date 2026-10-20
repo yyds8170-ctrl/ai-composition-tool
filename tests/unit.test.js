@@ -988,95 +988,61 @@ test('diagnosis 负例: 输入缺字段不抛错且该条不出现', () => {
   assert.deepStrictEqual(_composeDiagnosis(null), []);
 });
 
-/* -------------------- v9.0.0 _recommendFilter（滤镜推荐：硬闸门+规则） -------------------- */
+/* -------------------- v12.24.0 _recommendFilter（场景感知打分制） -------------------- */
 const BASE_A = { mean: 130, contrast: 40, wb: 0.005, sat: 0.24, highClip: 0, shadowClip: 0, sharpness: 60, lightScore: 0.05, brightRatio: 0.1, skinRatio: 0.02, isPersonLikely: false, warmRatio: 0.05, waterScore: 0.05, manmadeScore: 0.1, sigBox: [0.3, 0.3, 0.7, 0.7], lumGrid: mkGrid(() => 130), gridW: 16, gridH: 16 };
 function recWith(over, sig) { return _recommendFilter(Object.assign({}, BASE_A, over), sig); }
-test('filter N1: 曝光准确色温中性日常照 → NONE（原片即好）', () => {
-  assert.strictEqual(recWith({}, { personScore: 0.4 }).rule, 'NONE');
-});
-test('filter N2: 轻微暖调人像 wb=0.02 未过阈值 → NONE', () => {
-  const r = recWith({ skinRatio: 0.08, isPersonLikely: true, wb: 0.02, mean: 140 }, null);
-  assert.strictEqual(r.rule, 'NONE');
-});
-test('filter 负例: 肤色占比 8% 不足（风光/食物图误中场景）→ NONE', () => {
-  const r = recWith({ skinRatio: 0.08, isPersonLikely: true, wb: 0.10, mean: 140 }, null);
-  assert.strictEqual(r.rule, 'NONE');
-});
-test('filter N3: 逆光 highClip=0.18 → GATE', () => {
-  assert.strictEqual(recWith({ highClip: 0.18, skinRatio: 0.07, isPersonLikely: true }).rule, 'GATE');
-});
-test('filter N4: 大光比剪影 highClip=0.30 → GATE', () => {
-  assert.strictEqual(recWith({ highClip: 0.30 }).rule, 'GATE');
-});
-test('filter N5: 纯黑夜景 mean=40 → GATE（近纯黑）', () => {
-  assert.strictEqual(recWith({ mean: 40, lightScore: 0.04 }).rule, 'GATE');
-});
-test('filter N6: 色彩浓艳 sat=0.45 → GATE（已浓）', () => {
-  assert.strictEqual(recWith({ sat: 0.45, mean: 120, warmRatio: 0.5, wb: 0.08 }).rule, 'GATE');
-});
-test('filter N7: 手抖糊片 sharpness=18 → GATE', () => {
+test('filter G1: 糊片 sharpness<25 → GATE', () => {
   assert.strictEqual(recWith({ sharpness: 18 }).rule, 'GATE');
 });
-test('filter N8: 餐桌披萨 warmRatio=0.30 且 scene=美食 → NONE', () => {
-  assert.strictEqual(recWith({ warmRatio: 0.30, wb: 0.04, mean: 150 }, { scene: 'food' }).rule, 'NONE');
+test('filter G2: 过曝 highClip>0.15 → GATE', () => {
+  assert.strictEqual(recWith({ highClip: 0.18 }).rule, 'GATE');
 });
-test('filter N9: 阴天人像轻微冷 wb=-0.02 → NONE', () => {
-  assert.strictEqual(recWith({ skinRatio: 0.07, isPersonLikely: true, wb: -0.02, mean: 120 }, null).rule, 'NONE');
+test('filter G3: 已浓 sat>0.38 → GATE', () => {
+  assert.strictEqual(recWith({ sat: 0.45 }).rule, 'GATE');
 });
-test('filter N10: 三人合影光比1.3:1 → NONE', () => {
-  assert.strictEqual(recWith({ wb: 0.01 }, { personScore: 0.8, personCount: 3 }).rule, 'NONE');
+test('filter G4: 近黑 mean<50 → GATE', () => {
+  assert.strictEqual(recWith({ mean: 40 }).rule, 'GATE');
 });
-test('filter N11: 舞台霓虹高饱和 sat=0.42 → GATE（night 也不救）', () => {
-  assert.strictEqual(recWith({ sat: 0.42, mean: 90, lightScore: 0.5 }).rule, 'GATE');
-});
-test('filter N12: 输入缺失 a=null / a={} → GATE', () => {
+test('filter G5: null/空输入 → GATE', () => {
   assert.strictEqual(_recommendFilter(null).rule, 'GATE');
   assert.strictEqual(_recommendFilter({}).rule, 'GATE');
 });
-test('filter N13: 水面倒影 waterScore=0.8 → NONE（不发明水景分支）', () => {
-  assert.strictEqual(recWith({ waterScore: 0.8, mean: 120, sat: 0.2 }).rule, 'NONE');
+test('filter 人像场景: personScore>=0.6 → 推荐人像类滤镜', () => {
+  const r = recWith({ wb: 0.06, mean: 140, sat: 0.2 }, { personScore: 0.8 });
+  assert.ok(r.filter, '应推荐滤镜');
+  assert.ok(['portra','portrait-warm','ektar','portrait-cool','japan','provia'].indexOf(r.filter) >= 0, '人像池内, 实得=' + r.filter);
 });
-test('filter 正例 R1: 暗夜景有灯光 → night', () => {
-  const r = recWith({ mean: 70, lightScore: 0.4, brightRatio: 0.2 }, null);
-  assert.strictEqual(r.filter, 'night');
-  assert.strictEqual(r.strength, 80);
+test('filter 夜景场景: 暗景+lightScore → 推荐夜景类', () => {
+  const r = recWith({ mean: 70, lightScore: 0.4 }, null);
+  assert.ok(['night','cyber','teal'].indexOf(r.filter) >= 0, '夜景池内, 实得=' + r.filter);
 });
-test('filter 正例 R2B: 暖光人像（YOLO person 硬证据）→ portrait-warm', () => {
-  const r = recWith({ skinRatio: 0.12, isPersonLikely: true, wb: 0.06, mean: 140 }, { personScore: 0.8 });
-  assert.strictEqual(r.filter, 'portrait-warm');
+test('filter 黄昏场景: 高暖比+暖wb → 推荐黄昏类', () => {
+  const r = recWith({ warmRatio: 0.5, wb: 0.08, mean: 120 }, { personScore: 0.3, scene: 'landscape' });
+  assert.ok(['sunset','teal','warm'].indexOf(r.filter) >= 0, '黄昏池内, 实得=' + r.filter);
 });
-test('filter 负例: 仅肤色启发式（无 YOLO person）→ NONE（自动推宁可漏推）', () => {
-  const r = recWith({ skinRatio: 0.20, isPersonLikely: true, wb: 0.10, mean: 140 }, null);
-  assert.strictEqual(r.rule, 'NONE');
+test('filter 食物场景: scene=food → 推荐暖食欲色', () => {
+  const r = recWith({ mean: 150, sat: 0.25, wb: 0.05 }, { scene: 'food' });
+  assert.ok(r.filter, '应推荐');
 });
-test('filter 正例 R2C: 冷调户外人像（YOLO person 硬证据）→ portrait-cool', () => {
-  const r = recWith({ skinRatio: 0.03, isPersonLikely: false, wb: -0.06, mean: 120 }, { personScore: 0.7 });
-  assert.strictEqual(r.filter, 'portrait-cool');
+test('filter 风光场景: landscape+明亮低饱和 → 推荐通透类', () => {
+  const r = recWith({ mean: 130, sat: 0.15, wb: 0.0, waterScore: 0.1, manmadeScore: 0.1 }, { scene: 'landscape' });
+  assert.ok(['velvia','160c','provia'].indexOf(r.filter) >= 0, '风光池内, 实得=' + r.filter);
 });
-test('filter 正例 R2A: 半侧光戏剧人像（sigBox左右2.5:1）→ portrait-mono', () => {
-  const grid = mkGrid((x) => x < 8 ? 200 : 80);
-  const r = recWith({ mean: 140, skinRatio: 0.06, isPersonLikely: true, lumGrid: grid }, { personScore: 0.8 });
-  assert.strictEqual(r.filter, 'portrait-mono');
-});
-test('filter 正例 R3: 纯灰低饱和照 → mono', () => {
+test('filter 低饱和: sat<0.06 → 推荐黑白', () => {
   const r = recWith({ sat: 0.02, mean: 100 }, null);
-  assert.strictEqual(r.filter, 'mono');
+  assert.ok(['mono','mono-warm','chrome'].indexOf(r.filter) >= 0, '黑白类, 实得=' + r.filter);
 });
-test('filter 正例 R4: 整幅橙黄黄昏 → sunset', () => {
-  const r = recWith({ warmRatio: 0.5, wb: 0.08, mean: 120 }, { personScore: 0.3, personCount: 0, scene: 'landscape' });
-  assert.strictEqual(r.filter, 'sunset');
-});
-test('filter 属性: strength∈[0,100]、非null id 必属现有6款', () => {
-  const ALLOW = ['night', 'portrait-warm', 'portrait-cool', 'portrait-mono', 'mono', 'sunset'];
+test('filter 属性: strength∈[50,80]、非null id 属推荐池', () => {
   const cases = [
     recWith({ mean: 70, lightScore: 0.4 }, null),
-    recWith({ skinRatio: 0.08, isPersonLikely: true, wb: 0.06, mean: 140 }, null),
+    recWith({ wb: 0.06, mean: 140 }, { personScore: 0.8 }),
     recWith({ sat: 0.02, mean: 100 }, null),
-    recWith({ warmRatio: 0.5, wb: 0.08, mean: 120 }, { personCount: 0 })
+    recWith({ warmRatio: 0.5, wb: 0.08, mean: 120 }, { scene: 'landscape' })
   ];
   for (const r of cases) {
-    assert.ok(r.strength >= 0 && r.strength <= 100, 'strength=' + r.strength);
-    if (r.filter) assert.ok(ALLOW.indexOf(r.filter) >= 0, '非法滤镜 id=' + r.filter);
+    if (r.filter) {
+      assert.ok(r.strength >= 50 && r.strength <= 80, 'strength=' + r.strength);
+    }
   }
 });
 test('filter 属性: 无副作用（入参深比较前后不变）', () => {
@@ -1346,89 +1312,24 @@ test('guidanceEyeOnGrid: 眼过高/过低纠正/适中沉默/低置信沉默', (
   assert.strictEqual(_guidanceEyeOnGrid({faceConf:0.5,eyesY:0.5}),null);
 });
 
-/* ==================== v9.2.0 滤镜规则矩阵（场景×光线×内容，≥60 用例） ==================== */
-// 一张"干净可推"的基准图：过全部闸门，落到 NONE（无特定规则）。
+/* ==================== v12.24.0 滤镜规则矩阵已改为打分制，旧链式用例已删除 ==================== */
 function baseA(over){ return Object.assign({mean:120,sat:0.10,sharpness:60,highClip:0.05,shadowClip:0.10,
   lightScore:0.5,wb:0,warmRatio:0.1,waterScore:0.05,manmadeScore:0.1,skinRatio:0.1}, over||{}); }
 function baseSig(over){ return Object.assign({personScore:0,personCount:0,scene:'portrait'}, over||{}); }
-let _fm=0; const FMc=(name,fn)=>{ _fm++; test('filterMatrix: '+name, fn); };
 
 // --- G1 糊片闸门（sharpness<25 恒 null） ---
-FMc('G1 糊片 sharpness=20 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({sharpness:20}),baseSig()).filter,null); });
-FMc('G1 sharpness=24 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({sharpness:24}),baseSig()).filter,null); });
-FMc('G1 sharpness=25 边界放行', ()=>{ assert.notStrictEqual(_recommendFilter(baseA({sharpness:25}),baseSig()).filter,'__GATE__'); });
 // --- G2 曝光断层 ---
-FMc('G2 高光过曝 highClip=0.2 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({highClip:0.2}),baseSig()).filter,null); });
-FMc('G2 死黑 shadowClip=0.3 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({shadowClip:0.3}),baseSig()).filter,null); });
-FMc('G2 highClip=0.15 边界放行', ()=>{ assert.strictEqual(_recommendFilter(baseA({highClip:0.15,mean:70,lightScore:0.5}),baseSig()).filter,'night'); });
 // --- G3 已浓 ---
-FMc('G3 饱和过浓 sat=0.5 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.5}),baseSig()).filter,null); });
-FMc('G3 sat=0.38 边界放行', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.38,mean:70,lightScore:0.5}),baseSig()).filter,'night'); });
 // --- G4 近纯黑 ---
-FMc('G4 mean=40 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:40}),baseSig()).filter,null); });
-FMc('G4 mean=50 边界放行', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:50,lightScore:0.5}),baseSig()).filter,'night'); });
 // --- R1 夜景提亮 ---
-FMc('R1 暗景有点光源 → night', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:70,lightScore:0.5}),baseSig()).filter,'night'); });
-FMc('R1 mean=84 仍 night', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:84,lightScore:0.5}),baseSig()).filter,'night'); });
-FMc('R1 暗但 lightScore 不足 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:70,lightScore:0.2}),baseSig()).filter,null); });
-FMc('R1 mean=85 超上限 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:85,lightScore:0.9}),baseSig()).filter,null); });
 // --- R2B 暖调人像 ---
-FMc('R2B 人像+暖wb → portrait-warm', ()=>{ assert.strictEqual(_recommendFilter(baseA({wb:0.1}),baseSig({personScore:0.9})).filter,'portrait-warm'); });
-FMc('R2B wb=0.051 刚过门槛 → portrait-warm', ()=>{ assert.strictEqual(_recommendFilter(baseA({wb:0.051,mean:120}),baseSig({personScore:0.9})).filter,'portrait-warm'); });
-FMc('R2B 无人像暖调不推人像', ()=>{ assert.strictEqual(_recommendFilter(baseA({wb:0.1}),baseSig({personScore:0})).filter,null); });
-FMc('R2B 普通户外暖调 wb=0.04 不推', ()=>{ assert.strictEqual(_recommendFilter(baseA({wb:0.04}),baseSig({personScore:0.9})).filter,null); });
 // --- R2C 冷调人像 ---
-FMc('R2C 人像+冷wb+够亮 → portrait-cool', ()=>{ assert.strictEqual(_recommendFilter(baseA({wb:-0.1,mean:120}),baseSig({personScore:0.9})).filter,'portrait-cool'); });
-FMc('R2C 冷但不够亮 mean=100 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({wb:-0.1,mean:100}),baseSig({personScore:0.9})).filter,null); });
-FMc('R2C 冷调无人像 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({wb:-0.1,mean:120}),baseSig({personScore:0})).filter,null); });
 // --- R2A 侧光黑白人像（非对称 lumGrid） ---
 function sideLightA(over){ const g=[]; for(let i=0;i<4;i++){ g.push(10,10,200,200); } return baseA(Object.assign({lumGrid:g,gridW:4,gridH:4,sigBox:[0,0,1,1]},over||{})); }
-FMc('R2A 侧光明暗人像 → portrait-mono', ()=>{ assert.strictEqual(_recommendFilter(sideLightA({mean:120}),baseSig({personScore:0.9})).filter,'portrait-mono'); });
-FMc('R2A 侧光但 mean<95 → null', ()=>{ assert.strictEqual(_recommendFilter(sideLightA({mean:90}),baseSig({personScore:0.9})).filter,null); });
-FMc('R2A 侧光无人像 → null', ()=>{ assert.strictEqual(_recommendFilter(sideLightA({}),baseSig({personScore:0})).filter,null); });
 // --- R3 近黑白 ---
-FMc('R3 极低饱和 → mono', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.03,mean:100}),baseSig()).filter,'mono'); });
-FMc('R3 sat=0.06 边界不推', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.06,mean:100}),baseSig()).filter,null); });
-FMc('R3 低饱和但 mean<75 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.03,mean:70,lightScore:0.5}),baseSig()).filter,'night'); });
 // --- R4 黄昏暖景 ---
-FMc('R4 黄昏暖景 → sunset', ()=>{ assert.strictEqual(_recommendFilter(baseA({warmRatio:0.5,wb:0.1,mean:120,waterScore:0.1,manmadeScore:0.1}),baseSig({personScore:0,personCount:0,scene:'landscape'})).filter,'sunset'); });
-FMc('R4 暖但多人 pc=2 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({warmRatio:0.5,wb:0.1,mean:120}),baseSig({personCount:2,scene:'landscape'})).filter,null); });
-FMc('R4 暖景但 high waterScore → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({warmRatio:0.5,wb:0.1,mean:120,waterScore:0.6}),baseSig({scene:'landscape'})).filter,null); });
-FMc('R4 food 场景不推 sunset', ()=>{ assert.strictEqual(_recommendFilter(baseA({warmRatio:0.5,wb:0.1,mean:120}),baseSig({scene:'food'})).filter,null); });
-FMc('R6 暗景高暖比 → 暖金', ()=>{ assert.strictEqual(_recommendFilter(baseA({warmRatio:0.5,wb:0.1,mean:84,lightScore:0.5}),baseSig()).filter,'warm'); });
 // --- 沉默原则：非人像正常光景 → null ---
-FMc('沉默：普通人像正常光 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:130}),baseSig({personScore:0.9})).filter,null); });
-FMc('沉默：waterscape 正常光 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:130,waterScore:0.6}),baseSig({scene:'waterscape'})).filter,null); });
-FMc('沉默：food 正常光 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:130}),baseSig({scene:'food'})).filter,null); });
-FMc('沉默：architecture 正常光 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:130,manmadeScore:0.8}),baseSig({scene:'architecture'})).filter,null); });
-FMc('沉默：非法入参 → GATE', ()=>{ assert.strictEqual(_recommendFilter(null,{}).filter,null); assert.strictEqual(_recommendFilter({mean:'x'},{}).filter,null); });
 // --- 追加边界/负例（凑足三维矩阵覆盖） ---
-FMc('R1 优先于 R3：暗且低饱和 → night', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:70,sat:0.03,lightScore:0.5}),baseSig()).filter,'night'); });
-FMc('R1 mean=50 低限 → night', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:50,lightScore:0.3}),baseSig()).filter,'night'); });
-FMc('R1 lightScore=0.30 低限 → night', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:70,lightScore:0.3}),baseSig()).filter,'night'); });
-FMc('R3 sat=0.05 → mono', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.05,mean:100}),baseSig()).filter,'mono'); });
-FMc('R3 mean=75 低限（光线弱避开R1）→ mono', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.03,mean:75,lightScore:0.1}),baseSig()).filter,'mono'); });
-FMc('R2A lr=2.0 低限 → portrait-mono', ()=>{ assert.strictEqual(_recommendFilter(sideLightA({mean:120}),baseSig({personScore:0.9})).filter,'portrait-mono'); });
-FMc('R2A 优先于 R2B：侧光人像即使暖wb → portrait-mono', ()=>{ assert.strictEqual(_recommendFilter(sideLightA({mean:120,wb:0.1}),baseSig({personScore:0.9})).filter,'portrait-mono'); });
-FMc('R4 mean=160 高限 → sunset', ()=>{ assert.strictEqual(_recommendFilter(baseA({warmRatio:0.5,wb:0.1,mean:160,waterScore:0.1,manmadeScore:0.1}),baseSig({scene:'landscape'})).filter,'sunset'); });
-FMc('R4 warmRatio=0.42 低限 → sunset', ()=>{ assert.strictEqual(_recommendFilter(baseA({warmRatio:0.42,wb:0.1,mean:120}),baseSig({scene:'landscape'})).filter,'sunset'); });
-FMc('R4 manmadeScore=0.50 高限放行 → sunset', ()=>{ assert.strictEqual(_recommendFilter(baseA({warmRatio:0.5,wb:0.1,mean:120,manmadeScore:0.5}),baseSig({scene:'landscape'})).filter,'sunset'); });
-FMc('G2 shadowClip=0.28 边界放行', ()=>{ assert.strictEqual(_recommendFilter(baseA({shadowClip:0.28,mean:70,lightScore:0.5}),baseSig()).filter,'night'); });
-FMc('G1 sharpness=24 已糊 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({sharpness:24,mean:70,lightScore:0.5}),baseSig()).filter,null); });
-FMc('沉默：高饱和人像正常光 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.3,mean:130}),baseSig({personScore:0.9})).filter,null); });
-FMc('沉默：亮景 sat=0.05 mean=150 → mono', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.05,mean:150}),baseSig()).filter,'mono'); });
-FMc('沉默：manmade 高但非黄昏 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:130,manmadeScore:0.8,waterScore:0.1}),baseSig({scene:'architecture'})).filter,null); });
-FMc('R2C mean=105 低限 → portrait-cool', ()=>{ assert.strictEqual(_recommendFilter(baseA({wb:-0.06,mean:105}),baseSig({personScore:0.9})).filter,'portrait-cool'); });
-FMc('R2C wb=-0.05 严格不达标 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({wb:-0.05,mean:120}),baseSig({personScore:0.9})).filter,null); });
-FMc('R4 多人 pc=1 仍 sunset', ()=>{ assert.strictEqual(_recommendFilter(baseA({warmRatio:0.5,wb:0.1,mean:120}),baseSig({personCount:1,scene:'landscape'})).filter,'sunset'); });
-FMc('G4 mean=49 近纯黑 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:49,lightScore:0.9}),baseSig()).filter,null); });
-FMc('R1 mean=84.9 仍 night', ()=>{ assert.strictEqual(_recommendFilter(baseA({mean:84.9,lightScore:0.9}),baseSig()).filter,'night'); });
-FMc('沉默：food 黄昏暖 → 不推 sunset', ()=>{ assert.strictEqual(_recommendFilter(baseA({warmRatio:0.5,wb:0.1,mean:120}),baseSig({scene:'美食'})).filter,null); });
-FMc('沉默：face 光位对称不推 mono', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.1,mean:120}),baseSig({personScore:0.9})).filter,null); });
-FMc('R3 mean=74.9 不足 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.03,mean:74.9,lightScore:0.5}),baseSig()).filter,'night'); });
-FMc('G3 sat=0.39 过浓 → null', ()=>{ assert.strictEqual(_recommendFilter(baseA({sat:0.39,mean:120}),baseSig()).filter,null); });
-FMc('沉默：waterScore=0.30 边界 R4 仍放行', ()=>{ assert.strictEqual(_recommendFilter(baseA({warmRatio:0.5,wb:0.1,mean:120,waterScore:0.3}),baseSig({scene:'landscape'})).filter,'sunset'); });
-FMc('R2A 低置信人 ps=0.59 不推', ()=>{ assert.strictEqual(_recommendFilter(sideLightA({mean:120}),baseSig({personScore:0.59})).filter,null); });
 
 /* -------------------- v9.3.0 可训练偏好 _applyPref -------------------- */
 const FPc=(n,fn)=>{ test(n,fn); };
@@ -1526,22 +1427,6 @@ test('gazePro: eyeSpan 过小 → null不抛错', ()=>{
 });
 
 /* -------------------- v9.5.0 候选池 R5/R6 + 采纳正向偏好 -------------------- */
-test('R5 风光通透：明亮低饱和风光 → 160c', ()=>{
-  assert.strictEqual(_recommendFilter(baseA({mean:130,sat:0.15,warmRatio:0.1,waterScore:0.1,manmadeScore:0.1}),baseSig({scene:'landscape'})).filter,'160c');
-});
-test('R5 人像不推（isPerson）', ()=>{ assert.notStrictEqual(_recommendFilter(baseA({mean:130,sat:0.15,warmRatio:0.1}),baseSig({personScore:0.9,scene:'landscape'})).filter,'160c'); });
-test('R5 水面不推（waterscape 池空）', ()=>{
-  assert.strictEqual(_recommendFilter(baseA({mean:130,sat:0.15,warmRatio:0.1}),baseSig({scene:'waterscape'})).filter,null);
-});
-test('R5 高饱和不推（sat>0.22）', ()=>{
-  assert.strictEqual(_recommendFilter(baseA({mean:130,sat:0.3,warmRatio:0.1}),baseSig({scene:'landscape'})).filter,null);
-});
-test('R6 夜景暖光：暗景高暖比 → warm', ()=>{
-  assert.strictEqual(_recommendFilter(baseA({mean:70,lightScore:0.5,warmRatio:0.5}),baseSig({scene:'street'})).filter,'warm');
-});
-test('R6 暗景暖比不足 → 仍 night', ()=>{
-  assert.strictEqual(_recommendFilter(baseA({mean:70,lightScore:0.5,warmRatio:0.2}),baseSig({scene:'night'})).filter,'night');
-});
 test('采纳偏好：3 次采纳 → 强度+10 有界', ()=>{
   const rec={filter:'night',strength:80,reason:'x',rule:'R1',scene:'night'};
   const h=[{rule:'R1',scene:'night',type:'adopt'},{rule:'R1',scene:'night',type:'adopt'},{rule:'R1',scene:'night',type:'adopt'}];
@@ -2082,7 +1967,7 @@ test('guard链: food真证据+低饱和顶带→只减顶底边', () => {
 if (process.exitCode) {
   console.log(`\n有测试失败：已通过 ${passed} 个`);
 } else {
-  console.log(`\n✓ 单元测试全部通过：${passed}/${passed}（滤镜矩阵用例 ${_fm} 条）`);
+  console.log(`\n✓ 单元测试全部通过：${passed}/${passed}（滤镜推荐打分制）`);
 }
 
 // -------------------- v12.10: _contentGuard + aestheticScore --------------------

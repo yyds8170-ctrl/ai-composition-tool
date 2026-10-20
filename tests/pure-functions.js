@@ -771,62 +771,113 @@
         var waterScore=(typeof a.waterScore==="number"&&isFinite(a.waterScore))?a.waterScore:0;
         var manmadeScore=(typeof a.manmadeScore==="number"&&isFinite(a.manmadeScore))?a.manmadeScore:0;
         var pf=_scenePrefix((sig&&typeof sig.scene==="string")?sig.scene:"", wb);
-        function mkR(f,s,r,rule){ return {filter:f,strength:s,reason:pf+r,rule:rule}; }
-        // G1 糊片
-        if(sharpness<25) return GATE;
-        // G2 曝光断层
-        if(highClip>0.15||shadowClip>0.28) return GATE;
-        // G3 已浓
-        if(sat>0.38) return GATE;
-        // G4 近纯黑
-        if(mean<50) return GATE;
+        // G1-G5 硬闸门（安全底线不松）
+        if(sharpness<25) return GATE; // 糊片
+        if(highClip>0.15||shadowClip>0.28) return GATE; // 曝光断层
+        if(sat>0.38) return GATE; // 已浓
+        if(mean<50) return GATE; // 近纯黑
         var ps=(sig&&typeof sig.personScore==="number"&&isFinite(sig.personScore))?sig.personScore:0;
         var pc=(sig&&typeof sig.personCount==="number"&&isFinite(sig.personCount))?sig.personCount:0;
         var scn=(sig&&typeof sig.scene==="string")?sig.scene:null;
-        var skinRatio=(typeof a.skinRatio==="number"&&isFinite(a.skinRatio))?a.skinRatio:0;
-        // 人像成立（150 图实测标定）：只认 YOLO person≥0.6 硬证据——肤色启发式在风光/食物/建筑/水面图上普遍误中
-        // （实测水面图 skinRatio=16% 仍被 isPersonLikely 命中），自动推滤镜宁可漏掉也不硬推。
         var isPerson=(ps>=0.6);
-        // lightRatio：从 sigBox 左右半亮度比（与拍前光位同口径）
-        var lr=0;
-        try{
-          if(Array.isArray(a.lumGrid)&&a.gridW>=4&&a.gridH>=4&&Array.isArray(a.sigBox)&&a.sigBox.length===4){
-            var gw2=Math.round(a.gridW), gh2=Math.round(a.gridH), bx=a.sigBox;
-            var x0=Math.max(0,Math.min(1,bx[0])), x1=Math.max(x0+1e-3,Math.min(1,bx[2]));
-            var y0=Math.max(0,Math.min(1,bx[1])), y1=Math.max(y0+1e-3,Math.min(1,bx[3]));
-            var gx0=Math.floor(x0*gw2), gx1=Math.ceil(x1*gw2), gy0=Math.floor(y0*gh2), gy1=Math.ceil(y1*gh2);
-            var midX=(x0+x1)/2, sl=0,sr=0,nsl=0,nsr=0;
-            for(var gy=gy0;gy<gy1;gy++){ for(var gx=gx0;gx<gx1;gx++){
-              if(gx<0||gx>=gw2||gy<0||gy>=gh2) continue;
-              var v=a.lumGrid[gy*gw2+gx];
-              if(typeof v!=="number"||!isFinite(v)) continue;
-              if((gx+0.5)/gw2<midX){ sl+=v; nsl++; } else { sr+=v; nsr++; }
-            } }
-            if(nsl&&nsr){
-              var L=sl/nsl, R=sr/nsr;
-              if(Math.abs(L-R)>=12){ var mn=Math.min(L,R); if(mn<1e-3){ lr=0; } else { lr=Math.max(L,R)/mn; } }
-            }
+
+        // === 场景感知候选打分（v12.24.0）===
+        // 场景判定
+        var scene="general";
+        if(isPerson) scene="portrait";
+        else if(scn==="food"||scn==="美食") scene="food";
+        else if(mean<85&&lightScore>=0.3) scene="night";
+        else if(warmRatio>=0.42&&wb>0.05&&mean>=85&&mean<=160) scene="sunset";
+        else if(waterScore>=0.4) scene="water";
+        else if(manmadeScore>=0.5&&scn==="architecture") scene="architecture";
+        else if(scn==="landscape"||scn==="street") scene="outdoor";
+
+        // 候选滤镜池（按场景）
+        var POOLS={
+          portrait:["portra","ektar","portrait-warm","portrait-cool","portrait-mono","japan","provia"],
+          food:["portra","warm","sunset","c200","hk"],
+          night:["night","cyber","teal","chrome","cool"],
+          sunset:["sunset","teal","warm","cine","hk"],
+          water:["160c","velvia","cool","provia","natural"],
+          architecture:["chrome","classic","mono-warm","provia","cool"],
+          outdoor:["velvia","160c","provia","chrome","fade"],
+          general:["natural","provia","morandi","fade","classic"]
+        };
+        var pool=POOLS[scene]||POOLS.general;
+        // 极低饱和时强制加黑白候选
+        if(sat<0.06) pool=pool.concat(["mono","mono-warm","chrome"]);
+
+        // 打分函数：每个候选 0-100 分
+        function scoreFilter(f){
+          var s=0;
+          // 基础分：场景匹配
+          if(pool.indexOf(f)>=0) s+=30;
+          // 低饱和画面推高饱和，高饱和画面推低饱和/中性
+          if(sat<0.15&&["velvia","160c","ektar","sunset","cyber","vivid"].indexOf(f)>=0) s+=20;
+          if(sat>0.25&&["morandi","fade","classic","japan","provia"].indexOf(f)>=0) s+=15;
+          // 暖调画面推暖色，冷调推冷色
+          if(wb>0.03&&["warm","sunset","portra","portrait-warm","c200","hk"].indexOf(f)>=0) s+=15;
+          if(wb<-0.03&&["cool","chrome","classic","160c","portrait-cool"].indexOf(f)>=0) s+=15;
+          // 暗画面推提亮/霓虹
+          if(mean<90&&["night","cyber","teal"].indexOf(f)>=0) s+=20;
+          if(mean<90&&["morandi","fade","japan"].indexOf(f)>=0) s-=10;
+          // 人像推肤色友好
+          if(isPerson&&["portra","ektar","portrait-warm","portrait-cool","portrait-mono","japan"].indexOf(f)>=0) s+=15;
+          // 食物推暖食欲色
+          if(scene==="food"&&["portra","warm","sunset","c200","hk"].indexOf(f)>=0) s+=15;
+          // 风光推通透
+          if(scene==="outdoor"||scene==="water"){
+            if(["velvia","160c","provia"].indexOf(f)>=0) s+=15;
+            if(["hk","cyber","vivid"].indexOf(f)>=0) s-=15;
           }
-        }catch(e2){ lr=0; }
-        // R6 夜景暖调（v9.5 候选池扩展）：暗景且暖色占比高（城市霓虹/夜市暖光）→ 暖金，压过 R1 冷提亮
-        if(mean>=50&&mean<85&&lightScore>=0.30&&warmRatio>=0.45&&scn!=="food"&&scn!=="美食") return mkR("warm",75,"夜色里有暖光，暖金调更有氛围","R6");
-        // R1 夜景提亮
-        if(mean>=50&&mean<85&&lightScore>=0.30) return mkR("night",80,"夜景偏暗、有点光源，暗部提亮更通透","R1");
-        // R2A 侧光黑白人像
-        if(isPerson&&lr>=2.0&&mean>=95) return mkR("portrait-mono",60,"侧光人像明暗分明，黑白更衬光影","R2A");
-        // R2B 暖调人像（wb 门槛 0.035→0.05 实测标定：普通户外暖调照片 wb≈0.03–0.05 不应推）
-        if(isPerson&&wb>0.05) return mkR("portrait-warm",80,"暖光环境，肤色会更通透","R2B");
-        // R2C 冷调人像（wb 门槛 -0.035→-0.05）
-        if(isPerson&&wb<-0.05&&mean>=105) return mkR("portrait-cool",80,"冷调环境，肤色更清透","R2C");
-        // R3 近黑白
-        if(sat<0.06&&mean>=75) return mkR("mono",90,"画面本来就低饱和，黑白影调更干净","R3");
-        // R5 风光清新通透（v9.5 候选池扩展）：明亮低饱和的风光/街景、非暖黄昏非人像非水面 → 160c 通透
-        if(!isPerson&&(scn==="landscape"||scn==="general"||scn==="sunset"||scn==="street")&&mean>=100&&mean<=170&&sat<0.22&&warmRatio<0.30&&waterScore<=0.30&&manmadeScore<=0.50) return mkR("160c",65,"明亮干净的风光，通透一档天空更蓝","R5");
-        // R4 黄昏暖景
-        if(pc<=1&&warmRatio>=0.42&&wb>0.05&&mean>=85&&mean<=160&&waterScore<=0.30&&manmadeScore<=0.50&&scn!=="food"&&scn!=="美食"){
-          return mkR("sunset",70,"黄昏暖景，橙金氛围更浓","R4");
+          // 街拍/建筑推纪实黑白冷调
+          if(scene==="architecture"||scn==="street"){
+            if(["chrome","classic","mono-warm","provia"].indexOf(f)>=0) s+=10;
+          }
+          // 极低饱和直接推黑白
+          if(sat<0.06&&["mono","mono-warm","chrome"].indexOf(f)>=0) s+=25;
+          return s;
         }
-        return {filter:null,strength:0,reason:"",rule:"NONE"};
+
+        // 给所有候选打分并排序
+        var scored=pool.map(function(f){
+          return {filter:f,score:scoreFilter(f)};
+        }).sort(function(a,b){return b.score-a.score;});
+
+        // 取 top1，分数太低（<30）不推
+        var top=scored[0];
+        if(!top||top.score<30) return {filter:null,strength:0,reason:"",rule:"NONE"};
+
+        // 强度：分数越高强度越大
+        var strength=Math.min(80,Math.max(50,top.score));
+        // 理由
+        var reasons={
+          "portra":"暖调人像，肤色通透",
+          "ektar":"高饱和暖调，人像利器",
+          "portrait-warm":"暖光环境，肤色更通透",
+          "portrait-cool":"冷调环境，肤色更清透",
+          "portrait-mono":"侧光人像，黑白衬光影",
+          "japan":"清新低饱和日系",
+          "provia":"中性还原，自然通透",
+          "velvia":"浓郁色彩，红蓝对撞",
+          "160c":"通透蓝天，风光利器",
+          "night":"夜景提亮，暗部通透",
+          "cyber":"霓虹夜景，都市感",
+          "teal":"青橙分流，电影感",
+          "sunset":"橙金落日，暖意氛围",
+          "warm":"暖金色调，氛围浓郁",
+          "chrome":"高反差纪实，硬朗线条",
+          "classic":"冷峻低饱和，几何线条",
+          "mono-warm":"暖调黑白，复古质感",
+          "mono":"经典黑白，影调干净",
+          "morandi":"低饱和高级灰",
+          "fade":"褪色做旧，怀旧感",
+          "c200":"柔和胶片绿调",
+          "hk":"港风霓虹，高饱和",
+          "cool":"清冷干净，适合夜景",
+          "natural":"轻度增强，忠实还原"
+        };
+        return {filter:top.filter,strength:strength,reason:pf+(reasons[top.filter]||"场景适配"),rule:"SCORE"};
       }catch(e){ return GATE; }
     }
 
