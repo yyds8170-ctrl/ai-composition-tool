@@ -2084,3 +2084,26 @@ if (process.exitCode) {
 } else {
   console.log(`\n✓ 单元测试全部通过：${passed}/${passed}（滤镜矩阵用例 ${_fm} 条）`);
 }
+
+// -------------------- v12.10: _contentGuard + aestheticScore --------------------
+{
+  const { _contentGuard, aestheticScore } = require('./pure-functions.js');
+  // 极暗图不裁
+  assert.strictEqual(_contentGuard(10, 0.2, 0.1), true, '极暗图应不裁');
+  assert.strictEqual(_contentGuard(200, 0.2, 0.1), false, '正常亮度应裁');
+  // 纯色/灰图不裁
+  assert.strictEqual(_contentGuard(128, 0.01, 0.01), true, '纯色灰图应不裁');
+  // 截图/UI不裁
+  assert.strictEqual(_contentGuard(128, 0.05, 0.5), true, '高边缘低饱和截图应不裁');
+  // 正常照片不触发
+  assert.strictEqual(_contentGuard(120, 0.3, 0.1), false, '正常照片不应不裁');
+  // null安全
+  assert.strictEqual(_contentGuard(-1, 0.3, 0.1), false, 'null安全');
+  // aestheticScore
+  var good = aestheticScore(0.7, 0.4, 0.1, 0.9, 0.8);
+  var bad = aestheticScore(0.1, 0.05, 0.4, 0.2, 0.1);
+  assert.ok(good > bad, '好构图分应高于差构图: '+good+' vs '+bad);
+  assert.ok(good >= 60 && good <= 100, '好构图分在合理范围: '+good);
+  assert.ok(bad >= 0 && bad <= 60, '差构图分在合理范围: '+bad);
+  console.log('  ✓ v12.10 _contentGuard + aestheticScore（9条）');
+}
