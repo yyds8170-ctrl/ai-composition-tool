@@ -804,8 +804,10 @@
           general:["natural","provia","morandi","fade","classic"]
         };
         var pool=POOLS[scene]||POOLS.general;
-        // 极低饱和时强制加黑白候选
-        if(sat<0.06) pool=pool.concat(["mono","mono-warm","chrome"]);
+        // 极低饱和时，仅在建筑/街拍/通用场景加黑白候选（food/sunset/人像不加）
+        if(sat<0.06 && scene!=="food" && scene!=="sunset" && scene!=="portrait"){
+          pool=pool.concat(["mono","mono-warm","chrome"]);
+        }
 
         // 打分函数：每个候选 0-100 分
         function scoreFilter(f){
@@ -834,8 +836,14 @@
           if(scene==="architecture"||scn==="street"){
             if(["chrome","classic","mono-warm","provia"].indexOf(f)>=0) s+=10;
           }
-          // 极低饱和直接推黑白
-          if(sat<0.06&&["mono","mono-warm","chrome"].indexOf(f)>=0) s+=25;
+          // 极低饱和加黑白分：仅限建筑/街拍/通用，且非food/sunset/人像
+          if(sat<0.06 && (scene==="architecture"||scene==="street"||scene==="general") &&
+             scene!=="food" && scene!=="sunset" && !isPerson &&
+             ["mono","mono-warm","chrome"].indexOf(f)>=0) s+=25;
+          // 色彩即主体：food/sunset/暖色调 黑白直接负分
+          if((scene==="food"||scene==="sunset"||warmRatio>0.4) && ["mono","mono-warm"].indexOf(f)>=0) s-=30;
+          // 普通人像不推黑白（侧光强对比例外）
+          if(isPerson && scene==="portrait" && ["mono","mono-warm"].indexOf(f)>=0) s-=20;
           return s;
         }
 

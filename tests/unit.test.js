@@ -1032,6 +1032,18 @@ test('filter 低饱和: sat<0.06 → 推荐黑白', () => {
   const r = recWith({ sat: 0.02, mean: 100 }, null);
   assert.ok(['mono','mono-warm','chrome'].indexOf(r.filter) >= 0, '黑白类, 实得=' + r.filter);
 });
+test('filter 美食低饱和不推黑白: scene=food+sat=0.05 → 非mono', () => {
+  const r = recWith({ sat: 0.05, mean: 150, wb: 0.05 }, { scene: 'food' });
+  assert.ok(['mono','mono-warm'].indexOf(r.filter) < 0, '美食不该推黑白, 实得=' + r.filter);
+});
+test('filter 晚霞低饱和不推黑白: warmRatio=0.5+sat=0.05 → 非mono', () => {
+  const r = recWith({ sat: 0.05, warmRatio: 0.5, wb: 0.08, mean: 120 }, { scene: 'sunset' });
+  assert.ok(['mono','mono-warm'].indexOf(r.filter) < 0, '晚霞不该推黑白, 实得=' + r.filter);
+});
+test('filter 建筑低饱和可推黑白: scene=architecture+sat=0.05 → chrome/mono-warm', () => {
+  const r = recWith({ sat: 0.05, mean: 120, manmadeScore: 0.8 }, { scene: 'architecture' });
+  assert.ok(['chrome','mono-warm','provia'].indexOf(r.filter) >= 0, '建筑可接受, 实得=' + r.filter);
+});
 test('filter 属性: strength∈[50,80]、非null id 属推荐池', () => {
   const cases = [
     recWith({ mean: 70, lightScore: 0.4 }, null),
