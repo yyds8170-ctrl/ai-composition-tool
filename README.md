@@ -661,3 +661,4 @@ https://yyds8170-ctrl.github.io/ai-composition-tool/
 - 12MP 大图内存逼近 256MB，入口已降采样到长边≤2048px
 | v12.9.0 | 对比滑块真因修复：z-index叠层顺序（原图盖住效果层）；verify_stacking.js 真实验收 | ✅ 最终版 |
 | v12.13.0 | 最终收敛版：边界/stacking/多场景复核全过 | ✅ 最终版 |
+| v12.17.0 | 最终冻结版：全门禁过+真机清单+矩阵定稿 | ✅ 冻结 |
