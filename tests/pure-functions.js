@@ -779,17 +779,21 @@
         var ps=(sig&&typeof sig.personScore==="number"&&isFinite(sig.personScore))?sig.personScore:0;
         var pc=(sig&&typeof sig.personCount==="number"&&isFinite(sig.personCount))?sig.personCount:0;
         var scn=(sig&&typeof sig.scene==="string")?sig.scene:null;
-        var isPerson=(ps>=0.6);
+        var atm=(sig&&typeof sig.atmosphere==="string")?sig.atmosphere:null;
+        // v12.26.0: 云端 VLM 的 scene/atmosphere 是语义证据，优先于纯像素阈值；
+        // 仍保留"色彩即主体"硬保护（美食/晚霞/人像肤色不推黑白）。
+        var isPerson=(ps>=0.6)||scn==="portrait"||scn==="portrait_close";
 
-        // === 场景感知候选打分（v12.24.0）===
+        // === 场景感知候选打分（v12.26.0：云端语义 + 本地像素双证据）===
         // 场景判定
         var scene="general";
         if(isPerson) scene="portrait";
         else if(scn==="food"||scn==="美食") scene="food";
-        else if(mean<85&&lightScore>=0.3) scene="night";
-        else if(warmRatio>=0.42&&wb>0.05&&mean>=85&&mean<=160) scene="sunset";
-        else if(waterScore>=0.4) scene="water";
-        else if(manmadeScore>=0.5&&scn==="architecture") scene="architecture";
+        else if(scn==="night"||(mean<85&&lightScore>=0.3)) scene="night";
+        else if(atm==="sunset_sky"||(warmRatio>=0.42&&wb>0.05&&mean>=85&&mean<=160)) scene="sunset";
+        else if(scn==="waterscape"||atm==="water_reflection"||waterScore>=0.4) scene="water";
+        else if(scn==="architecture"&&manmadeScore>=0.5) scene="architecture";
+        else if(scn==="animal") scene="animal";
         else if(scn==="landscape"||scn==="street") scene="outdoor";
 
         // 候选滤镜池（按场景）
@@ -800,6 +804,7 @@
           sunset:["sunset","teal","warm","cine","hk"],
           water:["160c","velvia","cool","provia","natural"],
           architecture:["chrome","classic","mono-warm","provia","cool"],
+          animal:["natural","portra","provia","warm","japan"],
           outdoor:["velvia","160c","provia","chrome","fade"],
           general:["natural","provia","morandi","fade","classic"]
         };

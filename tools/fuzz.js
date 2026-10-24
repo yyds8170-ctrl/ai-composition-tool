@@ -512,7 +512,9 @@ for(let i=0;i<500000;i++){
 if(!Array.isArray(_composeDiagnosis(null))||_composeDiagnosis(null).length!==0) bad('composeDiagnosis null 输入未 []');
 
 // 19. v9.0.0 _recommendFilter: 随机信号 → 永远返回合法对象、strength∈[0,100]、非null id∈6款、不抛错、无副作用（50 万次）
-const FREC_ALLOW=['night','portrait-warm','portrait-cool','portrait-mono','mono','sunset','warm','160c'];
+// v12.26.0: 白名单与 _recommendFilter 的实际候选池同步（原清单停在旧版 8 款，误报 2 万+ 条"非法滤镜"）
+const FREC_ALLOW=['night','portrait-warm','portrait-cool','portrait-mono','mono','mono-warm','sunset','warm','160c',
+  'portra','ektar','japan','provia','c200','hk','cyber','teal','chrome','cool','velvia','natural','classic','morandi','fade'];
 for(let i=0;i<500000;i++){
   const grid=[]; for(let j=0;j<256;j++) grid.push(rnd(0,255));
   const a={mean:rnd(0,260),contrast:rnd(0,80),wb:rnd(-0.15,0.15),sat:rnd(0,0.6),

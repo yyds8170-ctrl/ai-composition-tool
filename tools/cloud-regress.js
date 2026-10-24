@@ -7,7 +7,7 @@
 'use strict';
 const http=require('http'); const fs=require('fs'); const path=require('path');
 const puppeteer=require('puppeteer');
-const ROOT=path.join(__dirname,'..'); const PORT=8776; const BATCH=40;
+const ROOT=path.join(__dirname,'..'); const PORT=Number(process.env.CLOUD_REGRESS_PORT||8776); const BATCH=40;
 const TOKEN=process.env.CLOUD_TOKEN;
 const MIME={'.html':'text/html','.js':'text/javascript','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webmanifest':'application/manifest+json','.wasm':'application/wasm','.onnx':'application/octet-stream'};
 const srv=http.createServer((req,res)=>{ let p=decodeURIComponent(req.url.split('?')[0]); if(p==='/')p='/index.html'; const fp=path.join(ROOT,p); if(!fs.existsSync(fp)){res.writeHead(404);res.end();return;} res.writeHead(200,{'Content-Type':MIME[path.extname(fp)]||'application/octet-stream'}); fs.createReadStream(fp).pipe(res); });
@@ -29,7 +29,9 @@ async function runBatch(imgs, batchIdx){
   for(const img of imgs){
     const input=await page.$('#fileInput'); await input.uploadFile(img); await new Promise(r=>setTimeout(r,1500));
     await page.evaluate(()=>document.getElementById('btnAnalyze').click());
-    let snap=null; const dl=Date.now()+40000;
+    // v12.26.0: 只在"已自动应用 + ☁️ 云端"时提前结束；本地结果不再算完成，
+    // 否则会在云端返回前把像素初判记成 local，云端回归失真。最多等 35s（云端窗口 30s）。
+    let snap=null; const dl=Date.now()+35000;
     while(Date.now()<dl){
       await new Promise(r=>setTimeout(r,800));
       snap=await page.evaluate(()=>{
@@ -41,7 +43,7 @@ async function runBatch(imgs, batchIdx){
           intent:(p.aiIntent&&p.aiIntent.intentName)||p.cropIntent||'',
           tag:tag, cloud:(tag.indexOf('☁️')>=0), noCrop:!!p.noCrop, status:st};
       });
-      if(snap&&/已自动应用/.test(snap.status)&&(snap.tag.indexOf('☁️')>=0||snap.tag.indexOf('📷')>=0)) break;
+      if(snap&&/已自动应用/.test(snap.status)&&snap.cloud) break;
     }
     const name=path.basename(img);
     if(snap){ console.log(`${name} | ${snap.cloud?'CLOUD':'local'} scene=${snap.scene} rule=${snap.rule} crop=[${snap.crop}] noCrop=${snap.noCrop} | ${snap.tag.slice(0,30)} | ${snap.status.slice(0,30)}`); results.push({name,snap}); }

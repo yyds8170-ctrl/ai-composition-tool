@@ -20,9 +20,9 @@ const path = require('path');
 const puppeteer = require('puppeteer');
 
 const ROOT = path.join(__dirname, '..');
-const PORT = 8771;
+const PORT = Number(process.env.REGRESS_PORT || 8771); // v12.26.0: 支持并行分片回归
 const WAIT_MODEL_MS = 40000;   // 等 YOLO ready
-const WAIT_ANALYZE_MS = 25000; // 每张图分析兜底
+const WAIT_ANALYZE_MS = 15000; // 每张图分析兜底（v12.26.0: 25s→15s，首判出现后再等 4s 收最终 plan）
 const POLL_MS = 500;
 
 const MIME = {
@@ -74,6 +74,7 @@ async function runImage(page, imgPath) {
   const deadline = Date.now() + WAIT_ANALYZE_MS;
   let snap = null;
   let sawCrop = false;
+  let settleUntil = 0; // v12.26.0: 首次"已自动应用"可能是像素初判，等 YOLO 回写后再读最终 plan
   while (Date.now() < deadline) {
     await new Promise(r => setTimeout(r, POLL_MS));
     snap = await page.evaluate(() => {
@@ -108,8 +109,10 @@ async function runImage(page, imgPath) {
     });
     if (!snap || !snap.plan || !snap.plan.crop) continue;
     sawCrop = true;
-    // 等到 YOLO 完成：状态栏出现"已自动应用"，或已等满 20s 兜底
-    if (sawCrop && snap.status && snap.status.indexOf('已自动应用') >= 0) break;
+    // v12.26.0: 首个 plan 可能是像素初判；出现后再等 4s，让 YOLO 异步回写最终 plan，
+    // 否则会把上一张的 person 状态/中间 scene 当成最终结果。
+    if (!settleUntil) settleUntil = Date.now() + 4000;
+    else if (Date.now() >= settleUntil) break;
   }
   return snap;
 }
@@ -168,7 +171,7 @@ async function main() {
       const r = await runImage(page, img);
       results[name] = r;
       if (r && r.plan) {
-        console.log(`crop=[${r.plan.crop}] scene=${r.plan.sceneType} conf=${r.plan.conf}% person=${r.data ? r.data.isPerson : '?'}`);
+        console.log(`crop=[${r.plan.crop}] scene=${r.plan.sceneType} conf=${r.plan.conf}% person=${r.data ? r.data.isPerson : '?'} f=${r.activeFilter || '-'}`);
       } else {
         console.log('NO RESULT');
       }

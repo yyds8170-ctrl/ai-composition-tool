@@ -1,0 +1,18 @@
+=== v12.26.0 发版前门禁 ===
+日期：2026-10-24
+
+[1] npm run extract                  PASS（生成 tests/pure-functions.js）
+[2] node tests/unit.test.js          PASS 400/400
+[3] node tools/fuzz.js               PASS 0 问题（滤镜白名单同步 24 款）
+[4] node --check sw.js               PASS
+[5] node tools/verify_stacking.js    PASS（cmpPos 20%/80% md5 不同）
+[6] 本地真实图回归 139 张             PASS noCrop=120（86.3%），微小裁切 0，人像单边>10 0
+[7] 云端真实图回归 139 张             PASS CLOUD=139，local=0（6 张并发超时样本已单线程复测）
+[8] 移动端 390×844 走查               PASS 横向溢出无、按钮越界/过小无、异常换行无、控制台错误无
+[9] 红线词扫描                        PASS 0 命中
+[10] 版本号同步                       PASS index.html / sw.js / package.json / manifest.webmanifest / README.md
+
+备注：
+- 真实图覆盖：夜景、水景、晚霞、对称、美食、宠物、人像、建筑、风光、街拍、室内。
+- 文件名前缀仅作弱标签；arch_2 实为湖景、arch_5 实为猫、sky_2 实为狗叼面包，已人工复核。
+- 云端回归首轮 6 张超时由三分片并发导致；单线程复测全部 CLOUD，非代码缺陷。

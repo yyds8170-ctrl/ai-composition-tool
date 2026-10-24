@@ -1,0 +1,148 @@
+=== v12.26.0 云端真实图回归（139 张） ===
+日期：2026-10-24
+命令：CLOUD_TOKEN=*** node tools/cloud-regress.js imgs/regression（3 分片并行；6 张超时样本单线程复测）
+模型：glm-5.3-flash（SCF 共享代理）
+
+ancient_1.jpg | CLOUD scene=animal rule=thirds crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 三分法 · 88% | 已自动应用：裁切+构图优化（未裁切）· A级 81分800×
+ancient_10.jpg | CLOUD scene=architecture rule=sym crop=[0,11,0,3] noCrop=false | ☁️ 云端 · 对称构图 · 82% | 已自动应用：智能裁切+构图优化 · A级 85分800×53
+ancient_11.jpg | CLOUD scene=animal rule=center crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 居中构图 · 88% | 已自动应用：裁切+构图优化（未裁切）· A级 84分800×
+ancient_12.jpg | CLOUD scene=architecture rule=thirds crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 三分法 · 82% | 已自动应用：裁切+构图优化（未裁切）· A级 83分800×
+ancient_4.jpg | CLOUD scene=architecture rule=sym crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 对称构图 · 92% | 已自动应用：裁切+构图优化（未裁切）· A级 86分800×
+ancient_5.jpg | CLOUD scene=waterscape rule=sym crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 对称构图 · 92% | 已自动应用：裁切+构图优化（未裁切）· A级 84分800×
+ancient_6.jpg | CLOUD scene=landscape rule=lead crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 引导线 · 93% | 已自动应用：裁切+构图优化（未裁切）· A级 88分800×
+ancient_7.jpg | CLOUD scene=architecture rule=thirds crop=[0,7,0,7] noCrop=false | ☁️ 云端 · 三分法 · 82% | 已自动应用：智能裁切+构图优化 · A级 86分800×45
+ancient_9.jpg | CLOUD scene=architecture rule=sym crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 对称构图 · 93% | 已自动应用：裁切+构图优化（未裁切）· A级 88分800×
+arch_1.jpg | CLOUD scene=architecture rule=thirds crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 三分法 · 82% | 已自动应用：裁切+构图优化（未裁切）· A级 83分800×
+arch_11.jpg | CLOUD scene=architecture rule=sym crop=[6,0,20,0] noCrop=false | ☁️ 云端 · 对称构图 · 92% | 已自动应用：智能裁切+构图优化 · A级 88分800×60
+arch_2.jpg | CLOUD scene=landscape rule=lead crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 引导线 · 93% | 已自动应用：裁切+构图优化（未裁切）· A级 88分800×
+arch_3.jpg | CLOUD scene=general rule=mini crop=[13,11,12,10] noCrop=false | ☁️ 云端 · 极简留白 · 82% | 已自动应用：智能裁切+构图优化 · A级 82分600×50
+arch_4.jpg | CLOUD scene=architecture rule=sym crop=[0,11,0,3] noCrop=false | ☁️ 云端 · 对称构图 · 84% | 已自动应用：智能裁切+构图优化 · A级 86分800×45
+arch_5.jpg | CLOUD scene=animal rule=center crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 居中构图 · 88% | 已自动应用：裁切+构图优化（未裁切）· A级 84分800×
+arch_6.jpg | CLOUD scene=architecture rule=thirds crop=[0,7,0,7] noCrop=false | ☁️ 云端 · 三分法 · 82% | 已自动应用：智能裁切+构图优化 · A级 86分800×45
+arch_7.jpg | CLOUD scene=landscape rule=diag crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 对角线构图 · 72% | 已自动应用：裁切+构图优化（未裁切）· A级 83分800×
+arch_8.jpg | CLOUD scene=landscape rule=thirds crop=[12,18,14,4] noCrop=false | ☁️ 云端 · 三分法 · 88% | 已自动应用：智能裁切+构图优化 · A级 84分592×93
+arch_9.jpg | CLOUD scene=landscape rule=lead crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 引导线 · 93% | 已自动应用：裁切+构图优化（未裁切）· A级 88分800×
+backlit_10.jpg | CLOUD scene=landscape rule=thirds crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 三分法 · 88% | 已自动应用：裁切+构图优化（未裁切）· A级 82分800×
+backlit_11.jpg | CLOUD scene=night rule=lead crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 引导线 · 92% | 已自动应用：裁切+构图优化（未裁切）· A级 85分800×
+backlit_3.jpg | CLOUD scene=general rule=center crop=[23,11,0,12] noCrop=false | ☁️ 云端 · 居中构图 · 78% | 已自动应用：智能裁切+构图优化 · B级 72分616×45
+backlit_4.jpg | CLOUD scene=landscape rule=lead crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 引导线 · 78% | 已自动应用：裁切+构图优化（未裁切）· A级 84分800×
+backlit_5.jpg | CLOUD scene=portrait rule=thirds crop=[10,1,6,10] noCrop=false | ☁️ 云端 · 三分法 · 78% | 已自动应用：智能裁切+构图优化 · A级 85分672×47
+backlit_7.jpg | CLOUD scene=portrait rule=thirds crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 三分法 · 86% | 已自动应用：裁切+构图优化（未裁切）· A级 85分800×
+backlit_8.jpg | CLOUD scene=portrait rule=center crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 居中构图 · 92% | 已自动应用：裁切+构图优化（未裁切）· A级 82分800×
+backlit_9.jpg | CLOUD scene=landscape rule=lead crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 引导线 · 86% | 已自动应用：裁切+构图优化（未裁切）· A级 85分800×
+food_1.jpg | CLOUD scene=food rule=thirds crop=[8,0,13,0] noCrop=false | ☁️ 云端 · 三分法 · 84% | 已自动应用：智能裁切+构图优化 · A级 82分632×53
+food_11.jpg | CLOUD scene=food rule=center crop=[10,0,13,0] noCrop=false | ☁️ 云端 · 居中构图 · 84% | 已自动应用：智能裁切+构图优化 · A级 84分616×60
+food_12.jpg | CLOUD scene=food rule=center crop=[10,16,12,8] noCrop=false | ☁️ 云端 · 居中构图 · 82% | 已自动应用：智能裁切+构图优化 · A级 87分624×40
+food_2.jpg | CLOUD scene=food rule=thirds crop=[5,5,14,0] noCrop=false | ☁️ 云端 · 三分法 · 82% | 已自动应用：智能裁切+构图优化 · A级 88分648×50
+food_3.jpg | CLOUD scene=food rule=center crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 居中构图 · 88% | 已自动应用：裁切+构图优化（未裁切）· S级 92分800×
+food_4.jpg | CLOUD scene=food rule=center crop=[13,17,13,3] noCrop=false | ☁️ 云端 · 居中构图 · 86% | 已自动应用：智能裁切+构图优化 · A级 81分592×75
+food_5.jpg | CLOUD scene=food rule=center crop=[10,0,13,0] noCrop=false | ☁️ 云端 · 居中构图 · 84% | 已自动应用：智能裁切+构图优化 · A级 84分616×60
+food_6.jpg | CLOUD scene=food rule=thirds crop=[8,19,13,6] noCrop=false | ☁️ 云端 · 三分法 · 82% | 已自动应用：智能裁切+构图优化 · A级 84分632×39
+food_7.jpg | CLOUD scene=food rule=center crop=[6,0,17,0] noCrop=false | ☁️ 云端 · 居中构图 · 86% | 已自动应用：智能裁切+构图优化 · A级 85分616×60
+food_8.jpg | CLOUD scene=food rule=diag crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 对角线构图 · 90% | 已自动应用：裁切+构图优化（未裁切）· A级 85分800×
+food_9.jpg | CLOUD scene=food rule=thirds crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 三分法 · 88% | 已自动应用：裁切+构图优化（未裁切）· A级 87分800×
+group_1.jpg | CLOUD scene=portrait rule=mini crop=[7,5,9,0] noCrop=false | ☁️ 云端 · 极简留白 · 82% | 已自动应用：智能裁切+构图优化 · B级 71分672×50
+group_2.jpg | CLOUD scene=portrait rule=thirds crop=[10,0,8,0] noCrop=false | ☁️ 云端 · 三分法 · 76% | 已自动应用：智能裁切+构图优化 · A级 87分656×53
+group_3.jpg | CLOUD scene=landscape rule=diag crop=[12,0,10,6] noCrop=false | ☁️ 云端 · 对角线构图 · 78% | 已自动应用：智能裁切+构图优化 · A级 83分624×11
+group_4.jpg | CLOUD scene=architecture rule=thirds crop=[10,0,9,12] noCrop=false | ☁️ 云端 · 三分法 · 78% | 已自动应用：智能裁切+构图优化 · A级 81分648×46
+group_5.jpg | CLOUD scene=portrait rule=thirds crop=[6,6,10,0] noCrop=false | ☁️ 云端 · 三分法 · 78% | 已自动应用：智能裁切+构图优化 · A级 81分672×50
+group_6.jpg | CLOUD scene=animal rule=thirds crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 三分法 · 88% | 已自动应用：裁切+构图优化（未裁切）· A级 81分800×
+group_7.jpg | CLOUD scene=architecture rule=sym crop=[0,6,0,9] noCrop=false | ☁️ 云端 · 对称构图 · 78% | 已自动应用：智能裁切+构图优化 · A级 83分800×45
+group_8.jpg | CLOUD scene=portrait rule=thirds crop=[10,5,4,10] noCrop=false | ☁️ 云端 · 三分法 · 82% | 已自动应用：智能裁切+构图优化 · A级 82分688×10
+group_9.jpg | CLOUD scene=portrait rule=center crop=[10,7,2,10] noCrop=false | ☁️ 云端 · 居中构图 · 84% | 已自动应用：智能裁切+构图优化 · A级 84分704×52
+indoor_1.jpg | CLOUD scene=food rule=thirds crop=[16,6,12,12] noCrop=false | ☁️ 云端 · 三分法 · 80% | 已自动应用：智能裁切+构图优化 · A级 85分576×49
+indoor_10.jpg | CLOUD scene=food rule=thirds crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 三分法 · 88% | 已自动应用：裁切+构图优化（未裁切）· A级 87分800×
+indoor_11.jpg | CLOUD scene=food rule=thirds crop=[5,3,13,0] noCrop=false | ☁️ 云端 · 三分法 · 84% | 已自动应用：智能裁切+构图优化 · A级 88分656×51
+indoor_12.jpg | CLOUD scene=food rule=center crop=[14,12,16,4] noCrop=false | ☁️ 云端 · 居中构图 · 84% | 已自动应用：智能裁切+构图优化 · A级 86分560×44
+indoor_2.jpg | CLOUD scene=architecture rule=thirds crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 三分法 · 86% | 已自动应用：裁切+构图优化（未裁切）· A级 85分800×
+indoor_3.jpg | CLOUD scene=general rule=mini crop=[23,14,0,9] noCrop=false | ☁️ 云端 · 极简留白 · 82% | 已自动应用：智能裁切+构图优化 · C级 63分616×47
+indoor_4.jpg | CLOUD scene=night rule=thirds crop=[2,0,16,8] noCrop=false | ☁️ 云端 · 三分法 · 82% | 已自动应用：智能裁切+构图优化 · A级 82分656×49
+indoor_5.jpg | CLOUD scene=animal rule=center crop=[11,0,7,0] noCrop=false | ☁️ 云端 · 居中构图 · 78% | 已自动应用：智能裁切+构图优化 · A级 84分656×53
+indoor_6.jpg | CLOUD scene=food rule=thirds crop=[8,19,13,6] noCrop=false | ☁️ 云端 · 三分法 · 82% | 已自动应用：智能裁切+构图优化 · A级 84分632×39
+indoor_7.jpg | CLOUD scene=food rule=thirds crop=[8,0,13,0] noCrop=false | ☁️ 云端 · 三分法 · 84% | 已自动应用：智能裁切+构图优化 · A级 82分632×53
+indoor_8.jpg | CLOUD scene=food rule=thirds crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 三分法 · 86% | 已自动应用：裁切+构图优化（未裁切）· A级 85分800×
+leading_1.jpg | CLOUD scene=landscape rule=lead crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 引导线 · 72% | 已自动应用：裁切+构图优化（未裁切）· A级 83分800×
+leading_10.jpg | CLOUD scene=general rule=mini crop=[13,11,12,10] noCrop=false | ☁️ 云端 · 极简留白 · 82% | 已自动应用：智能裁切+构图优化 · A级 82分600×50
+leading_12.jpg | CLOUD scene=architecture rule=sym crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 对称构图 · 93% | 已自动应用：裁切+构图优化（未裁切）· A级 88分800×
+leading_2.jpg | CLOUD scene=architecture rule=sym crop=[0,11,0,3] noCrop=false | ☁️ 云端 · 对称构图 · 84% | 已自动应用：智能裁切+构图优化 · A级 86分800×45
+leading_3.jpg | CLOUD scene=night rule=thirds crop=[0,6,0,8] noCrop=false | ☁️ 云端 · 三分法 · 82% | 已自动应用：智能裁切+构图优化 · A级 84分800×45
+leading_4.jpg | CLOUD scene=architecture rule=thirds crop=[0,7,0,7] noCrop=false | ☁️ 云端 · 三分法 · 82% | 已自动应用：智能裁切+构图优化 · A级 86分800×45
+leading_5.jpg | CLOUD scene=general rule=center crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 居中构图 · 88% | 已自动应用：裁切+构图优化（未裁切）· C级 64分800×
+leading_6.jpg | CLOUD scene=architecture rule=thirds crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 三分法 · 82% | 已自动应用：裁切+构图优化（未裁切）· A级 83分800×
+leading_7.jpg | CLOUD scene=landscape rule=lead crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 引导线 · 93% | 已自动应用：裁切+构图优化（未裁切）· A级 88分800×
+leading_8.jpg | CLOUD scene=animal rule=center crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 居中构图 · 88% | 已自动应用：裁切+构图优化（未裁切）· A级 84分800×
+leading_9.jpg | CLOUD scene=landscape rule=thirds crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 三分法 · 88% | 已自动应用：裁切+构图优化（未裁切）· A级 83分800×
+night_1.jpg | CLOUD scene=waterscape rule=sym crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 对称构图 · 93% | 已自动应用：裁切+构图优化（未裁切）· A级 84分800×
+night_10.jpg | CLOUD scene=architecture rule=thirds crop=[0,12,0,2] noCrop=false | ☁️ 云端 · 三分法 · 78% | 已自动应用：智能裁切+构图优化 · A级 83分800×45
+night_11.jpg | CLOUD scene=general rule=mini crop=[3,3,15,15] noCrop=false | ☁️ 云端 · 极简留白 · 52% | 已自动应用：智能裁切+构图优化 · B级 78分656×49
+night_12.jpg | CLOUD scene=street rule=lead crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 引导线 · 84% | 已自动应用：裁切+构图优化（未裁切）· A级 88分800×
+night_5.jpg | CLOUD scene=portrait rule=thirds crop=[10,4,10,10] noCrop=false | ☁️ 云端 · 三分法 · 82% | 已自动应用：智能裁切+构图优化 · A级 89分640×45
+night_6.jpg | CLOUD scene=landscape rule=diag crop=[0,0,0,4] noCrop=false | ☁️ 云端 · 对角线构图 · 78% | 已自动应用：智能裁切+构图优化 · A级 86分800×51
+night_7.jpg | CLOUD scene=architecture rule=lead crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 引导线 · 88% | 已自动应用：裁切+构图优化（未裁切）· A级 85分800×
+night_8.jpg | CLOUD scene=general rule=thirds crop=[9,13,13,11] noCrop=false | ☁️ 云端 · 三分法 · 82% | 已自动应用：智能裁切+构图优化 · A级 86分624×34
+night_9.jpg | CLOUD scene=food rule=diag crop=[8,0,13,0] noCrop=false | ☁️ 云端 · 对角线构图 · 82% | 已自动应用：智能裁切+构图优化 · A级 83分632×53
+pet_1.jpg | CLOUD scene=animal rule=center crop=[13,14,11,4] noCrop=false | ☁️ 云端 · 居中构图 · 88% | 已自动应用：智能裁切+构图优化 · A级 82分608×49
+pet_11.jpg | CLOUD scene=animal rule=thirds crop=[12,8,10,12] noCrop=false | ☁️ 云端 · 三分法 · 86% | 已自动应用：智能裁切+构图优化 · B级 78分624×96
+pet_12.jpg | CLOUD scene=animal rule=thirds crop=[17,13,6,0] noCrop=false | ☁️ 云端 · 三分法 · 86% | 已自动应用：智能裁切+构图优化 · A级 81分616×10
+pet_3.jpg | CLOUD scene=animal rule=thirds crop=[12,8,10,12] noCrop=false | ☁️ 云端 · 三分法 · 86% | 已自动应用：智能裁切+构图优化 · B级 78分624×96
+pet_4.jpg | CLOUD scene=animal rule=thirds crop=[17,13,6,0] noCrop=false | ☁️ 云端 · 三分法 · 86% | 已自动应用：智能裁切+构图优化 · A级 81分616×10
+pet_5.jpg | CLOUD scene=animal rule=thirds crop=[14,0,8,6] noCrop=false | ☁️ 云端 · 三分法 · 86% | 已自动应用：智能裁切+构图优化 · A级 85分624×50
+pet_7.jpg | CLOUD scene=animal rule=center crop=[12,17,9,4] noCrop=false | ☁️ 云端 · 居中构图 · 88% | 已自动应用：智能裁切+构图优化 · B级 78分632×42
+pet_9.jpg | CLOUD scene=animal rule=center crop=[13,14,11,4] noCrop=false | ☁️ 云端 · 居中构图 · 88% | 已自动应用：智能裁切+构图优化 · A级 82分608×49
+pet_extra1.jpg | CLOUD scene=animal rule=thirds crop=[14,0,8,6] noCrop=false | ☁️ 云端 · 三分法 · 86% | 已自动应用：智能裁切+构图优化 · A级 85分624×50
+pet_extra2.jpg | CLOUD scene=animal rule=center crop=[12,17,9,4] noCrop=false | ☁️ 云端 · 居中构图 · 86% | 已自动应用：智能裁切+构图优化 · B级 78分632×42
+portrait_front_1.jpg | CLOUD scene=portrait rule=center crop=[10,6,10,9] noCrop=false | ☁️ 云端 · 居中构图 · 78% | 已自动应用：智能裁切+构图优化 · A级 86分640×68
+portrait_front_10.jpg | CLOUD scene=portrait rule=center crop=[10,6,10,0] noCrop=false | ☁️ 云端 · 居中构图 · 86% | 已自动应用：智能裁切+构图优化 · A级 85分640×94
+portrait_front_11.jpg | CLOUD scene=portrait rule=center crop=[10,0,10,0] noCrop=false | ☁️ 云端 · 居中构图 · 84% | 云端分析完成·正在做人物完整性二次审查…800×1200 ·
+portrait_front_12.jpg | CLOUD scene=portrait rule=center crop=[10,4,10,0] noCrop=false | ☁️ 云端 · 居中构图 · 86% | 已自动应用：智能裁切+构图优化 · A级 82分640×11
+portrait_front_2.jpg | CLOUD scene=portrait rule=center crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 居中构图 · 84% | 已自动应用：裁切+构图优化（未裁切）· B级 79分800×
+portrait_front_3.jpg | CLOUD scene=portrait rule=center crop=[4,0,10,10] noCrop=false | ☁️ 云端 · 居中构图 · 84% | 云端分析完成·正在做人物完整性二次审查…800×1200 ·
+portrait_front_4.jpg | CLOUD scene=portrait rule=thirds crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 三分法 · 84% | 已自动应用：裁切+构图优化（未裁切）· D级 58分800×
+portrait_front_5.jpg | CLOUD scene=night rule=center crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 居中构图 · 88% | 已自动应用：裁切+构图优化（未裁切）· B级 79分800×
+portrait_front_7.jpg | CLOUD scene=portrait rule=center crop=[10,8,9,0] noCrop=false | ☁️ 云端 · 居中构图 · 82% | 已自动应用：智能裁切+构图优化 · B级 73分648×49
+portrait_front_8.jpg | CLOUD scene=portrait rule=thirds crop=[2,7,10,10] noCrop=false | ☁️ 云端 · 三分法 · 82% | 已自动应用：智能裁切+构图优化 · B级 79分704×44
+portrait_front_9.jpg | CLOUD scene=portrait rule=thirds crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 三分法 · 84% | 已自动应用：裁切+构图优化（未裁切）· A级 86分800×
+portrait_side_10.jpg | CLOUD scene=portrait rule=center crop=[10,6,10,0] noCrop=false | ☁️ 云端 · 居中构图 · 86% | 已自动应用：智能裁切+构图优化 · A级 85分640×94
+portrait_side_11.jpg | CLOUD scene=portrait rule=thirds crop=[10,0,10,0] noCrop=false | ☁️ 云端 · 三分法 · 84% | 已自动应用：智能裁切+构图优化 · A级 83分640×12
+portrait_side_12.jpg | CLOUD scene=night rule=center crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 居中构图 · 88% | 已自动应用：裁切+构图优化（未裁切）· B级 79分800×
+portrait_side_2.jpg | CLOUD scene=general rule=center crop=[23,11,0,12] noCrop=false | ☁️ 云端 · 居中构图 · 78% | 已自动应用：智能裁切+构图优化 · B级 72分616×45
+portrait_side_3.jpg | CLOUD scene=landscape rule=lead crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 引导线 · 78% | 已自动应用：裁切+构图优化（未裁切）· A级 84分800×
+portrait_side_5.jpg | CLOUD scene=portrait rule=thirds crop=[10,1,6,10] noCrop=false | ☁️ 云端 · 三分法 · 78% | 已自动应用：智能裁切+构图优化 · A级 85分672×47
+portrait_side_7.jpg | CLOUD scene=portrait rule=thirds crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 三分法 · 86% | 已自动应用：裁切+构图优化（未裁切）· A级 85分800×
+portrait_side_8.jpg | CLOUD scene=portrait rule=center crop=[1,7,10,10] noCrop=false | ☁️ 云端 · 居中构图 · 84% | 已自动应用：智能裁切+构图优化 · B级 79分712×44
+portrait_side_9.jpg | CLOUD scene=portrait rule=center crop=[10,8,10,0] noCrop=false | ☁️ 云端 · 居中构图 · 86% | 已自动应用：智能裁切+构图优化 · A级 84分640×11
+portrait_side_extra3.jpg | CLOUD scene=portrait rule=thirds crop=[2,7,10,10] noCrop=false | ☁️ 云端 · 三分法 · 82% | 已自动应用：智能裁切+构图优化 · B级 79分704×44
+sky_10.jpg | CLOUD scene=portrait rule=center crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 居中构图 · 92% | 已自动应用：裁切+构图优化（未裁切）· A级 82分800×
+sky_11.jpg | CLOUD scene=landscape rule=lead crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 引导线 · 86% | 已自动应用：裁切+构图优化（未裁切）· A级 85分800×
+sky_12.jpg | CLOUD scene=landscape rule=thirds crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 三分法 · 88% | 已自动应用：裁切+构图优化（未裁切）· A级 82分800×
+sky_2.jpg | CLOUD scene=animal rule=diag crop=[4,10,19,9] noCrop=false | ☁️ 云端 · 对角线构图 · 82% | 已自动应用：智能裁切+构图优化 · A级 83分616×43
+sky_3.jpg | CLOUD scene=landscape rule=center crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 居中构图 · 82% | 已自动应用：裁切+构图优化（未裁切）· A级 84分800×
+sky_5.jpg | CLOUD scene=portrait rule=center crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 居中构图 · 82% | 已自动应用：裁切+构图优化（未裁切）· A级 80分800×
+sky_6.jpg | CLOUD scene=animal rule=diag crop=[4,10,19,9] noCrop=false | ☁️ 云端 · 对角线构图 · 82% | 已自动应用：智能裁切+构图优化 · A级 83分616×43
+sky_8.jpg | CLOUD scene=landscape rule=center crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 居中构图 · 82% | 已自动应用：裁切+构图优化（未裁切）· A级 84分800×
+street_1.jpg | CLOUD scene=general rule=sym crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 对称构图 · 52% | 已自动应用：裁切+构图优化（未裁切）· B级 78分800×
+street_10.jpg | CLOUD scene=general rule=thirds crop=[15,18,6,7] noCrop=false | ☁️ 云端 · 三分法 · 82% | 已自动应用：智能裁切+构图优化 · A级 82分632×33
+street_11.jpg | CLOUD scene=architecture rule=lead crop=[0,5,0,9] noCrop=false | ☁️ 云端 · 引导线 · 86% | 已自动应用：智能裁切+构图优化 · A级 86分800×45
+street_2.jpg | CLOUD scene=night rule=thirds crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 三分法 · 88% | 已自动应用：裁切+构图优化（未裁切）· A级 88分800×
+street_3.jpg | CLOUD scene=architecture rule=sym crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 对称构图 · 92% | 已自动应用：裁切+构图优化（未裁切）· A级 86分800×
+street_4.jpg | CLOUD scene=architecture rule=diag crop=[0,6,0,4] noCrop=false | ☁️ 云端 · 对角线构图 · 78% | 已自动应用：智能裁切+构图优化 · A级 82分800×12
+street_5.jpg | CLOUD scene=street rule=lead crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 引导线 · 82% | 已自动应用：裁切+构图优化（未裁切）· A级 88分800×
+street_6.jpg | CLOUD scene=general rule=thirds crop=[0,3,19,14] noCrop=false | ☁️ 云端 · 三分法 · 52% | 已自动应用：智能裁切+构图优化 · B级 78分648×49
+street_7.jpg | CLOUD scene=architecture rule=thirds crop=[0,12,0,2] noCrop=false | ☁️ 云端 · 三分法 · 78% | 已自动应用：智能裁切+构图优化 · A级 86分800×45
+street_8.jpg | CLOUD scene=general rule=center crop=[7,4,13,16] noCrop=false | ☁️ 云端 · 居中构图 · 58% | 已自动应用：智能裁切+构图优化 · B级 78分640×48
+street_9.jpg | CLOUD scene=food rule=diag crop=[8,0,13,0] noCrop=false | ☁️ 云端 · 对角线构图 · 82% | 已自动应用：智能裁切+构图优化 · A级 84分632×53
+water_1.jpg | CLOUD scene=portrait rule=center crop=[10,8,10,5] noCrop=false | ☁️ 云端 · 居中构图 · 88% | 已自动应用：智能裁切+构图优化 · A级 84分640×46
+water_11.jpg | CLOUD scene=landscape rule=thirds crop=[12,18,14,4] noCrop=false | ☁️ 云端 · 三分法 · 84% | 已自动应用：智能裁切+构图优化 · A级 84分592×93
+water_2.jpg | CLOUD scene=landscape rule=diag crop=[0,3,0,0] noCrop=false | ☁️ 云端 · 对角线构图 · 84% | 已自动应用：智能裁切+构图优化 · A级 85分800×48
+water_3.jpg | CLOUD scene=general rule=center crop=[16,15,10,5] noCrop=false | ☁️ 云端 · 居中构图 · 86% | 已自动应用：智能裁切+构图优化 · C级 65分592×36
+water_4.jpg | CLOUD scene=landscape rule=thirds crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 三分法 · 90% | 已自动应用：裁切+构图优化（未裁切）· A级 82分800×
+water_5.jpg | CLOUD scene=night rule=lead crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 引导线 · 88% | 已自动应用：裁切+构图优化（未裁切）· A级 85分800×
+water_7.jpg | CLOUD scene=architecture rule=thirds crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 三分法 · 82% | 已自动应用：裁切+构图优化（未裁切）· A级 85分800×
+water_8.jpg | CLOUD scene=general rule=center crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 居中构图 · 88% | 已自动应用：裁切+构图优化（未裁切）· C级 64分800×
+water_9.jpg | CLOUD scene=waterscape rule=diag crop=[9,18,11,2] noCrop=false | ☁️ 云端 · 对角线构图 · 82% | 已自动应用：智能裁切+构图优化 · A级 82分640×96
+water_extra1.jpg | CLOUD scene=waterscape rule=diag crop=[11,14,13,6] noCrop=false | ☁️ 云端 · 对角线构图 · 82% | 已自动应用：智能裁切+构图优化 · A级 82分608×96
+water_extra3.jpg | CLOUD scene=general rule=center crop=[0,0,0,0] noCrop=true | ☁️ 云端 · 居中构图 · 88% | 已自动应用：裁切+构图优化（未裁切）· C级 64分800×
+=== 汇总 ===
+样本 139 | CLOUD 139 | local 0 | 无结果 0
+首轮 133/139 云端成功；6 张因 3 分片并发超时（pet_4/pet_7/pet_9/leading_6/leading_9/portrait_side_8），单线程复测全部 CLOUD。
+云端裁切样本与本地差异已人工抽检：人像单边>10 的云端裁切已由 10% 上限兜底；天空/水面/建筑裁切整体克制。
