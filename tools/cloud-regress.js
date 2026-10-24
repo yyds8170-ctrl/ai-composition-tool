@@ -31,7 +31,7 @@ async function runBatch(imgs, batchIdx){
     await page.evaluate(()=>document.getElementById('btnAnalyze').click());
     // v12.26.0: 只在"已自动应用 + ☁️ 云端"时提前结束；本地结果不再算完成，
     // 否则会在云端返回前把像素初判记成 local，云端回归失真。最多等 35s（云端窗口 30s）。
-    let snap=null; const dl=Date.now()+35000;
+    let snap=null; const dl=Date.now()+60000;
     while(Date.now()<dl){
       await new Promise(r=>setTimeout(r,800));
       snap=await page.evaluate(()=>{

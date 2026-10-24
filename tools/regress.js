@@ -89,7 +89,8 @@ async function runImage(page, imgPath) {
           rule: p.rule, sceneType: p.sceneType, conf: p.conf,
           subject: p.subject, f: p.f, noCrop: p.noCrop,
           crop: p.crop ? p.crop.map(v => (typeof v === 'number' ? Number(v.toFixed(4)) : v)) : null,
-          selfReviewed: p.selfReviewed, cropIntent: p.cropIntent
+          selfReviewed: p.selfReviewed, cropIntent: p.cropIntent,
+          proactiveCrop: p.proactiveCrop || null, proactiveTag: p.proactiveTag || null
         },
         data: d ? {
           detectedClasses: d.detectedClasses,
@@ -171,7 +172,7 @@ async function main() {
       const r = await runImage(page, img);
       results[name] = r;
       if (r && r.plan) {
-        console.log(`crop=[${r.plan.crop}] scene=${r.plan.sceneType} conf=${r.plan.conf}% person=${r.data ? r.data.isPerson : '?'} f=${r.activeFilter || '-'}`);
+        console.log(`crop=[${r.plan.crop}] scene=${r.plan.sceneType} conf=${r.plan.conf}% person=${r.data ? r.data.isPerson : '?'} f=${r.activeFilter || '-'} pc=${r.plan.proactiveCrop ? 'Y' : 'N'}`);
       } else {
         console.log('NO RESULT');
       }

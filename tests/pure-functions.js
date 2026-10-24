@@ -1156,7 +1156,8 @@
     }
 
     function _scenePrefix(scn, wb){
-      if(scn==="portrait"||scn==="portrait_close"||(scn==="general"&&typeof wb==="number"&&wb>0)) return "阳光人像·";
+      if(scn==="portrait"||scn==="portrait_close") return "阳光人像·";
+      if(scn==="general") return (typeof wb==="number"&&wb>0.03)?"暖调场景·":((typeof wb==="number"&&wb<-0.03)?"冷调场景·":"通用场景·");
       if(scn==="landscape"||scn==="waterscape"||scn==="sunset") return "户外绿意·";
       if(scn==="street") return "秋日街道·";
       if(scn==="night") return "夜景·";
@@ -1531,4 +1532,101 @@
       }catch(e){ return 50; }
     }
 
-module.exports = { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard, _decloudPlan, _bandSatSignal, _symEdgeSignal, _foodEvidenceSignal, _contentGuard, _thirdsFitScore, aestheticScore };
+    function _proactiveComposition(a, plan){
+      try{
+        if(!a||!plan) return null;
+        var sc=plan.sceneType||"general";
+        if(/portrait/.test(sc)) return null; // 人像/人头特写交给既有保护链，保持原图
+        // 场景被误判成 general/street、但模型确实检出人的，也不主动裁，避免切到人
+        if(a.isPerson===true) return null;
+        try{
+          if(Array.isArray(a.allBoxes)){
+            for(var _bi=0;_bi<a.allBoxes.length;_bi++){
+              var _b=a.allBoxes[_bi];
+              if(_b&&_b.class==="person"&&(_b.score===undefined||_b.score>=0.45)) return null;
+            }
+          }
+        }catch(e){}
+        if(plan.crop && (plan.crop[0]+plan.crop[1]+plan.crop[2]+plan.crop[3])>0) return null;
+        // 极暗/纯色/截图类仍然不折腾
+        try{
+          var _ed=(a.edgeEnergy&&a.edgeEnergy.eL)?((a.edgeEnergy.eL.reduce(function(s,v){return s+v;},0)/a.edgeEnergy.eL.length)+(a.edgeEnergy.eT.reduce(function(s,v){return s+v;},0)/a.edgeEnergy.eT.length))/2:0;
+          if(typeof _contentGuard==="function" && _contentGuard(a?a.mean:128, a?a.sat:0.2, _ed)) return null;
+        }catch(e){}
+        var ar=(typeof a.frameAspect==="number"&&isFinite(a.frameAspect)&&a.frameAspect>0.2&&a.frameAspect<5)?a.frameAspect:1;
+        var box=(a.sigBox&&a.sigBox.length===4)?a.sigBox:[0.25,0.25,0.75,0.75];
+        var cx=(typeof a.cx==="number"&&isFinite(a.cx))?a.cx:0.5;
+        var cy=(typeof a.cy==="number"&&isFinite(a.cy))?a.cy:0.5;
+        var cands=[];
+        function push(l,t,r,b,tag,reason,score,minOv,minArea){
+          l=Math.max(0,Math.min(0.15,l)); t=Math.max(0,Math.min(0.15,t));
+          r=Math.max(0,Math.min(0.15,r)); b=Math.max(0,Math.min(0.15,b));
+          var area=(1-l-r)*(1-t-b);
+          if(area<(minArea||0.78)) return;
+          if(l+r+t+b<0.035) return;
+          // 主体核心必须留在裁切框内；允许裁掉主体外接框边缘最多 14%（sigBox 常含背景，过严会永远不触发）
+          var _bw=Math.max(0.001,box[2]-box[0]), _bh=Math.max(0.001,box[3]-box[1]);
+          var _ow=Math.max(0,Math.min(box[2],1-r)-Math.max(box[0],l));
+          var _oh=Math.max(0,Math.min(box[3],1-b)-Math.max(box[1],t));
+          var _ov=(_ow*_oh)/(_bw*_bh);
+          if(_ov<(minOv||0.86)) return;
+          if(cx<l+0.05||cx>1-r-0.05||cy<t+0.05||cy>1-b-0.05) return;
+          // 氛围保护：顶部是晚霞/蓝天彩带时，不主动裁顶
+          var topWarm=(a.topBandHsv&&typeof a.topBandHsv.ratio==="number")?a.topBandHsv.ratio:0;
+          if(t>0.03 && (topWarm>0.25 || (typeof a.blueWater==="number"&&a.blueWater>0.55))) return;
+          // 对称保护：强对称不主动单边裁
+          if((l+r)>0.02 && typeof a.sym==="number" && a.sym>0.42) return;
+          cands.push({crop:[Math.round(l*100),Math.round(t*100),Math.round(r*100),Math.round(b*100)],tag:tag,reason:reason,score:score,area:area});
+        }
+        // A. 社交画幅候选：竖图 3:4→4:5；横图 3:2→16:9；方图不硬改
+        var tar=ar;
+        if(ar<1){
+          // 竖幅普通图（含美食）优先 4:5 社交画幅；人像已在上面排除
+          tar=0.8;
+        }else if(ar>1){
+          if(sc==="food") tar=(ar>1.40?4/3:1); // 3:2 美食→4:3；4:3 美食→1:1 方图
+          else if(sc==="landscape"||sc==="waterscape"||sc==="night"||sc==="architecture"||sc==="street"||sc==="general") tar=16/9;
+          else tar=4/3;
+        }
+        if(Math.abs(tar-ar)>0.02){
+          var l=0,t=0,r=0,b=0;
+          if(tar<ar){ // 目标更窄：裁宽
+            var cw=1-tar/ar;
+            l=cw*0.5; r=cw*0.5;
+            var sx=(0.5-cx)*cw*0.5;
+            if(sx>0){ r+=sx; l-=sx; } else { l+=sx; r-=sx; }
+          }else{ // 目标更高/更宽：裁高
+            var ch=1-ar/tar;
+            t=ch*0.5; b=ch*0.5;
+            var sy=(0.5-cy)*ch*0.5;
+            if(sy>0){ b+=sy; t-=sy; } else { t+=sy; b-=sy; }
+            // 顶部是晚霞/蓝天彩带时，把高度裁切全部让给底部，保住天空氛围
+            var _topRatio=(a.topBandHsv&&typeof a.topBandHsv.ratio==="number")?a.topBandHsv.ratio:0;
+            if(t>0.02 && (_topRatio>0.25 || (typeof a.blueWater==="number"&&a.blueWater>0.55))){ b+=t; t=0; }
+          }
+          var tagTxt=(Math.abs(tar-0.8)<0.01)?"4:5":(Math.abs(tar-16/9)<0.01?"16:9":(Math.abs(tar-1)<0.01?"1:1":"4:3"));
+          // 动物/美食主体轮廓更脆，画幅候选要求更高重叠；风光/街景允许裁掉少量天空/地面。
+          // 横图 4:3→16:9 是标准电影画幅，保留面积可放宽到 72%（竖图仍 78%，避免把 9:16 裁太狠）。
+          var _minOv=/animal|food/.test(sc)?0.88:0.80;
+          var _minArea=(sc==="food")?0.75:((ar>1 && /landscape|waterscape|night|architecture|street|general/.test(sc))?0.72:0.78);
+          push(l,t,r,b,"社交画幅 "+tagTxt,"裁成 "+tagTxt+" 更紧凑，主体占比更高，适合发朋友圈/小红书",0.66,_minOv,_minArea);
+        }
+        // B. 引导线/中心偏移候选：主体居中且一侧是低信息边带时，单边裁 8-12%，让消失点离开正中心
+        var lead=(typeof a.diagStrength==="number"&&a.diagStrength>0.30)||(typeof a.rowGap==="number"&&a.rowGap>25);
+        if(lead && cx>0.38 && cx<0.62){
+          var col=a.edgeEnergy&&a.edgeEnergy.col;
+          if(col&&col.length>20){
+            var avg=function(from,to){ var s=0,c=0,fi=Math.max(0,Math.floor(from*col.length)),ti=Math.min(col.length,Math.ceil(to*col.length)); for(var i=fi;i<ti;i++){ s+=(col[i]||0); c++; } return c?s/c:0; };
+            var eL=avg(0,0.12), eR=avg(0.88,1), eC=avg(0.30,0.70);
+            var cut=0.10;
+            if(eL<=eR && eL<eC*0.75){ push(cut,0,0,0,"引导线构图","裁掉左侧低信息边带，让道路/线条的消失点离开正中心，画面更有动势",0.62); }
+            else if(eR<eL && eR<eC*0.75){ push(0,0,cut,0,"引导线构图","裁掉右侧低信息边带，让道路/线条的消失点离开正中心，画面更有动势",0.62); }
+          }
+        }
+        if(!cands.length) return null;
+        cands.sort(function(x,y){ return y.score-x.score; });
+        return cands[0];
+      }catch(e){ return null; }
+    }
+
+module.exports = { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard, _decloudPlan, _bandSatSignal, _symEdgeSignal, _foodEvidenceSignal, _contentGuard, _thirdsFitScore, aestheticScore, _proactiveComposition };

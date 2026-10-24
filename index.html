@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v12.26.0 · 实景视觉构图生成工具</title>
-<meta name="description" content="AI 构图助手 Pro v12.26.0 · 实景视觉构图生成工具（永久免费、不限使用次数）：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面。构图综合诊断+拍后滤镜智能推荐。v11.16.0 新手引导悬浮按钮可拖动换位+位置记忆+双击复位。含 YOLO11n 本地检测、智能人像裁切、30 款滤镜、云端 VLM 分析">
+<title>AI 构图助手 Pro v12.27.0 · 实景视觉构图生成工具</title>
+<meta name="description" content="AI 构图助手 Pro v12.27.0 · 实景视觉构图生成工具（永久免费、不限使用次数）：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面。构图综合诊断+拍后滤镜智能推荐。v11.16.0 新手引导悬浮按钮可拖动换位+位置记忆+双击复位。含 YOLO11n 本地检测、智能人像裁切、30 款滤镜、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v12.26.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切（永久免费不限次数）">
+<meta property="og:title" content="AI 构图助手 Pro v12.27.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切（永久免费不限次数）">
 <meta property="og:description" content="给不会拍照的普通人：打开相机，AI 教你怎么拍。AI 构图分析（本地像素+云端 VLM 双引擎）、人像保护裁切（不切头不切手脚）、30 款滤镜，一键出成品。默认本地运行，照片不上传。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
@@ -1051,7 +1051,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v12.26.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v12.27.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1088,6 +1088,10 @@
       <label class="mp-sw"><input type="checkbox" id="cloudOn"><span class="mp-sl"></span>启用云端 VLM 构图分析</label>
     </div>
     <div class="mp-desc">联网时调用大模型"看懂"画面（场景/主体/构图），比本地像素算法更准；未填 Key 或断网时自动回退本地引擎。启用后照片会发送至云端分析。</div>
+    <div class="mp-row">
+      <label class="mp-sw"><input type="checkbox" id="cloudDeepReview"><span class="mp-sl"></span>人物完整性二次复核（更慢，默认关）</label>
+    </div>
+    <div class="mp-desc" style="line-height:1.7;">开启后每张人像会多一次云端复核（约 5-14 秒）；默认关闭，靠首轮 checklist + 人像单边 10% 裁切上限保证不切手脚。<b>追求速度就保持关闭。</b></div>
     <div style="height:6px;"></div>
     <!-- v8.0.9: 双通道云端——共享口令（作者代理）/ 自带 API Key（直连，用自己的额度） -->
     <div class="mp-row" style="flex-wrap:wrap;gap:6px;">
@@ -1125,7 +1129,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v12.26.0";
+var APP_VER="v12.27.0";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -1306,7 +1310,7 @@ var APP_VER="v12.26.0";
         btnLive=$("btnLive"), liveHUD=$("liveHUD"), lhLight=$("lhLight"), lhLevel=$("lhLevel"),
         lhTip=$("lhTip"), lhModel=$("lhModel"), lhSubject=$("lhSubject"),
         modelPanel=$("modelPanel"), mpBadge=$("mpBadge"), mpOn=$("mpOn"), mpReload=$("mpReload"),
-        cloudBadge=$("cloudBadge"), cloudOn=$("cloudOn"), cloudBase=$("cloudBase"), cloudKey=$("cloudKey"),
+        cloudBadge=$("cloudBadge"), cloudOn=$("cloudOn"), cloudDeepReview=$("cloudDeepReview"), cloudBase=$("cloudBase"), cloudKey=$("cloudKey"),
         cloudMode=$("cloudMode"), cloudVendor=$("cloudVendor"), cloudByokKey=$("cloudByokKey"), cloudByokModel=$("cloudByokModel"),
         cloudSharedRow=$("cloudSharedRow"), cloudByokRow=$("cloudByokRow"),
         btnCmp=$("btnCmp"), cmpBase=$("cmpBase"), cmpUI=$("cmpUI"), cmpLine=$("cmpLine"), cmpHandle=$("cmpHandle"),
@@ -1824,7 +1828,7 @@ var APP_VER="v12.26.0";
       toastMsg("滤镜："+f.name+" · "+f.desc);
     });
     // v9.0.0 滤镜自动推荐：裁切终检后的独立后期步骤；每图最多一次，null 时完全沉默（不弹/不 toast）。
-    function _hideFrec(){ try{ var _bn=document.getElementById("frecBanner"); if(_bn) _bn.style.display="none"; }catch(e2){} }
+    function _hideFrec(){ try{ var _bn=document.getElementById("frecBanner"); if(_bn) _bn.style.display="none"; var _tx=document.getElementById("frecText"); if(_tx) _tx.textContent=""; }catch(e2){} }
     function _maybeRecommendFilter(aFinal){
       try{
         if(state._frecShown) return;
@@ -1841,6 +1845,21 @@ var APP_VER="v12.26.0";
         if(_tx) _tx.textContent="推荐「"+FILTERS[rec.filter].name+"」 · "+rec.reason;
         var _bn=document.getElementById("frecBanner");
         if(_bn) _bn.style.display="flex";
+      }catch(e){}
+    }
+    // v12.27.0: 普通场景默认套用推荐滤镜（温和强度 60-78），人像/美食也走同一推荐器；
+    // 五道硬闸门/低信息图仍返回 null，不强行加滤镜。用户点「原图」即可换回。
+    function _applyAutoFilter(){
+      try{
+        if(state._autoFilterApplied) return;
+        var rec=state._frecRec;
+        if(!rec||!rec.filter||!FILTERS[rec.filter]||rec.filter==="clear") return;
+        state._autoFilterApplied=true;
+        setFilter(rec.filter);
+        state.strength=Math.min(78,Math.max(60,rec.strength||70));
+        applyStrength();
+        try{ _hideFrec(); }catch(e){}
+        toastMsg("已套用「"+FILTERS[rec.filter].name+"」"+Math.round(state.strength)+"%，点「原图」可换回");
       }catch(e){}
     }
     (function(){
@@ -3474,7 +3493,8 @@ var APP_VER="v12.26.0";
     }
     // v11.6.0 滤镜理由场景前缀（纯字符串拼接）：按 sceneType 给 reason 拼前缀，不改规则/推荐池/闸门。
     function _scenePrefix(scn, wb){
-      if(scn==="portrait"||scn==="portrait_close"||(scn==="general"&&typeof wb==="number"&&wb>0)) return "阳光人像·";
+      if(scn==="portrait"||scn==="portrait_close") return "阳光人像·";
+      if(scn==="general") return (typeof wb==="number"&&wb>0.03)?"暖调场景·":((typeof wb==="number"&&wb<-0.03)?"冷调场景·":"通用场景·");
       if(scn==="landscape"||scn==="waterscape"||scn==="sunset") return "户外绿意·";
       if(scn==="street") return "秋日街道·";
       if(scn==="night") return "夜景·";
@@ -3916,6 +3936,105 @@ var APP_VER="v12.26.0";
         s+=Math.min(1,Math.max(0,(goldenRatioFit||0.5)))*20; // 黄金分割
         return Math.round(s);
       }catch(e){ return 50; }
+    }
+    // v12.27.0 主动构图候选：本地判定"不裁"时，不直接摆烂；按场景推荐一个更紧凑的社交画幅/引导线构图。
+    // 纯函数、只读信号，返回 {crop:[L,T,R,B], tag, reason, score, area} 或 null。
+    // 设计依据（公开通用原理 + 用户提供的手机摄影参考）：三分/黄金点、引导线消失点、中心+负空间、4:5 社交画幅。
+    function _proactiveComposition(a, plan){
+      try{
+        if(!a||!plan) return null;
+        var sc=plan.sceneType||"general";
+        if(/portrait/.test(sc)) return null; // 人像/人头特写交给既有保护链，保持原图
+        // 场景被误判成 general/street、但模型确实检出人的，也不主动裁，避免切到人
+        if(a.isPerson===true) return null;
+        try{
+          if(Array.isArray(a.allBoxes)){
+            for(var _bi=0;_bi<a.allBoxes.length;_bi++){
+              var _b=a.allBoxes[_bi];
+              if(_b&&_b.class==="person"&&(_b.score===undefined||_b.score>=0.45)) return null;
+            }
+          }
+        }catch(e){}
+        if(plan.crop && (plan.crop[0]+plan.crop[1]+plan.crop[2]+plan.crop[3])>0) return null;
+        // 极暗/纯色/截图类仍然不折腾
+        try{
+          var _ed=(a.edgeEnergy&&a.edgeEnergy.eL)?((a.edgeEnergy.eL.reduce(function(s,v){return s+v;},0)/a.edgeEnergy.eL.length)+(a.edgeEnergy.eT.reduce(function(s,v){return s+v;},0)/a.edgeEnergy.eT.length))/2:0;
+          if(typeof _contentGuard==="function" && _contentGuard(a?a.mean:128, a?a.sat:0.2, _ed)) return null;
+        }catch(e){}
+        var ar=(typeof a.frameAspect==="number"&&isFinite(a.frameAspect)&&a.frameAspect>0.2&&a.frameAspect<5)?a.frameAspect:1;
+        var box=(a.sigBox&&a.sigBox.length===4)?a.sigBox:[0.25,0.25,0.75,0.75];
+        var cx=(typeof a.cx==="number"&&isFinite(a.cx))?a.cx:0.5;
+        var cy=(typeof a.cy==="number"&&isFinite(a.cy))?a.cy:0.5;
+        var cands=[];
+        function push(l,t,r,b,tag,reason,score,minOv,minArea){
+          l=Math.max(0,Math.min(0.15,l)); t=Math.max(0,Math.min(0.15,t));
+          r=Math.max(0,Math.min(0.15,r)); b=Math.max(0,Math.min(0.15,b));
+          var area=(1-l-r)*(1-t-b);
+          if(area<(minArea||0.78)) return;
+          if(l+r+t+b<0.035) return;
+          // 主体核心必须留在裁切框内；允许裁掉主体外接框边缘最多 14%（sigBox 常含背景，过严会永远不触发）
+          var _bw=Math.max(0.001,box[2]-box[0]), _bh=Math.max(0.001,box[3]-box[1]);
+          var _ow=Math.max(0,Math.min(box[2],1-r)-Math.max(box[0],l));
+          var _oh=Math.max(0,Math.min(box[3],1-b)-Math.max(box[1],t));
+          var _ov=(_ow*_oh)/(_bw*_bh);
+          if(_ov<(minOv||0.86)) return;
+          if(cx<l+0.05||cx>1-r-0.05||cy<t+0.05||cy>1-b-0.05) return;
+          // 氛围保护：顶部是晚霞/蓝天彩带时，不主动裁顶
+          var topWarm=(a.topBandHsv&&typeof a.topBandHsv.ratio==="number")?a.topBandHsv.ratio:0;
+          if(t>0.03 && (topWarm>0.25 || (typeof a.blueWater==="number"&&a.blueWater>0.55))) return;
+          // 对称保护：强对称不主动单边裁
+          if((l+r)>0.02 && typeof a.sym==="number" && a.sym>0.42) return;
+          cands.push({crop:[Math.round(l*100),Math.round(t*100),Math.round(r*100),Math.round(b*100)],tag:tag,reason:reason,score:score,area:area});
+        }
+        // A. 社交画幅候选：竖图 3:4→4:5；横图 3:2→16:9；方图不硬改
+        var tar=ar;
+        if(ar<1){
+          // 竖幅普通图（含美食）优先 4:5 社交画幅；人像已在上面排除
+          tar=0.8;
+        }else if(ar>1){
+          if(sc==="food") tar=(ar>1.40?4/3:1); // 3:2 美食→4:3；4:3 美食→1:1 方图
+          else if(sc==="landscape"||sc==="waterscape"||sc==="night"||sc==="architecture"||sc==="street"||sc==="general") tar=16/9;
+          else tar=4/3;
+        }
+        if(Math.abs(tar-ar)>0.02){
+          var l=0,t=0,r=0,b=0;
+          if(tar<ar){ // 目标更窄：裁宽
+            var cw=1-tar/ar;
+            l=cw*0.5; r=cw*0.5;
+            var sx=(0.5-cx)*cw*0.5;
+            if(sx>0){ r+=sx; l-=sx; } else { l+=sx; r-=sx; }
+          }else{ // 目标更高/更宽：裁高
+            var ch=1-ar/tar;
+            t=ch*0.5; b=ch*0.5;
+            var sy=(0.5-cy)*ch*0.5;
+            if(sy>0){ b+=sy; t-=sy; } else { t+=sy; b-=sy; }
+            // 顶部是晚霞/蓝天彩带时，把高度裁切全部让给底部，保住天空氛围
+            var _topRatio=(a.topBandHsv&&typeof a.topBandHsv.ratio==="number")?a.topBandHsv.ratio:0;
+            if(t>0.02 && (_topRatio>0.25 || (typeof a.blueWater==="number"&&a.blueWater>0.55))){ b+=t; t=0; }
+          }
+          var tagTxt=(Math.abs(tar-0.8)<0.01)?"4:5":(Math.abs(tar-16/9)<0.01?"16:9":(Math.abs(tar-1)<0.01?"1:1":"4:3"));
+          // 动物/美食主体轮廓更脆，画幅候选要求更高重叠；风光/街景允许裁掉少量天空/地面。
+          // 横图 4:3→16:9 是标准电影画幅，保留面积可放宽到 72%（竖图仍 78%，避免把 9:16 裁太狠）。
+          var _minOv=/animal|food/.test(sc)?0.88:0.80;
+          var _minArea=(sc==="food")?0.75:((ar>1 && /landscape|waterscape|night|architecture|street|general/.test(sc))?0.72:0.78);
+          push(l,t,r,b,"社交画幅 "+tagTxt,"裁成 "+tagTxt+" 更紧凑，主体占比更高，适合发朋友圈/小红书",0.66,_minOv,_minArea);
+        }
+        // B. 引导线/中心偏移候选：主体居中且一侧是低信息边带时，单边裁 8-12%，让消失点离开正中心
+        var lead=(typeof a.diagStrength==="number"&&a.diagStrength>0.30)||(typeof a.rowGap==="number"&&a.rowGap>25);
+        if(lead && cx>0.38 && cx<0.62){
+          var col=a.edgeEnergy&&a.edgeEnergy.col;
+          if(col&&col.length>20){
+            var avg=function(from,to){ var s=0,c=0,fi=Math.max(0,Math.floor(from*col.length)),ti=Math.min(col.length,Math.ceil(to*col.length)); for(var i=fi;i<ti;i++){ s+=(col[i]||0); c++; } return c?s/c:0; };
+            var eL=avg(0,0.12), eR=avg(0.88,1), eC=avg(0.30,0.70);
+            var cut=0.10;
+            if(eL<=eR && eL<eC*0.75){ push(cut,0,0,0,"引导线构图","裁掉左侧低信息边带，让道路/线条的消失点离开正中心，画面更有动势",0.62); }
+            else if(eR<eL && eR<eC*0.75){ push(0,0,cut,0,"引导线构图","裁掉右侧低信息边带，让道路/线条的消失点离开正中心，画面更有动势",0.62); }
+          }
+        }
+        if(!cands.length) return null;
+        cands.sort(function(x,y){ return y.score-x.score; });
+        return cands[0];
+      }catch(e){ return null; }
     }
     // v12.13.0 三分法贴合度：主体质心距最近三分交点的距离 → 0-1（1=完美落在交点）
     function _thirdsFitScore(cx, cy){
@@ -4888,7 +5007,13 @@ var APP_VER="v12.26.0";
           "将人物面部放在"+faceSide+"侧黄金分割点，头顶留白约 1/5，" +
           "推荐"+plan.z.toFixed(1)+"x焦段，"+(FILTERS[plan.f]?FILTERS[plan.f].name:"自然")+"滤镜。";
       } else if(plan.noCrop){
-        plan.desc = "检测到"+plan.subject+"，构图已很合理，建议保持原尺寸不裁切。" +
+        var _pcHint=null; try{ _pcHint=_proactiveComposition(a, plan); }catch(e){}
+        var _ruleTxt = bestRule==="sym" ? "左右/上下接近对称，保留完整对称更稳"
+          : (bestRule==="diag" ? "画面有斜向线条/光影，保留完整线条更耐看"
+          : (bestRule==="center" ? "主体居中，中心构图干净直接"
+          : "主体与留白关系已经成立"));
+        plan.desc = "检测到"+plan.subject+"，"+_ruleTxt+"，建议保留原尺寸不裁切。" +
+          (_pcHint?("下方还准备了更紧凑的「"+_pcHint.tag+"」候选，可预览后再决定。"):"") +
           "推荐"+(FILTERS[plan.f]?FILTERS[plan.f].name:"自然")+"滤镜优化画面。";
       } else {
         plan.desc = "检测到"+plan.subject+"，推荐"+ruleNames[bestRule]+"构图（匹配度"+plan.conf+"%）。" +
@@ -5176,6 +5301,27 @@ var APP_VER="v12.26.0";
           if(_mcs>0 && _mcs<=5){ plan.crop=[0,0,0,0]; plan.noCrop=true; }
         }
       }catch(e){}
+      // 裁切框被守门归零时同步 noCrop，避免"显示智能裁切但尺寸没变"的文案/状态不一致
+      try{
+        if(plan.crop && !plan.noCrop && (plan.crop[0]+plan.crop[1]+plan.crop[2]+plan.crop[3])===0) plan.noCrop=true;
+      }catch(e){}
+      // v12.27.0: 本地判定"不裁"时，仍主动找一个更紧凑的构图候选（默认自动应用；人像/特写除外）
+      try{
+        if(plan.noCrop && !isPerson && !isCloseUp){
+          var _pc=_proactiveComposition(a, plan);
+          if(_pc){
+            // v12.27.0 用户口径：普通场景默认主动给构图并应用；人像/人头特写才保留原图。
+            plan.proactiveCrop=_pc.crop;
+            plan.proactiveTag=_pc.tag;
+            plan.proactiveReason=_pc.reason;
+            plan.proactiveScore=_pc.score;
+            plan.proactiveApplied=true;
+            plan.crop=_pc.crop.slice();
+            plan.noCrop=false;
+            plan.cropAdvice="AI 主动构图："+_pc.tag+" · "+(_pc.reason||"");
+          }
+        }
+      }catch(e){}
       // v9.0.0 统一构图综合诊断：所有裁切 guard 跑完后只读追加 plan.diagnosis，绝不碰 plan.crop（外层 try/catch 兜底）。
       try{
         var _ad9=state.aiData||{};
@@ -5431,6 +5577,12 @@ var APP_VER="v12.26.0";
         }
         try{
           var plan, a;
+          // v12.27.0: 云端"软超时"状态——16s 先出本地结果，云端继续在后台算，回来再升级
+          state._cloudSoftTimedOut=false;
+          state._softApplied=false;
+          state._softSig=null;
+          state._autoFilterApplied=false;
+          state._frecRec=null;
           // v4.1: 示例图AI分析强制走真实算法（预设仅用于加载时的初始引导文案）
           // v4.0.1问题：示例图直接返回手写预设plan，与真实算法分叉，用户感觉"演示比正式聪明"
           var dims=currentSrcDims(el);
@@ -5464,10 +5616,27 @@ var APP_VER="v12.26.0";
           if(_scores) showScorePanel(_scores);
           var _autoApplied=false;
           function autoApplyPlan(finalPlan){
-            if(_autoApplied) return;
+            var _isCloudUpdate=!!(finalPlan && finalPlan.cloud && state._cloudSoftTimedOut);
+            if(_autoApplied && !_isCloudUpdate) return;
+            if(_isCloudUpdate){
+              // 软超时后本地结果已落地；只有用户没手动改裁切/滤镜/变焦时才自动升级，避免覆盖手动调整
+              // 只比较"裁切框 + 图片源"：滤镜/变焦是本地自动应用会改的，拿来比较会误判成用户手动调整
+              var _sig=""; try{ _sig=JSON.stringify({c:state.plan&&state.plan.crop,src:state.sourceName}); }catch(e){}
+              if(state._softSig && _sig && _sig!==state._softSig){
+                try{ toastMsg("云端建议已返回；检测到手动调整，未自动覆盖"); }catch(e){}
+                return;
+              }
+              state._cloudSoftTimedOut=false;
+              try{ finalPlan._cloudUpdate=true; }catch(e){}
+            }
             _autoApplied=true;
             var p=finalPlan||plan;
             if(!p) return;
+            if(_isCloudUpdate){
+              // 云端迟到升级：先把新方案回写 state.plan，再走与首轮相同的应用链
+              state.plan=p; state.analyzed=true;
+              try{ presentAnalysis(p); }catch(e){}
+            }
             // v4.7.1: 云端超时/失败兜底（finalPlan 为空）时，把本地像素初判刷新成正式结果（去掉 pending 标记），
             // 避免用户看到"已自动应用"但面板还停在"云端分析中"等待卡
             if(p.cloudPending){ try{ delete p.cloudPending; presentAnalysis(p); }catch(e){} }
@@ -5495,16 +5664,20 @@ var APP_VER="v12.26.0";
                   setZoom(p.z||1);
                   setFilter(autoFilter);
                   try{ _maybeRecommendFilter((typeof _a2!=="undefined"&&_a2)?_a2:null); }catch(e){} // v9.0.0 滤镜推荐（独立后期，只读）
+                  try{ _applyAutoFilter(); }catch(e){}
+                  var _pre=p.proactiveApplied?("已主动优化构图（"+p.proactiveTag+"）· "):(p._cloudUpdate?"云端结果已更新 · ":"已自动应用：");
+                  var _fn=(state.filter&&state.filter!=="clear"&&FILTERS[state.filter])?FILTERS[state.filter].name:"";
+                  var _pmsg=p.proactiveApplied?("已主动构图："+p.proactiveTag+(_fn?(" + "+_fn+"滤镜"):"")+"，可撤销"):(p._cloudUpdate?"云端结果已更新":(autoFilter==="clear"?"构图优化完成，滤镜已保持原图（"+ (FILTERS[p.f]?FILTERS[p.f].name:"") +"可手动预览）":"已应用自然滤镜，构图保持原样"));
                   if(p.noCrop){
-                    setStatus("已自动应用：裁切+构图优化（未裁切）· "+(_scores?_scores.grade+"级 "+_scores.total+"分":""), "done");
-                    toastMsg(autoFilter==="clear"?"构图优化完成，滤镜已保持原图（"+ (FILTERS[p.f]?FILTERS[p.f].name:"") +"可手动预览）":"已应用自然滤镜，构图保持原样");
+                    setStatus(_pre+"裁切+构图优化（未裁切）· "+(_scores?_scores.grade+"级 "+_scores.total+"分":""), "done");
+                    toastMsg(_pmsg);
                   } else {
-                    setStatus("已自动应用：智能裁切+构图优化 · "+(_scores?_scores.grade+"级 "+_scores.total+"分":""), "done");
-                    toastMsg(autoFilter==="clear"?"已自动应用：智能裁切（滤镜保持原图，可手动试"+ (FILTERS[p.f]?FILTERS[p.f].name:"") +"）":"已自动应用：智能裁切 + 自然滤镜");
+                    setStatus(_pre+"智能裁切+构图优化 · "+(_scores?_scores.grade+"级 "+_scores.total+"分":""), "done");
+                    toastMsg(_pmsg);
                   }
                 }
               },50);
-              setTimeout(function(){ if(_check){ clearInterval(_check); setZoom(p.z||1); setFilter(autoFilter); try{ _maybeRecommendFilter(null); }catch(e){} setStatus("已自动应用：智能裁切+构图优化", "done"); } }, 800);
+              setTimeout(function(){ if(_check){ clearInterval(_check); setZoom(p.z||1); if(!state._autoFilterApplied) setFilter(autoFilter); try{ _maybeRecommendFilter(null); }catch(e){} try{ _applyAutoFilter(); }catch(e){} var _p2=state.plan||p; setStatus(_p2.proactiveApplied?("已主动优化构图（"+_p2.proactiveTag+"）"):"已自动应用：智能裁切+构图优化", "done"); } }, 800);
             } else {
               setStatus("自动应用失败，请手动点一键成品", "err");
             }
@@ -5527,22 +5700,49 @@ var APP_VER="v12.26.0";
             autoApplyPlan(finalPlan);
           });
 
-          // v12.26.0: 云端视觉请求窗口 30s，外层兜底 35s；纯本地仍 20s，绝不卡死
+          // v12.27.0: 云端"软超时"——16s 先出本地结果，不阻塞；云端继续跑到 34s，回来再升级。
+          // 用户不再盯着"云端分析中"干等，也不会因为一次慢响应直接丢掉云端结果。
           setTimeout(function(){
-            // v4.8.2: 换图/重分析后旧兜底作废，否则旧 plan 会刷新面板（v4.5.0 BUG-04 残留）
             if(token!==state.analyzeToken) return;
-            if(!_fbDone){
-              _fbDone=true;
-              if(_cloudActiveNow){
-                // v6.0: 30s 兜底已应用本地像素初判，同步中止在途云端请求并打标记，
-                // 避免 35s abort 后 catch→onDone(null)→runLocalAIDetection 现场下载 18MB 模型
-                try{ if(state._cloudAbort){ state._cloudAbort.abort(); state._cloudAbort=null; } }catch(e){}
-                state._cloudKilled=true;
+            if(_cloudActiveNow){
+              if(!_fbDone){
+                state._cloudSoftTimedOut=true;
+                state._softApplied=true;
+                if(state.plan){ try{ delete state.plan.cloudPending; presentAnalysis(state.plan); }catch(e){} }
                 state.analyzing=false; stage.classList.remove("scanning"); btnAnalyze.disabled=false;
+                // 只预览本地构图，不立刻改写图片：这样云端迟到时还能基于原图安全升级；用户也可点「一键成品」直接落地
+                try{ _showCropPreview(state.plan); }catch(e){}
+                // 本地应用完成后再提示"云端仍在增强"，避免被 autoApplyPlan 的状态覆盖
+                setTimeout(function(){
+                  if(token!==state.analyzeToken || !state._cloudSoftTimedOut) return;
+                  try{ setStatus("本地结果已出 · 云端增强中…",""); }catch(e){}
+                }, 900);
+                // 记录用户此刻看到的方案；云端回来时若已被手动调整，不覆盖
+                setTimeout(function(){
+                  if(token!==state.analyzeToken) return;
+                  try{ state._softSig=JSON.stringify({c:state.plan&&state.plan.crop,src:state.sourceName}); }catch(e){}
+                }, 1400);
               }
+            } else if(!_fbDone){
+              _fbDone=true;
               autoApplyPlan(null);
             }
-          }, _cloudActiveNow?35000:20000);
+          }, _cloudActiveNow?16000:20000);
+          // 云端硬截止：34s 仍未回则中止，保留已应用的本地结果（不再弹"超时"大卡）
+          setTimeout(function(){
+            if(token!==state.analyzeToken) return;
+            if(_cloudActiveNow && !_fbDone){
+              _fbDone=true;
+              try{ if(state._cloudAbort){ state._cloudAbort.abort(); state._cloudAbort=null; } }catch(e){}
+              state._cloudKilled=true;
+              if(!state._softApplied){
+                state._cloudSoftTimedOut=true; state._softApplied=true;
+                state.analyzing=false; stage.classList.remove("scanning"); btnAnalyze.disabled=false;
+                autoApplyPlan(null);
+              }
+              try{ toastMsg("云端未在 60 秒内返回，已保留本地结果"); }catch(e){}
+            }
+          }, 60000);
         }catch(err){
           console.error("AI 分析异常:", err);
           state.analyzing=false;
@@ -5656,7 +5856,7 @@ var APP_VER="v12.26.0";
         _w.style.margin="10px";
         var _m=state.cloud&&state.cloud.model?state.cloud.model:"glm-5.3-flash";
         _w.innerHTML='<div class="db-head" style="color:#7FB5FF;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19a4.5 4.5 0 1 0 0-9h-1.8A7 7 0 1 0 4 14.9"/><path d="M12 12v6"/><path d="M9 15l3 3 3-3"/></svg>&nbsp;☁️ 云端 VLM 构图分析中…</div>'
-          +'<div class="sg-row"><span class="sg-b" style="color:#7FB5FF;">✦</span>正在调用云端视觉大模型（'+_m+'）读懂画面，约需 15-30 秒</div>'
+          +'<div class="sg-row"><span class="sg-b" style="color:#7FB5FF;">✦</span>正在调用云端视觉大模型（'+_m+'）读懂画面；本地结果 16 秒先出，云端通常 8-20 秒、慢时后台继续</div>'
           +'<div class="sg-row"><span class="sg-b" style="color:#7FB5FF;">✦</span>将识别画面场景 / 主体 / 构图法则，分析完成后自动应用并刷新结果</div>'
           +'<div class="sg-row"><span class="sg-b" style="color:#7FB5FF;">✦</span>云端不可用时会自动回退本地模型，不会卡死</div>';
         aiBody.appendChild(_w);
@@ -5951,7 +6151,47 @@ var APP_VER="v12.26.0";
           });
         }
       }catch(e){}
+      // v12.27.0: 主动构图候选卡（渲染函数抽出，presenter 包装层会再兜底调用一次）
+      try{ _renderProactiveCard(plan); }catch(e){}
       try{ _showCropPreview(plan); }catch(e){}
+    }
+    // v12.27.0: 主动构图候选卡——即使本地判定"不裁"，也把 AI 找到的更紧凑构图摆出来
+    function _renderProactiveCard(plan){
+      try{
+        if(!plan || plan.proactiveApplied || !plan.proactiveCrop || plan.proactiveCrop.length!==4 || plan.cloud) return;
+        if(!aiBody) return;
+        if(aiBody.querySelector('.ai-pc-card')) return;
+        function _pcEsc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(ch){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]; }); }
+        var _pcc=document.createElement("div"); _pcc.className="ai-suggest ai-pc-card"; _pcc.style.margin="10px";
+        var _pb='flex:1;padding:8px 0;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:var(--sub);font-size:11.5px;cursor:pointer;';
+        var _pa='flex:1;padding:8px 0;border-radius:10px;border:1px solid #3a7bd5;background:#3a7bd5;color:#fff;font-size:11.5px;font-weight:700;cursor:pointer;';
+        _pcc.innerHTML='<div class="db-head" style="color:#7FB5FF;margin-bottom:6px;">✨ AI 发现更适合的构图</div>'
+          +'<div style="font-size:12px;line-height:1.65;color:var(--sub);"><b style="color:var(--text);">'+_pcEsc(plan.proactiveTag||"更紧凑的构图")+'</b> · '+_pcEsc(plan.proactiveReason||"")+'</div>'
+          +'<div style="display:flex;gap:6px;margin-top:8px;">'
+          +'<button data-pc="preview" style="'+_pb+'">预览</button>'
+          +'<button data-pc="apply" style="'+_pa+'">应用这个构图</button>'
+          +'<button data-pc="keep" style="'+_pb+'">保持原图</button></div>';
+        aiBody.appendChild(_pcc);
+        setTimeout(function(){ _pcc.classList.add("show"); }, 220);
+        _pcc.querySelectorAll("button[data-pc]").forEach(function(b){
+          b.addEventListener("click",function(){
+            var act=b.getAttribute("data-pc");
+            if(act==="keep"){ _pcc.style.display="none"; toastMsg("已保持原图"); return; }
+            plan.crop=plan.proactiveCrop.slice();
+            plan._cropBase=plan.crop.slice();
+            plan.noCrop=false;
+            state.plan=plan;
+            if(act==="apply"){
+              try{ applyPlanCrop(true); }catch(e){}
+              toastMsg("已应用 AI 构图，可撤销");
+            }else{
+              try{ _showCropPreview(plan); }catch(e){}
+              toastMsg("已预览 AI 构图，点「一键成品」应用");
+            }
+            _pcc.style.display="none";
+          });
+        });
+      }catch(e){}
     }
     // v1.3.2: 一键应用 = 完整成品（按 AI 推荐框直接裁切 + 滤镜 + 变焦）
     function applyPlanCrop(keepOpen){
@@ -7909,9 +8149,14 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       var _lsOn=false; try{ _lsOn=localStorage.getItem("aiComposeCloudOn")==="1"; }catch(e){}
       state.cloud.on=_lsOn;
       cloudOn.checked=_lsOn;
+      if(cloudDeepReview){ try{ cloudDeepReview.checked=localStorage.getItem("aiComposeCloudDeepReview")==="1"; }catch(e){ cloudDeepReview.checked=false; } }
       _cloudUIApplyMode();
     }
     function initCloudUI(){
+      if(cloudDeepReview){ cloudDeepReview.addEventListener("change",function(){
+        try{ localStorage.setItem("aiComposeCloudDeepReview", cloudDeepReview.checked?"1":"0"); }catch(e){}
+        toastMsg(cloudDeepReview.checked?"已开启人物完整性二次复核（每张人像会慢 5-14 秒）":"已关闭二次复核（默认速度优先）");
+      }); }
       if(cloudOn) cloudOn.addEventListener("change",function(){
         state.cloud.on=cloudOn.checked;
         try{ localStorage.setItem("aiComposeCloudOn", state.cloud.on?"1":"0"); }catch(e){}
@@ -8005,11 +8250,16 @@ if(aiModelState!=="idle"){ resolve(false); return; }
     // v4.8.2: 云端失败/超时回退本地提示（toast + 结果面板顶部提示卡）
     function showCloudFallback(){
       try{
+        // v12.27.0: 软超时已经把本地结果交给用户了，云端再失败就不再弹"超时"大卡，只轻量更新状态
+        if(state._softApplied){
+          try{ setStatus("本地结果已出 · 云端未返回","warn"); }catch(e){}
+          return;
+        }
         // v7.8 #32: 按失败原因给不同人话文案，不再笼统说"超时/失败"
         var rs=state._cloudFailReason||"network", info;
         if(rs==="trip"){ var _sec=Math.max(0,Math.round(((state.cloudTripUntil||0)-Date.now())/1000)); var _min=Math.ceil(_sec/60);
           info={t:"云端暂时连不上",d:"云端连续几次没响应，自动先歇约"+_min+"分钟——这是防呆的可靠性保护，<b>与使用次数无关</b>；期间全程走<b>本地引擎</b>，功能不受任何影响，过会儿自动恢复云端。"};
-        } else if(rs==="timeout"){ info={t:"云端响应超时",d:"等了 35 秒还没返回，已自动切<b>本地引擎</b>出结果（本地功能照常）；网络好时点「重新分析」即可再试云端。"};
+        } else if(rs==="timeout"){ info={t:"云端响应超时",d:"云端 60 秒内没返回，已保留<b>本地结果</b>（本地功能照常）；网络好时点「重新分析」即可再试云端。"};
         } else if(rs==="auth"){ info={t:"云端口令可能有误",d:"云端鉴权没通过，已自动切<b>本地引擎</b>；请在设置里核对口令。"};
         } else if(rs==="busy"){ info={t:"云端暂时忙",d:"云端临时拥挤，已自动切<b>本地引擎</b>出结果（本地功能不受任何影响），稍后自动重试云端。"};
         } else if(rs==="cors"){ info={t:"云端厂商不支持直连或 Key 无效",d:"你选的厂商不允许浏览器跨域直连（或 API Key 不对/网络被拦）。已先用<b>本地引擎</b>；请在设置里改回「共享口令」模式，或换用支持直连的厂商（DeepSeek/通义/智谱/Kimi 等）。"}; }
@@ -8113,13 +8363,14 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         }
       }catch(e){}
       // v8.0.5 B6: 删除此处重复的 var _t0=Date.now()（原重复声明把分析起点重置，导致耗时只统计压缩+网络段）
-      var scale=Math.min(1, 1024/Math.max(vw,vh));
+      // v12.27.0: 1024→896。实测同一张图 1024px 云端 19-42s，896px 11-15s；构图语义不丢，延迟大幅下降。
+      var scale=Math.min(1, 896/Math.max(vw,vh));
       var c=document.createElement("canvas");
       c.width=Math.max(2,Math.round(vw*scale)); c.height=Math.max(2,Math.round(vh*scale));
       try{ c.getContext("2d").drawImage(el,0,0,c.width,c.height); }catch(e){ if(onDone) onDone(null); return; }
       var dataUrl;
       // v7.0.1: 0.8→0.85 细节更清（云端VLM输入质量）
-      try{ dataUrl=c.toDataURL("image/jpeg",0.85); }catch(e){ if(onDone) onDone(null); return; }
+      try{ dataUrl=c.toDataURL("image/jpeg",0.82); }catch(e){ if(onDone) onDone(null); return; }
       // v5.0: 同图缓存——相同照片24h内直接复用云端结果（省额度、秒出）；换图/清图不影响（按内容hash）
       var _ccKey=null;
       try{
@@ -8134,7 +8385,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         // v8.0.9: 缓存键带通道标识（s=共享代理 / b=厂商+模型），同图换通道/换厂商不串缓存
         var _ccMode=(state.cloud.mode==="byok")?("b"+state.cloud.byokVendor+(state.cloud.byokModel||"").replace(/[^a-z0-9]/gi,"").slice(0,10)):"s";
         // v12.26.0: 缓存前缀升级，避免复用旧模型（qwen3.5-flash）时代的云端结果
-        _ccKey="v1226_"+_ccMode+"_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36);
+        _ccKey="v1227_"+_ccMode+"_"+Math.abs(_h1).toString(36)+"_"+Math.abs(_h2).toString(36);
       }catch(e){ _ccKey=null; }
       if(_ccKey){
         try{
@@ -8202,14 +8453,14 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         {type:"text", text:prompt},
         {type:"image_url", image_url:{ url:dataUrl }}
       ]}], temperature:0.1, // v11.18.0: 0.15→0.1 更稳定（结构化字段枚举一致性）
-        max_tokens:2000 }, _cloudThinkingParams(model));
+        max_tokens:1400 }, _cloudThinkingParams(model));
       // v4.7.0: 新云端请求发起前中止上一个仍在飞行的请求（连点分析/快速换图不堆积请求；旧请求 token 已过期会自行丢弃）
       if(state._cloudAbort){ try{ state._cloudAbort.abort(); }catch(e){} state._cloudAbort=null; }
       var ctrl=(typeof AbortController!=="undefined")?new AbortController():null;
       state._cloudAbort=ctrl;
       // v4.7.0: 云端超时28s（25张实测p90=23.9s，25s会误杀约8%的25-28s临界慢响应；外层runAnalysis云端兜底30s仍为最后保险）
       // v12.26.0: glm-5.3-flash 视觉分析实测约 10s；12s 窗口会误杀。放宽到 30s，仍短于外层 35s 兜底。
-      var timer=setTimeout(function(){ if(ctrl) ctrl.abort(); }, 30000);
+      var timer=setTimeout(function(){ if(ctrl) ctrl.abort(); }, 55000);
       // v8.0.5: 弱网韧性——瞬时 5xx/429/网络错误自动重试 2 次（退避 2s/5s），4xx 与超时 abort 不重试；
       // 连续失败熔断：3 次失败后 5 分钟内直走本地（避免免费期额度/体验双重恶化）
       var _tryN=0;
@@ -8225,7 +8476,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       }
       function _retryReq(){
         if(token!==state.analyzeToken) return;
-        var timer2=setTimeout(function(){ if(ctrl) ctrl.abort(); }, 30000); // v12.26.0: 与主请求一致 30s
+        var timer2=setTimeout(function(){ if(ctrl) ctrl.abort(); }, 55000); // v12.27.0: 与主请求一致 55s
         _req().then(function(res2){
           clearTimeout(timer2);
           _handleCloudRes(res2);
@@ -8940,6 +9191,10 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         // v7.1 #11: VLM 自审闭环——人像且确有裁切时，把裁后小图喂回模型自查是否切到头/手/脚
         var _vlmSelfReview=function(p, srcEl, tk, cb){
           try{
+            // v12.27.0: 默认关闭二次复核（首轮 checklist + 10% 裁切上限已兜底），每张省 5-14 秒；
+            // 设置里可手动开启"人物完整性二次复核"。
+            var _deep=false; try{ _deep=localStorage.getItem("aiComposeCloudDeepReview")==="1"; }catch(e){}
+            if(!_deep){ cb(p); return; }
             var crop=p.crop||[0,0,0,0];
             var cutSum=crop[0]+crop[1]+crop[2]+crop[3];
             var _sceneTxt=String(p.scene||"")+String(p.sceneType||"")+String(p.subject||"");
@@ -8950,21 +9205,23 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             var sx=crop[0]/100*iw, sy=crop[1]/100*ih;
             var sw=(100-crop[0]-crop[2])/100*iw, sh=(100-crop[1]-crop[3])/100*ih;
             if(sw<10||sh<10){ cb(p); return; }
-            var tc=document.createElement("canvas"); var TW=480;
+            var tc=document.createElement("canvas"); var TW=384;
             tc.width=TW; tc.height=Math.max(60,Math.min(720,Math.round(TW*sh/sw)));
             tc.getContext("2d").drawImage(srcEl,sx,sy,sw,sh,0,0,tc.width,tc.height);
             var thumb=tc.toDataURL("image/jpeg",0.8);
             var rp=["你是摄影构图审查员。这是一张已经裁切完成的成片。",
               "请只判断：画面中的人物是否完整？有没有被切掉头顶、下巴、手、脚或身体任何部位？",
               '只输出JSON：{"complete":true或false,"cutPart":"被切部位或无"}。complete=false 仅当确实切到人物部位，构图留白不算问题。'].join("\n");
-            var rbody={ model:model, messages:[{role:"user",content:[{type:"text",text:rp},{type:"image_url",image_url:{url:thumb}}]}], temperature:0.1, max_tokens:200, enable_thinking:false };
+            var rbody=Object.assign({ model:model, messages:[{role:"user",content:[{type:"text",text:rp},{type:"image_url",image_url:{url:thumb}}]}], temperature:0.1, max_tokens:120 }, _cloudThinkingParams(model));
             var done=false;
             var finish=function(fp){ if(done) return; done=true; cb(fp); };
-            var tm=setTimeout(function(){ finish(p); }, 14000);
+            var tm=setTimeout(function(){ finish(p); }, 6000);
             // v8.0.5 B5: 自审请求也挂主 AbortController，换图/重分析时立即中止，不再白飞一次请求
             // v12.13.0 G审计P0-2: 关云后迟到响应不报"云端分析完成·二次审查"
             try{ setStatus((typeof _cloudReady==="function"&&_cloudReady())?"云端分析完成·正在做人物完整性二次审查…":"分析完成（本地引擎）","done"); }catch(e){}
-            fetch(base+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","X-App-Token":appToken},body:JSON.stringify(rbody),signal:ctrl?ctrl.signal:undefined})
+            var _srh={"Content-Type":"application/json"};
+            if(_byok){ _srh["Authorization"]="Bearer "+appToken; } else { _srh["X-App-Token"]=appToken; }
+            fetch(base+"/chat/completions",{method:"POST",headers:_srh,body:JSON.stringify(rbody),signal:ctrl?ctrl.signal:undefined})
               .then(function(r){ return r.json(); })
               .then(function(j){
                 clearTimeout(tm);
@@ -10758,6 +11015,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
     var _origPresent2=presentAnalysis;
     presentAnalysis=function(plan){
       _origPresent2(plan);
+      try{ _renderProactiveCard(state.plan||plan); }catch(e){}
       if(aiApply){
         aiApply.classList.add("highlight");
         if(aiApplyTip) aiApplyTip.style.display="block";
@@ -10780,7 +11038,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
   }catch(e){ console.error(e); }
   // v4.3: 只读调试钩子（自动化回归断言用，不影响任何功能与模型行为）
   try{ window.__ai={
-    get plan(){ return state&&state.plan?{rule:state.plan.rule,sceneType:state.plan.sceneType,conf:state.plan.conf,subject:state.plan.subject,f:state.plan.f||null,noCrop:!!state.plan.noCrop,crop:state.plan.crop||null,selfReviewed:!!state.plan.selfReviewed,selfReviewNote:state.plan.selfReviewNote||"",fromCache:!!state.plan.fromCache,notes:state.plan.notes||null,_dbgSkin:(state.plan&&state.plan._dbgSkin)||null,tiltHint:state.plan.tiltHint||null,cropIntent:state.plan.cropIntent||null,tiltDeg:state.aiData&&state.aiData.tiltDeg||null,tiltConf:state.aiData&&state.aiData.tiltConf||null}:null; },
+    get plan(){ return state&&state.plan?{rule:state.plan.rule,sceneType:state.plan.sceneType,conf:state.plan.conf,subject:state.plan.subject,f:state.plan.f||null,noCrop:!!state.plan.noCrop,crop:state.plan.crop||null,selfReviewed:!!state.plan.selfReviewed,selfReviewNote:state.plan.selfReviewNote||"",fromCache:!!state.plan.fromCache,notes:state.plan.notes||null,_dbgSkin:(state.plan&&state.plan._dbgSkin)||null,tiltHint:state.plan.tiltHint||null,proactiveCrop:state.plan.proactiveCrop||null,proactiveTag:state.plan.proactiveTag||null,proactiveReason:state.plan.proactiveReason||null,cloudFlag:!!state.plan.cloud,cropIntent:state.plan.cropIntent||null,tiltDeg:state.aiData&&state.aiData.tiltDeg||null,tiltConf:state.aiData&&state.aiData.tiltConf||null}:null; },
     get data(){ return state&&state.aiData?{sceneType:(state.plan&&state.plan.sceneType)||'',rowGap:state.aiData.rowGap,rowPeakN:state.aiData.rowPeakN,bodyRatio:state.aiData.bodyRatio,frameAspect:state.aiData.frameAspect||null,sat:state.aiData.sat,mean:state.aiData.mean,detectedClasses:state.aiData.detectedClasses,allBoxes:state.aiData.allBoxes||null,isPerson:state.aiData.isPerson,headTop:state.aiData.headTop,personLeft:state.aiData.personLeft,personRight:state.aiData.personRight,personBottom:state.aiData.personBottom,topBBox:state.aiData.topBBox,personScore:state.aiData.personScore,faceAvailable:state.aiData.faceAvailable,sym:state.aiData.sym,vSym:state.aiData.vSym,hSym:state.aiData.hSym,contrast:state.aiData.contrast,sharpness:state.aiData.sharpness,highClip:state.aiData.highClip,shadowClip:state.aiData.shadowClip,dynamicRange:state.aiData.dynamicRange,skinRatio:state.aiData.skinRatio,skinCx:state.aiData.skinCx,skinCy:state.aiData.skinCy,isPersonLikely:state.aiData.isPersonLikely,skinAspect:state.aiData.skinAspect,skinFill:state.aiData.skinFill,skinHRatio:state.aiData.skinHRatio,modelLoaded:(state.aiData&&'modelLoaded' in state.aiData)?state.aiData.modelLoaded:null,
 waterScore:state.aiData.waterScore,manmadeScore:state.aiData.manmadeScore,lightScore:state.aiData.lightScore,
 lowTexLower:state.aiData.lowTexLower,glareLower:state.aiData.glareLower,horizonOk:state.aiData.horizonOk,
@@ -10803,7 +11061,7 @@ hSym2:state.aiData.hSym}:null; }
   }; }catch(e){}
 })();
   </script>
-<div id="aicUpdateBar" class="hide"><span class="ub-t">🔧 v12.26.0：云端默认模型升级为 glm-5.3-flash，修复模型下线导致的云端静默回退；修复换图后上一张人像状态污染下一张（天空/水面/街景误判人像）；滤镜推荐接入云端场景与氛围，新增动物池；清理重复黑白滤镜键。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
+<div id="aicUpdateBar" class="hide"><span class="ub-t">🔧 v12.27.0：普通场景改为主动构图——自动给 4:5/16:9 画幅或引导线裁切，并自动套用温和推荐滤镜；人像/人头特写才保留原图。云端提速：896px 输入、单次调用默认、16s 先出本地结果、云端回来自动升级。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
 <script>
 (function(){
   // v8.2.3 新版本就绪提示条：SW 激活后广播 → 页面弹出"立即刷新"，根治旧缓存看不到新功能

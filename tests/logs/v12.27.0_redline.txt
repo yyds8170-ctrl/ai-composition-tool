@@ -1,0 +1,5 @@
+=== v12.27.0 红线词扫描 ===
+日期：2026-10-24
+范围：index.html sw.js README.md manifest.webmanifest docs/research/v12.27-global-upgrade.md tests/logs/*.txt
+口径：按项目约定的红线词表逐项扫描（词表本身不在仓库内复述）
+结果：0 命中

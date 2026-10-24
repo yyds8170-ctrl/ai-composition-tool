@@ -1,0 +1,18 @@
+=== v12.27.0 发版前门禁 ===
+日期：2026-10-24
+
+[1] npm run extract                  PASS（生成 tests/pure-functions.js，含 _proactiveComposition）
+[2] node tests/unit.test.js          PASS 400 条原有 + 6 条 v12.27 主动构图
+[3] node tools/fuzz.js               PASS 0 问题
+[4] node --check sw.js               PASS
+[5] node tools/verify_stacking.js    PASS（cmpPos 20%/80% md5 不同）
+[6] 本地 100 张真实图                 PASS noCrop=47，裁切=53；微小裁切 0；人像单边>10 0
+[7] 云端 50 张真实图                  PASS CLOUD=49，local=1（street_9 极端慢响应，本地预览保留）
+[8] 移动端 390×844 走查               PASS 横向溢出无、按钮越界/过小无、异常换行无、控制台错误无
+[9] 红线词扫描                        PASS 0 命中
+[10] 版本号同步                       PASS index.html / sw.js / package.json / manifest.webmanifest / README.md
+
+口径说明：
+- 普通场景默认主动构图（4:5/16:9/1:1 或引导线单边裁）并自动应用；人像/人头特写、画面中检出人物、极暗/纯色/截图、强氛围保护时保留原图。
+- 推荐滤镜自动套用温和强度（60-78）；五道硬闸门仍不推。
+- 云端 896px、单次调用默认、二次复核默认关；16s 本地构图预览，云端后台最多 55s，回来再升级。
