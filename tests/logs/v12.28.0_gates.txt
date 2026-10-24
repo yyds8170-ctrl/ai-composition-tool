@@ -1,0 +1,19 @@
+=== v12.28.0 发版前门禁 ===
+日期：2026-10-24
+
+[1] npm run extract                  PASS（含 _cloudCropGuard / _personBoxOf / _proactiveComposition）
+[2] node tests/unit.test.js          PASS 403/403（新增人景安全 6 条、云端分级保护 7 条、滤镜路由 3 条）
+[3] node tools/fuzz.js               PASS 0 问题
+[4] node --check sw.js               PASS
+[5] node tools/verify_stacking.js    PASS
+[6] 本地 100 张真实图                 PASS noCrop=43 / 裁切=57；人像单边>10 0；人物框切穿 0；微小裁切 0
+[7] 云端 50 张真实图                  PASS CLOUD=50 / local=0；云端裁切 24 / 不裁 26
+[8] 移动端 390×844 走查               PASS 无横向溢出/按钮越界/异常换行/控制台错误
+[9] 红线词扫描                        PASS 0 命中
+[10] 版本号同步                       PASS index.html / sw.js / package.json / manifest.webmanifest / README.md
+
+关键变化：
+- 人景共存：street_9、night_9 从“检出人就不裁”变为人物安全 4:5 裁切；人物框四周 3% 安全边。
+- 云端保护：动物单边≤8%/四边≤25%，美食单边≤12%/四边≤35%；arch_5、pet_1、pet_3、pet_4、pet_5、pet_9、sky_2 全部在保护线内。
+- 云端提速：max_tokens 1400→1000，6 张抽测 11-15s；50 张全部 CLOUD。
+- 滤镜路由：architecture/street 池接入 chrome/classic/hk/cool；假人像需本地人像证据。

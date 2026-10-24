@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v12.27.0 · 实景视觉构图生成工具</title>
-<meta name="description" content="AI 构图助手 Pro v12.27.0 · 实景视觉构图生成工具（永久免费、不限使用次数）：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面。构图综合诊断+拍后滤镜智能推荐。v11.16.0 新手引导悬浮按钮可拖动换位+位置记忆+双击复位。含 YOLO11n 本地检测、智能人像裁切、30 款滤镜、云端 VLM 分析">
+<title>AI 构图助手 Pro v12.28.0 · 实景视觉构图生成工具</title>
+<meta name="description" content="AI 构图助手 Pro v12.28.0 · 实景视觉构图生成工具（永久免费、不限使用次数）：基于实时场景信息智能输出专业摄影构图方案，一键生成优化后的成片画面。构图综合诊断+拍后滤镜智能推荐。v11.16.0 新手引导悬浮按钮可拖动换位+位置记忆+双击复位。含 YOLO11n 本地检测、智能人像裁切、30 款滤镜、云端 VLM 分析">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v12.27.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切（永久免费不限次数）">
+<meta property="og:title" content="AI 构图助手 Pro v12.28.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切（永久免费不限次数）">
 <meta property="og:description" content="给不会拍照的普通人：打开相机，AI 教你怎么拍。AI 构图分析（本地像素+云端 VLM 双引擎）、人像保护裁切（不切头不切手脚）、30 款滤镜，一键出成品。默认本地运行，照片不上传。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
@@ -1051,7 +1051,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v12.27.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v12.28.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1129,7 +1129,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v12.27.0";
+var APP_VER="v12.28.0";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -3526,10 +3526,12 @@ var APP_VER="v12.27.0";
         var scn=(sig&&typeof sig.scene==="string")?sig.scene:null;
         var atm=(sig&&typeof sig.atmosphere==="string")?sig.atmosphere:null;
         // v12.26.0: 云端 VLM 的 scene/atmosphere 是语义证据，优先于纯像素阈值；
-        // 仍保留"色彩即主体"硬保护（美食/晚霞/人像肤色不推黑白）。
-        var isPerson=(ps>=0.6)||scn==="portrait"||scn==="portrait_close";
+        // v12.28.0: 假人像防御——云端说 portrait，但本地没有人脸/肤色/人体证据时，不按人像推滤镜。
+        var _scnPort=(scn==="portrait"||scn==="portrait_close");
+        var _portEvidence=(ps>=0.35)||(pc>0)||(a.faceAvailable===true)||(typeof a.skinRatio==="number"&&a.skinRatio>=0.04)||(a.isPersonLikely===true);
+        var isPerson=(ps>=0.6)||(_scnPort&&_portEvidence);
 
-        // === 场景感知候选打分（v12.26.0：云端语义 + 本地像素双证据）===
+        // === 场景感知候选打分（v12.28.0：云端语义 + 本地像素双证据）===
         // 场景判定
         var scene="general";
         if(isPerson) scene="portrait";
@@ -3537,9 +3539,10 @@ var APP_VER="v12.27.0";
         else if(scn==="night"||(mean<85&&lightScore>=0.3)) scene="night";
         else if(atm==="sunset_sky"||(warmRatio>=0.42&&wb>0.05&&mean>=85&&mean<=160)) scene="sunset";
         else if(scn==="waterscape"||atm==="water_reflection"||waterScore>=0.4) scene="water";
-        else if(scn==="architecture"&&manmadeScore>=0.5) scene="architecture";
+        else if(scn==="architecture") scene="architecture";
+        else if(scn==="street") scene="street";
         else if(scn==="animal") scene="animal";
-        else if(scn==="landscape"||scn==="street") scene="outdoor";
+        else if(scn==="landscape") scene="outdoor";
 
         // 候选滤镜池（按场景）
         var POOLS={
@@ -3549,6 +3552,7 @@ var APP_VER="v12.27.0";
           sunset:["sunset","teal","warm","cine","hk"],
           water:["160c","velvia","cool","provia","natural"],
           architecture:["chrome","classic","mono-warm","provia","cool"],
+          street:["chrome","classic","hk","cool","provia"],
           animal:["natural","portra","provia","warm","japan"],
           outdoor:["velvia","160c","provia","chrome","fade"],
           general:["natural","provia","morandi","fade","classic"]
@@ -3583,9 +3587,10 @@ var APP_VER="v12.27.0";
             if(["hk","cyber","vivid"].indexOf(f)>=0) s-=15;
           }
           // 街拍/建筑推纪实黑白冷调
-          if(scene==="architecture"||scn==="street"){
-            if(["chrome","classic","mono-warm","provia"].indexOf(f)>=0) s+=10;
+          if(scene==="architecture"||scene==="street"||scn==="street"){
+            if(["chrome","classic","mono-warm","provia","cool"].indexOf(f)>=0) s+=10;
           }
+          if(scene==="street"&&["chrome","classic","hk"].indexOf(f)>=0) s+=8;
           // 极低饱和加黑白分：仅限建筑/街拍/通用，且非food/sunset/人像
           if(sat<0.06 && (scene==="architecture"||scene==="street"||scene==="general") &&
              scene!=="food" && scene!=="sunset" && !isPerson &&
@@ -3940,21 +3945,79 @@ var APP_VER="v12.27.0";
     // v12.27.0 主动构图候选：本地判定"不裁"时，不直接摆烂；按场景推荐一个更紧凑的社交画幅/引导线构图。
     // 纯函数、只读信号，返回 {crop:[L,T,R,B], tag, reason, score, area} 或 null。
     // 设计依据（公开通用原理 + 用户提供的手机摄影参考）：三分/黄金点、引导线消失点、中心+负空间、4:5 社交画幅。
+    // v12.28.0: 取画面里最大的可信人物框（COCO 快照优先，其次 personLeft/right，再退 allBoxes）
+    // v12.28.0 P0：云端裁切保护——人像 10%、动物/美食单边 12%/四边 35%、其他单边 15%/四边 40%；
+    // 有物体框时再走 _objectGuard；主体外接框被裁掉超过 25% 时直接不裁（宁可不裁，不切宠物/餐盘）。
+    function _cloudCropGuard(crop, a, scene){
+      try{
+        if(!crop||crop.length!==4) return crop;
+        var c=crop.map(function(v){ return Math.max(0,Math.min(50,Math.round(v))); });
+        var sum=c[0]+c[1]+c[2]+c[3];
+        if(!sum) return c;
+        var sc=String(scene||"");
+        if(/portrait/.test(sc)){
+          c=c.map(function(v){ return Math.min(10,v); });
+        }else if(sc==="animal"){
+          // 动物轮廓/耳朵/尾巴最脆：单边≤8%、四边≤25%，比美食更保守
+          c=c.map(function(v){ return Math.min(8,v); });
+          sum=c[0]+c[1]+c[2]+c[3];
+          if(sum>25){ var ka=25/sum; c=c.map(function(v){ return Math.round(v*ka); }); }
+          while((c[0]+c[1]+c[2]+c[3])>25){ var mia=0; for(var ia=1;ia<4;ia++){ if(c[ia]>c[mia]) mia=ia; } c[mia]--; }
+        }else if(sc==="food"){
+          c=c.map(function(v){ return Math.min(12,v); });
+          sum=c[0]+c[1]+c[2]+c[3];
+          if(sum>35){ var k=35/sum; c=c.map(function(v){ return Math.round(v*k); }); }
+          while((c[0]+c[1]+c[2]+c[3])>35){ var mi=0; for(var i=1;i<4;i++){ if(c[i]>c[mi]) mi=i; } c[mi]--; }
+        }else{
+          c=c.map(function(v){ return Math.min(15,v); });
+          sum=c[0]+c[1]+c[2]+c[3];
+          if(sum>40){ var k2=40/sum; c=c.map(function(v){ return Math.round(v*k2); }); }
+          while((c[0]+c[1]+c[2]+c[3])>40){ var mi2=0; for(var j=1;j<4;j++){ if(c[j]>c[mi2]) mi2=j; } c[mi2]--; }
+        }
+        if(a&&Array.isArray(a.allBoxes)&&a.allBoxes.length){
+          try{ c=_objectGuard(c,a.allBoxes); }catch(e){}
+        }
+        if(a&&a.sigBox&&a.sigBox.length===4){
+          var b=a.sigBox;
+          var bw=Math.max(0.001,b[2]-b[0]), bh=Math.max(0.001,b[3]-b[1]);
+          var l=c[0]/100,t=c[1]/100,r=c[2]/100,bb=c[3]/100;
+          var ow=Math.max(0,Math.min(b[2],1-r)-Math.max(b[0],l));
+          var oh=Math.max(0,Math.min(b[3],1-bb)-Math.max(b[1],t));
+          if((ow*oh)/(bw*bh)<0.75) return [0,0,0,0];
+        }
+        return c;
+      }catch(e){ return crop; }
+    }
+    function _personBoxOf(a){
+      try{
+        if(!a) return null;
+        var c=a.cocoPersonBox;
+        if(c&&typeof c.l==="number"&&typeof c.t==="number"&&typeof c.r==="number"&&typeof c.b==="number"){
+          if(c.r-c.l>0.03&&c.b-c.t>0.03) return [Math.max(0,c.l),Math.max(0,c.t),Math.min(1,c.r),Math.min(1,c.b)];
+        }
+        if(typeof a.personLeft==="number"&&typeof a.headTop==="number"&&typeof a.personRight==="number"){
+          var pb=[a.personLeft,a.headTop,a.personRight,(typeof a.personBottom==="number"?a.personBottom:0.98)];
+          if(pb[2]-pb[0]>0.03&&pb[3]-pb[1]>0.03) return [Math.max(0,pb[0]),Math.max(0,pb[1]),Math.min(1,pb[2]),Math.min(1,pb[3])];
+        }
+        if(Array.isArray(a.allBoxes)){
+          var best=null,ba=0;
+          for(var i=0;i<a.allBoxes.length;i++){
+            var o=a.allBoxes[i], b=o&&o.b;
+            if(!b||b.length!==4||o.class!=="person") continue;
+            if(o.score!==undefined&&o.score<0.40) continue;
+            var ar=Math.max(0,b[2]-b[0])*Math.max(0,b[3]-b[1]);
+            if(ar>ba){ ba=ar; best=b; }
+          }
+          if(best) return [Math.max(0,best[0]),Math.max(0,best[1]),Math.min(1,best[2]),Math.min(1,best[3])];
+        }
+      }catch(e){}
+      return null;
+    }
     function _proactiveComposition(a, plan){
       try{
         if(!a||!plan) return null;
         var sc=plan.sceneType||"general";
         if(/portrait/.test(sc)) return null; // 人像/人头特写交给既有保护链，保持原图
-        // 场景被误判成 general/street、但模型确实检出人的，也不主动裁，避免切到人
-        if(a.isPerson===true) return null;
-        try{
-          if(Array.isArray(a.allBoxes)){
-            for(var _bi=0;_bi<a.allBoxes.length;_bi++){
-              var _b=a.allBoxes[_bi];
-              if(_b&&_b.class==="person"&&(_b.score===undefined||_b.score>=0.45)) return null;
-            }
-          }
-        }catch(e){}
         if(plan.crop && (plan.crop[0]+plan.crop[1]+plan.crop[2]+plan.crop[3])>0) return null;
         // 极暗/纯色/截图类仍然不折腾
         try{
@@ -3966,6 +4029,53 @@ var APP_VER="v12.27.0";
         var cx=(typeof a.cx==="number"&&isFinite(a.cx))?a.cx:0.5;
         var cy=(typeof a.cy==="number"&&isFinite(a.cy))?a.cy:0.5;
         var cands=[];
+        // v12.28.0 P0：人景共存——检出人物时不再整张不裁，而是保留人物安全边、裁对侧/上下空白
+        var pb=_personBoxOf(a);
+        if(pb){
+          var safe=[];
+          function pushSafe(l,t,r,b,tag,reason,score){
+            l=Math.max(0,Math.min(0.15,l)); t=Math.max(0,Math.min(0.15,t));
+            r=Math.max(0,Math.min(0.15,r)); b=Math.max(0,Math.min(0.15,b));
+            var area=(1-l-r)*(1-t-b);
+            if(area<0.78||l+r+t+b<0.035) return;
+            // 人物框四周至少留 3%，绝不切人
+            if(pb[0]<l+0.03||pb[1]<t+0.03||pb[2]>1-r-0.03||pb[3]>1-b-0.03) return;
+            safe.push({crop:[Math.round(l*100),Math.round(t*100),Math.round(r*100),Math.round(b*100)],tag:tag,reason:reason,score:score,area:area});
+          }
+          // A. 保留人物，按 4:5/16:9 收紧上下；若人物贴顶/贴底则改裁另一侧
+          var tarP=ar<1?0.8:16/9;
+          if(Math.abs(tarP-ar)>0.02){
+            var chP=1-ar/tarP;
+            var topRatioP=(a.topBandHsv&&typeof a.topBandHsv.ratio==="number")?a.topBandHsv.ratio:0;
+            var tP=chP*0.5,bP=chP*0.5;
+            if(tP>0.02 && (topRatioP>0.25 || (typeof a.blueWater==="number"&&a.blueWater>0.55))){ bP+=tP; tP=0; }
+            var tagP=(Math.abs(tarP-0.8)<0.01)?"4:5":(Math.abs(tarP-16/9)<0.01?"16:9":"");
+            if(tagP){
+              pushSafe(0,tP,0,bP,"人景构图 "+tagP,"保留人物，裁掉上方/下方空白，画面更紧凑",0.76);
+              // 人物偏下→只裁上；偏上→只裁下
+              if(pb[3]>0.72) pushSafe(0,chP,0,0,"人景构图 "+tagP,"保留人物脚部，裁掉顶部空白",0.72);
+              else if(pb[1]<0.28) pushSafe(0,0,0,chP,"人景构图 "+tagP,"保留人物头顶，裁掉底部空白",0.72);
+            }
+          }
+          // B. 裁人物对侧空白（人物在左裁右，人物在右裁左；居中时选边缘能量更低的一侧）
+          if(!(typeof a.sym==="number"&&a.sym>0.42)){
+            var cutP=0.09, pcx=(pb[0]+pb[2])/2;
+            var sideP=pcx<0.5?"right":"left";
+            if(Math.abs(pcx-0.5)<0.06){
+              var colP=a.edgeEnergy&&a.edgeEnergy.col;
+              if(colP&&colP.length>20){
+                var avgP=function(from,to){var s=0,c=0,fi=Math.max(0,Math.floor(from*colP.length)),ti=Math.min(colP.length,Math.ceil(to*colP.length));for(var i=fi;i<ti;i++){s+=(colP[i]||0);c++;}return c?s/c:0;};
+                var eLP=avgP(0,0.12),eRP=avgP(0.88,1);
+                sideP=eLP<=eRP?"right":"left";
+              }
+            }
+            if(sideP==="right") pushSafe(0,0,cutP,0,"人景构图 侧裁","保留人物，裁掉右侧空白，街道更紧凑",0.70);
+            else pushSafe(cutP,0,0,0,"人景构图 侧裁","保留人物，裁掉左侧空白，街道更紧凑",0.70);
+          }
+          if(!safe.length) return null;
+          safe.sort(function(x,y){ return y.score-x.score; });
+          return safe[0];
+        }
         function push(l,t,r,b,tag,reason,score,minOv,minArea){
           l=Math.max(0,Math.min(0.15,l)); t=Math.max(0,Math.min(0.15,t));
           r=Math.max(0,Math.min(0.15,r)); b=Math.max(0,Math.min(0.15,b));
@@ -4029,6 +4139,19 @@ var APP_VER="v12.27.0";
             var cut=0.10;
             if(eL<=eR && eL<eC*0.75){ push(cut,0,0,0,"引导线构图","裁掉左侧低信息边带，让道路/线条的消失点离开正中心，画面更有动势",0.62); }
             else if(eR<eL && eR<eC*0.75){ push(0,0,cut,0,"引导线构图","裁掉右侧低信息边带，让道路/线条的消失点离开正中心，画面更有动势",0.62); }
+          }
+        }
+        // C. 轻量兜底：普通场景没有更强候选时，给 4:5/16:9 的轻度上下收紧；
+        // 只裁 ≤18% 高度、保留 ≥80% 面积，晚霞/蓝天顶部让给底部，避免"好多图完全不裁"。
+        if(!cands.length && !/animal|food/.test(sc) && tar>ar){
+          var chF=1-ar/tar;
+          if(chF>0.02 && chF<=0.26){
+            var tF=chF*0.5,bF=chF*0.5;
+            var topF=(a.topBandHsv&&typeof a.topBandHsv.ratio==="number")?a.topBandHsv.ratio:0;
+            if(tF>0.02 && (topF>0.25 || (typeof a.blueWater==="number"&&a.blueWater>0.55))){ bF+=tF; tF=0; }
+            var tagF=(Math.abs(tar-0.8)<0.01)?"4:5":(Math.abs(tar-16/9)<0.01?"16:9":"社交画幅");
+            // 4:3→16:9 是标准电影画幅（25% 高裁切），保留面积 75%；仅用于非动物/非美食普通场景
+            push(0,tF,0,bF,tagF,"轻度收紧上下，保留主体与氛围，画面更紧凑",0.58,0.60,0.72);
           }
         }
         if(!cands.length) return null;
@@ -5012,7 +5135,10 @@ var APP_VER="v12.27.0";
           : (bestRule==="diag" ? "画面有斜向线条/光影，保留完整线条更耐看"
           : (bestRule==="center" ? "主体居中，中心构图干净直接"
           : "主体与留白关系已经成立"));
-        plan.desc = "检测到"+plan.subject+"，"+_ruleTxt+"，建议保留原尺寸不裁切。" +
+        var _noReason = (isPerson||isCloseUp) ? "人像/特写优先保证人物完整"
+          : (a.bodyRatio>0.75 ? "主体已占满画面，再裁会切主体"
+          : (a.mean<35 ? "极暗氛围，保留暗部层次" : _ruleTxt));
+        plan.desc = "检测到"+plan.subject+"，"+_noReason+"，保持原图。" +
           (_pcHint?("下方还准备了更紧凑的「"+_pcHint.tag+"」候选，可预览后再决定。"):"") +
           "推荐"+(FILTERS[plan.f]?FILTERS[plan.f].name:"自然")+"滤镜优化画面。";
       } else {
@@ -5307,7 +5433,7 @@ var APP_VER="v12.27.0";
       }catch(e){}
       // v12.27.0: 本地判定"不裁"时，仍主动找一个更紧凑的构图候选（默认自动应用；人像/特写除外）
       try{
-        if(plan.noCrop && !isPerson && !isCloseUp){
+        if(plan.noCrop && !isCloseUp && !/portrait/.test(plan.sceneType||"")){
           var _pc=_proactiveComposition(a, plan);
           if(_pc){
             // v12.27.0 用户口径：普通场景默认主动给构图并应用；人像/人头特写才保留原图。
@@ -5319,6 +5445,8 @@ var APP_VER="v12.27.0";
             plan.crop=_pc.crop.slice();
             plan.noCrop=false;
             plan.cropAdvice="AI 主动构图："+_pc.tag+" · "+(_pc.reason||"");
+            plan.desc="检测到"+(plan.subject||"画面主体")+"，AI 主动构图：「"+_pc.tag+"」。"+(_pc.reason||"")+
+              " 推荐"+(FILTERS[plan.f]?FILTERS[plan.f].name:"自然")+"滤镜优化画面。";
           }
         }
       }catch(e){}
@@ -8453,7 +8581,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         {type:"text", text:prompt},
         {type:"image_url", image_url:{ url:dataUrl }}
       ]}], temperature:0.1, // v11.18.0: 0.15→0.1 更稳定（结构化字段枚举一致性）
-        max_tokens:1400 }, _cloudThinkingParams(model));
+        max_tokens:1000 }, _cloudThinkingParams(model));
       // v4.7.0: 新云端请求发起前中止上一个仍在飞行的请求（连点分析/快速换图不堆积请求；旧请求 token 已过期会自行丢弃）
       if(state._cloudAbort){ try{ state._cloudAbort.abort(); }catch(e){} state._cloudAbort=null; }
       var ctrl=(typeof AbortController!=="undefined")?new AbortController():null;
@@ -9045,13 +9173,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         }catch(e){ arbiterResult=null; }
 
         crop=_guardCrop(crop);
-        // v12.26.0: 云端人像裁切保守上限——没有人脸/人体框时，VLM 的 19% 单边裁切可能切到手臂/腿脚。
-        // 人像/特写任何一边最多裁 10%，先保证"不切手脚"，用户仍可手动加大裁切。
-        try{
-          if((sceneKey==="portrait"||sceneKey==="portrait_close") && crop && crop.length===4){
-            crop=crop.map(function(v){ return Math.max(0,Math.min(10,Math.round(v))); });
-          }
-        }catch(e){}
+        // v12.28.0: 云端裁切统一走 _cloudCropGuard（人像/动物/美食/通用分级上限 + 物体框/主体重叠保护）
         // v8.5.0 云端多物体保护（对齐本地 _objectGuard）：_guardCrop 只护住单一主体框，
         // 画面里第二只动物/船/车等较大非人物体（置信≥0.40、面积≥2%、前两大）被裁边切穿时，只减裁切把其完整纳入；
         // 横拍水景/风光/夜景已在 _computeCropByRule 顶部走宽幅 return，不经过这里。
@@ -9077,6 +9199,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             if(_ccg && _ccg.crop){ crop=_ccg.crop; _rodNote=_ccg.note||null; }
           }
         }catch(e){}
+        // v12.28.0: 云端分级裁切上限 + 物体/主体保护（动物/美食不再出现 40%+ 四边裁切）
+        try{ crop=_cloudCropGuard(crop, state.aiData, sceneKey); }catch(e){}
         var keepOriginal=(obj.keepOriginal===true)||(crop[0]+crop[1]+crop[2]+crop[3]===0);        // v4.8.2: 解除"变焦+裁切"双重叠加——裁切已由 cropBox 负责构图，再叠加 CSS 变焦会二次缩画面
         // （Qwen-Max 实测：裁切后再 setZoom，最终保留面积中位数仅 60%）；云端结果一律 z=1.0
         var z=1.0;        // v4.8.0: 云端推荐滤镜中文风格 -> app 滤镜 key 映射
@@ -11061,7 +11185,7 @@ hSym2:state.aiData.hSym}:null; }
   }; }catch(e){}
 })();
   </script>
-<div id="aicUpdateBar" class="hide"><span class="ub-t">🔧 v12.27.0：普通场景改为主动构图——自动给 4:5/16:9 画幅或引导线裁切，并自动套用温和推荐滤镜；人像/人头特写才保留原图。云端提速：896px 输入、单次调用默认、16s 先出本地结果、云端回来自动升级。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
+<div id="aicUpdateBar" class="hide"><span class="ub-t">🔧 v12.28.0：检出人物也能安全裁——保留人物 3% 安全边，裁对侧/上下空白；普通场景补 4:5/16:9 轻量兜底。云端动物/美食分级保护（动物单边≤8%、四边≤25%），max_tokens 降到 1000 后抽测 11-15s。建筑/街景滤镜路由与假人像防御同步上线。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
 <script>
 (function(){
   // v8.2.3 新版本就绪提示条：SW 激活后广播 → 页面弹出"立即刷新"，根治旧缓存看不到新功能

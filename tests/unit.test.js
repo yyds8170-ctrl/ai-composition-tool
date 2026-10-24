@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard, _decloudPlan, _bandSatSignal, _symEdgeSignal, _foodEvidenceSignal } = require('./pure-functions.js');
+const { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard, _decloudPlan, _bandSatSignal, _symEdgeSignal, _foodEvidenceSignal, _cloudCropGuard, _personBoxOf, _proactiveComposition } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -1044,6 +1044,18 @@ test('filter 建筑低饱和可推黑白: scene=architecture+sat=0.05 → chrome
   const r = recWith({ sat: 0.05, mean: 120, manmadeScore: 0.8 }, { scene: 'architecture' });
   assert.ok(['chrome','mono-warm','provia'].indexOf(r.filter) >= 0, '建筑可接受, 实得=' + r.filter);
 });
+test('filter v12.28 假人像: 云端 portrait 但本地无人像证据 → 不推人像专属', () => {
+  const r = recWith({ skinRatio: 0, isPersonLikely: false, faceAvailable: false, mean: 120, sat: 0.2 }, { scene: 'portrait', personScore: 0, personCount: 0 });
+  assert.ok(['portra','ektar','portrait-warm','portrait-cool','portrait-mono'].indexOf(r.filter) < 0, '假人像不推人像色, 实得=' + r.filter);
+});
+test('filter v12.28 建筑: scene=architecture 不再要求 manmadeScore', () => {
+  const r = recWith({ manmadeScore: 0.1, mean: 130, sat: 0.2, wb: 0.0 }, { scene: 'architecture' });
+  assert.ok(['chrome','classic','mono-warm','provia','cool'].indexOf(r.filter) >= 0, '建筑池, 实得=' + r.filter);
+});
+test('filter v12.28 街景: scene=street → 硬朗/纪实池', () => {
+  const r = recWith({ manmadeScore: 0.2, mean: 130, sat: 0.2, wb: 0.0 }, { scene: 'street' });
+  assert.ok(['chrome','classic','hk','cool','provia'].indexOf(r.filter) >= 0, '街景池, 实得=' + r.filter);
+});
 test('filter 属性: strength∈[50,80]、非null id 属推荐池', () => {
   const cases = [
     recWith({ mean: 70, lightScore: 0.4 }, null),
@@ -2017,4 +2029,62 @@ if (process.exitCode) {
   // null安全
   assert.ok(_thirdsFitScore(-1, -1) === 0.5, 'null安全');
   console.log('  ✓ v12.11.0 _thirdsFitScore（4条）');
+}
+
+// -------------------- v12.27.0: _proactiveComposition --------------------
+{
+  const A={frameAspect:0.75,cx:0.5,cy:0.5,sigBox:[0.25,0.2,0.75,0.8],bodyRatio:0.25,
+    edgeEnergy:{col:[0.5,0.4,0.3,0.2],row:[0.5,0.4,0.3,0.2]},sym:0.1,diagStrength:0.1,rowGap:10,
+    topBandHsv:{ratio:0.05},blueWater:0};
+  const r=_proactiveComposition(A,{sceneType:'street',crop:[0,0,0,0],noCrop:true});
+  assert.ok(r && r.crop, '竖幅街景应给出 4:5 候选');
+  assert.ok(r.crop[0]+r.crop[2]===0, '4:5 候选只裁上下');
+  assert.ok(r.crop[1]<=8 && r.crop[3]<=8, '上下裁切应温和');
+  assert.ok(_proactiveComposition(A,{sceneType:'portrait',crop:[0,0,0,0]})===null, '人像不主动裁');
+  const sunset=Object.assign({},A,{topBandHsv:{ratio:0.6}});
+  const rs=_proactiveComposition(sunset,{sceneType:'street',crop:[0,0,0,0]});
+  assert.ok(rs && rs.crop[1]===0, '晚霞/蓝天顶部应保留，裁切让给底部');
+  const leadCol=[]; for(let i=0;i<24;i++) leadCol.push((i<3||i>20)?0.05:0.6);
+  const lead=Object.assign({},A,{frameAspect:4/3,diagStrength:0.5,rowGap:30,
+    edgeEnergy:{col:leadCol,row:[0.4,0.4,0.4,0.4]}});
+  const r2=_proactiveComposition(lead,{sceneType:'street',crop:[0,0,0,0]});
+  assert.ok(r2 && r2.crop, '横图引导线应给出候选');
+  assert.ok(r2.crop[0]>=8||r2.crop[2]>=8||r2.crop[1]>=8||r2.crop[3]>=8, '应有明显裁切（画幅或引导线）');
+  console.log('  ✓ v12.27.0 _proactiveComposition（6条）');
+}
+
+// -------------------- v12.28.0: 人景共存安全构图 --------------------
+{
+  const base={frameAspect:0.75,cx:0.3,cy:0.5,sigBox:[0.12,0.18,0.46,0.92],bodyRatio:0.3,
+    edgeEnergy:{col:new Array(24).fill(0.2).map((v,i)=>i<3||i>20?0.05:0.6),row:new Array(16).fill(0.4)},
+    sym:0.1,diagStrength:0.2,rowGap:12,topBandHsv:{ratio:0.05},blueWater:0,
+    allBoxes:[{class:'person',score:0.82,b:[0.12,0.18,0.46,0.92]}]};
+  const pb=_personBoxOf(base);
+  assert.ok(pb && Math.abs(pb[0]-0.12)<1e-6, '人物框提取');
+  const r=_proactiveComposition(base,{sceneType:'street',crop:[0,0,0,0],noCrop:true});
+  assert.ok(r && r.crop, '街景有人时应给出安全构图');
+  assert.ok(/人景构图/.test(r.tag), '应标记人景构图');
+  assert.ok(pb[0]>=r.crop[0]/100+0.03-1e-6, '左安全边');
+  assert.ok(pb[2]<=1-r.crop[2]/100-0.03+1e-6, '右安全边');
+  const full=Object.assign({},base,{allBoxes:[{class:'person',score:0.9,b:[0.05,0.02,0.95,0.98]}],cocoPersonBox:{l:0.05,t:0.02,r:0.95,b:0.98}});
+  assert.strictEqual(_proactiveComposition(full,{sceneType:'street',crop:[0,0,0,0]}),null,'满框人物不强裁');
+  assert.strictEqual(_proactiveComposition(base,{sceneType:'portrait',crop:[0,0,0,0]}),null,'人像场景不主动裁');
+  console.log('  ✓ v12.28.0 人景共存安全构图（6条）');
+}
+
+// -------------------- v12.28.0: 云端分级裁切保护 --------------------
+{
+  const animal=_cloudCropGuard([13,10,10,9],null,'animal');
+  assert.ok(Math.max(...animal)<=8, '动物单边≤8: '+animal);
+  assert.ok(animal.reduce((a,b)=>a+b,0)<=25, '动物四边≤25: '+animal);
+  const food=_cloudCropGuard([10,0,13,0],null,'food');
+  assert.ok(food[2]<=12, '美食单边≤12: '+food);
+  const port=_cloudCropGuard([19,0,19,0],null,'portrait');
+  assert.ok(Math.max(...port)<=10, '人像单边≤10: '+port);
+  const land=_cloudCropGuard([20,20,20,20],null,'landscape');
+  assert.ok(Math.max(...land)<=15, '通用单边≤15: '+land);
+  assert.ok(land.reduce((a,b)=>a+b,0)<=40, '通用四边≤40: '+land);
+  const cut=_cloudCropGuard([15,0,0,0],{sigBox:[0,0.4,0.2,0.6]},'general');
+  assert.deepStrictEqual(cut,[0,0,0,0], '主体框被切>25%则不裁');
+  console.log('  ✓ v12.28.0 云端分级裁切保护（7条）');
 }
