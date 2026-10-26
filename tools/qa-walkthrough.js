@@ -36,11 +36,13 @@ function server() {
   fs.mkdirSync(OUT, { recursive: true });
   const srv = server();
   await new Promise(r => srv.listen(PORT, r));
-  const b = await puppeteer.launch({
-    headless: 'new',
-    args: ['--no-sandbox', '--disable-gpu', '--enable-unsafe-swiftshader']
-  });
+  const cands=[process.env.CHROME_PATH,'C:/Program Files/Google/Chrome/Application/chrome.exe','C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'].filter(Boolean);
+  const exe=cands.find(p=>fs.existsSync(p));
+  const launch={headless:'new',args:['--no-sandbox','--disable-gpu','--enable-unsafe-swiftshader']};
+  if(exe) launch.executablePath=exe;
+  const b = await puppeteer.launch(launch);
   const page = await b.newPage();
+  await page.evaluateOnNewDocument(()=>{ try{ localStorage.setItem('aiComposeOnboarded_v76','1'); localStorage.setItem('aiModelEnabled','0'); }catch(e){} });
   await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
   const errors = [];
   page.on('console', m => { if (m.type() === 'error') errors.push('CONSOLE: ' + m.text().slice(0, 160)); });

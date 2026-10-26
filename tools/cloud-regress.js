@@ -12,41 +12,59 @@ const TOKEN=process.env.CLOUD_TOKEN;
 const MIME={'.html':'text/html','.js':'text/javascript','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webmanifest':'application/manifest+json','.wasm':'application/wasm','.onnx':'application/octet-stream'};
 const srv=http.createServer((req,res)=>{ let p=decodeURIComponent(req.url.split('?')[0]); if(p==='/')p='/index.html'; const fp=path.join(ROOT,p); if(!fs.existsSync(fp)){res.writeHead(404);res.end();return;} res.writeHead(200,{'Content-Type':MIME[path.extname(fp)]||'application/octet-stream'}); fs.createReadStream(fp).pipe(res); });
 function listImgs(d){ return fs.readdirSync(d).filter(f=>/\.(png|jpe?g)$/i.test(f)).sort().map(f=>path.join(d,f)); }
+function launchOpts(){
+  const c=[process.env.CHROME_PATH,'C:/Program Files/Google/Chrome/Application/chrome.exe','C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'].filter(Boolean);
+  const p=c.find(x=>fs.existsSync(x)); const o={headless:'new',args:['--no-sandbox','--disable-gpu','--enable-unsafe-swiftshader']};
+  if(p)o.executablePath=p; return o;
+}
 async function runBatch(imgs, batchIdx){
-  const b=await puppeteer.launch({headless:'new',args:['--no-sandbox','--disable-gpu','--enable-unsafe-swiftshader']});
+  const b=await puppeteer.launch(launchOpts());
   const page=await b.newPage(); await page.setViewport({width:390,height:844});
   await page.goto(`http://localhost:${PORT}/index.html`,{waitUntil:'domcontentloaded',timeout:60000});
   await page.evaluate((tk)=>{
     localStorage.setItem('aiComposeCloudOn','1');
     localStorage.setItem('aiComposeCloudKey',tk);
     localStorage.setItem('aiComposeCloudBase','https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com');
+    localStorage.setItem('aiModelEnabled','0');
+    localStorage.setItem('aiComposeOnboarded_v76','1');
   },TOKEN);
   await page.reload({waitUntil:'domcontentloaded'});
-  await new Promise(r=>setTimeout(r,3000));
-  const t0=Date.now();
-  while(Date.now()-t0<40000){ const m=await page.evaluate(()=>window.__ai&&window.__ai.model); if(m&&m.ready)break; await new Promise(r=>setTimeout(r,1000)); }
+  await new Promise(r=>setTimeout(r,2500));
   const results=[];
   for(const img of imgs){
     const input=await page.$('#fileInput'); await input.uploadFile(img); await new Promise(r=>setTimeout(r,1500));
     await page.evaluate(()=>document.getElementById('btnAnalyze').click());
-    // v12.26.0: 只在"已自动应用 + ☁️ 云端"时提前结束；本地结果不再算完成，
-    // 否则会在云端返回前把像素初判记成 local，云端回归失真。最多等 35s（云端窗口 30s）。
+    // v12.29.0：像素构图先自动应用；云端返回后出现「云端建议」卡/☁️ 标签即算完成。
     let snap=null; const dl=Date.now()+60000;
     while(Date.now()<dl){
       await new Promise(r=>setTimeout(r,800));
       snap=await page.evaluate(()=>{
-        const p=window.__ai&&window.__ai.plan; const sb=document.getElementById('statusbar'); const tg=document.getElementById('aiRuleTag');
+        const p=window.__ai&&window.__ai.plan; const cp=window.__ai&&window.__ai.cloudPlan; const sb=document.getElementById('statusbar'); const tg=document.getElementById('aiRuleTag');
         if(!p) return null;
-        const st=sb?sb.textContent:'';
-        const tag=tg?tg.textContent:'';
+        const st=sb?sb.textContent:''; const tag=tg?tg.textContent:'';
         return {crop:p.crop,scene:p.sceneType,rule:p.rule,conf:p.conf,
           intent:(p.aiIntent&&p.aiIntent.intentName)||p.cropIntent||'',
-          tag:tag, cloud:(tag.indexOf('☁️')>=0), noCrop:!!p.noCrop, status:st};
+          tag:tag, cloud:(tag.indexOf('☁️')>=0), noCrop:!!p.noCrop, status:st,
+          cp:cp?{crop:cp.crop,scene:cp.sceneType,rule:cp.rule,conf:cp.conf,noCrop:cp.noCrop,intent:cp.cropIntent||''}:null,
+          card:!!document.getElementById('cloudUpgradeApply')};
       });
+      if(snap&&/云端建议已返回|云端与本地构图一致|已应用云端构图|云端已复核|人像保护/.test(snap.status)) break;
       if(snap&&/已自动应用/.test(snap.status)&&snap.cloud) break;
     }
+    // v12.29.0：云端返回后点“应用云端构图”，让回归读取真正的云端裁切结果（而不是本地已落地的那一版）。
+    if(snap&&snap.card){
+      try{ await page.evaluate(()=>{const b=document.getElementById('cloudUpgradeApply');if(b)b.click();}); }catch(e){}
+      await new Promise(r=>setTimeout(r,900));
+      snap=await page.evaluate(()=>{
+        const p=window.__ai&&window.__ai.plan; const cp=window.__ai&&window.__ai.cloudPlan; const sb=document.getElementById('statusbar'); const tg=document.getElementById('aiRuleTag');
+        if(!p) return null; const st=sb?sb.textContent:''; const tag=tg?tg.textContent:'';
+        return {crop:p.crop,scene:p.sceneType,rule:p.rule,conf:p.conf,intent:(p.aiIntent&&p.aiIntent.intentName)||p.cropIntent||'',
+          tag:tag, cloud:(tag.indexOf('☁️')>=0), noCrop:!!p.noCrop, status:st, card:false,
+          cp:cp?{crop:cp.crop,scene:cp.sceneType,rule:cp.rule,conf:cp.conf,noCrop:cp.noCrop,intent:cp.cropIntent||''}:null};
+      });
+    }
     const name=path.basename(img);
-    if(snap){ console.log(`${name} | ${snap.cloud?'CLOUD':'local'} scene=${snap.scene} rule=${snap.rule} crop=[${snap.crop}] noCrop=${snap.noCrop} | ${snap.tag.slice(0,30)} | ${snap.status.slice(0,30)}`); results.push({name,snap}); }
+    if(snap){ const cc=snap.cp||snap; console.log(`${name} | ${snap.cloud?'CLOUD':'local'} scene=${cc.scene} rule=${cc.rule} cloudCrop=[${cc.crop}] cloudNoCrop=${cc.noCrop} localCrop=[${snap.crop}] | ${snap.tag.slice(0,30)} | ${snap.status.slice(0,34)}`); results.push({name,snap}); }
     else { console.log(`${name} | NO RESULT`); results.push({name,snap:null}); }
   }
   await b.close();

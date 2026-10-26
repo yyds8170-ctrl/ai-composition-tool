@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard, _decloudPlan, _bandSatSignal, _symEdgeSignal, _foodEvidenceSignal, _cloudCropGuard, _personBoxOf, _proactiveComposition } = require('./pure-functions.js');
+const { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard, _decloudPlan, _bandSatSignal, _symEdgeSignal, _foodEvidenceSignal, _cloudCropGuard, _personBoxOf, _proactiveComposition, _balanceCrop, _cropQualityScore, _saferCropVariant } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -997,11 +997,21 @@ test('filter G1: 糊片 sharpness<25 → GATE', () => {
 test('filter G2: 过曝 highClip>0.15 → GATE', () => {
   assert.strictEqual(recWith({ highClip: 0.18 }).rule, 'GATE');
 });
-test('filter G3: 已浓 sat>0.38 → GATE', () => {
-  assert.strictEqual(recWith({ sat: 0.45 }).rule, 'GATE');
+test('filter G3: 明亮且已浓 sat>0.52 且 mean>=80 → GATE', () => {
+  assert.strictEqual(recWith({ sat: 0.55, mean: 120 }).rule, 'GATE');
 });
-test('filter G4: 近黑 mean<50 → GATE', () => {
-  assert.strictEqual(recWith({ mean: 40 }).rule, 'GATE');
+test('filter G3b: 极端过饱和 sat>0.72 → GATE（暗图也拦）', () => {
+  assert.strictEqual(recWith({ sat: 0.8, mean: 60 }).rule, 'GATE');
+});
+test('filter G4: 近黑 mean<38 → GATE', () => {
+  assert.strictEqual(recWith({ mean: 35 }).rule, 'GATE');
+});
+test('filter G4b: 暗但有层次（mean45/contrast62/暗部46%）→ 放行温和提亮', () => {
+  const r = recWith({ mean: 45, contrast: 62, shadowClip: 0.46, highClip: 0.004, sat: 0.60, lightScore: 0.4 });
+  assert.notStrictEqual(r.rule, 'GATE');
+});
+test('filter G4c: 逆光剪影（高光13%+暗部40%）→ GATE，不自动加色', () => {
+  assert.strictEqual(recWith({ highClip: 0.13, shadowClip: 0.40 }).rule, 'GATE');
 });
 test('filter G5: null/空输入 → GATE', () => {
   assert.strictEqual(_recommendFilter(null).rule, 'GATE');
@@ -2070,6 +2080,51 @@ if (process.exitCode) {
   assert.strictEqual(_proactiveComposition(full,{sceneType:'street',crop:[0,0,0,0]}),null,'满框人物不强裁');
   assert.strictEqual(_proactiveComposition(base,{sceneType:'portrait',crop:[0,0,0,0]}),null,'人像场景不主动裁');
   console.log('  ✓ v12.28.0 人景共存安全构图（6条）');
+}
+
+// -------------------- v12.29.0: 大侧裁暗部呼吸 + 4:5 画幅平衡 --------------------
+{
+  const underpass={frameAspect:0.75,cx:0.303,cy:0.489,sigBox:[0,0,1,1],bodyRatio:0.075,
+    edgeEnergy:{col:new Array(24).fill(0.4),row:new Array(16).fill(0.4)},allBoxes:[]};
+  const r=_balanceCrop(underpass,{sceneType:'general',crop:[0,0,18,0],noCrop:false});
+  assert.ok(r && r.length===4, '地下通道大侧裁应给出平衡候选');
+  assert.strictEqual(r[0],0,'左边不新增');
+  assert.ok(r[2]>=5 && r[2]<=10,'右侧保留暗部呼吸: '+r[2]);
+  assert.ok(r[3]>=12 && r[3]<=18,'底部收紧空地面: '+r[3]);
+  assert.ok(r[1]===0,'顶部不新增');
+  const real=0.75*(1-r[0]/100-r[2]/100)/(1-r[1]/100-r[3]/100);
+  assert.ok(Math.abs(real-0.8)<0.015,'候选应接近 4:5: '+real);
+  assert.strictEqual(_balanceCrop(Object.assign({},underpass,{frameAspect:1.5}),{sceneType:'street',crop:[0,0,18,0]}),null,'横图不走竖幅平衡');
+  assert.strictEqual(_balanceCrop(underpass,{sceneType:'portrait',crop:[0,0,18,0]}),null,'人像不自动重平衡');
+  const personNearBottom=Object.assign({},underpass,{allBoxes:[{class:'person',score:0.9,b:[0.2,0.2,0.5,0.95]}],cocoPersonBox:{l:0.2,t:0.2,r:0.5,b:0.95}});
+  assert.strictEqual(_balanceCrop(personNearBottom,{sceneType:'street',crop:[0,0,18,0]}),null,'人物贴底不强收底部');
+  console.log('  ✓ v12.29.0 暗部呼吸画幅平衡（5条）');
+}
+
+// -------------------- v12.29.0: 裁切质量评分（像素 vs 模型择优） --------------------
+{
+  const a={frameAspect:1.5,cx:0.5,cy:0.5,sigBox:[0.3,0.35,0.7,0.65],bodyRatio:0.2,
+    edgeEnergy:{col:new Array(24).fill(0.5).map((v,i)=>i<2||i>21?0.05:0.5),row:new Array(16).fill(0.5).map((v,i)=>i<2||i>13?0.05:0.5)},allBoxes:[]};
+  const cropScore=_cropQualityScore(a,[0,7,0,9],false);
+  const noScore=_cropQualityScore(a,[0,0,0,0],true);
+  assert.ok(cropScore>noScore,'16:9 收边应优于原图: '+cropScore+' vs '+noScore);
+  assert.strictEqual(_cropQualityScore(a,[0,0,40,0],false),-1,'切主体候选不安全');
+  const person={frameAspect:0.75,cx:0.3,cy:0.5,sigBox:[0.2,0.2,0.4,0.9],bodyRatio:0.3,cocoPersonBox:{l:0.2,t:0.2,r:0.4,b:0.9},allBoxes:[{class:'person',score:0.9,b:[0.2,0.2,0.4,0.9]}]};
+  assert.strictEqual(_cropQualityScore(person,[30,0,0,0],false),-1,'裁到人物不安全');
+  console.log('  ✓ v12.29.0 裁切质量评分（3条）');
+}
+
+// -------------------- v12.29.0: 底部物体保护时把裁切量移到顶部 --------------------
+{
+  const sky={frameAspect:1.55,cx:0.5,cy:0.55,sigBox:[0.15,0.35,0.85,0.95],bodyRatio:0.25,
+    edgeEnergy:{col:new Array(24).fill(0.2),row:new Array(16).fill(0.2).map((v,i)=>i<4?0.02:(i>11?0.7:0.2))},
+    allBoxes:[{class:'potted plant',score:0.7,b:[0.05,0.72,0.25,0.98]},{class:'chair',score:0.6,b:[0.35,0.88,0.6,0.99]}]};
+  const bad=[0,6,0,7];
+  assert.strictEqual(_cropQualityScore(sky,bad,false),-1,'底部植物被裁时原候选不安全');
+  const safe=_saferCropVariant(sky,bad);
+  assert.ok(safe && safe[3]===0 && safe[1]>=10,'应把底部裁切量移到顶部: '+JSON.stringify(safe));
+  assert.ok(_cropQualityScore(sky,safe,false)>=0,'顶部空天候选通过物体保护');
+  console.log('  ✓ v12.29.0 底部物体保护改收顶部（3条）');
 }
 
 // -------------------- v12.28.0: 云端分级裁切保护 --------------------

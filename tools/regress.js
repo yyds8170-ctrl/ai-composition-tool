@@ -66,7 +66,7 @@ async function runImage(page, imgPath) {
   // 上传图片
   const input = await page.$('#fileInput');
   await input.uploadFile(imgPath);
-  await new Promise(r => setTimeout(r, 2000));
+  await new Promise(r => setTimeout(r, 1200));
   // 点分析
   await page.evaluate(() => document.getElementById('btnAnalyze').click());
   // 轮询等 plan——必须等 YOLO 检测回调完成（状态栏出现"已自动应用"），
@@ -110,10 +110,11 @@ async function runImage(page, imgPath) {
     });
     if (!snap || !snap.plan || !snap.plan.crop) continue;
     sawCrop = true;
-    // v12.26.0: 首个 plan 可能是像素初判；出现后再等 4s，让 YOLO 异步回写最终 plan，
-    // 否则会把上一张的 person 状态/中间 scene 当成最终结果。
-    if (!settleUntil) settleUntil = Date.now() + 4000;
-    else if (Date.now() >= settleUntil) break;
+    // 像素结果已出；等模型复核完成（或最多 3.5s）再读最终 plan。
+    if (!settleUntil) settleUntil = Date.now() + 3500;
+    if (/真AI主体识别完成|AI精修建议|人像保护|已应用云端构图/.test(snap.status)) {
+      if (Date.now() >= settleUntil - 2800) break;
+    } else if (Date.now() >= settleUntil) break;
   }
   return snap;
 }
@@ -127,6 +128,14 @@ function diffCrop(a, b) {
     if (a.crop[i] !== b.crop[i]) diffs.push(`crop[${i}]: ${a.crop[i]} → ${b.crop[i]}`);
   }
   return diffs;
+}
+
+function browserLaunchOptions(){
+  const candidates=[process.env.CHROME_PATH,'C:/Program Files/Google/Chrome/Application/chrome.exe','C:/Program Files (x86)/Google/Chrome/Application/chrome.exe','C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'].filter(Boolean);
+  const found=candidates.find(p=>fs.existsSync(p));
+  const opts={headless:'new',args:['--no-sandbox','--disable-setuid-sandbox','--disable-gpu','--enable-unsafe-swiftshader']};
+  if(found) opts.executablePath=found;
+  return opts;
 }
 
 async function main() {
@@ -147,12 +156,17 @@ async function main() {
 
   console.log(`=== 回归开始：${images.length} 张图 ===`);
   const srv = await startServer();
-  const browser = await puppeteer.launch({
-    headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--enable-unsafe-swiftshader']
-  });
+  const browser = await puppeteer.launch(browserLaunchOptions());
   const page = await browser.newPage();
   await page.setViewport({ width: 390, height: 844 });
+  // v12.29.0：回归显式请求本地模型（普通用户默认不下载），并跳过新手引导。
+  await page.evaluateOnNewDocument(() => {
+    try{
+      localStorage.setItem('aiModelEnabled','1');
+      localStorage.setItem('aiForceModel','1');
+      localStorage.setItem('aiComposeOnboarded_v76','1');
+    }catch(e){}
+  });
 
   // 等模型 ready
   await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'networkidle2', timeout: 60000 });

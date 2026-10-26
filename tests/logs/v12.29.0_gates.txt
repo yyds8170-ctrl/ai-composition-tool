@@ -1,0 +1,23 @@
+=== v12.29.0 发版前门禁 ===
+日期：2026-10-26
+
+[1] npm run extract                  PASS（新增 _balanceCrop / _cropQualityScore / _saferCropVariant）
+[2] node tests/unit.test.js          PASS 406/406（新增暗部呼吸 5 条、裁切评分 3 条、底部保护 3 条）
+[3] node tools/fuzz.js               PASS 0 问题
+[4] node --check sw.js               PASS
+[5] node tools/verify_stacking.js    PASS
+[6] 本地 100 张真实图                 PASS noCrop=44 / 裁切=56；人像/特写 23 张全部保留；人物切穿 0；微小裁切 0
+[7] 云端 50 张真实图                  PASS CLOUD=50 / local=0；云端提案裁切 17 / 不裁 33；最终落地裁切 30 / 不裁 20；人像 14 张全部不裁；动物≤8%/25%、美食≤12%/35%；微裁 0；无 >35% 裁切
+[8] 移动端 390×844 走查               PASS 无横向溢出/按钮越界/异常换行/控制台错误
+[9] 红线词扫描                        PASS 0 命中
+[10] 版本号同步                       PASS index.html / sw.js / package.json / manifest.webmanifest / README.md
+
+关键变化：
+- 像素构图先落地：点分析立即裁切/滤镜，不再等 YOLO 11MB+22MB WASM 下载；SW 不再后台预缓存约 100MB 模型。
+- 模型后台精修：首图出结果后按需下载；模型回传用 _cropQualityScore 比较，只在更优/更安全时基于原图重裁；人像硬保护退回原图。
+- 示例去陈旧：loadSample 不再写入旧 s.plan。
+- 暗部呼吸：地下通道 [0,0,18,0] → [0,0,10,16]（4:5），保留右侧暗墙纵深、收紧底部空地面。
+- 滤镜：暗但有层次放行温和提亮；逆光剪影/近黑/极端过饱和仍拦截；自动强度 60-78 → 35-55。
+- 云端 prompt 压缩约 40%，max_tokens 1000→900；云端结果改为「建议卡」，用户确认后从原图应用。
+
+发布状态：全部验证通过，准备发布 v12.29.0。

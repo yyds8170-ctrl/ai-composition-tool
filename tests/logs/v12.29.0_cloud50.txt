@@ -1,0 +1,67 @@
+=== v12.29.0 云端真实图回归（50 张，跨类目） ===
+日期：2026-10-26
+模型：glm-5.3-flash（SCF 共享代理）
+口径：像素构图先落地；云端返回后给建议卡；人像/特写硬保护不裁；≤5% 微裁归零；云端裁切经物体/主体保护
+
+arch_2.jpg | CLOUD scene=landscape rule=lead cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,0,0,0] | ☁️ 云端 · 引导线 · 92% | 已应用云端建议：保留原图 · 引导线800×531 · 800:53
+arch_4.jpg | CLOUD scene=architecture rule=sym cloudCrop=[0,11,0,3] cloudNoCrop=false localCrop=[0,11,0,3] | ☁️ 云端 · 对称构图 · 85% | 已应用云端构图 · 对称构图 · 85%800×457 · 800:
+arch_5.jpg | CLOUD scene=animal rule=center cloudCrop=[6,6,6,6] cloudNoCrop=false localCrop=[6,6,6,6] | ☁️ 云端 · 居中构图 · 88% | 已应用云端构图 · 居中构图 · 88%704×1056 · 2:3
+arch_6.jpg | CLOUD scene=architecture rule=thirds cloudCrop=[0,7,0,7] cloudNoCrop=false localCrop=[0,7,0,7] | ☁️ 云端一致 · 三分法 · 82% | 云端与本地构图一致 · 已保留当前结果800×457 · 800:4
+arch_8.jpg | CLOUD scene=landscape rule=thirds cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,7,0,10] | ☁️ 云端已复核 · 保留本地构图 | 云端已复核 · 本地构图更紧凑，已保留800×996 · 200:2
+backlit_5.jpg | CLOUD scene=portrait rule=thirds cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,0,0,0] | ☁️ 云端 · 三分法 · 85% | 已应用人像保护建议：保留原图 · 三分法800×533 · 800:
+food_1.jpg | CLOUD scene=food rule=thirds cloudCrop=[8,0,12,0] cloudNoCrop=false localCrop=[8,0,12,0] | ☁️ 云端 · 三分法 · 82% | 已应用云端构图 · 三分法 · 82%640×533 · 640:5
+food_3.jpg | CLOUD scene=food rule=diag cloudCrop=[6,0,12,0] cloudNoCrop=false localCrop=[6,0,12,0] | ☁️ 云端 · 对角线构图 · 85% | 已应用云端构图 · 对角线构图 · 85%656×533 · 16:
+food_5.jpg | CLOUD scene=food rule=center cloudCrop=[11,0,12,0] cloudNoCrop=false localCrop=[11,0,12,0] | ☁️ 云端 · 居中构图 · 85% | 已应用云端构图 · 居中构图 · 85%616×600 · 77:7
+food_7.jpg | CLOUD scene=food rule=center cloudCrop=[6,0,12,0] cloudNoCrop=false localCrop=[6,0,12,0] | ☁️ 云端 · 居中构图 · 85% | 已应用云端构图 · 居中构图 · 85%656×600 · 82:7
+food_9.jpg | CLOUD scene=food rule=thirds cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,4,0,4] | ☁️ 云端已复核 · 保留本地构图 | 云端已复核 · 本地构图更紧凑，已保留800×450 · 16:9
+group_5.jpg | CLOUD scene=portrait rule=thirds cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,0,0,0] | ☁️ 云端 · 三分法 · 82% | 已应用人像保护建议：保留原图 · 三分法800×533 · 800:
+indoor_2.jpg | CLOUD scene=architecture rule=lead cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,0,0,12] | ☁️ 云端已复核 · 保留本地构图 | 云端已复核 · 本地构图更紧凑，已保留800×452 · 200:1
+leading_2.jpg | CLOUD scene=architecture rule=sym cloudCrop=[0,11,0,3] cloudNoCrop=false localCrop=[0,11,0,3] | ☁️ 云端 · 对称构图 · 85% | 已应用云端构图 · 对称构图 · 85%800×457 · 800:
+leading_9.jpg | CLOUD scene=landscape rule=thirds cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,7,0,10] | ☁️ 云端已复核 · 保留本地构图 | 云端已复核 · 本地构图更紧凑，已保留800×996 · 200:2
+night_1.jpg | CLOUD scene=night rule=thirds cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,0,0,0] | ☁️ 云端 · 三分法 · 92% | 已应用云端建议：保留原图 · 三分法800×509 · 800:50
+night_10.jpg | CLOUD scene=general rule=thirds cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,12,0,1] | ☁️ 云端已复核 · 保留本地构图 | 云端已复核 · 本地构图更紧凑，已保留800×464 · 50:29
+night_5.jpg | CLOUD scene=portrait rule=thirds cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,0,0,0] | ☁️ 云端 · 三分法 · 85% | 已应用人像保护建议：保留原图 · 三分法800×533 · 800:
+night_6.jpg | CLOUD scene=landscape rule=diag cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,7,0,8] | ☁️ 云端已复核 · 保留本地构图 | 云端已复核 · 本地构图更紧凑，已保留800×452 · 200:1
+night_7.jpg | CLOUD scene=street rule=lead cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,6,0,8] | ☁️ 云端已复核 · 保留本地构图 | 云端已复核 · 本地构图更紧凑，已保留800×452 · 200:1
+pet_1.jpg | CLOUD scene=animal rule=thirds cloudCrop=[6,6,6,6] cloudNoCrop=false localCrop=[6,6,6,6] | ☁️ 云端 · 三分法 · 86% | 已应用云端构图 · 三分法 · 86%704×528 · 4:3
+pet_3.jpg | CLOUD scene=animal rule=thirds cloudCrop=[6,6,6,6] cloudNoCrop=false localCrop=[6,6,6,6] | ☁️ 云端 · 三分法 · 84% | 已应用云端构图 · 三分法 · 84%704×1056 · 2:3
+pet_4.jpg | CLOUD scene=animal rule=thirds cloudCrop=[8,8,6,0] cloudNoCrop=false localCrop=[8,8,6,0] | ☁️ 云端 · 三分法 · 85% | 已应用云端构图 · 三分法 · 85%688×1104 · 43:6
+pet_5.jpg | CLOUD scene=animal rule=thirds cloudCrop=[8,0,8,6] cloudNoCrop=false localCrop=[8,0,8,6] | ☁️ 云端 · 三分法 · 88% | 已应用云端构图 · 三分法 · 88%672×501 · 224:1
+pet_9.jpg | CLOUD scene=animal rule=thirds cloudCrop=[6,6,6,6] cloudNoCrop=false localCrop=[6,6,6,6] | ☁️ 云端 · 三分法 · 86% | 已应用云端构图 · 三分法 · 86%704×528 · 4:3
+portrait_front_10.jpg | CLOUD scene=portrait rule=thirds cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,0,0,0] | ☁️ 云端 · 三分法 · 88% | 已应用人像保护建议：保留原图 · 三分法800×1000 · 4:5
+portrait_front_2.jpg | CLOUD scene=portrait rule=center cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,0,0,0] | ☁️ 云端 · 居中构图 · 88% | 已应用人像保护建议：保留原图 · 居中构图800×1200 · 2:
+portrait_front_3.jpg | CLOUD scene=portrait rule=thirds cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,0,0,0] | ☁️ 云端 · 三分法 · 85% | 已应用人像保护建议：保留原图 · 三分法800×1200 · 2:3
+portrait_front_4.jpg | CLOUD scene=portrait rule=thirds cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,0,0,0] | ☁️ 云端一致 · 三分法 · 88% | 云端与本地构图一致 · 已保留当前结果800×1200 · 2:3
+portrait_front_7.jpg | CLOUD scene=portrait rule=center cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,0,0,0] | ☁️ 云端 · 居中构图 · 88% | 已应用人像保护建议：保留原图 · 居中构图800×533 · 800
+portrait_side_10.jpg | CLOUD scene=portrait rule=thirds cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,0,0,0] | ☁️ 云端 · 三分法 · 88% | 已应用人像保护建议：保留原图 · 三分法800×1000 · 4:5
+portrait_side_2.jpg | CLOUD scene=general rule=center cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[11,0,0,0] | ☁️ 云端已复核 · 保留本地构图 | 云端已复核 · 本地构图更紧凑，已保留712×596 · 178:1
+portrait_side_3.jpg | CLOUD scene=landscape rule=thirds cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,10,0,0] | ☁️ 云端已复核 · 保留本地构图 | 云端已复核 · 本地构图更紧凑，已保留800×405 · 160:8
+portrait_side_5.jpg | CLOUD scene=portrait rule=thirds cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,0,0,0] | ☁️ 云端 · 三分法 · 82% | 已应用人像保护建议：保留原图 · 三分法800×533 · 800:
+portrait_side_8.jpg | CLOUD scene=portrait rule=thirds cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,0,0,0] | ☁️ 云端 · 三分法 · 85% | 已应用人像保护建议：保留原图 · 三分法800×533 · 800:
+sky_10.jpg | CLOUD scene=portrait rule=center cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,0,0,0] | ☁️ 云端 · 居中构图 · 90% | 已应用人像保护建议：保留原图 · 居中构图800×533 · 800
+sky_12.jpg | CLOUD scene=landscape rule=thirds cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,0,0,0] | ☁️ 云端 · 三分法 · 88% | 已应用云端建议：保留原图 · 三分法800×1200 · 2:3
+sky_2.jpg | CLOUD scene=animal rule=thirds cloudCrop=[3,7,7,7] cloudNoCrop=false localCrop=[3,7,7,7] | ☁️ 云端 · 三分法 · 85% | 已应用云端构图 · 三分法 · 85%720×458 · 360:2
+sky_3.jpg | CLOUD scene=landscape rule=thirds cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[8,0,9,0] | ☁️ 云端已复核 · 保留本地构图 | 云端已复核 · 本地构图更紧凑，已保留664×373 · 664:3
+sky_5.jpg | CLOUD scene=portrait rule=center cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,0,0,0] | ☁️ 云端一致 · 居中构图 · 85% | 云端与本地构图一致 · 已保留当前结果800×1105 · 160:
+street_2.jpg | CLOUD scene=night rule=lead cloudCrop=[0,6,0,8] cloudNoCrop=false localCrop=[0,6,0,8] | ☁️ 云端 · 引导线 · 82% | 已应用云端构图 · 引导线 · 82%800×458 · 400:2
+street_4.jpg | CLOUD scene=architecture rule=diag cloudCrop=[0,6,0,0] cloudNoCrop=false localCrop=[0,6,0,0] | ☁️ 云端 · 对角线构图 · 84% | 已应用云端构图 · 对角线构图 · 84%800×1128 · 10
+street_5.jpg | CLOUD scene=street rule=lead cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,0,0,0] | ☁️ 云端 · 引导线 · 82% | 已应用云端建议：保留原图 · 引导线800×533 · 800:53
+street_7.jpg | CLOUD scene=general rule=thirds cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,12,0,1] | ☁️ 云端已复核 · 保留本地构图 | 云端已复核 · 本地构图更紧凑，已保留800×464 · 50:29
+street_9.jpg | CLOUD scene=food rule=diag cloudCrop=[8,0,12,0] cloudNoCrop=false localCrop=[8,0,12,0] | ☁️ 云端 · 对角线构图 · 85% | 已应用云端构图 · 对角线构图 · 85%640×532 · 160
+water_1.jpg | CLOUD scene=portrait rule=center cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,0,0,0] | ☁️ 云端 · 居中构图 · 92% | 已应用人像保护建议：保留原图 · 居中构图800×533 · 800
+water_2.jpg | CLOUD scene=waterscape rule=diag cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,0,0,0] | ☁️ 云端 · 对角线构图 · 82% | 已应用云端建议：保留原图 · 对角线构图800×500 · 8:5
+water_4.jpg | CLOUD scene=landscape rule=thirds cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,8,0,8] | ☁️ 云端已复核 · 保留本地构图 | 云端已复核 · 本地构图更紧凑，已保留800×1008 · 50:6
+water_5.jpg | CLOUD scene=night rule=lead cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,7,0,8] | ☁️ 云端已复核 · 保留本地构图 | 云端已复核 · 本地构图更紧凑，已保留800×453 · 800:4
+water_7.jpg | CLOUD scene=architecture rule=thirds cloudCrop=[0,0,0,0] cloudNoCrop=true localCrop=[0,0,0,0] | ☁️ 云端一致 · 三分法 · 82% | 云端与本地构图一致 · 已保留当前结果800×449 · 800:4
+
+=== 汇总 ===
+样本 50 | CLOUD 50 | local 0 | 无结果 0
+云端提案裁切 17 | 云端提案不裁 33 | 最终落地裁切 30 | 最终不裁 20
+人像/特写 14 张云端全部不裁：是
+微小裁切(1-5) 0
+动物 7 张：arch_5.jpg[6,6,6,6]、pet_1.jpg[6,6,6,6]、pet_3.jpg[6,6,6,6]、pet_4.jpg[8,8,6,0]、pet_5.jpg[8,0,8,6]、pet_9.jpg[6,6,6,6]、sky_2.jpg[3,7,7,7]
+美食 6 张：food_1.jpg[8,0,12,0]、food_3.jpg[6,0,12,0]、food_5.jpg[11,0,12,0]、food_7.jpg[6,0,12,0]、food_9.jpg[0,0,0,0]、street_9.jpg[8,0,12,0]
+云端四边>35 0
+云端提案裁切率 34%；最终落地裁切率 60%（本地构图先落地，云端 noCrop 不覆盖本地好构图；v12.28 云端裁切 48%）
+本地构图被云端保守建议覆盖：0（云端 noCrop 而本地有裁切时保留本地）
+研究：docs/research/v12.29-composition.md

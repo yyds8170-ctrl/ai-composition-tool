@@ -764,6 +764,7 @@
         var mean=a.mean, wb=(typeof a.wb==="number"&&isFinite(a.wb))?a.wb:0;
         var sat=(typeof a.sat==="number"&&isFinite(a.sat))?a.sat:0;
         var sharpness=(typeof a.sharpness==="number"&&isFinite(a.sharpness))?a.sharpness:0;
+        var contrast=(typeof a.contrast==="number"&&isFinite(a.contrast))?a.contrast:0;
         var highClip=(typeof a.highClip==="number"&&isFinite(a.highClip))?a.highClip:0;
         var shadowClip=(typeof a.shadowClip==="number"&&isFinite(a.shadowClip))?a.shadowClip:0;
         var lightScore=(typeof a.lightScore==="number"&&isFinite(a.lightScore))?a.lightScore:0;
@@ -771,11 +772,19 @@
         var waterScore=(typeof a.waterScore==="number"&&isFinite(a.waterScore))?a.waterScore:0;
         var manmadeScore=(typeof a.manmadeScore==="number"&&isFinite(a.manmadeScore))?a.manmadeScore:0;
         var pf=_scenePrefix((sig&&typeof sig.scene==="string")?sig.scene:"", wb);
-        // G1-G5 硬闸门（安全底线不松）
+        // G1-G5 硬闸门（安全底线不松；v12.29.0 对“暗但有层次”的场景放行轻度 night 滤镜）
         if(sharpness<25) return GATE; // 糊片
-        if(highClip>0.15||shadowClip>0.28) return GATE; // 曝光断层
-        if(sat>0.38) return GATE; // 已浓
-        if(mean<50) return GATE; // 近纯黑
+        if(highClip>0.15) return GATE; // 高光断层
+        if(highClip>0.12 && shadowClip>0.35) return GATE; // 逆光剪影：保留蓝橙过渡，不自动加色
+        if(shadowClip>0.28){
+          // 暗部很大但画面有明确亮部/对比（如地下通道的光束）→ 允许温和提亮；死黑平坦画面仍拦截
+          var _darkLayered=(mean>=40 && contrast>=45);
+          if(!_darkLayered) return GATE;
+        }
+        if(sat>0.52 && mean>=80) return GATE; // 明亮且已浓，避免“塑料感”
+        if(sat>0.72) return GATE; // 极端过饱和
+        if(mean<38) return GATE; // 近纯黑
+        if(mean<48 && contrast<35) return GATE; // 暗且平，提亮只会发灰
         var ps=(sig&&typeof sig.personScore==="number"&&isFinite(sig.personScore))?sig.personScore:0;
         var pc=(sig&&typeof sig.personCount==="number"&&isFinite(sig.personCount))?sig.personCount:0;
         var scn=(sig&&typeof sig.scene==="string")?sig.scene:null;
@@ -1694,8 +1703,9 @@
           tar=0.8;
         }else if(ar>1){
           if(sc==="food") tar=(ar>1.40?4/3:1); // 3:2 美食→4:3；4:3 美食→1:1 方图
-          else if(sc==="landscape"||sc==="waterscape"||sc==="night"||sc==="architecture"||sc==="street"||sc==="general") tar=16/9;
-          else tar=4/3;
+          else if(ar>=1.45 && /landscape|waterscape|night|architecture|street|general/.test(sc)) tar=16/9;
+          else if(ar>=1.10) tar=4/3; // 5:4 / 4:3 轻收上下即可，不硬拉到 16:9
+          else tar=1;
         }
         if(Math.abs(tar-ar)>0.02){
           var l=0,t=0,r=0,b=0;
@@ -1751,4 +1761,139 @@
       }catch(e){ return null; }
     }
 
-module.exports = { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard, _decloudPlan, _bandSatSignal, _symEdgeSignal, _foodEvidenceSignal, _contentGuard, _thirdsFitScore, aestheticScore, _cloudCropGuard, _personBoxOf, _proactiveComposition };
+    function _balanceCrop(a, plan){
+      try{
+        if(!a||!plan||plan.noCrop) return null;
+        var sc=plan.sceneType||"general";
+        if(!(sc==="general"||sc==="street"||sc==="night")) return null;
+        var ar=(typeof a.frameAspect==="number"&&isFinite(a.frameAspect))?a.frameAspect:0;
+        if(!(ar>0.25&&ar<1)) return null;
+        var c=plan.crop; if(!c||c.length!==4) return null;
+        var L=c[0]/100,T=c[1]/100,R=c[2]/100,B=c[3]/100;
+        var sideSum=L+R;
+        if(sideSum<0.12 || T+B>0.03) return null;
+        var side=(R>=L)?"R":"L";
+        var oldSide=(side==="R")?R:L;
+        var newSide=Math.max(0.05,Math.min(0.10,oldSide*0.55));
+        var nL=L,nR=R;
+        if(side==="R") nR=newSide; else nL=newSide;
+        var w=1-nL-nR;
+        var target=0.8; // 4:5 竖幅
+        var h=ar*w/target;
+        if(!(h>0.80&&h<=1)) return null;
+        var b=1-h;
+        if(b<=0.02 || b>0.24) return null;
+        // 顶部不裁（保护天空/晚霞），全部让给底部
+        var bottomEdge=1-b;
+        var cx=(typeof a.cx==="number"&&isFinite(a.cx))?a.cx:0.5;
+        var cy=(typeof a.cy==="number"&&isFinite(a.cy))?a.cy:0.5;
+        // 显著框常把整张高对比画面都框住（地下通道 sigBox=[0,0,1,1]），此时用主体质心+占比合成一个小框，
+        // 避免“任何裁切都被判切主体”。只有真正新增的边才要求安全边距；比当前裁得更少的边不再重复设限。
+        var box=(a.sigBox&&a.sigBox.length===4)?a.sigBox.slice():[0.25,0.25,0.75,0.75];
+        var _bw=box[2]-box[0], _bh=box[3]-box[1];
+        if(_bw*_bh>0.70 || _bw>0.80 || _bh>0.80){
+          var _s=Math.max(0.18,Math.min(0.60,Math.sqrt(Math.max(0.03,a.bodyRatio||0.20))));
+          box=[Math.max(0,cx-_s/2),Math.max(0,cy-_s/2),Math.min(1,cx+_s/2),Math.min(1,cy+_s/2)];
+        }
+        var ml=0.04, mr=0.04, mb=0.04;
+        if(nL>L+0.002 && box[0]<nL+ml) return null;
+        if(nR>R+0.002 && box[2]>1-nR-mr) return null;
+        if(b>B+0.002 && box[3]>bottomEdge-mb) return null;
+        if(cx<nL+0.02||cx>1-nR-0.02||cy>bottomEdge-0.02) return null;
+        // 人物硬保护：候选框只要切到任何可信人物就放弃
+        var pb=_personBoxOf(a);
+        if(pb && ((nL>L+0.002&&pb[0]<nL+0.04)||(nR>R+0.002&&pb[2]>1-nR-0.04)||(b>B+0.002&&pb[3]>bottomEdge-0.04))) return null;
+        var cand=[Math.round(nL*100),0,Math.round(nR*100),Math.round(b*100)];
+        try{
+          if(a.allBoxes&&a.allBoxes.length){
+            var g=_objectGuard(cand,a.allBoxes);
+            if(JSON.stringify(g)!==JSON.stringify(cand)) return null;
+          }
+        }catch(e){}
+        // 画幅/面积校验
+        var real=ar*w/(1-b);
+        if(Math.abs(real-0.8)>0.012) return null;
+        if(w*(1-b)<0.72) return null;
+        return cand;
+      }catch(e){ return null; }
+    }
+
+    function _cropQualityScore(a, crop, noCrop){
+      try{
+        if(!a) return 0;
+        var c=(noCrop||!crop)?[0,0,0,0]:crop;
+        var L=c[0]/100,T=c[1]/100,R=c[2]/100,B=c[3]/100;
+        if(L<0||T<0||R<0||B<0||L+R>=1||T+B>=1) return -1;
+        var ar=(typeof a.frameAspect==="number"&&isFinite(a.frameAspect))?a.frameAspect:1;
+        var w=1-L-R,h=1-T-B,area=w*h,real=ar*w/h;
+        var cx=(typeof a.cx==="number"&&isFinite(a.cx))?a.cx:0.5;
+        var cy=(typeof a.cy==="number"&&isFinite(a.cy))?a.cy:0.5;
+        var box=(a.sigBox&&a.sigBox.length===4)?a.sigBox.slice():[0.25,0.25,0.75,0.75];
+        var bw=box[2]-box[0],bh=box[3]-box[1];
+        if(bw*bh>0.70||bw>0.80||bh>0.80){
+          var s=Math.max(0.18,Math.min(0.60,Math.sqrt(Math.max(0.03,a.bodyRatio||0.20))));
+          box=[Math.max(0,cx-s/2),Math.max(0,cy-s/2),Math.min(1,cx+s/2),Math.min(1,cy+s/2)];
+          bw=box[2]-box[0];bh=box[3]-box[1];
+        }
+        var ix=Math.max(0,Math.min(box[2],1-R)-Math.max(box[0],L));
+        var iy=Math.max(0,Math.min(box[3],1-B)-Math.max(box[1],T));
+        var overlap=(bw>0&&bh>0)?(ix*iy)/(bw*bh):1;
+        if(overlap<0.82) return -1;
+        var pb=_personBoxOf(a);
+        if(pb && (pb[0]<L+0.03||pb[1]<T+0.03||pb[2]>1-R-0.03||pb[3]>1-B-0.03)) return -1;
+        try{
+          if(a.allBoxes&&a.allBoxes.length){
+            var g=_objectGuard(c.map(function(v){return Math.round(v);}),a.allBoxes);
+            if(JSON.stringify(g)!==JSON.stringify(c.map(function(v){return Math.round(v);}))) return -1;
+          }
+        }catch(e){}
+        var nx=(cx-L)/Math.max(0.01,w), ny=(cy-T)/Math.max(0.01,h);
+        var fit=_thirdsFitScore(nx,ny);
+        var targets=[0.75,0.8,1,4/3,16/9];
+        var minErr=1;
+        for(var ti=0;ti<targets.length;ti++){ minErr=Math.min(minErr,Math.abs(real-targets[ti])/targets[ti]); }
+        var standard=minErr<0.02?1:(minErr<0.05?0.78:(minErr<0.10?0.45:0.15));
+        var cutEnergy=0;
+        try{
+          var ee=a.edgeEnergy||{};
+          var col=ee.col||[], row=ee.row||ee.eT||[];
+          var sum=0,n=0;
+          if(L>0&&col.length){ var li=Math.floor(L*col.length); for(var i=0;i<li;i++){sum+=(col[i]||0);n++;} }
+          if(R>0&&col.length){ var ri=Math.floor((1-R)*col.length); for(var j=ri;j<col.length;j++){sum+=(col[j]||0);n++;} }
+          if(T>0&&row.length){ var ti2=Math.floor(T*row.length); for(var k=0;k<ti2;k++){sum+=(row[k]||0);n++;} }
+          if(B>0&&row.length){ var bi=Math.floor((1-B)*row.length); for(var m=bi;m<row.length;m++){sum+=(row[m]||0);n++;} }
+          cutEnergy=n?Math.min(1,sum/n):0;
+        }catch(e){}
+        var areaScore=1-Math.min(0.45,Math.abs(area-0.85)*0.75);
+        if(area<0.62) areaScore-=0.25;
+        var centerBalance=1-Math.min(1,Math.abs(nx-0.5)+Math.abs(ny-0.5));
+        // 不裁不能靠"零裁切能量"白拿高分；普通照片里保留太多冗余本身是弱项。
+        var isNoCrop=(L+T+R+B)<0.005;
+        var cutScore=isNoCrop?0.55:Math.max(0,1-cutEnergy);
+        if(isNoCrop) areaScore=0.72;
+        var tightGain=isNoCrop?0:Math.min(1,(1/area-1)*2.2);
+        return 0.26*overlap + 0.19*fit + 0.16*standard + 0.17*cutScore + 0.12*areaScore + 0.06*centerBalance + 0.04*tightGain;
+      }catch(e){ return -1; }
+    }
+
+    function _saferCropVariant(a, crop){
+      try{
+        if(!a||!crop||crop.length!==4) return null;
+        var c=crop.map(function(v){return Math.round(v);});
+        var noScore=_cropQualityScore(a,[0,0,0,0],true);
+        var best=null,bestScore=noScore+0.02;
+        function tryCrop(t){
+          if(!t) return;
+          var sum=t[0]+t[1]+t[2]+t[3];
+          if(sum<=5 || sum>28) return;
+          var s=_cropQualityScore(a,t,false);
+          if(s>=0 && s>bestScore){ best=t; bestScore=s; }
+        }
+        if(c[3]>0) tryCrop([c[0],Math.min(24,c[1]+c[3]),c[2],0]);
+        if(c[1]>0) tryCrop([c[0],0,c[2],Math.min(24,c[1]+c[3])]);
+        if(c[3]>0 && c[3]>4) tryCrop([c[0],c[1],c[2],Math.max(0,c[3]-4)]);
+        return best;
+      }catch(e){ return null; }
+    }
+
+module.exports = { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard, _decloudPlan, _bandSatSignal, _symEdgeSignal, _foodEvidenceSignal, _contentGuard, _thirdsFitScore, aestheticScore, _cloudCropGuard, _personBoxOf, _proactiveComposition, _balanceCrop, _cropQualityScore, _saferCropVariant };

@@ -55,7 +55,11 @@ function solid(r,g,b){
 async function main(){
   const { srv, port } = await startServer();
   console.log('服务端口', port);
-  const browser = await puppeteer.launch({ headless:'new', args:['--no-sandbox','--disable-setuid-sandbox','--disable-gpu','--enable-unsafe-swiftshader'] });
+  const cands=[process.env.CHROME_PATH,'C:/Program Files/Google/Chrome/Application/chrome.exe','C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'].filter(Boolean);
+  const exe=cands.find(p=>fs.existsSync(p));
+  const launch={headless:'new',args:['--no-sandbox','--disable-setuid-sandbox','--disable-gpu','--enable-unsafe-swiftshader']};
+  if(exe) launch.executablePath=exe;
+  const browser = await puppeteer.launch(launch);
   try {
     const page = await browser.newPage();
     await page.setViewport({ width:390, height:844 });
