@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard, _decloudPlan, _bandSatSignal, _symEdgeSignal, _foodEvidenceSignal, _cloudCropGuard, _personBoxOf, _proactiveComposition, _balanceCrop, _cropQualityScore, _saferCropVariant } = require('./pure-functions.js');
+const { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard, _decloudPlan, _bandSatSignal, _symEdgeSignal, _foodEvidenceSignal, _cloudCropGuard, _personBoxOf, _proactiveComposition, _balanceCrop, _cropQualityScore, _saferCropVariant, _candidateRatioTag, _candidateAspectCrop, _buildCompositionCandidates } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -2125,6 +2125,24 @@ if (process.exitCode) {
   assert.ok(safe && safe[3]===0 && safe[1]>=10,'应把底部裁切量移到顶部: '+JSON.stringify(safe));
   assert.ok(_cropQualityScore(sky,safe,false)>=0,'顶部空天候选通过物体保护');
   console.log('  ✓ v12.29.0 底部物体保护改收顶部（3条）');
+}
+
+// -------------------- v13.0.0: 构图候选 A/B/C/原图 --------------------
+{
+  const under={frameAspect:0.75,cx:0.303,cy:0.489,sigBox:[0,0,1,1],bodyRatio:0.075,
+    edgeEnergy:{col:new Array(24).fill(0.4),row:new Array(16).fill(0.4)},allBoxes:[],topBandHsv:{ratio:0.05},blueWater:0,sym:0.1};
+  const list=_buildCompositionCandidates(under,{sceneType:'general',crop:[0,0,10,16],noCrop:false});
+  assert.ok(list.length>=3,'应生成至少3个候选: '+JSON.stringify(list));
+  assert.strictEqual(list[list.length-1].noCrop,true,'最后一项应为原图');
+  const ids=list.map(c=>c.id).join('');
+  assert.ok(/^[A-D]+$/.test(ids)&&new Set(ids.split('')).size===ids.length,'候选 id 唯一');
+  assert.ok(list.some(c=>!c.noCrop&&c.crop[3]>=12),'应含底部收紧候选');
+  assert.strictEqual(_buildCompositionCandidates(under,{sceneType:'portrait',crop:[0,0,10,16]}).length,0,'人像不生成候选');
+  const animal={frameAspect:1.5,cx:0.5,cy:0.5,sigBox:[0.2,0.3,0.8,0.7],bodyRatio:0.3,
+    edgeEnergy:{col:new Array(24).fill(0.4),row:new Array(16).fill(0.4)},allBoxes:[],topBandHsv:{ratio:0.05},blueWater:0,sym:0.1};
+  const al=_buildCompositionCandidates(animal,{sceneType:'animal',crop:[0,0,0,0],noCrop:true});
+  for(const c of al){ if(!c.noCrop){ assert.ok(Math.max(...c.crop)<=8,'动物候选单边≤8: '+c.crop); assert.ok(c.crop.reduce((a,b)=>a+b,0)<=25,'动物候选四边≤25: '+c.crop); } }
+  console.log('  ✓ v13.0.0 构图候选 A/B/C/原图（5条）');
 }
 
 // -------------------- v12.28.0: 云端分级裁切保护 --------------------

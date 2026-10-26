@@ -1,7 +1,7 @@
 {
   "name": "AI 构图助手",
   "short_name": "构图助手",
-  "description": "AI 构图助手 Pro v12.29.0 · 实景视觉构图生成工具（永久免费、不限使用次数）：像素构图即时落地，普通场景主动发现 4:5/16:9 与暗部呼吸；拍前实时引导、可选 YOLO11n 本地精修、智能人像裁切、背景保护 RoD、30 款滤镜、构图法则百科与云端 VLM 分析",
+  "description": "AI 构图助手 Pro v13.0.0 · 真AI构图：本地生成 A/B/C/原图安全候选，云端 VLM 看图选最美并自动落地；云端状态可见、可重试；BYOK 内置已核对的视觉模型预设与一键连接测试；永久免费、不限使用次数",
   "id": "/ai-composition-tool/",
   "start_url": "./index.html",
   "scope": "./",
@@ -24,5 +24,5 @@
       "purpose": "any maskable"
     }
   ],
-  "version":"12.29.0"
+  "version":"13.0.0"
 }

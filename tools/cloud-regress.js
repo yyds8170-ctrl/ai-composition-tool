@@ -25,17 +25,21 @@ async function runBatch(imgs, batchIdx){
     localStorage.setItem('aiComposeCloudOn','1');
     localStorage.setItem('aiComposeCloudKey',tk);
     localStorage.setItem('aiComposeCloudBase','https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com');
-    localStorage.setItem('aiModelEnabled','0');
+    localStorage.setItem('aiModelEnabled','1');
+    localStorage.setItem('aiForceModel','1');
     localStorage.setItem('aiComposeOnboarded_v76','1');
   },TOKEN);
   await page.reload({waitUntil:'domcontentloaded'});
-  await new Promise(r=>setTimeout(r,2500));
+  await new Promise(r=>setTimeout(r,1500));
+  const _tm=Date.now();
+  while(Date.now()-_tm<40000){ const m=await page.evaluate(()=>window.__ai&&window.__ai.model); if(m&&m.ready) break; await new Promise(r=>setTimeout(r,800)); }
+  await new Promise(r=>setTimeout(r,500));
   const results=[];
   for(const img of imgs){
     const input=await page.$('#fileInput'); await input.uploadFile(img); await new Promise(r=>setTimeout(r,1500));
     await page.evaluate(()=>document.getElementById('btnAnalyze').click());
     // v12.29.0：像素构图先自动应用；云端返回后出现「云端建议」卡/☁️ 标签即算完成。
-    let snap=null; const dl=Date.now()+60000;
+    let snap=null; const dl=Date.now()+75000;
     while(Date.now()<dl){
       await new Promise(r=>setTimeout(r,800));
       snap=await page.evaluate(()=>{
@@ -48,8 +52,21 @@ async function runBatch(imgs, batchIdx){
           cp:cp?{crop:cp.crop,scene:cp.sceneType,rule:cp.rule,conf:cp.conf,noCrop:cp.noCrop,intent:cp.cropIntent||''}:null,
           card:!!document.getElementById('cloudUpgradeApply')};
       });
-      if(snap&&/云端建议已返回|云端与本地构图一致|已应用云端构图|云端已复核|人像保护/.test(snap.status)) break;
+      if(snap&&snap.cp) break;
+      if(snap&&/云端建议已返回|云端与本地构图一致|已应用云端构图|已应用云端AI|云端AI确认|云端已复核|人像保护/.test(snap.status)) break;
       if(snap&&/已自动应用/.test(snap.status)&&snap.cloud) break;
+    }
+    // 云端候选已返回：等自动应用/建议卡稳定后再读最终 plan。
+    if(snap&&snap.cp && !snap.card){
+      await new Promise(r=>setTimeout(r,900));
+      const _snap2=await page.evaluate(()=>{
+        const p=window.__ai&&window.__ai.plan; const cp=window.__ai&&window.__ai.cloudPlan; const sb=document.getElementById('statusbar'); const tg=document.getElementById('aiRuleTag');
+        if(!p) return null; const st=sb?sb.textContent:''; const tag=tg?tg.textContent:'';
+        return {crop:p.crop,scene:p.sceneType,rule:p.rule,conf:p.conf,intent:(p.aiIntent&&p.aiIntent.intentName)||p.cropIntent||'',
+          tag:tag, cloud:(tag.indexOf('☁️')>=0), noCrop:!!p.noCrop, status:st, card:false,
+          cp:cp?{crop:cp.crop,scene:cp.sceneType,rule:cp.rule,conf:cp.conf,noCrop:cp.noCrop,intent:cp.cropIntent||''}:null};
+      });
+      if(_snap2) snap=_snap2;
     }
     // v12.29.0：云端返回后点“应用云端构图”，让回归读取真正的云端裁切结果（而不是本地已落地的那一版）。
     if(snap&&snap.card){

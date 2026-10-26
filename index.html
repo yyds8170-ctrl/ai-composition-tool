@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v12.29.0 · 实景视觉构图生成工具</title>
-<meta name="description" content="AI 构图助手 Pro v12.29.0 · 实景视觉构图生成工具（永久免费、不限使用次数）：像素构图即时落地，普通场景主动发现 4:5/16:9 与暗部呼吸；可选 YOLO11n 本地精修、智能人像裁切、30 款滤镜、云端 VLM 分析">
+<title>AI 构图助手 Pro v13.0.0 · 实景视觉构图生成工具</title>
+<meta name="description" content="AI 构图助手 Pro v13.0.0 · 真AI构图：本地生成 A/B/C/原图安全候选，云端 VLM 看图选最美并自动落地；云端状态可见/可重试；BYOK 内置已核对视觉模型预设与一键连接测试；永久免费、不限使用次数">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v12.29.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切（永久免费不限次数）">
-<meta property="og:description" content="给不会拍照的普通人：打开相机，AI 教你怎么拍。AI 构图分析（本地像素+云端 VLM 双引擎）、人像保护裁切（不切头不切手脚）、30 款滤镜，一键出成品。默认本地运行，照片不上传。">
+<meta property="og:title" content="AI 构图助手 Pro v13.0.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切（永久免费不限次数）">
+<meta property="og:description" content="给不会拍照的普通人：本地先生成多个安全构图，云端AI直接看图选最美并自动应用。云端开关/口令/失败原因一眼可见；BYOK 选厂商即自动填视觉模型，一键测试连接。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
 <meta name="twitter:card" content="summary_large_image">
@@ -1051,7 +1051,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v12.29.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v13.0.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1114,12 +1114,21 @@
         <select id="cloudVendor" style="flex:1 1 100%;padding:7px 10px;border-radius:8px;border:1px solid rgba(0,0,0,.14);background:#fff;font-size:12px;color:#1A1B1C;min-width:0;box-sizing:border-box;"></select>
       </div>
       <div class="mp-row" style="flex-wrap:wrap;gap:6px;">
+        <select id="cloudByokModelPreset" style="flex:1 1 100%;padding:7px 10px;border-radius:8px;border:1px solid rgba(0,0,0,.14);background:#fff;font-size:12px;color:#1A1B1C;min-width:0;box-sizing:border-box;"></select>
+      </div>
+      <div class="mp-row" id="cloudByokCustomRow" style="display:none;flex-wrap:wrap;gap:6px;">
+        <input type="text" id="cloudByokModel" placeholder="自定义模型 ID（需确认支持图片输入）" style="flex:1 1 100%;padding:7px 10px;border-radius:8px;border:1px solid rgba(0,0,0,.14);background:#fff;font-size:12px;color:#1A1B1C;min-width:0;box-sizing:border-box;">
+      </div>
+      <div class="mp-desc" id="cloudByokModelHint" style="line-height:1.7;">选择厂商后会自动填入经过确认的视觉模型预设；不用手写模型名。</div>
+      <div class="mp-row" style="flex-wrap:wrap;gap:6px;">
         <input type="password" id="cloudByokKey" placeholder="你自己的 API Key（仅保存在本机，只发往你选的厂商）" style="flex:1 1 100%;padding:7px 10px;border-radius:8px;border:1px solid rgba(0,0,0,.14);background:#fff;font-size:12px;color:#1A1B1C;min-width:0;box-sizing:border-box;">
       </div>
-      <div class="mp-row" style="flex-wrap:wrap;gap:6px;">
-        <input type="text" id="cloudByokModel" placeholder="模型名（选厂商后自动填入，可按需修改）" style="flex:1 1 100%;padding:7px 10px;border-radius:8px;border:1px solid rgba(0,0,0,.14);background:#fff;font-size:12px;color:#1A1B1C;min-width:0;box-sizing:border-box;">
-      </div>
-      <div class="mp-desc" style="line-height:1.7;">自带 Key 模式：在下方选厂商，填你自己的 API Key 即可<b>浏览器直连</b>该厂商（DeepSeek/通义/智谱/Kimi/混元/千帆/MiniMax/阶跃/硅基流动/OpenRouter 已实测支持直连）；豆包/OpenAI 官方不支持直连，需走共享模式或自备代理。Key 只存本机、只发往所选厂商，绝不进入代码。</div>
+
+      <div class="mp-desc" style="line-height:1.7;">自带 Key 模式：选厂商 → 选视觉模型预设 → 填 API Key → 点「测试云端连接」确认可用。Key 只存本机、只发往所选厂商，绝不进入代码。不可用的厂商会标注原因。</div>
+    </div>
+    <div class="mp-row" style="flex-wrap:wrap;gap:8px;align-items:center;">
+      <button id="cloudTestBtn" class="mp-btn" style="flex:0 0 auto;">测试云端连接</button>
+      <span id="cloudTestResult" style="font-size:11px;color:var(--sub);line-height:1.5;">不跑整图，只发一张 64×64 测试图</span>
     </div>
   </div>
   <div class="help-body" id="helpBody"></div>
@@ -1129,7 +1138,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v12.29.0";
+var APP_VER="v13.0.0";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -1312,6 +1321,8 @@ var APP_VER="v12.29.0";
         modelPanel=$("modelPanel"), mpBadge=$("mpBadge"), mpOn=$("mpOn"), mpReload=$("mpReload"),
         cloudBadge=$("cloudBadge"), cloudOn=$("cloudOn"), cloudDeepReview=$("cloudDeepReview"), cloudBase=$("cloudBase"), cloudKey=$("cloudKey"),
         cloudMode=$("cloudMode"), cloudVendor=$("cloudVendor"), cloudByokKey=$("cloudByokKey"), cloudByokModel=$("cloudByokModel"),
+        cloudByokModelPreset=$("cloudByokModelPreset"), cloudByokCustomRow=$("cloudByokCustomRow"), cloudByokModelHint=$("cloudByokModelHint"),
+        cloudTestBtn=$("cloudTestBtn"), cloudTestResult=$("cloudTestResult"),
         cloudSharedRow=$("cloudSharedRow"), cloudByokRow=$("cloudByokRow"),
         btnCmp=$("btnCmp"), cmpBase=$("cmpBase"), cmpUI=$("cmpUI"), cmpLine=$("cmpLine"), cmpHandle=$("cmpHandle"),
         baseLayer=$("baseLayer"), strengthRow=$("strengthRow"), strengthRange=$("strengthRange"), strengthVal=$("strengthVal"),
@@ -1349,7 +1360,7 @@ var APP_VER="v12.29.0";
       aiData:null,
       origURL:null,
       analyzeToken:0,
-      // v12.29.0：模型仍默认开启，但不再首屏抢带宽；第一次像素构图落地后才后台下载。
+      // v13.0.0：模型仍默认开启，但不再首屏抢带宽；第一次像素构图落地后才后台下载。
       // 弱网/省流量设备不自动下载，用户可在结果卡手动开启。
       aiModelEnabled: (function(){ try{ var v=localStorage.getItem("aiModelEnabled"); return v===null?true:v==="1"; }catch(e){ return true; } })(),
       liveMode:false,
@@ -1380,14 +1391,18 @@ var APP_VER="v12.29.0";
       }
     };
 
+    function _cloudChatURL(base){ return String(base||"").replace(/\/+$/,"")+"/chat/completions"; }
     // v8.0.9: 云端"已配置可用"统一判定——shared 看访问口令、byok 看 API Key，任一套就绪即云端可用
     // v11.16.0: 双重检查 localStorage——防止内存状态与UI开关不同步导致"关了还走云端"
     function _cloudReady(){
       try{
-        // 直接读 localStorage 作为权威来源
+        // 直接读 localStorage 作为权威来源（开关/模式/口令三者同源），避免刷新/多标签/回填竞态。
         var storedOn = localStorage.getItem("aiComposeCloudOn")==="1";
-        if(!storedOn) return false; // localStorage说关了，绝对不走云端
-        return !!(state.cloud && state.cloud.on && (state.cloud.mode==="byok" ? state.cloud.byokKey : state.cloud.key));
+        if(!storedOn) return false;
+        var mode = localStorage.getItem("aiComposeCloudMode") || (state.cloud&&state.cloud.mode) || "shared";
+        var key = mode==="byok" ? (localStorage.getItem("aiComposeByokKey")||(state.cloud&&state.cloud.byokKey)||"")
+                                : (localStorage.getItem("aiComposeCloudKey")||(state.cloud&&state.cloud.key)||"");
+        return !!(state.cloud && state.cloud.on && key);
       }catch(e){ return false; }
     }
 
@@ -1396,27 +1411,184 @@ var APP_VER="v12.29.0";
        MiniMax/阶跃星辰/硅基流动/OpenRouter 均返回 CORS 头（浏览器可直连）；豆包(火山方舟)/OpenAI 无 CORS 头，
        需走共享代理或用户自备代理。base 均为 OpenAI 兼容 /chat/completions 端点。 */
     var BYOK_VENDORS=[
-      {id:"deepseek",    name:"DeepSeek",            base:"https://api.deepseek.com/v1",                         model:"deepseek-chat",        note:"支持直连"},
-      {id:"dashscope",   name:"通义千问 DashScope",   base:"https://dashscope.aliyuncs.com/compatible-mode/v1",    model:"qwen-plus",            note:"支持直连"},
-      {id:"zhipu",       name:"智谱 GLM",             base:"https://open.bigmodel.cn/api/paas/v4",                  model:"glm-4-flash",          note:"支持直连"},
-      {id:"kimi",        name:"月之暗面 Kimi",        base:"https://api.moonshot.cn/v1",                            model:"moonshot-v1-8k",       note:"支持直连"},
-      {id:"hunyuan",     name:"腾讯混元",             base:"https://api.hunyuan.cloud.tencent.com/v1",             model:"hunyuan-lite",         note:"支持直连"},
-      {id:"qianfan",     name:"百度千帆",             base:"https://qianfan.baidubce.com/v2",                      model:"ernie-4.0-turbo-8k",    note:"支持直连"},
-      {id:"minimax",     name:"MiniMax",             base:"https://api.minimax.chat/v1",                          model:"abab6.5s-chat",        note:"支持直连"},
-      {id:"stepfun",     name:"阶跃星辰 StepFun",     base:"https://api.stepfun.com/v1",                           model:"step-1-8k",            note:"支持直连"},
-      {id:"siliconflow", name:"硅基流动（聚合）",      base:"https://api.siliconflow.cn/v1",                         model:"deepseek-ai/DeepSeek-V3", note:"支持直连"},
-      {id:"openrouter",  name:"OpenRouter（聚合）",   base:"https://openrouter.ai/api/v1",                          model:"deepseek/deepseek-chat",  note:"支持直连"},
-      {id:"ark",         name:"豆包·火山方舟",        base:"https://ark.cn-beijing.volces.com/api/v3",              model:"",                     note:"不支持直连，需走共享代理"},
-      {id:"openai",      name:"OpenAI",              base:"https://api.openai.com/v1",                             model:"gpt-4o-mini",          note:"不支持直连，需走共享代理"}
+      {id:"siliconflow", name:"硅基流动（聚合 · 国内推荐）", base:"https://api.siliconflow.cn/v1", note:"直连已确认", cors:"yes", models:[
+        {id:"Qwen/Qwen3-VL-32B-Instruct",label:"Qwen3-VL 32B",tier:"balanced",vision:true,note:"默认推荐"},
+        {id:"Qwen/Qwen3-VL-235B-A22B-Instruct",label:"Qwen3-VL 235B",tier:"quality",vision:true,note:"视觉旗舰"},
+        {id:"Qwen/Qwen3-VL-30B-A3B-Instruct",label:"Qwen3-VL 30B",tier:"fast",vision:true,note:"更快"},
+        {id:"zai-org/GLM-4.6V",label:"GLM-4.6V",tier:"balanced",vision:true,note:"中文视觉"},
+        {id:"deepseek-ai/DeepSeek-V4-Flash-Vision-Exp",label:"DeepSeek V4 Flash Vision",tier:"fast",vision:true,note:"原生视觉"}
+      ]},
+      {id:"dashscope", name:"通义千问 · 阿里云百炼", base:"https://dashscope.aliyuncs.com/compatible-mode/v1", note:"直连已确认", cors:"yes", models:[
+        {id:"qwen3.7-plus",label:"Qwen3.7 Plus",tier:"balanced",vision:true,note:"默认推荐·1M"},
+        {id:"qwen3.8-max",label:"Qwen3.8 Max",tier:"quality",vision:true,note:"旗舰"},
+        {id:"qwen3-vl-plus",label:"Qwen3-VL Plus",tier:"quality",vision:true,note:"视觉专项"},
+        {id:"qwen3-vl-flash",label:"Qwen3-VL Flash",tier:"fast",vision:true,note:"快/省"}
+      ]},
+      {id:"openrouter", name:"OpenRouter（聚合 · 国际推荐）", base:"https://openrouter.ai/api/v1", note:"直连已确认", cors:"yes", models:[
+        {id:"google/gemini-3.8-flash",label:"Gemini 3.8 Flash",tier:"fast",vision:true,note:"默认推荐·快且便宜"},
+        {id:"qwen/qwen3-vl-235b-a22b-instruct",label:"Qwen3-VL 235B",tier:"balanced",vision:true,note:"视觉强/便宜"},
+        {id:"anthropic/claude-sonnet-5.5",label:"Claude Sonnet 5.5",tier:"quality",vision:true,note:"高质量"},
+        {id:"openai/gpt-5.5",label:"GPT-5.5",tier:"quality",vision:true,note:"顶配"},
+        {id:"google/gemma-4-31b-it:free",label:"Gemma 4 31B 免费",tier:"fast",vision:true,note:"免费/可能用于训练，隐私图勿用"}
+      ]},
+      {id:"deepseek", name:"DeepSeek", base:"https://api.deepseek.com/v1", note:"直连已确认", cors:"yes", models:[
+        {id:"deepseek-flash",label:"DeepSeek V4.1 Flash",tier:"balanced",vision:true,note:"原生视觉·1M"},
+        {id:"deepseek-v4-flash-vision-exp",label:"V4 Flash Vision Exp",tier:"balanced",vision:true,note:"旧 ID，路由至 V4.1 Flash"}
+      ]},
+      {id:"kimi", name:"Kimi · 月之暗面", base:"https://api.moonshot.cn/v1", note:"直连已确认", cors:"yes", models:[
+        {id:"kimi-k3.1-pro",label:"Kimi K3.1 Pro",tier:"quality",vision:true,note:"原生视觉·1M"},
+        {id:"kimi-k3.1-pro-highspeed",label:"Kimi K3.1 Pro 高速版",tier:"fast",vision:true,note:"2-3x 速度"},
+        {id:"kimi-k3",label:"Kimi K3",tier:"balanced",vision:true,note:"上一代旗舰"}
+      ]},
+      {id:"qianfan", name:"百度千帆 · 文心", base:"https://qianfan.baidubce.com/v2", note:"直连已确认", cors:"yes", models:[
+        {id:"ernie-4.5-turbo-vl",label:"ERNIE 4.5 Turbo VL",tier:"balanced",vision:true,note:"默认推荐"},
+        {id:"ernie-5.0",label:"ERNIE 5.0",tier:"quality",vision:true,note:"原生全模态"},
+        {id:"ernie-4.5-turbo-vl-32k",label:"ERNIE 4.5 Turbo VL 32K",tier:"fast",vision:true,note:"32K"},
+        {id:"ernie-4.5-vl-28b-a3b",label:"ERNIE 4.5 VL 28B",tier:"fast",vision:true,note:"轻量"}
+      ]},
+      {id:"minimax", name:"MiniMax", base:"https://api.minimaxi.com/v1", note:"直连已确认", cors:"yes", models:[
+        {id:"MiniMax-M3.1-Flash",label:"MiniMax M3.1 Flash",tier:"fast",vision:true,note:"默认推荐"},
+        {id:"MiniMax-M3",label:"MiniMax M3",tier:"quality",vision:true,note:"旗舰·图/视频"}
+      ]},
+      {id:"stepfun", name:"阶跃星辰 StepFun", base:"https://api.stepfun.com/v1", note:"直连已确认", cors:"yes", models:[
+        {id:"step-3.7-flash",label:"Step 3.7 Flash",tier:"balanced",vision:true,note:"默认推荐"},
+        {id:"step-5-preview",label:"Step 5 Preview",tier:"quality",vision:true,note:"旗舰"},
+        {id:"step-1o-turbo-vision",label:"Step-1o Turbo Vision",tier:"fast",vision:true,note:"视觉"},
+        {id:"step-1o-vision-32k",label:"Step-1o Vision 32K",tier:"fast",vision:true,note:"旧版视觉"}
+      ]},
+      {id:"zhipu", name:"智谱 GLM（必须代理）", base:"https://open.bigmodel.cn/api/paas/v4", note:"CORS 预检失败，浏览器直连会被拦", cors:"no", models:[
+        {id:"glm-4.6v-flashx",label:"GLM-4.6V FlashX",tier:"fast",vision:true,note:"便宜"},
+        {id:"glm-4.6v",label:"GLM-4.6V",tier:"balanced",vision:true,note:"视觉"},
+        {id:"glm-5v-turbo",label:"GLM-5V Turbo",tier:"quality",vision:true,note:"旗舰"},
+        {id:"glm-4.6v-flash",label:"GLM-4.6V Flash（免费）",tier:"fast",vision:true,note:"免费"}
+      ]},
+      {id:"hunyuan", name:"腾讯混元（必须代理）", base:"https://api.hunyuan.cloud.tencent.com/v1", note:"旧平台 CORS 失败，正在迁移 TokenHub", cors:"no", models:[
+        {id:"hunyuan-t1-vision",label:"Hunyuan T1 Vision",tier:"balanced",vision:true,note:"默认"},
+        {id:"hunyuan-turbos-vision",label:"Hunyuan TurboS Vision",tier:"fast",vision:true,note:"更快"},
+        {id:"hunyuan-vision",label:"Hunyuan Vision",tier:"fast",vision:true,note:"旧版"}
+      ]},
+      {id:"ark", name:"豆包 · 火山方舟（通常需代理）", base:"https://ark.cn-beijing.volces.com/api/v3", note:"实际 POST 无 CORS 头，浏览器会被拦", cors:"no", models:[
+        {id:"doubao-seed-2.1-lite",label:"Doubao Seed 2.1 Lite",tier:"fast",vision:true,note:"便宜"},
+        {id:"doubao-seed-2.1-pro",label:"Doubao Seed 2.1 Pro",tier:"quality",vision:true,note:"旗舰"},
+        {id:"doubao-seed-2.0-mini",label:"Doubao Seed 2.0 Mini",tier:"fast",vision:true,note:"轻量"},
+        {id:"doubao-seed-evolving",label:"Doubao Seed Evolving",tier:"quality",vision:true,note:" evolving"}
+      ]},
+      {id:"openai", name:"OpenAI 官方（通常需代理）", base:"https://api.openai.com/v1", note:"浏览器直连通常被拦", cors:"no", models:[
+        {id:"gpt-5.5",label:"GPT-5.5",tier:"quality",vision:true,note:"旗舰"},
+        {id:"gpt-5.4",label:"GPT-5.4",tier:"quality",vision:true,note:"高质量"},
+        {id:"gpt-5.2",label:"GPT-5.2",tier:"balanced",vision:true,note:"均衡"},
+        {id:"gpt-5-mini",label:"GPT-5 mini",tier:"fast",vision:true,note:"快/省"},
+        {id:"gpt-5-nano",label:"GPT-5 nano",tier:"fast",vision:true,note:"极速"}
+      ]},
+      {id:"anthropic", name:"Anthropic Claude 官方（需海外网络）", base:"https://api.anthropic.com/v1", note:"需 opt-in 头 + 海外网络", cors:"maybe", models:[
+        {id:"claude-opus-5-5",label:"Claude Opus 5.5",tier:"quality",vision:true,note:"顶配"},
+        {id:"claude-sonnet-5-5",label:"Claude Sonnet 5.5",tier:"quality",vision:true,note:"均衡高质量"},
+        {id:"claude-haiku-5-5",label:"Claude Haiku 5.5",tier:"fast",vision:true,note:"快"}
+      ]},
+      {id:"gemini", name:"Google Gemini 官方（需海外网络）", base:"https://generativelanguage.googleapis.com/v1beta/openai/", note:"直连未确认", cors:"maybe", models:[
+        {id:"gemini-3.8-flash",label:"Gemini 3.8 Flash",tier:"fast",vision:true,note:"默认推荐"},
+        {id:"gemini-3.6-flash",label:"Gemini 3.6 Flash",tier:"balanced",vision:true,note:"均衡"},
+        {id:"gemini-3.1-pro-preview",label:"Gemini 3.1 Pro",tier:"quality",vision:true,note:"高质量"},
+        {id:"gemini-3.5-flash-lite",label:"Gemini 3.5 Flash-Lite",tier:"fast",vision:true,note:"省"}
+      ]}
     ];
     function _byokVendor(id){ for(var _i=0;_i<BYOK_VENDORS.length;_i++){ if(BYOK_VENDORS[_i].id===id) return BYOK_VENDORS[_i]; } return BYOK_VENDORS[0]; }
+    // v13.0.0：每个厂商的“已确认视觉模型预设”。没有 models 时退回单模型。
+    function _byokModelPresets(vendorId){
+      var v=_byokVendor(vendorId);
+      if(v&&Array.isArray(v.models)&&v.models.length) return v.models.slice();
+      if(v&&v.model) return [{id:v.model,label:v.model,tier:"均衡",vision:false,note:"旧版默认，需确认视觉"}];
+      return [];
+    }
+    function _byokTierLabel(t){ return t==="fast"?"极速":(t==="quality"?"高质量":"均衡"); }
+    function _populateByokModelPresets(vendorId,currentModel){
+      try{
+        if(!cloudByokModelPreset) return;
+        var v=_byokVendor(vendorId), list=_byokModelPresets(vendorId);
+        var cur=String(currentModel||state.cloud.byokModel||"").trim();
+        var match=null;
+        for(var i=0;i<list.length;i++){ if(list[i].id===cur){ match=list[i]; break; } }
+        if(!cur && list.length){ cur=list[0].id; match=list[0]; }
+        cloudByokModelPreset.innerHTML="";
+        for(var j=0;j<list.length;j++){
+          var m=list[j], o=document.createElement("option");
+          o.value=m.id;
+          o.textContent=_byokTierLabel(m.tier)+" · "+m.label+(m.vision?" · 视觉":" · 仅文本")+" · "+m.id;
+          cloudByokModelPreset.appendChild(o);
+        }
+        var oc=document.createElement("option"); oc.value="__custom__"; oc.textContent="自定义模型 ID…"; cloudByokModelPreset.appendChild(oc);
+        if(match){ cloudByokModelPreset.value=match.id; if(cloudByokModel) cloudByokModel.value=match.id; if(cloudByokCustomRow) cloudByokCustomRow.style.display="none"; }
+        else{ cloudByokModelPreset.value="__custom__"; if(cloudByokModel && cur) cloudByokModel.value=cur; if(cloudByokCustomRow) cloudByokCustomRow.style.display=""; }
+        if(cloudByokModelHint){
+          if(match) cloudByokModelHint.innerHTML="<b>"+esc(match.label)+"</b> · "+_byokTierLabel(match.tier)+(match.vision?" · 支持图片输入":" · <span style='color:#EF6B6B'>仅文本，不适合构图</span>")+(match.note?" · "+esc(match.note):"");
+          else cloudByokModelHint.textContent="自定义模型：请确认该模型支持图片输入（vision / image_url），否则云端无法看图。";
+          if(v.cors==="no") cloudByokModelHint.innerHTML+="<br><span style='color:#EF6B6B'>该厂商实测不支持浏览器直连，请改选硅基流动/OpenRouter，或走共享口令。</span>";
+          else if(v.cors==="maybe") cloudByokModelHint.innerHTML+="<br><span style='color:#FAAD14'>直连未确认，请点「测试云端连接」；失败就换聚合平台。</span>";
+        }
+        state.cloud.byokModel=cur;
+      }catch(e){}
+    }
+    function _cloudTestResultSet(txt,ok){
+      try{
+        if(!cloudTestResult) return;
+        cloudTestResult.textContent=txt;
+        cloudTestResult.style.color=ok===true?"#1a7f37":(ok===false?"#c0392b":"var(--sub)");
+      }catch(e){}
+    }
+    function _testCloudConnection(){
+      try{
+        var byok=(state.cloud.mode==="byok");
+        var v=byok?_byokVendor(state.cloud.byokVendor):null;
+        var base=byok?v.base:state.cloud.base;
+        var key=byok?state.cloud.byokKey:state.cloud.key;
+        var model=byok?(state.cloud.byokModel||v.model):state.cloud.model;
+        if(!key){ _cloudTestResultSet("先填写"+(byok?"API Key":"访问口令")+"再测试",false); return; }
+        if(!base||!model){ _cloudTestResultSet("缺少 Base URL 或模型名",false); return; }
+        _cloudTestResultSet("正在测试 "+model+" …",null);
+        // 生成一张 64×64 小图，真实走一次视觉请求（只花很少 token）。
+        var c=document.createElement("canvas"); c.width=64; c.height=64;
+        var cx=c.getContext("2d"); cx.fillStyle="#5a6470"; cx.fillRect(0,0,64,64);
+        cx.fillStyle="#fff"; cx.font="bold 20px Arial"; cx.fillText("AI",18,38);
+        var tiny=c.toDataURL("image/jpeg",0.8);
+        var body=Object.assign({model:model,messages:[{role:"user",content:[
+          {type:"text",text:"只回复 OK"},
+          {type:"image_url",image_url:{url:tiny}}
+        ]}],temperature:0,max_tokens:5}, _cloudThinkingParams(model));
+        var h={"Content-Type":"application/json"};
+        if(byok) h["Authorization"]="Bearer "+key; else h["X-App-Token"]=key;
+        if(byok&&v.id==="openrouter"){ h["HTTP-Referer"]="https://yyds8170-ctrl.github.io/ai-composition-tool/"; h["X-OpenRouter-Title"]="AI 构图助手"; }
+        if(byok&&v.id==="anthropic"){ h["anthropic-dangerous-direct-browser-access"]="true"; }
+        var ctrl=(typeof AbortController!=="undefined")?new AbortController():null;
+        var t0=Date.now(), timer=setTimeout(function(){ try{ if(ctrl) ctrl.abort(); }catch(e){} },20000);
+        fetch(_cloudChatURL(base),{method:"POST",headers:h,body:JSON.stringify(body),signal:ctrl?ctrl.signal:undefined})
+          .then(function(r){ return r.json().catch(function(){return {};}).then(function(j){ return {ok:r.ok,status:r.status,j:j}; }); })
+          .then(function(res){
+            clearTimeout(timer);
+            var sec=((Date.now()-t0)/1000).toFixed(1);
+            if(res.ok){ _cloudTestResultSet("✅ 可用 · "+sec+"s · "+model,true); }
+            else if(res.status===401||res.status===403){ _cloudTestResultSet("❌ 鉴权失败（"+res.status+"）：Key/口令不对或没有该模型权限",false); }
+            else if(res.status===404){ _cloudTestResultSet("❌ 模型不存在（404）：请重新选择预设或确认模型 ID",false); }
+            else if(res.status===429){ _cloudTestResultSet("❌ 限流/额度不足（429）",false); }
+            else{
+              var msg=(res.j&&res.j.error&&(res.j.error.message||res.j.error.code))||("HTTP "+res.status);
+              _cloudTestResultSet("❌ "+String(msg).replace(key,"***").slice(0,90),false);
+            }
+          })
+          .catch(function(e){
+            clearTimeout(timer);
+            if(e&&e.name==="AbortError") _cloudTestResultSet("❌ 超时（20s）；检查网络或换模型",false);
+            else _cloudTestResultSet("❌ 浏览器直连被拦截（CORS）或网络不通；请换聚合平台/共享模式",false);
+          });
+      }catch(e){ _cloudTestResultSet("测试失败："+String(e.message||e).slice(0,60),false); }
+    }
     // v12.26.0: glm-5.3-flash 不认 enable_thinking:false，会先输出 reasoning 再输出 content，
     // 实测同一张图 34s→10s；必须用 thinking:{type:"disabled"}。其他厂商沿用原参数。
     function _cloudThinkingParams(model){
       var m=String(model||"").toLowerCase();
-      // 只对 GLM 改参数，避免影响原有 BYOK 厂商的兼容性。
+      // v13.0.0：只给明确支持该参数的厂商发送，避免 OpenAI/Gemini/Kimi 等因未知字段 400。
       if(m.indexOf("glm")===0) return {thinking:{type:"disabled"}};
-      return {enable_thinking:false};
+      if(/^(qwen|qwq|qvq)/.test(m)) return {enable_thinking:false};
+      return {};
     }
 
     /* ===================== 数据 ===================== */
@@ -1858,7 +2030,7 @@ var APP_VER="v12.29.0";
         if(!rec||!rec.filter||!FILTERS[rec.filter]||rec.filter==="clear") return;
         var p=state.plan||{}, a=state.aiData||{};
         var sc=p.sceneType||"";
-        // v12.29.0 克制边界（研究结论）：晚霞/逆光剪影/合影/已成黑白/低信息图不自动加色；
+        // v13.0.0 克制边界（研究结论）：晚霞/逆光剪影/合影/已成黑白/低信息图不自动加色；
         // 推荐横幅仍保留，用户想加可手动点「应用」。
         if(p.atmosphere==="sunset_sky"||sc==="sunset") return;
         if((typeof a.highClip==="number"&&a.highClip>0.12)&&(typeof a.shadowClip==="number"&&a.shadowClip>0.35)) return;
@@ -2155,6 +2327,7 @@ var APP_VER="v12.29.0";
 
     function setPhotoSource(url, kind, name, keepPanel){
       invalidateAnalysis(keepPanel);
+      if(!keepPanel){ try{ _clearCloudStatusTimer(); state._cloudStatus=null; var _csc=document.getElementById('cloudStatusCard'); if(_csc&&_csc.parentNode)_csc.parentNode.removeChild(_csc); }catch(e){} }
       if(state.mode==="camera"){ stopStream(); camBadge.classList.remove("on"); camBadgeTxt.textContent="未连接相机"; }
       state.mode="photo";
       state.sourceKind=kind;
@@ -2177,7 +2350,7 @@ var APP_VER="v12.29.0";
         setStatus("图片加载失败，请换一张图片试试", "err");
         noSrc.classList.add("show");
       };
-      // v12.29.0：保存“已按 EXIF 转正”的原图 URL，云端升级/模型重裁时从它裁，避免手机竖拍旋转错位。
+      // v13.0.0：保存“已按 EXIF 转正”的原图 URL，云端升级/模型重裁时从它裁，避免手机竖拍旋转错位。
       loadPhotoWithExif(url, function(fu){ try{ if(kind!=="crop"&&fu) state.origURL=fu; }catch(e){} photoView.src=fu; }); // v4.3: EXIF 方向处理
       if(cmpOn){ setCmp(false); }
       baseLayer.style.display="none"; strengthRow.style.display="none"; state.strength=100;
@@ -2194,7 +2367,7 @@ var APP_VER="v12.29.0";
       clearAiData(); // v4.2: 切换示例图清空旧分析结果
       sampleStrip.querySelectorAll(".s-chip").forEach(function(c){ c.classList.toggle("active", c.dataset.id===s.id); });
       setPhotoSource(s.url,"sample",s.name);
-      // v12.29.0 P0：不再把 SAMPLES 里手写的旧 plan 塞进 state.plan。
+      // v13.0.0 P0：不再把 SAMPLES 里手写的旧 plan 塞进 state.plan。
       // 旧预设会和当前引擎分叉，用户在“分析中”的 1 秒里看到 B77/暗夜提亮/不裁切等过期结论，
       // 误以为算法没工作。示例现在和真实照片走同一条 analyzePixels→planFromAnalysis 链。
       state.sourceKind="sample";
@@ -3533,7 +3706,7 @@ var APP_VER="v12.29.0";
         var waterScore=(typeof a.waterScore==="number"&&isFinite(a.waterScore))?a.waterScore:0;
         var manmadeScore=(typeof a.manmadeScore==="number"&&isFinite(a.manmadeScore))?a.manmadeScore:0;
         var pf=_scenePrefix((sig&&typeof sig.scene==="string")?sig.scene:"", wb);
-        // G1-G5 硬闸门（安全底线不松；v12.29.0 对“暗但有层次”的场景放行轻度 night 滤镜）
+        // G1-G5 硬闸门（安全底线不松；v13.0.0 对“暗但有层次”的场景放行轻度 night 滤镜）
         if(sharpness<25) return GATE; // 糊片
         if(highClip>0.15) return GATE; // 高光断层
         if(highClip>0.12 && shadowClip>0.35) return GATE; // 逆光剪影：保留蓝橙过渡，不自动加色
@@ -4185,7 +4358,7 @@ var APP_VER="v12.29.0";
         return cands[0];
       }catch(e){ return null; }
     }
-    // v12.29.0：大侧裁 + 画幅不标准时的“暗部呼吸”平衡。
+    // v13.0.0：大侧裁 + 画幅不标准时的“暗部呼吸”平衡。
     // 研究结论：把整面暗墙/暗地面切到 0 会丢纵深；保留约 6-10% 暗侧留白、把多余量换到底部，
     // 既得到 4:5 社交画幅，又不让主体贴右/贴底。只作用于普通/街景/夜景竖图，且只在大侧裁(≥12%)时触发。
     function _balanceCrop(a, plan){
@@ -4244,7 +4417,7 @@ var APP_VER="v12.29.0";
         return cand;
       }catch(e){ return null; }
     }
-    // v12.29.0：像素/模型两个方案并存时，用同一套安全 + 画幅 + 三分 + 死区评分选更优者，
+    // v13.0.0：像素/模型两个方案并存时，用同一套安全 + 画幅 + 三分 + 死区评分选更优者，
     // 不再“模型说啥就覆盖啥”。返回 -1 表示不安全。
     function _cropQualityScore(a, crop, noCrop){
       try{
@@ -4303,7 +4476,7 @@ var APP_VER="v12.29.0";
         return 0.26*overlap + 0.19*fit + 0.16*standard + 0.17*cutScore + 0.12*areaScore + 0.06*centerBalance + 0.04*tightGain;
       }catch(e){ return -1; }
     }
-    // v12.29.0：当模型硬证据发现某个上下对称裁切会切到底部主体时，优先尝试把底部裁切量移到顶部
+    // v13.0.0：当模型硬证据发现某个上下对称裁切会切到底部主体时，优先尝试把底部裁切量移到顶部
     //（常见于建筑/街景：顶部是空天，底部是植物/椅子/车）。只接受通过物体/人物保护的候选。
     function _saferCropVariant(a, crop){
       try{
@@ -4323,6 +4496,96 @@ var APP_VER="v12.29.0";
         if(c[3]>0 && c[3]>4) tryCrop([c[0],c[1],c[2],Math.max(0,c[3]-4)]);
         return best;
       }catch(e){ return null; }
+    }
+    // v13.0.0：本地生成“同一张照片的多个安全构图候选”，供本地评分/云端 VLM 选优。
+    // 只做候选，不直接改图；所有候选必须通过 _cropQualityScore（人物/物体/主体/画幅/死区）。
+    function _candidateRatioTag(crop, ar){
+      try{
+        var L=crop[0]/100,T=crop[1]/100,R=crop[2]/100,B=crop[3]/100;
+        var real=ar*(1-L-R)/(1-T-B);
+        var ts=[{v:0.8,t:"4:5"},{v:1,t:"1:1"},{v:4/3,t:"4:3"},{v:16/9,t:"16:9"},{v:0.75,t:"3:4"},{v:2/3,t:"2:3"}];
+        var best=ts[0],bd=9;
+        for(var i=0;i<ts.length;i++){ var d=Math.abs(real-ts[i].v); if(d<bd){bd=d;best=ts[i];} }
+        return best.t;
+      }catch(e){ return "构图"; }
+    }
+    function _candidateAspectCrop(a, target){
+      try{
+        var ar=(typeof a.frameAspect==="number"&&isFinite(a.frameAspect))?a.frameAspect:1;
+        if(!(target>0.2&&target<5)||Math.abs(target-ar)<0.02) return null;
+        var cx=(typeof a.cx==="number"&&isFinite(a.cx))?a.cx:0.5;
+        var cy=(typeof a.cy==="number"&&isFinite(a.cy))?a.cy:0.5;
+        var vars=[];
+        if(target>ar){ // 更宽：裁高
+          var ch=1-ar/target;
+          if(ch<0.02||ch>0.30) return null;
+          var t0=Math.max(0,Math.min(ch,cy-0.5*(1-ch)));
+          var topRatio=(a.topBandHsv&&typeof a.topBandHsv.ratio==="number")?a.topBandHsv.ratio:0;
+          var protectTop=(topRatio>0.25 || (typeof a.blueWater==="number"&&a.blueWater>0.55));
+          vars=[t0, protectTop?0:ch, protectTop?ch:0, ch/2];
+        }else{ // 更窄：裁宽
+          var cw=1-target/ar;
+          if(cw<0.02||cw>0.30) return null;
+          var l0=Math.max(0,Math.min(cw,cx-0.5*(1-cw)));
+          vars=(typeof a.sym==="number"&&a.sym>0.42)?[cw/2]:[l0,0,cw];
+        }
+        var best=null,bs=-1;
+        for(var i=0;i<vars.length;i++){
+          var v=vars[i];
+          var c=(target>ar)?[0,Math.round(v*100),0,Math.round((ch-v)*100)]
+                           :[Math.round(v*100),0,Math.round((cw-v)*100),0];
+          var sum=c[0]+c[1]+c[2]+c[3];
+          if(sum<=3) continue;
+          var s=_cropQualityScore(a,c,false);
+          if(s>=0 && s>bs){ bs=s; best=c; }
+        }
+        return best;
+      }catch(e){ return null; }
+    }
+    function _buildCompositionCandidates(a, plan){
+      try{
+        if(!a||!plan) return [];
+        if(/portrait/.test(plan.sceneType||"")) return [];
+        var ar=(typeof a.frameAspect==="number"&&isFinite(a.frameAspect))?a.frameAspect:1;
+        var out=[], seen={};
+        function add(crop,noCrop,tag,reason,source,expected){
+          var c=noCrop?[0,0,0,0]:(crop||[0,0,0,0]).map(function(v){return Math.round(v);});
+          var sum=c[0]+c[1]+c[2]+c[3];
+          if(!noCrop && sum<=3) return;
+          if(!noCrop){
+            // v13.0.0：候选也必须过云端同款分级保护；本地已落地的 A 保持原值，避免 1% 级抖动。
+            if(source!=="local") c=_cloudCropGuard(c,a,plan.sceneType||"general");
+            sum=c[0]+c[1]+c[2]+c[3];
+            if(sum<=3) return;
+            if(_cropQualityScore(a,c,false)<0) return;
+            // 候选被分级保护改动后，若已偏离目标画幅 >2%，宁可不展示，避免“标着 1:1 实际不是”。
+            if(expected){
+              var _r=ar*(1-c[0]/100-c[2]/100)/(1-c[1]/100-c[3]/100);
+              if(Math.abs(_r-expected)/expected>0.02) return;
+            }
+            if(source==="aspect") tag=_candidateRatioTag(c,ar);
+          }
+          var k=noCrop?"N":c.join(",");
+          if(seen[k]) return;
+          seen[k]=1;
+          out.push({crop:c,noCrop:!!noCrop,tag:tag,reason:reason,source:source,
+            score:noCrop?_cropQualityScore(a,[0,0,0,0],true):_cropQualityScore(a,c,false)});
+        }
+        // A：当前本地主动构图（如果本来就是原图，则跳过，让 A/B/C 都是真实裁切候选）
+        if(!plan.noCrop) add(plan.crop,false,_candidateRatioTag(plan.crop,ar),"本地主动构图","local");
+        // B/C：两个不同社交画幅
+        var targets=(ar<0.70)?[0.75,0.8,1]:(ar<0.95?[1,2/3,0.8]:(ar<1.45?[4/3,1,16/9]:[16/9,4/3,1]));
+        for(var i=0;i<targets.length && out.length<3;i++){
+          var c=_candidateAspectCrop(a,targets[i]);
+          if(c) add(c,false,_candidateRatioTag(c,ar),"AI 构图候选 · "+_candidateRatioTag(c,ar),"aspect",targets[i]);
+        }
+        // D：原图。必须已有 3 个真实裁切候选，联系表才固定为 A/B/C + 原图，避免字母含义漂移。
+        if(out.length<3) return [];
+        add([0,0,0,0],true,"原图","保留完整画面","original");
+        out=out.slice(0,4);
+        for(var j=0;j<out.length;j++) out[j].id=String.fromCharCode(65+j);
+        return out;
+      }catch(e){ return []; }
     }
     // v12.13.0 三分法贴合度：主体质心距最近三分交点的距离 → 0-1（1=完美落在交点）
     function _thirdsFitScore(cx, cy){
@@ -5615,7 +5878,7 @@ var APP_VER="v12.29.0";
           }
         }
       }catch(e){}
-      // v12.29.0：大侧裁竖图（如地下通道右侧整面暗墙）改为 4:5 + 保留 6-10% 暗侧呼吸。
+      // v13.0.0：大侧裁竖图（如地下通道右侧整面暗墙）改为 4:5 + 保留 6-10% 暗侧呼吸。
       try{
         if(!plan.noCrop){
           var _bc=_balanceCrop(a,plan);
@@ -5626,7 +5889,7 @@ var APP_VER="v12.29.0";
           }
         }
       }catch(e){}
-      // v12.29.0 用户口径硬保护：人像/人头特写不自动裁切（保持原图与完整人物）。
+      // v13.0.0 用户口径硬保护：人像/人头特写不自动裁切（保持原图与完整人物）。
       // 这条放在所有构图/景别化裁切之后，防止模型精修把像素阶段的人像保护覆盖掉。
       try{
         if(/portrait/.test(plan.sceneType||"")){
@@ -5862,9 +6125,20 @@ var APP_VER="v12.29.0";
       }
       runAnalysis(el);
     });
+    function _captureFrameURL(el){
+      try{
+        var w=el&&(el.videoWidth||el.naturalWidth), h=el&&(el.videoHeight||el.naturalHeight);
+        if(!w||!h) return "";
+        var c=document.createElement("canvas"); c.width=w; c.height=h;
+        c.getContext("2d").drawImage(el,0,0,w,h);
+        return c.toDataURL("image/jpeg",0.9);
+      }catch(e){ return ""; }
+    }
     function runAnalysis(el){
       state.analyzing=true;
       state.analyzeToken++;
+      // v13.0.0：点击分析先同步清空上一张的 plan/候选/云端缓存，避免旧结果在 700ms 过渡期被读到或误显示。
+      state.plan=null; state.analyzed=false; state._pendingCloudPlan=null; state._compositionCandidates=[]; state._selectedCandidate=null; state._cloudPickReason=null; state._cloudPickId=null;
       var token=state.analyzeToken;
       btnAnalyze.disabled=true;
       stage.classList.add("scanning");
@@ -5898,6 +6172,16 @@ var APP_VER="v12.29.0";
           state._frecRec=null;
           state._pixelFirstApplied=false;
           state._pendingCloudPlan=null;
+          state._cloudFinished=false;
+          // v13.0.0：先把云端状态说清楚——开关开了但没口令/熔断/失败，绝不静默装作走了云端。
+          var _cloudOnLS=false; try{ _cloudOnLS=localStorage.getItem("aiComposeCloudOn")==="1"; }catch(e){}
+          if(_cloudOnLS && !_cloudReady()){
+            _setCloudStatus("notready","云端已开启，但还没填访问口令","本次先用本地构图；到「帮助 → 云端分析引擎」填写口令后即可走云端。");
+          }else if(_cloudReady()){
+            _setCloudStatus("analyzing","云端 AI 正在看画面…","先给本地构图，云端返回后会自动比较最美区域与候选构图。",Date.now());
+          }else{
+            _setCloudStatus("off");
+          }
           // v4.1: 示例图AI分析强制走真实算法（预设仅用于加载时的初始引导文案）
           // v4.0.1问题：示例图直接返回手写预设plan，与真实算法分叉，用户感觉"演示比正式聪明"
           var dims=currentSrcDims(el);
@@ -5910,19 +6194,36 @@ var APP_VER="v12.29.0";
           }
           state.plan=plan;
           state.analyzed=true;
-          // v12.29.0 P0：像素结果立即落地，云端/模型只做后台增强，不再让用户等 16-20 秒才看到裁切。
+          // v13.0.0：生成同一张照片的安全构图候选；本地立即可切换，云端AI会在候选里选最优。
+          try{
+            state._compositionCandidates=_buildCompositionCandidates(a,plan);
+            state._selectedCandidate=null;
+            for(var _ci=0;_ci<state._compositionCandidates.length;_ci++){
+              var _cc=state._compositionCandidates[_ci];
+              if(!!_cc.noCrop===!!plan.noCrop && JSON.stringify(_cc.crop||[0,0,0,0])===JSON.stringify(plan.crop||[0,0,0,0])){ state._selectedCandidate=_cc.id; break; }
+            }
+            state._cloudPickReason=null; state._cloudPickId=null;
+          }catch(e){ state._compositionCandidates=[]; }
+          // v13.0.0 P0：像素结果立即落地，云端/模型只做后台增强，不再让用户等 16-20 秒才看到裁切。
           state.analyzing=false;
           stage.classList.remove("scanning");
           btnAnalyze.disabled=false;
           drawGuides(plan);
           setStatus(_cloudReady()?"本地构图已生成，正在自动优化 · 云端后台增强中…":"已生成构图方案，正在自动优化…","");
           presentAnalysis(plan);
+          if(_cloudOnLS){
+            try{ aiRuleTag.textContent=_cloudReady()?"📷 本地预览 · ☁️ 云端AI分析中…":"📷 本地 · ☁️ 云端未就绪"; }catch(e){}
+          }
           // v1.3.0: 异步真 AI 视觉识别（加载失败自动静默，不影响基础分析）
           // v1.3.0: 异步真 AI 视觉识别（加载失败自动静默，不影响基础分析）
           // v4.1: 自动应用重构——等模型检测回调完成后用最终plan应用（修复：自动应用提前触发
           // invalidateAnalysis→token++，导致模型回调plan2被拦截，猫/风景误判人像保留在面板）
           var _scores=scorePhoto(el, a);
-          if(_scores) showScorePanel(_scores);
+          if(_scores){
+            // 云端在跑时先别让评分浮层遮住“云端分析中”状态；延迟到云端回来后再弹。
+            if(_cloudOnLS) setTimeout(function(){ try{ showScorePanel(_scores); }catch(e){} }, _cloudReady()?15000:4000);
+            else showScorePanel(_scores);
+          }
           var _autoApplied=false;
           function autoApplyPlan(finalPlan){
             if(_autoApplied) return;
@@ -5981,14 +6282,18 @@ var APP_VER="v12.29.0";
               setStatus("自动应用失败，请手动点一键成品", "err");
             }
           }
-          // v12.29.0 P0：像素方案先落地，再启动云端/本地模型增强。applyPlanCrop 会更换图片源并递增
+          // v13.0.0：相机分析先固化当前帧，避免云端拿到上一张相册照片或空 URL。
+          var _isCamFrame=(state.mode==="camera" && el===videoCam);
+          var _camFrameURL=_isCamFrame?_captureFrameURL(videoCam):"";
+          if(_camFrameURL){ state.origURL=_camFrameURL; state._origImgEl=null; state._origImgSrc=null; }
+          // v13.0.0 P0：像素方案先落地，再启动云端/本地模型增强。applyPlanCrop 会更换图片源并递增
           // analyzeToken（防串台），所以必须在应用之后重新取一次 token 再发起后台分析。
           autoApplyPlan(plan);
           var _tokenAfterApply=state.analyzeToken;
-          var _origEnhanceURL=state.origURL||el.currentSrc||el.src;
+          var _origEnhanceURL=_isCamFrame?(_camFrameURL||""):(state.origURL||el.currentSrc||el.src);
           try{ state._softSig=JSON.stringify({c:state.plan&&state.plan.crop,src:state.sourceName}); }catch(e){}
           var _cloudActiveNow=_cloudReady();
-          // v12.29.0：像素结果已经落地，才允许模型后台下载；弱网/省流量不自动抢带宽。
+          // v13.0.0：像素结果已经落地，才允许模型后台下载；弱网/省流量不自动抢带宽。
           try{
             var _conn=navigator.connection||{};
             var _slowNet=/^(slow-2g|2g|3g)$/.test(_conn.effectiveType||"");
@@ -5996,10 +6301,19 @@ var APP_VER="v12.29.0";
               setTimeout(function(){ _modelQPush(function(){ return tryLoadModel(false); }); }, 1200);
             }
           }catch(e){}
+          if(!_origEnhanceURL){
+            state._cloudFinished=true;
+            if(_cloudActiveNow) _setCloudStatus("failed","相机画面读取失败","已保留本地构图；请重试或换一张照片");
+          }else{
           runAIDetection(function(finalPlan){
             if(_tokenAfterApply!==state.analyzeToken){ return; }
-            // 云端结果只给「一键应用」卡，不自动改已经落地的像素构图；本地模型只补主体识别信息。
-            if(finalPlan && finalPlan.cloud){
+            state._cloudFinished=true;
+            // v13.0.0：云端候选选优自动落地；旧语义云端仍给建议卡；本地模型只补安全/信息。
+            if(finalPlan && finalPlan.cloudPick){
+              try{ _handleCloudPick(finalPlan); }catch(e){}
+            } else if(finalPlan && finalPlan.cloud){
+              state._pendingCloudPlan=finalPlan;
+              _setCloudStatus("picked","云端构图建议已返回","查看结果卡，可一键应用云端方案");
               try{ _showCloudUpgradeCard(finalPlan); }catch(e){}
             } else if(finalPlan){
               try{ _refineAppliedPlan(finalPlan); }catch(e){}
@@ -6007,13 +6321,17 @@ var APP_VER="v12.29.0";
               try{ toastMsg("云端未返回，已保留本地构图；可稍后重新分析"); }catch(e){}
             }
           }, true, _origEnhanceURL);
+          }
           // 云端硬截止：60s 仍未回则中止，保留已落地的本地结果（不再弹"超时"大卡）
           setTimeout(function(){
             if(_tokenAfterApply!==state.analyzeToken) return;
+            if(state._cloudFinished) return;
             if(_cloudActiveNow){
               try{ if(state._cloudAbort){ state._cloudAbort.abort(); state._cloudAbort=null; } }catch(e){}
-              state._cloudKilled=true;
+              state._cloudKilled=true; state._cloudFinished=true;
               state.analyzing=false; stage.classList.remove("scanning"); btnAnalyze.disabled=false;
+              _setCloudStatus("failed","云端超过 60 秒未返回","已保留本地构图；点「重试云端」可再试");
+              try{ aiRuleTag.textContent="📷 本地 · ☁️ 云端超时"; }catch(e){}
               try{ toastMsg("云端未在 60 秒内返回，已保留本地结果"); }catch(e){}
             }
           }, 60000);
@@ -6024,11 +6342,22 @@ var APP_VER="v12.29.0";
           btnAnalyze.disabled=false;
           setStatus("AI 分析遇到问题，请重试", "err");
         }
-      }, 700); // v12.29.0: 像素分析 <100ms，保留 0.7s 扫描过渡即可；不再固定等 1.2s
+      }, 700); // v13.0.0: 像素分析 <100ms，保留 0.7s 扫描过渡即可；不再固定等 1.2s
     }
     function drawAiPreview(plan){
       // 生成构图示意：当前画面 + 对角引导线 + 裁切框（高分辨率+粗线，保证清晰）
       var el=photoView||currentEl();
+      // v13.0.0：已裁切后，photoView 是裁后图，而 plan.crop 是相对原图的百分比；
+      // 必须用原图渲染预览，否则会出现黑屏/双重裁切/框线错位。
+      if(state.sourceKind==="crop" && state.origURL){
+        if(!state._origImgEl || state._origImgSrc!==state.origURL){
+          var _oi=new Image();
+          _oi.onload=function(){ state._origImgEl=_oi; state._origImgSrc=state.origURL; try{ drawAiPreview(plan); }catch(e){} };
+          _oi.src=state.origURL;
+          return;
+        }
+        el=state._origImgEl;
+      }
       if(!el){ aiPreview.style.display="none"; return; }
       try{
         var vw=el.videoWidth||el.naturalWidth, vh=el.videoHeight||el.naturalHeight;
@@ -6147,7 +6476,8 @@ var APP_VER="v12.29.0";
       // v4.2: 清空后重建模型/检测状态卡（presentAnalysis 重渲染会把模型卡一起清掉，用户看不到模型加载状态）
       try{
         // v4.7.0: 云端 VLM 结果不插入本地模型状态卡/本地检测卡（云端模式跳过本地模型，避免"下载中/本地真AI模型"误导）
-        if(!plan.cloud && typeof aiModelState!=="undefined"){
+        var _cloudOnLS2=false; try{ _cloudOnLS2=localStorage.getItem("aiComposeCloudOn")==="1"; }catch(e){}
+        if(!plan.cloud && !_cloudOnLS2 && typeof aiModelState!=="undefined"){
           if(localModelReady()){
             // 已就绪时由下方“主体识别/未检出主体”卡承载，避免同一信息出现两张卡。
           }else{
@@ -6391,10 +6721,9 @@ var APP_VER="v12.29.0";
       try{
         if(!plan.noCrop && plan.crop && (plan.crop[0]+plan.crop[1]+plan.crop[2]+plan.crop[3])>0){
           if(!plan._cropBase) plan._cropBase=plan.crop.slice();
-          // v7.9 #33: 记住上次选的裁切松紧，下次默认沿用（个人偏好学习）
+          // v13.0.0：三档松紧只做“点击后从原图应用”，不再在每次渲染时改写 plan.crop——
+          // 否则面板百分比和屏幕上的裁后图会脱钩，下一次一键成品会在已裁图上二次裁切。
           var _prefMode="standard";
-          try{ var _pm=localStorage.getItem("aiCropModePref"); if(_pm==="loose"||_pm==="tight"||_pm==="standard") _prefMode=_pm; }catch(e){}
-          if(_prefMode!=="standard"){ plan.crop=_deriveCrop(plan._cropBase,_prefMode); }
           var _mstyle=function(m){ return m===_prefMode?_bn:_bo; };
           var _asp=SCENE_ASPECT[plan.sceneType]||SCENE_ASPECT.general;
           var _ad=state.aiData||{}, _sr=null;
@@ -6422,9 +6751,10 @@ var APP_VER="v12.29.0";
               btn.setAttribute("style",_bn);
               var _mm=btn.getAttribute("data-m");
               try{ localStorage.setItem("aiCropModePref",_mm); }catch(e){}
-              plan.crop=_deriveCrop(plan._cropBase,_mm);
-              state.plan=plan;
-              _showCropPreview(plan);
+              var _newCrop=_deriveCrop(plan._cropBase,_mm);
+              var np=Object.assign({},plan,{crop:_newCrop,noCrop:false,aiCandidateId:null});
+              _applyPlanFromOriginal(np,"裁切 "+_mm);
+              setStatus("已应用裁切方案："+(_mm==="loose"?"宽松·留环境":(_mm==="tight"?"紧凑·特写":"标准·推荐")),"done");
             });
           });
         }
@@ -6472,7 +6802,7 @@ var APP_VER="v12.29.0";
       }catch(e){}
     }
     // v1.3.2: 一键应用 = 完整成品（按 AI 推荐框直接裁切 + 滤镜 + 变焦）
-    // v12.29.0：从“原始图”重新裁切并落地一个外部方案（云端/模型精修）。
+    // v13.0.0：从“原始图”重新裁切并落地一个外部方案（云端/模型精修）。
     // 不用 setPhotoSource，避免 invalidateAnalysis 递增 analyzeToken 把仍在途的云端回调作废；
     // 也不在已经裁过的图上二次裁切（那会级联丢画质/裁切框错位）。
     function _applyPlanFromOriginal(p, label){
@@ -6514,7 +6844,7 @@ var APP_VER="v12.29.0";
             setStatus("已应用"+(label||"云端")+"建议：保留原图 · "+_rn,"done");
             toastMsg("已恢复原图，保留完整画面");
           }else{
-            setStatus("已应用"+(label||"云端")+"构图 · "+_rn+" · "+p.conf+"%","done");
+            setStatus("已应用"+(label||"云端")+" · "+_rn+" · "+p.conf+"%","done");
             toastMsg("已应用"+(label||"云端")+"构图，可撤销");
           }
           try{ state._softSig=JSON.stringify({c:state.plan&&state.plan.crop,src:state.sourceName}); }catch(e){}
@@ -6539,6 +6869,38 @@ var APP_VER="v12.29.0";
       img.src=orig;
       return true;
     }
+    // v13.0.0：云端在 A/B/C/原图 中选中后的落地逻辑。用户未手动调整时自动应用，让“云端AI”真正可见。
+    function _handleCloudPick(p){
+      try{
+        if(!p) return;
+        state._pendingCloudPlan=p;
+        try{ if(!p.noCrop && p.crop) p.crop=_cloudCropGuard(p.crop,state.aiData,p.sceneType||p.scene||"general"); }catch(e){}
+        var _curPortrait=!!(state.plan && /portrait/.test(String(state.plan.sceneType||"")));
+        if(_curPortrait || /portrait/.test(String(p.sceneType||p.scene||"")) || !p.crop || (p.crop[0]+p.crop[1]+p.crop[2]+p.crop[3])<=5){ p.crop=[0,0,0,0]; p.noCrop=true; p.aiCandidateTag="原图"; }
+        var cur=state.plan||{};
+        var tag=p.aiCandidateTag||(_candidateRatioTag(p.crop, (state.aiData&&state.aiData.frameAspect)||1));
+        var same=(!!cur.noCrop===!!p.noCrop)&&JSON.stringify(cur.crop||[0,0,0,0])===JSON.stringify(p.crop||[0,0,0,0]);
+        state._cloudPickReason=p.aiReason||"";
+        state._cloudPickId=p.aiPick||"";
+        if(same){
+          state.plan=p; state.analyzed=true; state._selectedCandidate=p.aiPick;
+          try{ presentAnalysis(p); }catch(e){}
+          _setCloudStatus("confirmed","云端AI确认 "+p.aiPick+" · "+tag, p.aiReason||"云端AI也认为这是最佳构图");
+          setStatus("☁️ 云端AI确认当前构图 · "+tag,"done");
+          return;
+        }
+        var sig=""; try{ sig=JSON.stringify({c:cur.crop,src:state.sourceName}); }catch(e){}
+        if(!state._softSig || sig===state._softSig){
+          state._selectedCandidate=p.aiPick;
+          _applyPlanFromOriginal(p,"云端AI");
+          _setCloudStatus("picked","云端AI选中 "+p.aiPick+" · "+tag, p.aiReason||"");
+          toastMsg("云端AI选中 "+p.aiPick+"（"+tag+"），已自动应用；可撤销");
+          return;
+        }
+        _showCloudUpgradeCard(p);
+        _setCloudStatus("picked","云端AI建议 "+p.aiPick+" · "+tag, "检测到手动调整，点结果卡可应用");
+      }catch(e){}
+    }
     // 云端建议卡：不自动覆盖已落地的像素构图，给用户一键升级（避免图片闪动/二次裁切）
     function _showCloudUpgradeCard(p){
       try{
@@ -6553,7 +6915,7 @@ var APP_VER="v12.29.0";
           }
         }catch(e){}
         var cur=state.plan||{};
-        // v12.29.0：云端确认是人像时，本地误裁的普通场景要自动恢复原图（用户口径：人像/特写不裁）。
+        // v13.0.0：云端确认是人像时，本地误裁的普通场景要自动恢复原图（用户口径：人像/特写不裁）。
         try{
           var _cloudPortrait=/portrait|人像|人物/i.test(String(p.sceneType||p.scene||""));
           var _curSum=(cur.crop&&!cur.noCrop)?(cur.crop[0]+cur.crop[1]+cur.crop[2]+cur.crop[3]):0;
@@ -6575,7 +6937,7 @@ var APP_VER="v12.29.0";
           toastMsg("云端建议与本地一致，无需重复裁切");
           return;
         }
-        // v12.29.0：云端只在“更优或更安全”时打扰用户；若云端只会撤销本地更紧凑的构图，则静默保留本地。
+        // v13.0.0：云端只在“更优或更安全”时打扰用户；若云端只会撤销本地更紧凑的构图，则静默保留本地。
         try{
           var _aCmp=state.aiData||{};
           var _curS=_cropQualityScore(_aCmp,cur.crop,cur.noCrop);
@@ -6659,7 +7021,7 @@ var APP_VER="v12.29.0";
           }
         }
         // 模型硬证据可能把场景从 general 纠正为 food/animal/portrait，或发现裁线切到主体。
-        // v12.29.0：像素结果先落地；模型回来后若用户没手动改，就基于原图重裁一次，保留 v12.28 的识别质量。
+        // v13.0.0：像素结果先落地；模型回来后若用户没手动改，就基于原图重裁一次，保留 v12.28 的识别质量。
         var sig=""; try{ sig=JSON.stringify({c:state.plan&&state.plan.crop,src:state.sourceName}); }catch(e){}
         var untouched=(!state._softSig)||(sig===state._softSig);
         var cropChanged=JSON.stringify(p.crop||[0,0,0,0])!==JSON.stringify(np.crop||[0,0,0,0]) || !!p.noCrop!==!!np.noCrop;
@@ -6789,6 +7151,8 @@ var APP_VER="v12.29.0";
       state.aiData=null;
       state.plan=null;
       state.analyzed=false;
+      state._compositionCandidates=[]; state._selectedCandidate=null;
+      try{ _clearCloudStatusTimer(); state._cloudStatus=null; state._pendingCloudPlan=null; var _csc=document.getElementById("cloudStatusCard"); if(_csc&&_csc.parentNode)_csc.parentNode.removeChild(_csc); }catch(e){}
       // v9.0.0 换图即重置滤镜推荐（每图最多弹一次，残留横幅必须收起）
       state._frecShown=false; state._frecRec=null; try{ _hideFrec(); }catch(e){}
     }
@@ -7712,7 +8076,7 @@ var AI_MODEL_URL_FALLBACK="model/model.json";
               function(){ _modelQBusy=false; _modelQPump(); });
     }
     var FACE_DET_URL="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js";
-    // v12.29.0：人脸/姿态模型改成用户主动开启（默认关）——不再首屏 5/6 秒后自动下载 18MB，
+    // v13.0.0：人脸/姿态模型改成用户主动开启（默认关）——不再首屏 5/6 秒后自动下载 18MB，
     // 手机上会和 YOLO/ORT 抢带宽，造成“模型永远在下载”。构图默认走像素引擎，人像细节按需增强。
     var faceModelState="idle", faceModel=null, faceEnabled=(function(){ try{ return localStorage.getItem("faceEnabled")==="true"; }catch(e){ return false; } })();
     var faceBadge=null;  // mpBadge 已在前面初始化，不要覆盖
@@ -8370,15 +8734,46 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       // v4.7.0 云端分支：开启云端且已填口令时走云端 VLM（经 SCF 代理，跳过本地模型预加载）；
       // 云端失败/超时/解析失败时自动回退本地模型精判（而非仅用粗糙像素初判），保证"本地效果不变差"
       if(_cloudReady()){
-        runCloudAnalysis(elSnap, function(cloudPlan){
-          if(token!==state.analyzeToken){ return; } // 期间已换图/重分析，丢弃本次回调
-          if(cloudPlan){ if(onDone) onDone(cloudPlan); }
-          else {
-            // v4.8.2: 云端超时/失败回退本地时必须明确提示（4 家 AI 报告共识：静默回退是"感觉没跑云端"主因）
-            showCloudFallback();
-            runLocalAIDetection(elSnap, token, onDone, background);
+        var _startCloud=function(){
+          // v13.0.0：有多个安全构图候选时，让云端直接“看图选最美”（A/B/C/原图）；否则退回语义意图分析。
+          var _cands=state._compositionCandidates||[];
+          if(_cands.length>=3){
+            _setCloudStatus("analyzing","云端AI正在比较构图候选…","正在看 A/B/C/原图 哪个最美、最自然",Date.now());
+            _runCloudCandidatePick(elSnap,_cands,function(cloudPlan){
+              if(token!==state.analyzeToken){ return; }
+              if(cloudPlan){ if(onDone) onDone(cloudPlan); }
+              else { showCloudFallback(); runLocalAIDetection(elSnap, token, onDone, background); }
+            });
+            return;
           }
-        });
+          runCloudAnalysis(elSnap, function(cloudPlan){
+            if(token!==state.analyzeToken){ return; }
+            if(cloudPlan){ if(onDone) onDone(cloudPlan); }
+            else {
+              showCloudFallback();
+              runLocalAIDetection(elSnap, token, onDone, background);
+            }
+          });
+        };
+        // v13.0.0：云端模式如果本地模型已加载，先用它补人物/物体证据（不下载、不阻塞本地结果），
+        // 防止“像素把真实人像误判成普通场景，云端又误判成 general → 把人裁了”。
+        if(state.aiModelEnabled && localModelReady()){
+          runLocalAIDetection(elSnap, token, function(np){
+            if(token!==state.analyzeToken) return;
+            try{ if(np) _refineAppliedPlan(np); }catch(e){}
+            try{
+              state._compositionCandidates=_buildCompositionCandidates(state.aiData,state.plan);
+              state._selectedCandidate=null;
+              for(var _ci2=0;_ci2<state._compositionCandidates.length;_ci2++){
+                var _cc2=state._compositionCandidates[_ci2];
+                if(!!_cc2.noCrop===!!state.plan.noCrop && JSON.stringify(_cc2.crop||[0,0,0,0])===JSON.stringify(state.plan.crop||[0,0,0,0])){ state._selectedCandidate=_cc2.id; break; }
+              }
+            }catch(e){}
+            _startCloud();
+          }, true);
+        }else{
+          _startCloud();
+        }
         return;
       }
       runLocalAIDetection(elSnap, token, onDone, background);
@@ -8415,7 +8810,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
     function runLocalAIDetection(elSnap, token, onDone, background){
       // 模型状态卡由 presentAnalysis 统一渲染，这里不再插卡，避免「像素构图已生效」出现两次。
       if(!state.aiModelEnabled){ if(onDone) onDone(null); return; }
-      // v12.29.0 P0：模型未就绪时绝不在这里触发下载/等待——像素构图已经应用，模型只做可选精修。
+      // v13.0.0 P0：模型未就绪时绝不在这里触发下载/等待——像素构图已经应用，模型只做可选精修。
       // 旧版会 await loadYolo（11MB + 22MB WASM），弱网下整次分析被拖到 20s 兜底，用户看到的就是“不裁”。
       if(!localModelReady()){ if(onDone) onDone(null); return; }
       // v8.3.0: YOLO11n 优先（onnxruntime-web，WebGPU 优先 / WASM 兜底），失败自动回退 coco-ssd
@@ -8502,7 +8897,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
               var newPlan=planFromAnalysis(a2);
               if(newPlan){
                 if(background){
-                  // v12.29.0：像素构图已应用；模型结果只回传给 _refineAppliedPlan 做安全补丁/信息补全，
+                  // v13.0.0：像素构图已应用；模型结果只回传给 _refineAppliedPlan 做安全补丁/信息补全，
                   // 绝不再 presentAnalysis 覆盖面板里已经落地的裁切方案（否则面板和图片会不一致）。
                   if(onDone) onDone(newPlan);
                 } else {
@@ -8637,7 +9032,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       });
     }
       updateModelUI();
-      // v12.29.0：此处不再自动下载模型（旧版会在 800ms 后拉 11MB+22MB，弱网手机首屏即被占满）。
+      // v13.0.0：此处不再自动下载模型（旧版会在 800ms 后拉 11MB+22MB，弱网手机首屏即被占满）。
       // 分析结果卡里的「真AI精修」按钮会按需加载。
     }
 
@@ -8650,8 +9045,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       if(cloudMode){ cloudMode.value=state.cloud.mode||"shared"; }
       if(cloudSharedRow){ cloudSharedRow.style.display=byok?"none":""; }
       if(cloudByokRow){ cloudByokRow.style.display=byok?"":"none"; }
-      if(cloudBase){ cloudBase.value=state.cloud.base||"https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com"; }
-      if(cloudKey){ cloudKey.value=state.cloud.key||""; }
+      if(cloudBase && document.activeElement!==cloudBase){ cloudBase.value=state.cloud.base||"https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com"; }
+      if(cloudKey && document.activeElement!==cloudKey){ cloudKey.value=state.cloud.key||""; }
       // 厂商下拉填充 + 选中
       if(cloudVendor){
         var _prev=cloudVendor.value||state.cloud.byokVendor;
@@ -8659,13 +9054,13 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         for(var _i=0;_i<BYOK_VENDORS.length;_i++){
           var _o=document.createElement("option");
           _o.value=BYOK_VENDORS[_i].id;
-          _o.textContent=BYOK_VENDORS[_i].name+"（"+BYOK_VENDORS[_i].note+"）";
+          _o.textContent=BYOK_VENDORS[_i].name+" · "+BYOK_VENDORS[_i].note;
           cloudVendor.appendChild(_o);
         }
         var _vd=_byokVendor(_prev);
         cloudVendor.value=_vd.id;
-        if(cloudByokKey){ cloudByokKey.value=state.cloud.byokKey||""; }
-        if(cloudByokModel){ cloudByokModel.value=state.cloud.byokModel||_vd.model; }
+        if(cloudByokKey && document.activeElement!==cloudByokKey){ cloudByokKey.value=state.cloud.byokKey||""; }
+        _populateByokModelPresets(_vd.id, state.cloud.byokModel||_vd.model);
       }
       if(cloudBadge){
         // v11.16.0: badge 权威来源也是 localStorage，防止内存状态与 UI 不同步
@@ -8693,6 +9088,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       }); }
       if(cloudOn) cloudOn.addEventListener("change",function(){
         state.cloud.on=cloudOn.checked;
+        // v13.0.0：开关切换前先把当前输入落盘，避免“刚粘贴的口令被回填清空”。
+        try{ if(state.cloud.mode==="byok") _saveByokInputs(); else _saveCloudInputs(); }catch(e){}
         try{ localStorage.setItem("aiComposeCloudOn", state.cloud.on?"1":"0"); }catch(e){}
         updateCloudUI();
         // v11.16.0: 关闭云端时清空所有云端缓存结果，避免旧缓存显示"云端"标记
@@ -8720,27 +9117,28 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             if(typeof setStatus==="function") setStatus("已切换回本地分析引擎","idle");
           }catch(epr){}
         }
-        // v12.29.0：切回本地不再自动下载模型——分析结果卡可按需开启「真AI精修」。
-        toastMsg(state.cloud.on?"已启用云端分析引擎（"+state.cloud.model+"）":"已切换回本地分析引擎");
+        // v13.0.0：切回本地不再自动下载模型——分析结果卡可按需开启「真AI精修」。
+        if(state.cloud.on){
+          var _miss=state.cloud.mode==="byok"?!state.cloud.byokKey:!state.cloud.key;
+          toastMsg(_miss?"云端已开启，但还没填"+(state.cloud.mode==="byok"?"API Key":"访问口令")+"；当前仍用本地，点结果卡「去填口令」":"已启用云端分析引擎（"+(state.cloud.mode==="byok"?state.cloud.byokModel:state.cloud.model)+"）");
+        }else{
+          toastMsg("已切换回本地分析引擎");
+        }
       });
-      // v8.0.5 B-03: 代理地址/口令改为 input 实时防抖保存（原仅 change=失焦才存，填完直接点分析存在未保存窗口）
-      var _cloudSaveTimer=null;
+      // v13.0.0：输入即写 state（localStorage 同步写），不再 250ms 后才读 DOM——
+      // 修复“粘贴口令后立刻点开关/分析，口令被回填清空，云端永远不发出”的 P0。
       function _saveCloudInputs(){
-        clearTimeout(_cloudSaveTimer);
-        _cloudSaveTimer=setTimeout(function(){
-          var v=(cloudBase.value||"").trim();
-          // v4.7.0: 拦截 cephalon.cloud 官方直连地址（浏览器带 Origin 必被 403），自动纠正为安全代理
-          if(/cephalon\.cloud/i.test(v)){
-            v="https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com";
-            cloudBase.value=v;
-            toastMsg("Cephalon 官方地址无法在浏览器直连（会被拦截），已改回安全代理地址");
-          }
-          state.cloud.base=v||"https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com";
-          state.cloud.key=(cloudKey.value||"").trim();
-          try{ localStorage.setItem("aiComposeCloudBase", state.cloud.base); }catch(e){}
-          try{ localStorage.setItem("aiComposeCloudKey", state.cloud.key); }catch(e){}
-          updateCloudUI();
-        },250);
+        var v=(cloudBase.value||"").trim();
+        if(/cephalon\.cloud/i.test(v)){
+          v="https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com";
+          cloudBase.value=v;
+          try{ toastMsg("Cephalon 官方地址无法在浏览器直连（会被拦截），已改回安全代理地址"); }catch(e){}
+        }
+        state.cloud.base=v||"https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com";
+        state.cloud.key=(cloudKey.value||"").trim();
+        try{ localStorage.setItem("aiComposeCloudBase", state.cloud.base); }catch(e){}
+        try{ localStorage.setItem("aiComposeCloudKey", state.cloud.key); }catch(e){}
+        _cloudUIApplyMode();
       }
       if(cloudBase){ cloudBase.addEventListener("input",_saveCloudInputs); cloudBase.addEventListener("change",_saveCloudInputs); }
       if(cloudKey){ cloudKey.addEventListener("input",_saveCloudInputs); cloudKey.addEventListener("change",_saveCloudInputs); }
@@ -8751,32 +9149,335 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         _cloudUIApplyMode();
         toastMsg(state.cloud.mode==="byok"?"已切换到自带 API Key 模式（直连，用自己的额度）":"已切换到共享口令模式（作者代理）");
       }); }
-      var _byokTimer=null;
       function _saveByokInputs(){
-        clearTimeout(_byokTimer);
-        _byokTimer=setTimeout(function(){
-          if(cloudVendor){
-            var _vd=_byokVendor(cloudVendor.value);
-            state.cloud.byokVendor=_vd.id;
-            // 换厂商时若模型还是旧厂商的默认值且用户没手动改过，则跟随新厂商默认
-            if(cloudByokModel){
-              var _cur=(cloudByokModel.value||"").trim();
-              var _isOldDefault=BYOK_VENDORS.some(function(v2){ return v2.id!==_vd.id && v2.model && _cur===v2.model; });
-              if(_cur==="" || _isOldDefault){ cloudByokModel.value=_vd.model; state.cloud.byokModel=_vd.model; }
-              else{ state.cloud.byokModel=_cur; }
-            }
+        if(cloudVendor){
+          var _vd=_byokVendor(cloudVendor.value);
+          state.cloud.byokVendor=_vd.id;
+          if(cloudByokModel){
+            var _cur=(cloudByokModel.value||"").trim();
+            var _rec=(_vd.models&&_vd.models[0]&&_vd.models[0].id)||_vd.model||"";
+            var _isOldDefault=BYOK_VENDORS.some(function(v2){
+              if(v2.id===_vd.id) return false;
+              if(v2.model&&_cur===v2.model) return true;
+              return (v2.models||[]).some(function(mm){ return mm.id===_cur; });
+            });
+            if(_cur==="" || _isOldDefault){ cloudByokModel.value=_rec; state.cloud.byokModel=_rec; }
+            else{ state.cloud.byokModel=_cur; }
+            _populateByokModelPresets(_vd.id,state.cloud.byokModel);
           }
-          if(cloudByokKey){ state.cloud.byokKey=(cloudByokKey.value||"").trim(); }
-          try{ localStorage.setItem("aiComposeByokVendor", state.cloud.byokVendor); }catch(e){}
-          try{ localStorage.setItem("aiComposeByokKey", state.cloud.byokKey); }catch(e){}
-          try{ localStorage.setItem("aiComposeByokModel", state.cloud.byokModel||""); }catch(e){}
-          updateCloudUI();
-        },250);
+        }
+        if(cloudByokKey){ state.cloud.byokKey=(cloudByokKey.value||"").trim(); }
+        try{ localStorage.setItem("aiComposeByokVendor", state.cloud.byokVendor); }catch(e){}
+        try{ localStorage.setItem("aiComposeByokKey", state.cloud.byokKey); }catch(e){}
+        try{ localStorage.setItem("aiComposeByokModel", state.cloud.byokModel||""); }catch(e){}
+        _cloudUIApplyMode();
       }
       if(cloudVendor){ cloudVendor.addEventListener("change",_saveByokInputs); }
       if(cloudByokKey){ cloudByokKey.addEventListener("input",_saveByokInputs); cloudByokKey.addEventListener("change",_saveByokInputs); }
       if(cloudByokModel){ cloudByokModel.addEventListener("input",_saveByokInputs); cloudByokModel.addEventListener("change",_saveByokInputs); }
-      _cloudUIApplyMode();
+      if(cloudByokModelPreset){ cloudByokModelPreset.addEventListener("change",function(){
+        var val=cloudByokModelPreset.value;
+        if(val==="__custom__"){
+          if(cloudByokCustomRow) cloudByokCustomRow.style.display="";
+          if(cloudByokModel){ cloudByokModel.focus(); cloudByokModel.select(); }
+          if(cloudByokModelHint) cloudByokModelHint.textContent="自定义模型：请确认支持图片输入（vision / image_url），否则云端无法看图。";
+          return;
+        }
+        if(cloudByokModel) cloudByokModel.value=val;
+        state.cloud.byokModel=val;
+        if(cloudByokCustomRow) cloudByokCustomRow.style.display="none";
+        _saveByokInputs();
+      }); }
+      if(cloudTestBtn){ cloudTestBtn.addEventListener("click",_testCloudConnection); }
+      // v13.0.0：启动时同步开关/复核 checkbox/口令回填，避免刷新后“实际开着但 UI 显示关”。
+      updateCloudUI();
+    }
+    // v13.0.0：云端状态条——用户必须一眼知道“这次到底走没走云端、为什么没走”。
+    function _openCloudSettings(){
+      try{
+        var hb=document.getElementById("btnHelp"); if(hb) hb.click();
+        setTimeout(function(){
+          var k=document.getElementById("cloudKey");
+          if(k){ try{ k.scrollIntoView({block:"center",behavior:"smooth"}); k.focus(); }catch(e){} }
+        }, 420);
+      }catch(e){}
+    }
+    function _clearCloudStatusTimer(){
+      if(state._cloudStatusTimer){ clearInterval(state._cloudStatusTimer); state._cloudStatusTimer=null; }
+    }
+    // v13.0.0：构图候选条——同一张照片的 A/B/C/原图，本地可切换，云端AI选中会高亮。
+    function _renderCompositionCandidatesCard(){
+      try{
+        var body=document.getElementById("aiBody"); if(!body) return;
+        var old=document.getElementById("compCandidatesCard");
+        var list=state._compositionCandidates||[];
+        if(list.length<2){ if(old&&old.parentNode) old.parentNode.removeChild(old); return; }
+        var cur=state.plan||{};
+        var selected=state._selectedCandidate;
+        if(!selected){
+          for(var i=0;i<list.length;i++){
+            if(!!list[i].noCrop===!!cur.noCrop && JSON.stringify(list[i].crop||[0,0,0,0])===JSON.stringify(cur.crop||[0,0,0,0])){ selected=list[i].id; break; }
+          }
+        }
+        if(!selected) selected=list[0].id;
+        var chips="";
+        for(var j=0;j<list.length;j++){
+          var c=list[j], on=(c.id===selected);
+          var sc=(typeof c.score==="number"&&c.score>=0)?Math.round(c.score*100):null;
+          chips+='<button data-cid="'+c.id+'" class="btn" style="flex:0 0 auto;min-width:70px;padding:7px 9px;font-size:11px;border-radius:10px;'
+            +(on?'border-color:#FFB454;background:rgba(255,180,84,.16);color:#FFD08A;':'')+'">'
+            +'<b style="font-size:12px;">'+c.id+'</b> · '+esc(c.tag||"")+(sc!==null?'<span style="display:block;font-size:9px;color:var(--sub);margin-top:2px;">'+sc+'分</span>':'')+'</button>';
+        }
+        var reason="点一下切换构图，原图随时可回";
+        if(state._cloudPickReason && selected===state._cloudPickId) reason="☁️ "+state._cloudPickReason;
+        else{ for(var q=0;q<list.length;q++){ if(list[q].id===selected){ reason=list[q].reason||reason; break; } } }
+        var html='<div style="display:flex;align-items:center;gap:6px;"><span style="font-size:13px;">✨</span><b style="font-size:12.5px;color:#FFB454;">AI 构图候选</b><span style="font-size:10px;color:var(--sub);">同一张照片的多种裁法</span></div>'
+          +'<div style="display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;-webkit-overflow-scrolling:touch;">'+chips+'</div>'
+          +'<div style="font-size:10.5px;color:var(--sub);line-height:1.5;">'+esc(reason)+'</div>';
+        if(!old){
+          old=document.createElement("div");
+          old.id="compCandidatesCard"; old.className="ai-suggest"; old.style.margin="10px";
+          var anchor=(aiPreview&&aiPreview.parentNode===body)?aiPreview.nextSibling:body.firstChild;
+          body.insertBefore(old,anchor);
+        }
+        old.innerHTML=html;
+        setTimeout(function(){ old.classList.add("show"); },50);
+        var bts=old.querySelectorAll("button[data-cid]");
+        for(var k=0;k<bts.length;k++){
+          bts[k].addEventListener("click",function(){
+            try{
+              var id=this.getAttribute("data-cid"), c=null;
+              for(var z=0;z<list.length;z++){ if(list[z].id===id){ c=list[z]; break; } }
+              if(!c) return;
+              var cp=state.plan||{};
+              if(!!c.noCrop===!!cp.noCrop && JSON.stringify(c.crop||[0,0,0,0])===JSON.stringify(cp.crop||[0,0,0,0])) return;
+              state._selectedCandidate=id;
+              var np=Object.assign({},cp,{crop:c.crop.slice(),noCrop:!!c.noCrop,aiCandidateId:id,proactiveApplied:false});
+              np.desc="AI 构图候选「"+id+" · "+c.tag+"」："+(c.reason||"")+"。可点「原图」或撤销换回。";
+              _applyPlanFromOriginal(np,"AI候选 "+id);
+              setStatus("已切换 AI 构图候选 "+id+" · "+c.tag,"done");
+              toastMsg("已切换构图 "+id+" · "+c.tag+"，可撤销");
+            }catch(e){}
+          });
+        }
+      }catch(e){}
+    }
+    // v13.0.0：把 A/B/C/原图 四个真实裁切候选画成 2×2 联系表，让云端 VLM 直接“看图选最美”。
+    function _buildCandidateSheet(el, cands){
+      try{
+        if(!el||!cands||cands.length<2) return null;
+        var iw=el.naturalWidth||el.videoWidth, ih=el.naturalHeight||el.videoHeight;
+        if(!iw||!ih) return null;
+        var CELL=448, W=896, H=896, PAD=12;
+        var c=document.createElement("canvas"); c.width=W; c.height=H;
+        var ctx=c.getContext("2d");
+        ctx.fillStyle="#0A0C0E"; ctx.fillRect(0,0,W,H);
+        var orig=null, alts=[];
+        for(var q=0;q<cands.length;q++){ if(cands[q].noCrop) orig=cands[q]; else alts.push(cands[q]); }
+        // 原图固定左上；A/B/C 按图片内容 hash 轮换位置，抵消“偏爱某个格子”的位置偏差。
+        var hseed=iw+ih;
+        for(var hj=0;hj<alts.length;hj++){ hseed+=alts[hj].crop[0]*7+alts[hj].crop[1]*11+alts[hj].crop[2]*13+alts[hj].crop[3]*17; }
+        var rot=alts.length? (hseed%alts.length):0;
+        var ordered=[];
+        if(orig) ordered.push(orig);
+        for(var rj=0;rj<alts.length;rj++) ordered.push(alts[(rj+rot)%alts.length]);
+        var colors=["#E8EDF2","#FFB454","#54C8F7","#67D97A"];
+        for(var i=0;i<ordered.length && i<4;i++){
+          var x=(i%2)*CELL, y=Math.floor(i/2)*CELL;
+          var cp=ordered[i].noCrop?[0,0,0,0]:(ordered[i].crop||[0,0,0,0]);
+          var sx=Math.round(cp[0]/100*iw), sy=Math.round(cp[1]/100*ih);
+          var sw=Math.max(4,Math.round((100-cp[0]-cp[2])/100*iw));
+          var sh=Math.max(4,Math.round((100-cp[1]-cp[3])/100*ih));
+          var availW=CELL-PAD*2, availH=CELL-PAD*2-28;
+          var sc=Math.min(availW/sw,availH/sh);
+          var dw=Math.max(1,Math.round(sw*sc)), dh=Math.max(1,Math.round(sh*sc));
+          var dx=x+Math.round((CELL-dw)/2), dy=y+PAD+Math.round((availH-dh)/2);
+          ctx.drawImage(el,sx,sy,sw,sh,dx,dy,dw,dh);
+          ctx.strokeStyle=colors[i]||"#fff"; ctx.lineWidth=4; ctx.strokeRect(x+2,y+2,CELL-4,CELL-4);
+          ctx.fillStyle="rgba(0,0,0,.78)"; ctx.fillRect(x+8,y+8,46,40);
+          ctx.fillStyle=colors[i]||"#fff"; ctx.font="bold 26px -apple-system,Arial,sans-serif"; ctx.textBaseline="middle";
+          ctx.fillText(ordered[i].noCrop?"原":ordered[i].id,x+17,y+29);
+          ctx.fillStyle="rgba(0,0,0,.82)"; ctx.fillRect(x+8,y+CELL-44,Math.min(CELL-16,240),34);
+          ctx.fillStyle="#E8EDF2"; ctx.font="13px -apple-system,Arial,sans-serif";
+          ctx.fillText((ordered[i].noCrop?"原图":ordered[i].id+" · "+(ordered[i].tag||"")),x+14,y+CELL-27);
+        }
+        return c.toDataURL("image/jpeg",0.82);
+      }catch(e){ return null; }
+    }
+    function _runCloudCandidatePick(el, cands, onDone){
+      try{
+        if(!el||!onDone||!cands||cands.length<2){ if(onDone) onDone(null); return; }
+        if(localStorage.getItem("aiComposeCloudOn")!=="1"){ if(onDone) onDone(null); return; }
+        if(state.cloudTripUntil && Date.now()<state.cloudTripUntil){ state._cloudFailReason="trip"; onDone(null); return; }
+        if(state.cloudBlindUntil && Date.now()<state.cloudBlindUntil){ state._cloudFailReason="blind"; onDone(null); return; }
+        // v13.0.0：每次新请求重置上一轮的中止/熔断残留，避免“一次手动中止后所有网络失败被静默吞掉”。
+        state._cloudKilled=false;
+        state._cloudFailReason="";
+        state.cloudTripUntil=0;
+        var byok=(state.cloud.mode==="byok");
+        var base=byok?_byokVendor(state.cloud.byokVendor).base:state.cloud.base;
+        var key=byok?state.cloud.byokKey:state.cloud.key;
+        var model=byok?(state.cloud.byokModel||_byokVendor(state.cloud.byokVendor).model):state.cloud.model;
+        if(!base||!key){ state._cloudFailReason="auth"; onDone(null); return; }
+        var sheet=_buildCandidateSheet(el,cands);
+        if(!sheet){ state._cloudFailReason="network"; onDone(null); return; }
+        var ids=cands.map(function(c){return c.id;});
+        var scoreSchema="{"; for(var si=0;si<ids.length;si++){ scoreSchema+='"'+ids[si]+'":0'+(si<ids.length-1?",":""); } scoreSchema+="}";
+        var sys=["你是专业摄影构图评审。图中是同一张照片的多个候选构图：左上角固定是原图，其余格是 A/B/C 裁切候选，每格左上角有字母或“原”。",
+          "给每个候选打 0-100 构图分，选出最高分。评分看：主体/人物是否完整、画面最美区域是否突出、负空间与平衡、是否切到杂物/人物、裁切是否自然。",
+          "如果候选是同类重复或都差不多，选最自然的一张；人像/特写优先原图；拿不准选原图。只输出严格 JSON。"
+        ].join("\n");
+        var user="左上角是原图，其余为 "+ids.join(" / ")+" 裁切候选。按此 JSON 输出：\n"
+          +'{"scene":"food/portrait/landscape/street/architecture/animal/waterscape/night/general","subject":"一句中文","highlight":"最美区域","scores":'+scoreSchema+',"best":"'+ids[0]+'","worst":"'+ids[0]+'","confidence":80,"hasPerson":false,"personCount":0,"cutsPerson":false,"reason":"为什么选它，一句中文","conf":80,"filter":"自然/暖阳/冷调/黑白/浓郁/清新/电影感/莫兰迪/港风","filterReason":"一句"}\n'
+          +"要求：scores 覆盖所有候选；best 必须最高分；worst 选最差；confidence 0-100；如果画面有人，hasPerson=true 并填 personCount；如果 best 候选会切到人物，cutsPerson=true；不要输出坐标。";
+        var body=Object.assign({model:model,messages:[
+          {role:"system",content:sys},
+          {role:"user",content:[{type:"text",text:user},{type:"image_url",image_url:{url:sheet}}]}
+        ],temperature:0.1,max_tokens:500}, _cloudThinkingParams(model));
+        if(state._cloudAbort){ try{ state._cloudAbort.abort(); }catch(e){} }
+        var ctrl=(typeof AbortController!=="undefined")?new AbortController():null;
+        state._cloudAbort=ctrl;
+        var token=state.analyzeToken, done=false;
+        function finish(p){ if(done) return; done=true; try{ if(state._cloudAbort===ctrl) state._cloudAbort=null; }catch(e){} if(onDone) onDone(p); }
+        function parse(txt){
+          var mm=String(txt||"").match(/\{[\s\S]*\}/); if(!mm) return null;
+          try{ return JSON.parse(mm[0]); }catch(e){ return null; }
+        }
+        function handle(res){
+          if(token!==state.analyzeToken){ finish(null); return; }
+          if(!res.ok){
+            var st=res.status||0;
+            state._cloudFailReason=(st===401||st===403)?"auth":((st===429||st>=500)?"busy":"network");
+            state.cloudFailCount=(state.cloudFailCount||0)+1;
+            if(state.cloudFailCount>=3){ state.cloudFailCount=0; state.cloudTripUntil=Date.now()+300000; }
+            finish(null); return;
+          }
+          res.json().then(function(j){
+            try{
+              var txt=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;
+              var obj=parse(txt);
+              if(!obj){ state._cloudFailReason="network"; finish(null); return; }
+              var scores={}, best=null, bestScore=-1;
+              for(var i=0;i<ids.length;i++){
+                var id=ids[i], v=(obj.scores&&obj.scores[id]!=null)?Number(obj.scores[id]):NaN;
+                if(isFinite(v)){ scores[id]=Math.max(0,Math.min(100,v)); if(scores[id]>bestScore){bestScore=scores[id];best=id;} }
+              }
+              var _cutsPerson=(obj.cutsPerson===true)||(obj.hasPerson===true && obj.cutsPerson===undefined && obj.personCount>0);
+              var want=String(obj.best||"").toUpperCase().replace(/[^A-D]/g,"");
+              var worst=String(obj.worst||"").toUpperCase().replace(/[^A-D]/g,"");
+              if(scores[want]!==undefined && scores[want]>=bestScore-4 && want!==worst) best=want;
+              if(!best && want) best=want;
+              if(!best) best=ids[0];
+              function candById(id){ for(var q=0;q<cands.length;q++){ if(cands[q].id===id) return cands[q]; } return null; }
+              var pick=candById(best);
+              // 安全复核：云端选的候选如果切到人物/物体，退回最高分仍安全的候选，最后退原图。
+              if(pick){
+                var a=state.aiData||{};
+                if(_cropQualityScore(a,pick.crop,pick.noCrop)<0){
+                  pick=null;
+                  var order=ids.slice().sort(function(x,y){return (scores[y]||0)-(scores[x]||0);});
+                  for(var oi=0;oi<order.length;oi++){ var cc=candById(order[oi]); if(cc && _cropQualityScore(a,cc.crop,cc.noCrop)>=0){ pick=cc; best=cc.id; break; } }
+                }
+              }
+              if(!pick){ state._cloudFailReason="network"; finish(null); return; }
+              var sceneKey=String(obj.scene||"").toLowerCase();
+              var scenes=["portrait","portrait_close","landscape","food","architecture","street","night","animal","waterscape","general"];
+              if(scenes.indexOf(sceneKey)<0) sceneKey=state.plan&&state.plan.sceneType||"general";
+              var _localSc=(state.plan&&state.plan.sceneType)||"general";
+              // 食物/宠物被 VLM 误标 portrait 时以本地强证据为准；本地已判 portrait 时不允许云端降级。
+              if(/^(food|animal)$/.test(_localSc) && /portrait/.test(sceneKey) && !(state.aiData&&state.aiData.isPerson)) sceneKey=_localSc;
+              if(/portrait/.test(_localSc) && !/portrait/.test(sceneKey)) sceneKey=_localSc;
+              // 云端在候选里识别出人像时，必须退回原图（本地可能先误判成普通场景）。
+              if(/portrait/.test(sceneKey) || _cutsPerson){
+                var _origC=candById("D")||cands[cands.length-1];
+                if(_origC){ pick=_origC; best=_origC.id; }
+              }
+              var conf=Math.max(40,Math.min(98,parseInt(obj.conf,10)||state.plan&&state.plan.conf||82));
+              var fk=null; try{ fk=_cf2k(obj.filter); }catch(e){}
+              var p=Object.assign({},state.plan||{},{
+                crop:pick.crop.slice(), noCrop:!!pick.noCrop, sceneType:sceneKey,
+                conf:conf, cloud:true, cloudPick:true, aiPick:pick.id, aiScores:scores,
+                aiReason:String(obj.reason||""), aiHighlight:String(obj.highlight||""), aiPickConf:Math.max(0,Math.min(100,parseInt(obj.confidence,10)||0)), aiWorst:worst, aiHasPerson:!!obj.hasPerson, aiCutsPerson:_cutsPerson,
+                aiCandidateTag:pick.tag||"", subject:String(obj.subject||(state.plan&&state.plan.subject)||"画面主体"),
+                f:fk||(state.plan&&state.plan.f)||"natural"
+              });
+              if(!p.noCrop && p.crop){ try{ p.crop=_cloudCropGuard(p.crop,state.aiData,sceneKey); }catch(e){} }
+              if(/portrait/.test(sceneKey) || !p.crop || (p.crop[0]+p.crop[1]+p.crop[2]+p.crop[3])<=5){ p.crop=[0,0,0,0]; p.noCrop=true; p.aiCandidateTag="原图"; }
+              p.desc="云端AI对比 "+cands.length+" 个构图候选，选中「"+pick.id+" · "+(pick.tag||"")+"」："+(obj.reason||"画面最自然")+"。";
+              state.cloudFailCount=0; state.cloudTripUntil=0; state._cloudFailReason="";
+              finish(p);
+            }catch(e){ state._cloudFailReason="network"; finish(null); }
+          }).catch(function(){ state._cloudFailReason="network"; finish(null); });
+        }
+        function req(){
+          var h={"Content-Type":"application/json"};
+          if(byok) h["Authorization"]="Bearer "+key; else h["X-App-Token"]=key;
+          if(byok&&state.cloud.byokVendor==="openrouter"){ h["HTTP-Referer"]="https://yyds8170-ctrl.github.io/ai-composition-tool/"; h["X-OpenRouter-Title"]="AI 构图助手"; }
+          if(byok&&state.cloud.byokVendor==="anthropic"){ h["anthropic-dangerous-direct-browser-access"]="true"; }
+          return fetch(_cloudChatURL(base),{method:"POST",headers:h,body:JSON.stringify(body),signal:ctrl?ctrl.signal:undefined});
+        }
+        var timer=setTimeout(function(){ try{ if(ctrl) ctrl.abort(); }catch(e){} state._cloudFailReason="timeout"; finish(null); },55000);
+        req().then(function(r){ return r; }).then(function(r){ clearTimeout(timer); handle(r); }).catch(function(e){
+          clearTimeout(timer);
+          if(state._cloudKilled||token!==state.analyzeToken){ finish(null); return; }
+          state._cloudFailReason=(e&&e.name==="AbortError")?"timeout":"network";
+          state.cloudFailCount=(state.cloudFailCount||0)+1;
+          if(state.cloudFailCount>=3){ state.cloudFailCount=0; state.cloudTripUntil=Date.now()+300000; }
+          finish(null);
+        });
+      }catch(e){ try{ state._cloudFailReason="network"; }catch(e2){} if(onDone) onDone(null); }
+    }
+    function _renderCloudStatusCard(){
+      try{
+        var body=document.getElementById("aiBody"); if(!body) return;
+        var old=document.getElementById("cloudStatusCard");
+        var st=state._cloudStatus;
+        if(!st || st.mode==="off"){ if(old&&old.parentNode) old.parentNode.removeChild(old); return; }
+        var color=st.mode==="failed"||st.mode==="trip"?"#EF6B6B":(st.mode==="confirmed"||st.mode==="picked")?"#67D97A":(st.mode==="notready"?"#FFB454":"#7FB5FF");
+        var icon=st.mode==="failed"?"⚠️":st.mode==="trip"?"⏸":st.mode==="picked"?"☁️":st.mode==="confirmed"?"✅":st.mode==="notready"?"☁️":"☁️";
+        var elapsed="";
+        if(st.mode==="analyzing" && state._cloudStartedAt){
+          elapsed=' <span id="cloudStatusElapsed" style="color:var(--sub);font-weight:400;">'+Math.max(0,Math.round((Date.now()-state._cloudStartedAt)/1000))+'s</span>';
+        }
+        var btns="";
+        if(st.mode==="notready") btns='<button id="cloudStatusGo" class="btn" style="font-size:12px;padding:6px 10px;">去填口令</button>';
+        else if(st.mode==="failed"||st.mode==="trip") btns='<button id="cloudStatusRetry" class="btn" style="font-size:12px;padding:6px 10px;">重试云端</button><button id="cloudStatusGo" class="btn" style="font-size:12px;padding:6px 10px;">云端设置</button>';
+        var html='<div style="display:flex;align-items:flex-start;gap:8px;"><span style="font-size:16px;line-height:1.2;">'+icon+'</span><div style="flex:1;min-width:0;">'
+          +'<div style="font-size:12.5px;font-weight:700;color:'+color+';">'+esc(st.title||"")+elapsed+'</div>'
+          +(st.detail?'<div style="font-size:11px;color:var(--sub);line-height:1.55;margin-top:3px;">'+esc(st.detail)+'</div>':'')
+          +(btns?'<div style="display:flex;gap:8px;margin-top:8px;">'+btns+'</div>':'')
+          +'</div></div>';
+        if(!old){
+          old=document.createElement("div");
+          old.id="cloudStatusCard"; old.className="ai-suggest";
+          old.style.cssText="margin:10px;border-color:rgba(127,181,255,.32);";
+          body.insertBefore(old, body.firstChild);
+        }
+        old.innerHTML=html;
+        setTimeout(function(){ old.classList.add("show"); },40);
+        var go=document.getElementById("cloudStatusGo"); if(go) go.addEventListener("click",_openCloudSettings);
+        var rt=document.getElementById("cloudStatusRetry"); if(rt) rt.addEventListener("click",function(){
+          try{ state.cloudTripUntil=0; state.cloudFailCount=0; state._cloudFailReason=""; }catch(e){}
+          _setCloudStatus("analyzing","正在重试云端 AI 构图…","会重新比较画面最美区域与候选构图",Date.now());
+          try{ document.getElementById("btnAnalyze").click(); }catch(e){}
+        });
+      }catch(e){}
+    }
+    function _setCloudStatus(mode,title,detail,startedAt){
+      try{
+        _clearCloudStatusTimer();
+        state._cloudStatus=mode?{mode:mode,title:title||"",detail:detail||"",at:Date.now()}:null;
+        if(startedAt) state._cloudStartedAt=startedAt; else if(mode!=="analyzing") state._cloudStartedAt=0;
+        _renderCloudStatusCard();
+        if(mode==="analyzing"){
+          state._cloudStatusTimer=setInterval(function(){
+            try{
+              var el=document.getElementById("cloudStatusElapsed");
+              if(el && state._cloudStartedAt) el.textContent=Math.max(0,Math.round((Date.now()-state._cloudStartedAt)/1000))+"s";
+            }catch(e){}
+          },1000);
+        }
+      }catch(e){}
     }
     // v4.8.2: 云端失败/超时回退本地提示（toast + 结果面板顶部提示卡）
     function showCloudFallback(){
@@ -8797,19 +9498,9 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         else if(rs==="blind"){ info={t:"云端视觉服务暂不可用",d:"云端模型当前<b>读不到图片</b>（服务端视觉通道异常，与口令、网络无关），已自动改用<b>本地引擎</b>分析，裁切照常生效；云端恢复后会自动用回云端。"}; }
         else { info={t:"网络不通或云端超时",d:"已自动回退<b>本地引擎</b>分析（本地照样能用）；联网后可重试云端。"}; }
         setStatus(info.t+"，本次为本地引擎结果","warn");
-        var _fb=document.getElementById("cloudFallbackCard");
-        if(!_fb){
-          _fb=document.createElement("div");
-          _fb.id="cloudFallbackCard";
-          _fb.className="ai-suggest cloud-badge";
-          var panel=document.getElementById("aiPanel");
-          var body=document.getElementById("aiBody")||document.body;
-          if(panel && body){ panel.insertBefore(_fb, body); }
-          else{ body.insertBefore(_fb, body.firstChild); }
-        }
-        _fb.innerHTML='<div class="cb-head"><span class="cb-cloud">⚠️</span><span class="cb-title">'+info.t+'</span></div>'
-          +'<div class="cb-row" style="color:var(--sub)">'+info.d+'</div>';
-        setTimeout(function(){ _fb.classList.add("show"); }, 60);
+        _setCloudStatus(rs==="trip"?"trip":"failed", info.t, String(info.d||"").replace(/<[^>]+>/g,""));
+        try{ aiRuleTag.textContent="📷 本地 · ☁️ 云端未返回"; }catch(e){}
+        try{ toastMsg(info.t+"：本次先用本地构图"); }catch(e){}
       }catch(e){}
     }
     function runCloudAnalysis(el, onDone){
@@ -8829,6 +9520,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           return;
         }
         state.cloudTripUntil=0;
+        state._cloudFailReason=""; state._cloudKilled=false;
       }catch(e){}
       // v8.1.4: 视觉通道短时熔断——上游若连续返回"读不到图"（HTTP 200 但视觉无效），60s 内直接回退本地，
       // 避免每张图都干等多次重试（实测该故障为服务端持续性异常，非单请求丢图）；60s 后自动再探，恢复即自愈。
@@ -8933,7 +9625,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           }
         }catch(e){}
       }
-            // v12.29.0：system/user 提示压缩约 40%，保留全部解析字段；减少输入/输出 token，云端更快。
+            // v13.0.0：system/user 提示压缩约 40%，保留全部解析字段；减少输入/输出 token，云端更快。
             var sysPrompt=[
         "你是给普通手机用户看图的专业构图师。只输出严格 JSON，无 markdown、无多余文字。",
         "原则：主动找画面最美的 highlight 并建议裁切突出它，不默认保持原图；判断必须基于真实画面。",
@@ -8979,7 +9671,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       function _req(){
         var _h={ "Content-Type":"application/json" };
         if(_byok){ _h["Authorization"]="Bearer "+appToken; } else { _h["X-App-Token"]=appToken; } // v8.0.9
-        return fetch(base+"/chat/completions", {
+        return fetch(_cloudChatURL(base), {
           method:"POST",
           headers:_h,
           body:JSON.stringify(body),
@@ -9657,10 +10349,11 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           state.aiData.cloudConf=conf;
           state.aiData.cloudKeep=keepOriginal;
         }
-        // v12.29.0：云端结果也要服从用户口径——人像/人头特写保留原图；≤5% 微裁切归零。
+        // v13.0.0：云端结果也要服从用户口径——人像/人头特写保留原图；≤5% 微裁切归零。
         try{
           var _cscn=String(plan.sceneType||plan.scene||"");
-          if(/portrait|人像|人物/i.test(_cscn)){
+          var _localPortrait=!!(state.plan && /portrait/.test(String(state.plan.sceneType||"")));
+          if(_localPortrait || /portrait|人像|人物/i.test(_cscn)){
             plan.crop=[0,0,0,0]; plan.noCrop=true;
             plan.cropAdvice="人像保护：保留原图与完整人物";
           }else if(!plan.noCrop && plan.crop && plan.crop.length===4){
@@ -9668,7 +10361,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             if(_csum>0 && _csum<=5){ plan.crop=[0,0,0,0]; plan.noCrop=true; }
           }
         }catch(e){}
-        // v12.29.0：像素构图已落地时，云端结果只排队等用户确认，不再直接覆盖 state.plan/面板。
+        // v13.0.0：像素构图已落地时，云端结果只排队等用户确认，不再直接覆盖 state.plan/面板。
         if(state._pixelFirstApplied){
           state._pendingCloudPlan=plan;
           state.aiData.cloudPendingPlan=plan;
@@ -9744,7 +10437,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             try{ setStatus((typeof _cloudReady==="function"&&_cloudReady())?"云端分析完成·正在做人物完整性二次审查…":"分析完成（本地引擎）","done"); }catch(e){}
             var _srh={"Content-Type":"application/json"};
             if(_byok){ _srh["Authorization"]="Bearer "+appToken; } else { _srh["X-App-Token"]=appToken; }
-            fetch(base+"/chat/completions",{method:"POST",headers:_srh,body:JSON.stringify(rbody),signal:ctrl?ctrl.signal:undefined})
+            fetch(_cloudChatURL(base),{method:"POST",headers:_srh,body:JSON.stringify(rbody),signal:ctrl?ctrl.signal:undefined})
               .then(function(r){ return r.json(); })
               .then(function(j){
                 clearTimeout(tm);
@@ -9765,7 +10458,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           if(token!==state.analyzeToken){ return; }
           if(finalPlan!==plan){
             // v7.1 修复：自审调整后的方案必须回写 state.plan（后续裁切/快门读的是它），并同步云端裁切缓存
-            // v12.29.0：像素构图已落地时只排队，等用户点“应用云端构图”。
+            // v13.0.0：像素构图已落地时只排队，等用户点“应用云端构图”。
             if(state._pixelFirstApplied){
               state._pendingCloudPlan=finalPlan;
             }else{
@@ -9897,7 +10590,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       });
     }
     updateFaceUI();
-    // v12.29.0：不再自动下载人脸模型；只有用户在「帮助」里主动勾选才加载（一次即可离线复用）。
+    // v13.0.0：不再自动下载人脸模型；只有用户在「帮助」里主动勾选才加载（一次即可离线复用）。
     var faceCb=document.getElementById("faceOn");
     if(faceCb) faceCb.checked=faceEnabled;
 
@@ -9989,7 +10682,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       });
     }
     updatePoseUI();
-    // v12.29.0：姿态模型同样改为按需开启，避免首屏下载 5.8MB wasm + 6.4MB 模型。
+    // v13.0.0：姿态模型同样改为按需开启，避免首屏下载 5.8MB wasm + 6.4MB 模型。
     var poseCb=document.getElementById("poseOn");
     if(poseCb) poseCb.checked=poseEnabled;
 
@@ -10007,7 +10700,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       window.addEventListener("deviceorientation",onDev);
       live._cleanup=function(){ window.removeEventListener("deviceorientation",onDev); };
       setTimeout(function(){ if(!live.devOK && state.liveMode){ lhLevel.className="lh"; lhLevel.textContent="➡ 水平仪不可用（无陀螺仪）"; } },2600);
-      // v12.29.0：实时取景也不自动下载模型；先给像素级引导，用户在「帮助」开启后才做主体锁定。
+      // v13.0.0：实时取景也不自动下载模型；先给像素级引导，用户在「帮助」开启后才做主体锁定。
       updateModelUI();
       function tick(){
         if(!state.liveMode || state.mode!=="camera"){ if(state.liveMode){ stopLive(); } return; }
@@ -11538,6 +12231,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
     presentAnalysis=function(plan){
       _origPresent2(plan);
       try{ _renderProactiveCard(state.plan||plan); }catch(e){}
+      try{ _renderCloudStatusCard(); }catch(e){}
+      try{ _renderCompositionCandidatesCard(); }catch(e){}
       if(aiApply){
         aiApply.classList.add("highlight");
         if(aiApplyTip) aiApplyTip.style.display="block";
@@ -11551,7 +12246,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
     // v2.0.2: 页面加载完成后自动初始化模型 UI 并加载模型（确保不依赖进入实时模式）
     try{
       if(typeof initModelUI==="function") initModelUI();
-      // v12.29.0：不再在启动 1 秒后自动下载模型。像素构图先行，模型由用户主动开启。
+      // v13.0.0：不再在启动 1 秒后自动下载模型。像素构图先行，模型由用户主动开启。
       // 测试/自动化可通过 localStorage.aiForceModel=1 显式请求加载（不影响普通用户）。
       try{
         if((localStorage.getItem("aiForceModel")==="1" || /(?:\?|&)aimodel=1/.test(location.search)) && state.aiModelEnabled){
@@ -11565,6 +12260,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
   try{ window.__ai={
     get plan(){ return state&&state.plan?{rule:state.plan.rule,sceneType:state.plan.sceneType,conf:state.plan.conf,subject:state.plan.subject,f:state.plan.f||null,noCrop:!!state.plan.noCrop,crop:state.plan.crop||null,selfReviewed:!!state.plan.selfReviewed,selfReviewNote:state.plan.selfReviewNote||"",fromCache:!!state.plan.fromCache,notes:state.plan.notes||null,_dbgSkin:(state.plan&&state.plan._dbgSkin)||null,tiltHint:state.plan.tiltHint||null,proactiveCrop:state.plan.proactiveCrop||null,proactiveTag:state.plan.proactiveTag||null,proactiveReason:state.plan.proactiveReason||null,cloudFlag:!!state.plan.cloud,cropIntent:state.plan.cropIntent||null,tiltDeg:state.aiData&&state.aiData.tiltDeg||null,tiltConf:state.aiData&&state.aiData.tiltConf||null}:null; },
     get cloudPlan(){ var p=state&&state._pendingCloudPlan; return p?{rule:p.rule,sceneType:p.sceneType||p.scene||null,conf:p.conf,subject:p.subject||"",noCrop:!!p.noCrop,crop:p.crop||null,cropIntent:p.cropIntent||null,cloud:true,symmetry:p.symmetry||null,atmosphere:p.atmosphere||null,hasReflection:!!p.hasReflection}:null; },
+    get candidates(){ return (state&&state._compositionCandidates||[]).map(function(c){return {id:c.id,tag:c.tag,crop:c.crop,noCrop:c.noCrop,score:c.score,reason:c.reason,source:c.source};}); },
+    get selectedCandidate(){ return state&&state._selectedCandidate||null; },
     get data(){ return state&&state.aiData?{sceneType:(state.plan&&state.plan.sceneType)||'',rowGap:state.aiData.rowGap,rowPeakN:state.aiData.rowPeakN,bodyRatio:state.aiData.bodyRatio,frameAspect:state.aiData.frameAspect||null,sat:state.aiData.sat,mean:state.aiData.mean,detectedClasses:state.aiData.detectedClasses,allBoxes:state.aiData.allBoxes||null,isPerson:state.aiData.isPerson,headTop:state.aiData.headTop,personLeft:state.aiData.personLeft,personRight:state.aiData.personRight,personBottom:state.aiData.personBottom,topBBox:state.aiData.topBBox,personScore:state.aiData.personScore,faceAvailable:state.aiData.faceAvailable,sym:state.aiData.sym,vSym:state.aiData.vSym,hSym:state.aiData.hSym,contrast:state.aiData.contrast,sharpness:state.aiData.sharpness,highClip:state.aiData.highClip,shadowClip:state.aiData.shadowClip,dynamicRange:state.aiData.dynamicRange,skinRatio:state.aiData.skinRatio,skinCx:state.aiData.skinCx,skinCy:state.aiData.skinCy,isPersonLikely:state.aiData.isPersonLikely,skinAspect:state.aiData.skinAspect,skinFill:state.aiData.skinFill,skinHRatio:state.aiData.skinHRatio,modelLoaded:(state.aiData&&'modelLoaded' in state.aiData)?state.aiData.modelLoaded:null,
 waterScore:state.aiData.waterScore,manmadeScore:state.aiData.manmadeScore,lightScore:state.aiData.lightScore,
 lowTexLower:state.aiData.lowTexLower,glareLower:state.aiData.glareLower,horizonOk:state.aiData.horizonOk,
@@ -11588,7 +12285,7 @@ hSym2:state.aiData.hSym}:null; }
   }; }catch(e){}
 })();
   </script>
-<div id="aicUpdateBar" class="hide"><span class="ub-t">🔧 v12.29.0：像素构图先落地，不再等模型下载。地下通道等普通竖图新增「暗部呼吸 + 4:5 画幅平衡」，示例也走当前算法；真AI/人脸/姿态改为按需下载，滤镜自动强度降到 35-55，云端 prompt 压缩约 40%。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
+<div id="aicUpdateBar" class="hide"><span class="ub-t">🔧 v13.0.0：真 AI 构图来了——本地先生成 A/B/C/原图安全候选，云端 VLM 直接看图选最美并自动落地；云端状态条明示「分析中/已选/失败/缺口令」，点开即可重试或去填口令；BYOK 厂商内置已确认的视觉模型预设（硅基/通义/OpenRouter/DeepSeek/Kimi/千帆/MiniMax/阶跃等），支持一键测试连接。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
 <script>
 (function(){
   // v8.2.3 新版本就绪提示条：SW 激活后广播 → 页面弹出"立即刷新"，根治旧缓存看不到新功能

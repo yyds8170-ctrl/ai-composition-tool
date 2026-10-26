@@ -1,0 +1,23 @@
+=== v13.0.0 发版前门禁 ===
+日期：2026-10-26
+
+[1] npm run extract                  PASS（新增 _candidateRatioTag / _candidateAspectCrop / _buildCompositionCandidates）
+[2] node tests/unit.test.js          PASS 406/406（另含 v13 构图候选 5 条直接断言）
+[3] node tools/fuzz.js               PASS 0 问题
+[4] node --check sw.js               PASS
+[5] node tools/verify_stacking.js    PASS
+[6] 本地 100 张真实图                 PASS noCrop=44 / 裁切=56；人像/特写 23 张全部保留；人物切穿 0；微小裁切 0
+[7] 云端 50 张真实图（本地+云端均开） PASS CLOUD=36 / local=14（14 张为本地人像保护）；超时/失败 0；云端提案裁切24/不裁26；最终落地裁切28/不裁22；人像16张全部不裁；动物≤8%/25%、美食≤12%/35%；微裁0；>35% 0
+[8] 移动端 390×844 走查               PASS 无横向溢出/按钮越界/异常换行/控制台错误
+[9] 红线词扫描                        PASS 0 命中
+[10] 版本号同步                       PASS index.html / sw.js / package.json / manifest.webmanifest / README.md
+
+关键变化：
+- 真AI构图：本地 A/B/C/原图候选 → 云端 VLM 看图打分选优 → 本地人物/物体/画幅/死区复核 → 未手动调整时自动从原图应用。
+- 候选条：A/B/C/原图随时切换；云端选中项高亮并显示理由；人像/特写不生成候选，云端识别 portrait 强制原图。
+- 云端状态：分析中计时、AI选中、确认本地、缺口令、口令错误、超时/熔断；一键重试/去填口令。
+- P0 修复：口令 debounce 被回填清空、刷新后开关不同步、60s 超时仍显示分析中、相机发上一张照片、云端建议卡被渲染清掉。
+- BYOK：内置已核对视觉模型预设（硅基/通义/OpenRouter/DeepSeek/Kimi/千帆/MiniMax/阶跃），选厂商自动填模型；自定义 ID；64×64 测试图真实校验 Key/模型/CORS/视觉通道。
+- 本地模型+云端同开：云端前先用本地模型补人物/物体证据，修复“本地像素误判、云端再误判 general 把人裁了”。
+
+发布状态：全部验证通过，准备发布 v13.0.0。

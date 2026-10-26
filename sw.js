@@ -1,5 +1,5 @@
-/* AI 构图助手 · Service Worker v12.29.0 —— 离线缓存，让应用像原生 App 一样秒开 */
-const CACHE = 'ai-compose-v122900';
+/* AI 构图助手 · Service Worker v13.0.0 —— 离线缓存，让应用像原生 App 一样秒开 */
+const CACHE = 'ai-compose-v130000';
 const CORE = [
   './',
   './index.html',
@@ -7,7 +7,7 @@ const CORE = [
   './icon-192.png',
   './icon-512.png'
 ];
-// v12.29.0 P0：停止后台批量预缓存模型。旧版 activate 后会排队下载 YOLO/ORT/人脸/姿态约 100MB，
+// v13.0.0 P0：停止后台批量预缓存模型。旧版 activate 后会排队下载 YOLO/ORT/人脸/姿态约 100MB，
 // 在手机上把用户的带宽占满，体感就是“模型一直在下载、分析一直不出结果”。
 // 模型改为用户主动开启后按需加载；首次用过的文件仍由下方 cache-first 分支写入缓存，二次打开/离线可用。
 
@@ -27,7 +27,7 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
   // v8.2.2: 通知所有受控页面"新版本已就绪"，页面据此弹出刷新提示条（根治旧缓存看不到新功能）
   self.clients.matchAll({type:'window', includeUncontrolled:true}).then(function(clients){
-    clients.forEach(function(c){ c.postMessage({type:'AIC_SW_UPDATE', ver:"v12.29.0"}); });
+    clients.forEach(function(c){ c.postMessage({type:'AIC_SW_UPDATE', ver:"v13.0.0"}); });
   }).catch(function(){});
 });
 
