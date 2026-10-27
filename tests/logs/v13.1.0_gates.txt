@@ -33,6 +33,11 @@
      122 张测试照片本体与 tools/label-picsum.js（含本机口令路径）均不进入仓库
 [14] 远端基线核对                        PASS main HEAD 仍是 v13.0.0 提交，tree 499 个 blob 未截断，
      发布用 base_tree 叠加只覆盖 FILES 列表，不删除任何既有文件
+[15] 发布后线上冒烟（node tools/qa-live-smoke.js）PASS
+     https://yyds8170-ctrl.github.io/ai-composition-tool/ 线上 APP_VER=v13.1.0、sw 缓存 ai-compose-v131000；
+     真机视口 390×844 上传真实照片 → 分析落地 crop=[0,8,0,8] scene=street 候选 6 个、
+     状态"已主动优化构图（社交画幅 16:9）· 智能裁切+构图优化 · B级 77分"；横向溢出 0、console/page 错误 0、4xx/5xx 0；
+     线上 index.html 内 SCF 代理地址字面量仅 1 次（其余引用常量），未泄露任何口令
 
 关键变化（相对 v13.0.0）
 - 构图候选从"1 本地 + 2 画幅"扩到最多 8 个**意图不同**的候选（三分左/右、地平线上/下、小框重构图、小框+三分、
