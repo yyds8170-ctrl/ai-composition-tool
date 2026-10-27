@@ -1,0 +1,19 @@
+=== v13.1.0 红线词扫描 ===
+日期：2026-10-27
+脚本与词表：均在仓库外（AI构图助手_v12.26.0_研究资料/redline-scan.js、redline-words.txt，词表 48 条，不在仓库内复述）
+口径：扫描前剔除 `data:image/...;base64,` 与 400+ 连续 base64 字符段，避免把图片数据当文本命中
+范围（本版扩围）：index.html、sw.js、manifest.webmanifest、package.json、README.md、
+  docs/research/v13.1-composition.md、docs/research/v13-global-upgrade.md、docs/research/v12.29-composition.md、
+  tests/unit.test.js、tests/pure-functions.js、
+  tests/logs/v13.1.0_local100.txt、tests/logs/v13.1.0_cloud50.txt、tests/logs/v13.1.0_gates.txt、
+  tests/data/picsum-manifest.json、tools/summarize-cloud.js、tools/probe-cloud-actions.js
+结果：0 命中（无 skip missing，全部文件均存在并被扫描）
+
+口径说明：词表中的医疗项已收窄为「医疗诊断 / 疾病诊断 / 诊断疾病」，
+因为"构图诊断"是本产品长期存在的功能名，泛化的"诊断"二字会造成假阳性从而掩盖真命中。
+
+补充的密钥与隐私核对（不属于红线词，但同为发版门禁）：
+· 将要上传的 28 个文件逐个匹配共享口令、GitHub token 原文与 `sk-`/`ghp_`/`github_pat_` 形态：0 命中
+· index.html 中 SCF 代理地址只出现 1 次（`var SCF_BASE`，第 1337 行），其余 5 处均引用该常量
+· 122 张测试照片本体、imgs/u50、imgs/u2tail、imgs/u3 与 tools/label-picsum.js（内含本机口令路径）均不进入发布清单
+· 云端回归日志只记录模型返回的指令形态与裁切数字，不含任何 Key/Token

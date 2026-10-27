@@ -1,5 +1,6 @@
 // v12.18.0 端到端 QA：完整流程抓错
 const puppeteer=require('puppeteer');
+const chromePath=require('./chrome-path');
 const http=require('http'); const fs=require('fs'); const path=require('path');
 const ROOT=path.join(__dirname,'..');
 const PORT=8779;
@@ -13,7 +14,7 @@ const srv=http.createServer((req,res)=>{
 });
 (async()=>{
   await new Promise(r=>srv.listen(PORT,r));
-  const b=await puppeteer.launch({headless:'new',args:['--no-sandbox','--disable-gpu','--enable-unsafe-swiftshader']});
+  const b=await puppeteer.launch(chromePath.launch());
   const page=await b.newPage();
   await page.setViewport({width:390,height:844,isMobile:true,hasTouch:true});
   const errors=[];
@@ -27,7 +28,8 @@ const srv=http.createServer((req,res)=>{
   await new Promise(r=>setTimeout(r,3000));
 
   console.log('2. 上传测试图...');
-  const testImg=path.join(ROOT,'imgs/regression/backlit_1.jpg');
+  const CANDS=['imgs/picsum/p001.jpg','imgs/regression/backlit_1.jpg','imgs/test100/arch_1.jpg','imgs/test50/food_3.jpg'].map(p=>path.join(ROOT,p));
+  const testImg=CANDS.find(p=>fs.existsSync(p))||'';
   if(fs.existsSync(testImg)){
     const input=await page.$('#fileInput');
     await input.uploadFile(testImg);

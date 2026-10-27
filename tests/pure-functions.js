@@ -798,8 +798,12 @@
         // === 场景感知候选打分（v12.28.0：云端语义 + 本地像素双证据）===
         // 场景判定
         var scene="general";
+        // v13.1.0：暗调美食不再被误判成夜景（外部审计 P1-3）。只在"有真实食物证据（下半区暖色团块 +
+        // 亮度方差像一盘菜）+ 画面偏暗 + 暖色不在天空带"时才判食物，避免把晚霞暖调整片误当美食。
+        var _topWarm=(a.topBandHsv&&typeof a.topBandHsv.ratio==="number")?a.topBandHsv.ratio:0;
+        var _foodLike=(a.hasFoodEvidence===true)&&mean<115&&!(_topWarm>0.3);
         if(isPerson) scene="portrait";
-        else if(scn==="food"||scn==="美食") scene="food";
+        else if(scn==="food"||scn==="美食"||_foodLike) scene="food";
         else if(scn==="night"||(mean<85&&lightScore>=0.3)) scene="night";
         else if(atm==="sunset_sky"||(warmRatio>=0.42&&wb>0.05&&mean>=85&&mean<=160)) scene="sunset";
         else if(scn==="waterscape"||atm==="water_reflection"||waterScore>=0.4) scene="water";
@@ -838,8 +842,8 @@
           // 暖调画面推暖色，冷调推冷色
           if(wb>0.03&&["warm","sunset","portra","portrait-warm","c200","hk"].indexOf(f)>=0) s+=15;
           if(wb<-0.03&&["cool","chrome","classic","160c","portrait-cool"].indexOf(f)>=0) s+=15;
-          // 暗画面推提亮/霓虹
-          if(mean<90&&["night","cyber","teal"].indexOf(f)>=0) s+=20;
+          // 暗画面推提亮/霓虹（食物除外：暗调美食要暖要亮，不要夜景冷调）
+          if(mean<90&&["night","cyber","teal"].indexOf(f)>=0) s+=(_foodLike?-25:20);
           if(mean<90&&["morandi","fade","japan"].indexOf(f)>=0) s-=10;
           // 人像推肤色友好
           if(isPerson&&["portra","ektar","portrait-warm","portrait-cool","portrait-mono","japan"].indexOf(f)>=0) s+=15;
@@ -1618,6 +1622,8 @@
         if(!a||!plan) return null;
         var sc=plan.sceneType||"general";
         if(/portrait/.test(sc)) return null; // 人像/人头特写交给既有保护链，保持原图
+        // v13.1.0：先过主体证据闸门——糊片/纯色/截图/占位图/找不到主体时一律不主动裁
+        try{ if(!_subjectEvidence(a,plan).ok) return null; }catch(e){}
         if(plan.crop && (plan.crop[0]+plan.crop[1]+plan.crop[2]+plan.crop[3])>0) return null;
         // 极暗/纯色/截图类仍然不折腾
         try{
@@ -1847,6 +1853,8 @@
             if(JSON.stringify(g)!==JSON.stringify(c.map(function(v){return Math.round(v);}))) return -1;
           }
         }catch(e){}
+        // v13.1.0：肤色边缘守卫——小人物未被模型检出时的最后一道保护（裁掉的条带里有成块肤色 → 否决）
+        try{ if(_skinEdgeGuard(c.map(function(v){return Math.round(v);}),a).veto) return -1; }catch(e){}
         var nx=(cx-L)/Math.max(0.01,w), ny=(cy-T)/Math.max(0.01,h);
         var fit=_thirdsFitScore(nx,ny);
         var targets=[0.75,0.8,1,4/3,16/9];
@@ -1864,8 +1872,13 @@
           if(B>0&&row.length){ var bi=Math.floor((1-B)*row.length); for(var m=bi;m<row.length;m++){sum+=(row[m]||0);n++;} }
           cutEnergy=n?Math.min(1,sum/n):0;
         }catch(e){}
-        var areaScore=1-Math.min(0.45,Math.abs(area-0.85)*0.75);
-        if(area<0.62) areaScore-=0.25;
+        // v13.1.0 幅度预算感知：旧版把"保留 85% 面积"当最优、面积一小就罚分，
+        // 导致任何主动重构图（小框/靠近）在打分上永远输给"不裁"——这是"AI 不敢裁"的数学根源。
+        // 现在：预算内（area ≥ cropMinArea）越紧越加分；只有超出预算才重罚。
+        var _floor=(typeof a.cropMinArea==="number"&&a.cropMinArea>0.02&&a.cropMinArea<0.95)
+          ? a.cropMinArea : (pb?0.40:0.25);
+        var areaScore=0.70+0.30*Math.min(1,(1-area)/0.70);
+        if(area<_floor) areaScore-=0.85;
         var centerBalance=1-Math.min(1,Math.abs(nx-0.5)+Math.abs(ny-0.5));
         // 不裁不能靠"零裁切能量"白拿高分；普通照片里保留太多冗余本身是弱项。
         var isNoCrop=(L+T+R+B)<0.005;
@@ -1946,45 +1959,349 @@
         if(!a||!plan) return [];
         if(/portrait/.test(plan.sceneType||"")) return [];
         var ar=(typeof a.frameAspect==="number"&&isFinite(a.frameAspect))?a.frameAspect:1;
+        var budget=_cropBudget(a, plan.sceneType||"general");
+        try{ a.cropMinArea=budget.minArea; }catch(e){} // 让质量分与候选生成用同一套预算
         var out=[], seen={};
-        function add(crop,noCrop,tag,reason,source,expected){
-          var c=noCrop?[0,0,0,0]:(crop||[0,0,0,0]).map(function(v){return Math.round(v);});
-          var sum=c[0]+c[1]+c[2]+c[3];
-          if(!noCrop && sum<=3) return;
-          if(!noCrop){
-            // v13.0.0：候选也必须过云端同款分级保护；本地已落地的 A 保持原值，避免 1% 级抖动。
-            if(source!=="local") c=_cloudCropGuard(c,a,plan.sceneType||"general");
-            sum=c[0]+c[1]+c[2]+c[3];
-            if(sum<=3) return;
-            if(_cropQualityScore(a,c,false)<0) return;
-            // 候选被分级保护改动后，若已偏离目标画幅 >2%，宁可不展示，避免“标着 1:1 实际不是”。
-            if(expected){
-              var _r=ar*(1-c[0]/100-c[2]/100)/(1-c[1]/100-c[3]/100);
-              if(Math.abs(_r-expected)/expected>0.02) return;
-            }
-            if(source==="aspect") tag=_candidateRatioTag(c,ar);
+        function accept(c,intent,tag,reason,source,expected){
+          if(!c||c.length!==4) return false;
+          var cc=c.map(function(v){return Math.round(v);});
+          if(expected){ // 画幅候选被保护改动后偏离目标 >2% → 不展示（避免"标着 1:1 实际不是"）
+            var _r=ar*(1-cc[0]/100-cc[2]/100)/(1-cc[1]/100-cc[3]/100);
+            if(Math.abs(_r-expected)/expected>0.02) return false;
           }
-          var k=noCrop?"N":c.join(",");
-          if(seen[k]) return;
+          var v=_validateNewCrop(cc,a,plan.sceneType||"general",budget,{source:source});
+          if(!v.ok) return false;
+          var k=cc.join(",");
+          if(seen[k]) return false;
+          for(var oi=0;oi<out.length;oi++){ if(_cropsSimilar(out[oi].crop,cc)) return false; } // 近似重复才剔
           seen[k]=1;
-          out.push({crop:c,noCrop:!!noCrop,tag:tag,reason:reason,source:source,
-            score:noCrop?_cropQualityScore(a,[0,0,0,0],true):_cropQualityScore(a,c,false)});
+          out.push({crop:cc,noCrop:false,tag:tag||intent,intent:intent,reason:reason,source:source,score:v.score,area:v.area});
+          return true;
         }
-        // A：当前本地主动构图（如果本来就是原图，则跳过，让 A/B/C 都是真实裁切候选）
-        if(!plan.noCrop) add(plan.crop,false,_candidateRatioTag(plan.crop,ar),"本地主动构图","local");
-        // B/C：两个不同社交画幅
+        // 1) 本地已落地的主动构图（保持原值，避免 1% 级抖动）
+        if(!plan.noCrop && plan.crop) accept(plan.crop,"local","本地构图","本地引擎找到的构图","local");
+        // 2) 意图模板候选（三分/地平线/小框重构图/去死边/画幅）
+        var intents=_intentCandidates(a,plan,budget);
+        var quota={};
+        for(var ii=0;ii<intents.length && out.length<8;ii++){
+          var it=intents[ii];
+          quota[it.intent]=quota[it.intent]||0;
+          if(quota[it.intent]>=2) continue; // 每种意图最多 2 个，保证"思路多"而不是"同一思路的近似框"
+          if(accept(it.crop,it.intent,it.tag,it.reason,"intent")) quota[it.intent]++;
+        }
+        // 3) 兜底：意图候选不足 3 个时，补两个不同画幅（保持 v13 的能力不回退）
         var targets=(ar<0.70)?[0.75,0.8,1]:(ar<0.95?[1,2/3,0.8]:(ar<1.45?[4/3,1,16/9]:[16/9,4/3,1]));
         for(var i=0;i<targets.length && out.length<3;i++){
           var c=_candidateAspectCrop(a,targets[i]);
-          if(c) add(c,false,_candidateRatioTag(c,ar),"AI 构图候选 · "+_candidateRatioTag(c,ar),"aspect",targets[i]);
+          if(c) accept(c,"aspect","画幅 "+_candidateRatioTag(c,ar),"换成 "+_candidateRatioTag(c,ar)+" 更好发","aspect",targets[i]);
         }
-        // D：原图。必须已有 3 个真实裁切候选，联系表才固定为 A/B/C + 原图，避免字母含义漂移。
-        if(out.length<3) return [];
-        add([0,0,0,0],true,"原图","保留完整画面","original");
-        out=out.slice(0,4);
+        // 4) 强制含"最宽"和"最紧"两个极端（研究结论：候选必须覆盖不同构图意图，否则云端选择没有区分度）
+        out.sort(function(x,y){ return y.score-x.score; });
+        out=out.slice(0,8);
+        // 少于 2 个真实裁切时不组联系表（字母含义会漂移），退回语义通道
+        if(out.length<2) return [];
+        var noScore=_cropQualityScore(a,[0,0,0,0],true);
+        out.push({crop:[0,0,0,0],noCrop:true,tag:"原图",intent:"original",reason:"保留完整画面",source:"original",score:noScore,area:1});
         for(var j=0;j<out.length;j++) out[j].id=String.fromCharCode(65+j);
         return out;
       }catch(e){ return []; }
     }
 
-module.exports = { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard, _decloudPlan, _bandSatSignal, _symEdgeSignal, _foodEvidenceSignal, _contentGuard, _thirdsFitScore, aestheticScore, _cloudCropGuard, _personBoxOf, _proactiveComposition, _balanceCrop, _cropQualityScore, _saferCropVariant, _candidateRatioTag, _candidateAspectCrop, _buildCompositionCandidates };
+    function _srcMegapixels(a){
+      var w=a&&a.srcW, h=a&&a.srcH;
+      if(!(w>0)||!(h>0)) return 12;
+      return (w*h)/1e6;
+    }
+
+    function _cropBudget(a, scene){
+      var mp=_srcMegapixels(a);
+      var sc=String(scene||"general");
+      var mean=(a&&typeof a.mean==="number")?a.mean:128;
+      var sharp=(a&&typeof a.sharpness==="number")?a.sharpness:50;
+      var minArea, allowTight, why;
+      if(/portrait/.test(sc)){ minArea=0.72; allowTight=false; why="人像/特写：不做大裁"; }
+      else if(_personBoxOf(a)){
+        // v13.1.0 修正：不能"只要检出一个 2% 大小的人就把幅度锁死"。实测（imgs/u50 探针）：
+        // 端侧模型开启时任何人物框都会让候选从 6~7 个掉到 3~4 个，云端 refine 命中率直接归零——
+        // 这正是"云端超越不了本地"的真因。人物保护不该靠"禁止生成候选"实现，
+        // 而是靠 _validateNewCrop 里的人物 3% 边距、物体保护与肤色边缘守卫（它们与幅度预算无关）。
+        var _pbb=_personBoxOf(a);
+        var _pbArea=Math.max(0,_pbb[2]-_pbb[0])*Math.max(0,_pbb[3]-_pbb[1]);
+        if(_pbArea>=0.10){ minArea=0.40; allowTight=false; why="人物占画面较大（≥10%）：只允许中度收紧"; }
+        else { minArea=0.30; allowTight=true; why="人物占比小：允许主动重构图，人物边距仍由硬校验兜底"; }
+      }
+      else if(sc==="animal"){ minArea=0.35; allowTight=false; why="宠物轮廓/耳朵最脆：限制收紧幅度"; }
+      else if(sc==="food"){ minArea=0.20; allowTight=true; why="食物可以大胆靠近"; }
+      else if(sc==="night"||(mean<85&&sharp<45)){ minArea=0.55; allowTight=false; why="暗调/高噪：大裁会把噪点放大"; }
+      else { minArea=0.25; allowTight=true; why="无人物的大场景：允许主动重构图"; }
+      // 像素授权：短边≥900、长边≥1350 是"发得出去且不放大"的底线（朋友圈官方短边≤1080、
+      // Instagram 4:5 长边 1080、手机全屏 1206 宽）。源像素不足时自动抬高 minArea。
+      var sw=(a&&a.srcW>0)?a.srcW:4000, sh=(a&&a.srcH>0)?a.srcH:3000;
+      var shortSide=Math.min(sw,sh), longSide=Math.max(sw,sh);
+      var areaByShort=Math.pow(900/shortSide,2);
+      var areaByLong=Math.pow(1350/longSide,2);
+      var floorArea=Math.max(areaByShort,areaByLong);
+      if(floorArea>minArea){ minArea=Math.min(0.60,floorArea); allowTight=false; why="源像素不足，已自动收紧裁切幅度"; }
+      // "小框重构图"档能小到多少，由源真实像素决定（等效变焦 z=1/sqrt(area)）。
+      // 档位按本应用的实际工作分辨率标定（上传长边压到 2400/3200px）：
+      //   ≈12MP→2.7x(14%)、≈8MP→2.35x(18%)、≈4MP→2.1x(22%)、更小→2x(25%)。
+      // 抖音魔法框实测 10~16% 面积（2.5~3.2x），需要光学长焦，属于"拍前"能力，见 docs/research/v13.1-composition.md。
+      var tightArea=mp>=12?0.14:(mp>=7?0.18:(mp>=4?0.22:0.25));
+      if(!allowTight) tightArea=minArea;
+      // 注意：floorArea 只用于"抬高"下限，绝不能把下限推到 >1（小图会让任何裁切都非法）。
+      // 源本身就不够大时（如 800px 网图），只做轻度收紧，并靠 allowTight=false 禁止小框重构图。
+      if(tightArea<floorArea && floorArea<=0.60) tightArea=floorArea;
+      if(tightArea>0.60) tightArea=0.60;
+      // tightArea 允许低于 minArea：minArea 是"常规候选"的下限，tightArea 是"小框重构图"的下限，
+      // 两者分开正是高像素图能做出 2.5~3.2x 魔法框、而普通图仍保守的原因。
+      var maxZoom=1/Math.sqrt(Math.max(0.02,tightArea));
+      return {minArea:Math.round(minArea*1000)/1000, tightArea:Math.round(tightArea*1000)/1000,
+              allowTight:!!allowTight, maxZoom:Math.round(maxZoom*100)/100,
+              srcMP:Math.round(mp*10)/10, shortSide:Math.round(shortSide), longSide:Math.round(longSide), why:why};
+    }
+
+    function _subjectEvidence(a, plan){
+      try{
+        if(!a) return {ok:false, why:"没有像素分析结果"};
+        var mean=typeof a.mean==="number"?a.mean:128;
+        var sat=typeof a.sat==="number"?a.sat:0.2;
+        var sharp=typeof a.sharpness==="number"?a.sharpness:50;
+        var dr=typeof a.dynamicRange==="number"?a.dynamicRange:0.3;
+        var sig=typeof a.sigRatio==="number"?a.sigRatio:0;
+        var ed=0, en=0;
+        try{ var eL=a.edgeEnergy&&a.edgeEnergy.eL||[], eT=a.edgeEnergy&&a.edgeEnergy.eT||[];
+          ed=(eL.reduce(function(s,v){return s+v;},0)/Math.max(1,eL.length)+eT.reduce(function(s,v){return s+v;},0)/Math.max(1,eT.length))/2; en=1; }catch(e){}
+        if(sharp<22) return {ok:false, why:"画面偏糊，裁了只会更糊"};
+        if(dr<0.10 && sat<0.10) return {ok:false, why:"画面几乎没有层次与色彩"};
+        if(mean<28) return {ok:false, why:"接近全黑"};
+        if(sat<0.03 && ed<0.02) return {ok:false, why:"纯色/无内容"};
+        if(ed>0.35 && sat<0.08) return {ok:false, why:"像截图/图文，不是照片"};
+        var hasPerson=!!_personBoxOf(a);
+        var hasFood=(a.hasFoodEvidence===true);
+        // sigRatio 缺失时退化到 bodyRatio / sigBox 面积（真实 analyzePixels 一定有，单测夹具可能只给其一）
+        if(!(sig>0)){
+          var bs=(typeof a.bodyRatio==="number")?a.bodyRatio:0;
+          if(!(bs>0) && a.sigBox && a.sigBox.length===4) bs=Math.max(0,a.sigBox[2]-a.sigBox[0])*Math.max(0,a.sigBox[3]-a.sigBox[1]);
+          sig=bs;
+        }
+        // 可信主体：模型人框 / 显著性质心占比合理 / 食物证据
+        if(!hasPerson && !hasFood && (sig<0.02||sig>0.92)) return {ok:false, why:"找不到明确主体"};
+        return {ok:true, hasPerson:hasPerson, hasFood:hasFood, sigRatio:sig};
+      }catch(e){ return {ok:false, why:"证据判定异常"}; }
+    }
+
+    function _skinEdgeGuard(crop, a){
+      try{
+        if(!a||!Array.isArray(a.skinGrid)||!a.gridW||!crop||crop.length!==4) return {veto:false, crop:crop};
+        var GW=a.gridW, GH=a.gridH||GW, g=a.skinGrid;
+        var cellPx=(typeof a.skinCellPx==="number"&&a.skinCellPx>0)?a.skinCellPx:1000;
+        var blobCell=cellPx*0.30; // 单格肤色占比>30% 才算"一块皮肤"
+        var L=crop[0]/100, T=crop[1]/100, R=crop[2]/100, B=crop[3]/100;
+        if(!(L>0||T>0||R>0||B>0)) return {veto:false, crop:crop};
+        var total=0; for(var t=0;t<GW*GH;t++) total+=g[t]||0;
+        if(total<=0) return {veto:false};
+        // 关键校准（实测教训）：木桌/木地板/秋叶/砖墙/暖色外墙整片都会落进 YCbCr 肤色范围。
+        // 一张照片里"肤色"占比超过 18% 时，几乎必然是大面积暖色表面而不是人
+        // （真人露肤占比通常 <15%，更大就是特写——特写走人像通道根本不裁）。
+        // 不加这条会把构图能力直接清零（实测一张笔记本+木桌照片拦掉全部候选）。
+        var ratio=total/(GW*GH*cellPx);
+        if(ratio>0.18) return {veto:false, diffuse:true, skinRatio:+ratio.toFixed(3)};
+        function cells(x0,y0,x1,y1){
+          var gx0=Math.max(0,Math.floor(x0*GW)), gx1=Math.min(GW,Math.ceil(x1*GW));
+          var gy0=Math.max(0,Math.floor(y0*GH)), gy1=Math.min(GH,Math.ceil(y1*GH));
+          var out=[];
+          for(var yy=gy0;yy<gy1;yy++) for(var xx=gx0;xx<gx1;xx++) out.push(g[yy*GW+xx]||0);
+          return out;
+        }
+        function stat(list){
+          var n=list.length, sum=0, blobs=0;
+          for(var i=0;i<n;i++){ sum+=list[i]; if(list[i]>=blobCell) blobs++; }
+          return {n:n, sum:sum, blobs:blobs, avg:n?sum/n/cellPx:0};
+        }
+        // 紧贴裁切线的"跨界带"（2 格宽 ≈ 画面 12%）
+        var zones=[
+          {edge:"左", out:stat(cells(0,0,L,1)),            cross:stat(cells(Math.max(0,L-0.13),0,L+0.02,1)), kept:stat(cells(L,0,1-R,1))},
+          {edge:"右", out:stat(cells(1-R,0,1,1)),          cross:stat(cells(1-R-0.02,0,Math.min(1,1-R+0.13),1)), kept:stat(cells(L,0,1-R,1))},
+          {edge:"上", out:stat(cells(0,0,1,T)),            cross:stat(cells(0,Math.max(0,T-0.13),1,T+0.02)), kept:stat(cells(0,T,1,1-B))},
+          {edge:"下", out:stat(cells(0,1-B,1,1)),          cross:stat(cells(0,1-B-0.02,1,Math.min(1,1-B+0.13))), kept:stat(cells(0,T,1,1-B))}
+        ];
+        var diag=[];
+        for(var i=0;i<4;i++){
+          var z=zones[i];
+          if([L,T,R,B][i]<=0.005) continue;
+          // 跨界判定用"成块格数"而不是条带平均：一个人的头/手跨在裁切线上只占条带里 2~3 格，
+          // 平均质量会被整条边带稀释到 2%，用平均值判等于永远拦不住。
+          var straddle=(z.cross.blobs>=2 && z.kept.blobs>=2);
+          var removeAll=(z.out.blobs>=3 && z.out.sum/total>=0.60);
+          diag.push({edge:z.edge,crossBlobs:z.cross.blobs,crossAvg:+z.cross.avg.toFixed(3),keptBlobs:z.kept.blobs,outShare:+(z.out.sum/total).toFixed(2)});
+          if(straddle||removeAll){
+            return {veto:true, why:"裁掉的"+z.edge+"侧正切到人物皮肤（"+(straddle?"人跨在裁切线上":"会把人整个裁掉")+"）",
+                    mode:straddle?"straddle":"removeAll", crossAvg:+z.cross.avg.toFixed(3), crossBlobs:z.cross.blobs, keptBlobs:z.kept.blobs, outShare:+(z.out.sum/total).toFixed(2), diag:diag};
+          }
+        }
+        return {veto:false, diag:diag, skinTotal:total};
+      }catch(e){ return {veto:false, crop:crop}; }
+    }
+
+    function _cropsIoU(c1, c2){
+      var a1=[c1[0]/100,c1[1]/100,1-c1[2]/100,1-c1[3]/100];
+      var a2=[c2[0]/100,c2[1]/100,1-c2[2]/100,1-c2[3]/100];
+      var ix=Math.max(0,Math.min(a1[2],a2[2])-Math.max(a1[0],a2[0]));
+      var iy=Math.max(0,Math.min(a1[3],a2[3])-Math.max(a1[1],a2[1]));
+      var inter=ix*iy, u=a1[2]-a1[0], v=a1[3]-a1[1], u2=a2[2]-a2[0], v2=a2[3]-a2[1];
+      var uni=u*v+u2*v2-inter;
+      return uni>0?inter/uni:0;
+    }
+
+    function _cropsSimilar(c1, c2){
+      var iou=_cropsIoU(c1,c2);
+      if(iou>=0.88) return true;
+      var a1=(1-c1[0]/100-c1[2]/100)*(1-c1[1]/100-c1[3]/100);
+      var a2=(1-c2[0]/100-c2[2]/100)*(1-c2[1]/100-c2[3]/100);
+      var cx1=(c1[0]-c1[2])/2+50, cy1=(c1[1]-c1[3])/2+50, cx2=(c2[0]-c2[2])/2+50, cy2=(c2[1]-c2[3])/2+50;
+      var d=Math.sqrt((cx1-cx2)*(cx1-cx2)+(cy1-cy2)*(cy1-cy2))/100;
+      return (Math.abs(a1-a2)<0.05 && d<0.05);
+    }
+
+    function _windowToCrop(x0,y0,x1,y1){
+      return [Math.max(0,Math.round(x0*100)),Math.max(0,Math.round(y0*100)),
+              Math.max(0,Math.round((1-x1)*100)),Math.max(0,Math.round((1-y1)*100))];
+    }
+
+    function _anchorWindow(cx, cy, keepArea, targetNX, targetNY){
+      var s=Math.sqrt(Math.max(0.05,Math.min(1,keepArea)));
+      var w=s, h=s;
+      var x0=cx-targetNX*w, y0=cy-targetNY*h;
+      if(x0<0) x0=0; if(x0+w>1) x0=1-w;
+      if(y0<0) y0=0; if(y0+h>1) y0=1-h;
+      return [x0,y0,x0+w,y0+h];
+    }
+
+    function _intentCandidates(a, plan, budget){
+      var out=[];
+      try{
+        if(!a||!plan) return out;
+        var ar=(typeof a.frameAspect==="number"&&isFinite(a.frameAspect))?a.frameAspect:1;
+        var box=(a.sigBox&&a.sigBox.length===4)?a.sigBox:[0.25,0.25,0.75,0.75];
+        var cx=(typeof a.cx==="number"&&isFinite(a.cx))?a.cx:0.5;
+        var cy=(typeof a.cy==="number"&&isFinite(a.cy))?a.cy:0.5;
+        var pb=_personBoxOf(a);
+        // v13.1.0：只有"人物在画面里占比较大"才禁止生成意图候选；小人物照常生成候选，
+        // 由 _validateNewCrop 的人物 3% 边距 / 物体保护 / 肤色边缘三重硬校验决定去留。
+        var pbBig=(function(){ try{ return !!pb && Math.max(0,pb[2]-pb[0])*Math.max(0,pb[3]-pb[1])>=0.10; }catch(e){ return !!pb; } })();
+        var topWarm=(a.topBandHsv&&typeof a.topBandHsv.ratio==="number")?a.topBandHsv.ratio:0;
+        var protectTop=(topWarm>0.25||(typeof a.blueWater==="number"&&a.blueWater>0.55));
+        var symStrong=(typeof a.sym==="number"&&a.sym>0.42);
+        function push(win,intent,tag,reason){
+          if(!win) return;
+          var c=_windowToCrop(win[0],win[1],win[2],win[3]);
+          var sum=c[0]+c[1]+c[2]+c[3];
+          if(sum<=2) return;
+          out.push({crop:c,intent:intent,tag:tag,reason:reason});
+        }
+        // 1) 主体三分（左/右交点）——把主体放到三分线交点，这是"随手拍→有构图"的最大一步
+        var midArea=Math.max(budget.tightArea,0.45);
+        if(!pbBig && !symStrong){
+          push(_anchorWindow(cx,cy,midArea,1/3,0.5),"thirds-left","主体放左侧三分","把主体从正中间挪到左侧三分线，画面立刻有呼吸");
+          push(_anchorWindow(cx,cy,midArea,2/3,0.5),"thirds-right","主体放右侧三分","把主体从正中间挪到右侧三分线，视线有延伸");
+        }
+        // 2) 地平线三分（上/下）——天空与地面二选一权重，正中间是最呆的位置
+        var hy=(typeof a.row==="number"&&typeof a.rowGap==="number"&&a.rowGap>18)?(a.row/(a.gridH||16)):null;
+        if(hy!==null && hy>0.15 && hy<0.85 && !pbBig){
+          push(_anchorWindow(cx,hy,Math.max(budget.tightArea,0.40),0.5,1/3),"horizon-upper","地平线放上三分","把地平线压到上三分线，地面/前景成为主角");
+          if(!protectTop) push(_anchorWindow(cx,hy,Math.max(budget.tightArea,0.40),0.5,2/3),"horizon-lower","地平线放下三分","把地平线抬到下三分线，天空/氛围占主导");
+        }
+        // 3) 主体紧抱（小框重构图）——抖音"魔法框"的核心：只留最值得看的那一块
+        var subjW=Math.max(0.05,box[2]-box[0]), subjH=Math.max(0.05,box[3]-box[1]);
+        var needArea=Math.max(budget.tightArea, Math.min(0.6,(subjW*1.6)*(subjH*1.6)));
+        if(budget.allowTight && !pbBig && subjW<0.55 && subjH<0.55){
+          push(_anchorWindow(cx,cy,needArea,0.5,0.5),"subject-tight","小框重构图","只框住最好看的那一块，主体占比明显变大");
+          push(_anchorWindow(cx,cy,Math.min(0.62,needArea*1.7),1/3,0.5),"subject-tight-third","小框+三分","只留最好看的一块，并把主体放三分线");
+        }
+        // 4) 去死边——把低能量边带裁掉，杂物/空地面出局
+        try{
+          var col=(a.edgeEnergy&&a.edgeEnergy.col)||[], row=(a.edgeEnergy&&a.edgeEnergy.row)||a.edgeEnergy.eT||[];
+          if(col.length>16&&row.length>16){
+            var avg=function(arr,f0,f1){var s=0,c=0,i0=Math.floor(f0*arr.length),i1=Math.ceil(f1*arr.length);for(var i=Math.max(0,i0);i<Math.min(arr.length,i1);i++){s+=arr[i]||0;c++;}return c?s/c:0;};
+            var midC=avg(col,0.3,0.7), midR=avg(row,0.3,0.7);
+            var L=0,T=0,R=0,B=0, lim=budget.allowTight?0.16:0.10;
+            if(avg(col,0,0.10)<midC*0.6) L=lim*0.6;
+            if(avg(col,0.9,1)<midC*0.6) R=lim*0.6;
+            if(avg(row,0,0.10)<midR*0.6 && !protectTop) T=lim*0.5;
+            if(avg(row,0.9,1)<midR*0.6) B=lim*0.6;
+            if(L+T+R+B>0.05) push([L,T,1-R,1-B],"deadzone-trim","裁掉空边","把没有内容的边带裁掉，画面更干净");
+          }
+        }catch(e){}
+        // 5) 社交画幅（保留旧能力：2:3 / 4:5 / 1:1 / 16:9），供"发朋友圈/小红书"直接用
+        var targets=(ar<0.70)?[0.75,0.8]:(ar<0.95?[1,2/3,0.8]:(ar<1.45?[4/3,1,16/9]:[16/9,4/3,0.8]));
+        for(var ti=0;ti<targets.length;ti++){
+          var c=_candidateAspectCrop(a,targets[ti]);
+          if(c) out.push({crop:c,intent:"aspect",tag:"画幅 "+_candidateRatioTag(c,ar),reason:"换成 "+_candidateRatioTag(c,ar)+" 更好发"});
+        }
+      }catch(e){}
+      return out;
+    }
+
+    function _cloudTrimToCrop(baseCrop, trim){
+      try{
+        var c=(baseCrop||[0,0,0,0]).slice();
+        var t=trim||{};
+        var ALLOW={0:1,5:1,10:1,15:1,20:1,25:1};
+        function v(x){ x=Math.round(Number(x)||0); if(x<0) x=0; if(!ALLOW[x]) { x=x<=2?0:(x<=7?5:(x<=12?10:(x<=17?15:(x<=22?20:25)))); } return Math.min(25,x); }
+        return [Math.min(40,c[0]+v(t.l)),Math.min(40,c[1]+v(t.t)),Math.min(40,c[2]+v(t.r)),Math.min(40,c[3]+v(t.b))];
+      }catch(e){ return (baseCrop||[0,0,0,0]).slice(); }
+    }
+
+    function _validateNewCrop(crop, a, scene, budget, opts){
+      try{
+        opts=opts||{};
+        if(!crop||crop.length!==4) return {ok:false, why:"裁切参数不完整"};
+        var c=crop.map(function(v){return Math.round(v);});
+        var sum=c[0]+c[1]+c[2]+c[3];
+        if(sum<=5) return {ok:false, why:"几乎没裁（四边合计 "+sum+"%）"}; // 微裁一律归零：产品口径"要么明显更好，要么不动"
+        var area=(1-c[0]/100-c[2]/100)*(1-c[1]/100-c[3]/100);
+        var _floorArea=(typeof budget.tightArea==="number"&&budget.tightArea>0)?budget.tightArea:budget.minArea;
+        if(area<_floorArea) return {ok:false, why:"裁得太狠（保留 "+Math.round(area*100)+"% < 允许 "+Math.round(_floorArea*100)+"%）"};
+        var mxEdge=Math.max(c[0],c[1],c[2],c[3]);
+        // 分级幅度上限：宠物最脆、有人物次之；无人物的大场景/美食允许"小框重构图"。
+        // 注意真正的硬约束是"保留面积 ≥ tightArea"（等价于限制等效变焦），
+        // 四边合计只是防止某一边吃掉整幅；对称紧裁（25/25/25/25）合计会到 100，属合法构图。
+        var sc2=String(scene||"");
+        var capEdge=45, capSum=150;
+        if(sc2==="animal"){ capEdge=8; capSum=25; }
+        else if(sc2==="food"){ capEdge=30; capSum=130; } // 餐盘居中紧裁需要四边同时收，面积下限才是真约束
+        else if(_personBoxOf(a)){ capEdge=15; capSum=40; }
+        // 允许"小框重构图"的场景：居中紧裁必然让四边同时收到 (1-√面积下限)/2，
+        // 单边上限必须跟着放开，否则魔法框那种 10~16% 的居中紧裁永远被单边上限误杀。
+        if(budget.allowTight){
+          var _edgeNeed=Math.ceil((1-Math.sqrt(Math.max(0.02,budget.tightArea)))/2*100)+5; // +5：主体不在正中心时两侧不对称
+          capEdge=Math.max(capEdge,Math.min(45,_edgeNeed));
+          capSum=Math.max(capSum,4*_edgeNeed);
+        }
+        if(mxEdge>capEdge) return {ok:false, why:"单边裁切 "+mxEdge+"% 超过该场景上限 "+capEdge+"%"};
+        if(sum>capSum) return {ok:false, why:"四边合计 "+sum+"% 超过上限 "+capSum+"%"};
+        var ev=_subjectEvidence(a,null);
+        if(!ev.ok) return {ok:false, why:ev.why};
+        var sk=_skinEdgeGuard(c,a);
+        if(sk.veto) return {ok:false, why:sk.why};
+        var qs=_cropQualityScore(a,c,false);
+        if(qs<0) return {ok:false, why:"切到主体/人物/物体"};
+        // 人物：任何一条边都必须离人物框 ≥3%，多主体一律拒绝大裁（Twitter 裁切研究的教训）
+        var pb=_personBoxOf(a);
+        if(pb && (pb[0]<c[0]/100+0.03||pb[1]<c[1]/100+0.03||pb[2]>1-c[2]/100-0.03||pb[3]>1-c[3]/100-0.03)) return {ok:false, why:"会切到人物"};
+        if(area<0.45 && Array.isArray(a.allBoxes)){
+          var pc=0; for(var i=0;i<a.allBoxes.length;i++){ if(a.allBoxes[i]&&a.allBoxes[i].class==="person") pc++; }
+          if(pc>1) return {ok:false, why:"画面里不止一个人，大裁会丢掉其他人"};
+        }
+        // 物体保护：_objectGuard 若改变裁切，说明原方案切到了物体
+        try{
+          if(Array.isArray(a.allBoxes)&&a.allBoxes.length){
+            var g=_objectGuard(c,a.allBoxes);
+            if(JSON.stringify(g)!==JSON.stringify(c)) return {ok:false, why:"会切到画面里的物体"};
+          }
+        }catch(e){}
+        return {ok:true, score:qs, area:area};
+      }catch(e){ return {ok:false, why:"校验异常"}; }
+    }
+
+module.exports = { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard, _decloudPlan, _bandSatSignal, _symEdgeSignal, _foodEvidenceSignal, _contentGuard, _thirdsFitScore, aestheticScore, _cloudCropGuard, _personBoxOf, _proactiveComposition, _balanceCrop, _cropQualityScore, _saferCropVariant, _candidateRatioTag, _candidateAspectCrop, _buildCompositionCandidates, _srcMegapixels, _cropBudget, _subjectEvidence, _skinEdgeGuard, _cropsIoU, _cropsSimilar, _windowToCrop, _anchorWindow, _intentCandidates, _cloudTrimToCrop, _validateNewCrop };

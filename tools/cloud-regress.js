@@ -48,6 +48,7 @@ async function runBatch(imgs, batchIdx){
         const st=sb?sb.textContent:''; const tag=tg?tg.textContent:'';
         return {crop:p.crop,scene:p.sceneType,rule:p.rule,conf:p.conf,
           intent:(p.aiIntent&&p.aiIntent.intentName)||p.cropIntent||'',
+          refined:!!p.aiRefined, rejected:!!p.aiRejected, pick:p.aiPick||null, guard:p.aiGuardWhy||null, candCount:p.candCount||0, candTag:p.aiCandidateTag||'',
           tag:tag, cloud:(tag.indexOf('☁️')>=0), noCrop:!!p.noCrop, status:st,
           cp:cp?{crop:cp.crop,scene:cp.sceneType,rule:cp.rule,conf:cp.conf,noCrop:cp.noCrop,intent:cp.cropIntent||''}:null,
           card:!!document.getElementById('cloudUpgradeApply')};
@@ -62,7 +63,7 @@ async function runBatch(imgs, batchIdx){
       const _snap2=await page.evaluate(()=>{
         const p=window.__ai&&window.__ai.plan; const cp=window.__ai&&window.__ai.cloudPlan; const sb=document.getElementById('statusbar'); const tg=document.getElementById('aiRuleTag');
         if(!p) return null; const st=sb?sb.textContent:''; const tag=tg?tg.textContent:'';
-        return {crop:p.crop,scene:p.sceneType,rule:p.rule,conf:p.conf,intent:(p.aiIntent&&p.aiIntent.intentName)||p.cropIntent||'',
+        return {crop:p.crop,scene:p.sceneType,rule:p.rule,conf:p.conf,intent:(p.aiIntent&&p.aiIntent.intentName)||p.cropIntent||'',refined:!!p.aiRefined,rejected:!!p.aiRejected,pick:p.aiPick||null,guard:p.aiGuardWhy||null,candCount:p.candCount||0,candTag:p.aiCandidateTag||'',
           tag:tag, cloud:(tag.indexOf('☁️')>=0), noCrop:!!p.noCrop, status:st, card:false,
           cp:cp?{crop:cp.crop,scene:cp.sceneType,rule:cp.rule,conf:cp.conf,noCrop:cp.noCrop,intent:cp.cropIntent||''}:null};
       });
@@ -75,13 +76,13 @@ async function runBatch(imgs, batchIdx){
       snap=await page.evaluate(()=>{
         const p=window.__ai&&window.__ai.plan; const cp=window.__ai&&window.__ai.cloudPlan; const sb=document.getElementById('statusbar'); const tg=document.getElementById('aiRuleTag');
         if(!p) return null; const st=sb?sb.textContent:''; const tag=tg?tg.textContent:'';
-        return {crop:p.crop,scene:p.sceneType,rule:p.rule,conf:p.conf,intent:(p.aiIntent&&p.aiIntent.intentName)||p.cropIntent||'',
+        return {crop:p.crop,scene:p.sceneType,rule:p.rule,conf:p.conf,intent:(p.aiIntent&&p.aiIntent.intentName)||p.cropIntent||'',refined:!!p.aiRefined,rejected:!!p.aiRejected,pick:p.aiPick||null,guard:p.aiGuardWhy||null,candCount:p.candCount||0,candTag:p.aiCandidateTag||'',
           tag:tag, cloud:(tag.indexOf('☁️')>=0), noCrop:!!p.noCrop, status:st, card:false,
           cp:cp?{crop:cp.crop,scene:cp.sceneType,rule:cp.rule,conf:cp.conf,noCrop:cp.noCrop,intent:cp.cropIntent||''}:null};
       });
     }
     const name=path.basename(img);
-    if(snap){ const cc=snap.cp||snap; console.log(`${name} | ${snap.cloud?'CLOUD':'local'} scene=${cc.scene} rule=${cc.rule} cloudCrop=[${cc.crop}] cloudNoCrop=${cc.noCrop} localCrop=[${snap.crop}] | ${snap.tag.slice(0,30)} | ${snap.status.slice(0,34)}`); results.push({name,snap}); }
+    if(snap){ const cc=snap.cp||snap; console.log(`${name} | ${snap.cloud?'CLOUD':'local'} scene=${cc.scene} rule=${cc.rule} cloudCrop=[${cc.crop}] cloudNoCrop=${cc.noCrop} localCrop=[${snap.crop}] | ${snap.tag.slice(0,30)} | ${snap.status.slice(0,34)} | refined=${!!snap.refined} rejected=${!!snap.rejected} pick=${snap.pick||'-'} cand=${snap.candCount||0} guard=${snap.guard||'-'}`); results.push({name,snap}); }
     else { console.log(`${name} | NO RESULT`); results.push({name,snap:null}); }
   }
   await b.close();
@@ -108,5 +109,14 @@ async function runBatch(imgs, batchIdx){
   const cloudOnly=all.filter(x=>x.snap&&x.snap.cloud&&x.snap.noCrop===false);
   const localOnly=all.filter(x=>x.snap&&!x.snap.cloud&&x.snap.noCrop===false);
   console.log(`\n=== 汇总：${all.length} 张 | 云端裁切 ${cloudOnly.length} | 本地裁切 ${localOnly.length} | 无结果 ${all.filter(x=>!x.snap).length} ===`);
+  // v13.1.0：refine/reject 是不是真的落地，只看 plan.aiRefined，不看界面文案（文案会遮住它）
+  const withSnap=all.filter(x=>x.snap);
+  const refined=withSnap.filter(x=>x.snap.refined);
+  const rejected=withSnap.filter(x=>x.snap.rejected);
+  const guarded=withSnap.filter(x=>x.snap.guard&&x.snap.guard!=='-');
+  const cands=withSnap.map(x=>x.snap.candCount||0);
+  console.log(`=== 指令落地：refine ${refined.length} | reject ${rejected.length} | 被硬校验退回 ${guarded.length} | 候选数平均 ${(cands.reduce((a,b)=>a+b,0)/Math.max(1,cands.length)).toFixed(2)} ===`);
+  for(const x of refined) console.log('  refine: '+x.name+' pick='+x.snap.pick+' crop=['+x.snap.crop+'] '+x.snap.candTag);
+  for(const x of guarded) console.log('  guard : '+x.name+' → '+x.snap.guard);
   srv.close();
 })();

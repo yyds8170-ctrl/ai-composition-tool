@@ -1,0 +1,50 @@
+=== v13.1.0 发版前门禁 ===
+日期：2026-10-27（当日两次自动断电后，全部在最终构建上重跑）
+
+[1] node tools/extract-pure.js          PASS（新增 11 个纯函数入表：_srcMegapixels/_cropBudget/_subjectEvidence/_skinEdgeGuard/
+    _cropsIoU/_cropsSimilar/_windowToCrop/_anchorWindow/_intentCandidates/_cloudTrimToCrop/_validateNewCrop）
+[2] node tests/unit.test.js             PASS 415 个 test() 用例 + 分块断言组
+    本版新增用例组：意图候选 / 幅度预算档位 / 主体证据闸门 / 肤色边缘守卫（跨界·暖墙放行·整人裁掉·弥散表面放行）/
+    refine 指令与几何 / 小图预算 / 高像素小框解锁 / 暗调美食滤镜 / **小人物按面积分档 + 大人物禁小框 + 切到人物必被拒**
+[3] node tools/fuzz.js                  PASS 0 问题
+[4] node --check sw.js / 内联脚本编译     PASS（sw 语法 OK；index.html 内联脚本 2 段 0 语法错误，用 vm.Script 编译校验）
+[5] node tools/verify_stacking.js       PASS（分割线移动后画面变化，效果层在上、原图层在下）
+[6] node tools/qa-walkthrough.js（390×844）PASS 横向溢出无 / 按钮越界或过小无 / 异常换行无 / 控制台错误无（截图 qa/v131f）
+[7] node tools/qa-e2e.js（390×844 全流程）PASS 无 console error / 无 pageerror / 无 4xx-5xx
+[8] 本地回归 · 122 张唯一真实照片（主基准）  PASS
+    样本 122 · 裁切 96（79%）· 不裁 26 · 错误 0 · 微裁 0 · 低于像素预算 0
+    保留面积 p10=84% 中位=85% p90=100% 最小=45% · 候选数平均 3.5 最多 7
+    人像/特写 15 张裁切率 0%（全部保留）· person=true 被裁 0 张
+[9] 本地回归 · 70 张唯一图（旧 800px 图集，与 v13.0.0 同图可比）  PASS
+    裁切率 56% → 60% · 平均保留 92.6% → 90.2% · 最小保留 83% → 60% · 人像 17 张全部保留
+    与改动前逐行 diff：122 张 0 行差异；70 张 1 行差异（night_9 候选 0→4，裁切不变）
+[10] 云端回归 · 50 张唯一真实照片（本地模型 + 云端同开 = 默认配置）  PASS
+    50/50 有结果 · 超时 0 · 失败/熔断 0 · 微裁 0 · 人像 5 张被裁 0
+    云端主导 44 / 本地人像保护 6 · 云端提案裁切 31 判不裁 13 · 最终落地裁切 32（64%）
+    **refine 被云端主动要求 5 次：4 次通过硬校验落地、1 次被肤色边缘守卫退回**；reject 0 次
+    候选表：有联系表的 30 张平均 4.47 个候选；20 张 cand=0（5 张人像设计内 / 13 张本地也凑不出 / 7 张云端重建后不足 2 个）
+    详见 tests/logs/v13.1.0_cloud50.txt（含"测量口径更正"与 v13.2 待办）
+[11] 红线词扫描                          PASS 0 命中（词表在仓库外 redline-words.txt；扫描前剔除 base64 数据；
+     本版扫描范围扩到 tests/unit.test.js、tests/pure-functions.js、三份 v13.1 日志与 picsum-manifest.json）
+[12] 版本号同步                          PASS index.html(APP_VER=v13.1.0) / sw.js(ai-compose-v131000) /
+     package.json 13.1.0 / manifest.webmanifest 13.1.0 / README v13.1.0 条目
+[13] 口令与密钥                          PASS 将要上传的 28 个文件扫描：共享口令、GitHub token、
+     `sk-`/`ghp_`/`github_pat_` 形态 0 命中；SCF 代理地址在 index.html 中只出现 1 次（SCF_BASE 常量），其余 5 处引用常量；
+     122 张测试照片本体与 tools/label-picsum.js（含本机口令路径）均不进入仓库
+[14] 远端基线核对                        PASS main HEAD 仍是 v13.0.0 提交，tree 499 个 blob 未截断，
+     发布用 base_tree 叠加只覆盖 FILES 列表，不删除任何既有文件
+
+关键变化（相对 v13.0.0）
+- 构图候选从"1 本地 + 2 画幅"扩到最多 8 个**意图不同**的候选（三分左/右、地平线上/下、小框重构图、小框+三分、
+  去死边、社交画幅），离线时本地也会自动采用其中通过全部硬校验的最优者。
+- 裁切幅度不再写死：`_cropBudget` 由源真实像素 + 场景 + 暗/糊证据决定，并受"短边≥900、长边≥1350"输出下限约束；
+  人物按**占画面面积**分档（≥10% 保守 / <10% 允许主动重构图），保护交给与幅度无关的硬校验。
+- 云端协议加 `action=select|refine|reject` + `base` + `trim(0/5/10/15/20/25)`：坐标仍由本地计算并过
+  `_validateNewCrop`，不过则退回原候选；新增 `thinking`/`format` 两类失败原因。
+- BYOK 体检改为两档真实链路（小图视觉 + 896 联系表严格 JSON），换厂商/模型/Key 立即清空结论；
+  思考开关按「厂商+模型」配置并 400 降级重试；请求头三路径统一；60s 从云端请求发出计时；删除死兜底。
+- P1：肤色边缘守卫（小人物未被模型检出也保护）、主体证据闸门（低质/无主体/占位图不硬裁）、
+  暗调美食不再误推夜景冷调滤镜、四边合计≤5% 微裁归零、候选条隐藏条件收窄。
+- 数据诚实化：更正 v13.0.0 的"100/50 张真实拍摄图"口径（md5 实测 70/42 唯一，且含 emoji 占位图）；
+  回归脚本加 md5 去重与唯一数上报；新增 122 张来源可追溯的真实照片作为主基准；
+  新增 tools/summarize-cloud.js 与 tools/probe-cloud-actions.js，把"云端到底做了什么"变成可核对的字段。

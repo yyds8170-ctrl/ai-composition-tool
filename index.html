@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v13.0.0 · 实景视觉构图生成工具</title>
-<meta name="description" content="AI 构图助手 Pro v13.0.0 · 真AI构图：本地生成 A/B/C/原图安全候选，云端 VLM 看图选最美并自动落地；云端状态可见/可重试；BYOK 内置已核对视觉模型预设与一键连接测试；永久免费、不限使用次数">
+<title>AI 构图助手 Pro v13.1.0 · 实景视觉构图生成工具</title>
+<meta name="description" content="AI 构图助手 Pro v13.1.0 · 真AI构图：本地一次给出最多 8 种不同构图思路（三分/地平线/小框重构图/去死边/画幅），云端 AI 不只挑一个，还能在选中方案上继续往里收边；每一步都有本地硬保护（人物/宠物/主体/像素预算）；BYOK 改为真实链路体检；永久免费、不限使用次数">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v13.0.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切（永久免费不限次数）">
-<meta property="og:description" content="给不会拍照的普通人：本地先生成多个安全构图，云端AI直接看图选最美并自动应用。云端开关/口令/失败原因一眼可见；BYOK 选厂商即自动填视觉模型，一键测试连接。">
+<meta property="og:title" content="AI 构图助手 Pro v13.1.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切（永久免费不限次数）">
+<meta property="og:description" content="给不会拍照的普通人：本地一次给出多种不同构图思路，云端AI看图挑最美、还能在选中方案上继续收紧边距。云端开关/口令/失败原因一眼可见；BYOK 选厂商即自动填视觉模型，一键测试连接。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
 <meta name="twitter:card" content="summary_large_image">
@@ -1051,7 +1051,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v13.0.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v13.1.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1087,7 +1087,7 @@
     <div class="mp-row">
       <label class="mp-sw"><input type="checkbox" id="cloudOn"><span class="mp-sl"></span>启用云端 VLM 构图分析</label>
     </div>
-    <div class="mp-desc">联网时调用大模型"看懂"画面（场景/主体/构图），比本地像素算法更准；未填 Key 或断网时自动回退本地引擎。启用后照片会发送至云端分析。</div>
+    <div class="mp-desc">联网时调用大模型"看懂"画面（场景/主体/构图），比本地像素算法更准；未填口令或断网时自动回退本地引擎。启用后照片会发送至云端分析。<b>v13.1.0 起</b>：云端可以在本地候选基础上继续帮你"收紧边距"，但坐标一律由本地计算并过人物/宠物/主体/像素四道硬保护，云端说"不该裁"时我们就不裁。</div>
     <div class="mp-row">
       <label class="mp-sw"><input type="checkbox" id="cloudDeepReview"><span class="mp-sl"></span>人物完整性二次复核（更慢，默认关）</label>
     </div>
@@ -1102,7 +1102,7 @@
     </div>
     <div id="cloudSharedRow" style="display:none;">
       <div class="mp-row" style="flex-wrap:wrap;gap:6px;">
-        <input type="text" id="cloudBase" value="https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com" placeholder="代理 Base URL" style="flex:1 1 100%;padding:7px 10px;border-radius:8px;border:1px solid rgba(0,0,0,.14);background:#fff;font-size:12px;color:#1A1B1C;min-width:0;box-sizing:border-box;">
+        <input type="text" id="cloudBase" value="" placeholder="代理 Base URL" style="flex:1 1 100%;padding:7px 10px;border-radius:8px;border:1px solid rgba(0,0,0,.14);background:#fff;font-size:12px;color:#1A1B1C;min-width:0;box-sizing:border-box;">
       </div>
       <div class="mp-row" style="flex-wrap:wrap;gap:6px;">
         <input type="password" id="cloudKey" placeholder="访问口令（X-App-Token，仅保存在本机）" style="flex:1 1 100%;padding:7px 10px;border-radius:8px;border:1px solid rgba(0,0,0,.14);background:#fff;font-size:12px;color:#1A1B1C;min-width:0;box-sizing:border-box;">
@@ -1127,8 +1127,8 @@
       <div class="mp-desc" style="line-height:1.7;">自带 Key 模式：选厂商 → 选视觉模型预设 → 填 API Key → 点「测试云端连接」确认可用。Key 只存本机、只发往所选厂商，绝不进入代码。不可用的厂商会标注原因。</div>
     </div>
     <div class="mp-row" style="flex-wrap:wrap;gap:8px;align-items:center;">
-      <button id="cloudTestBtn" class="mp-btn" style="flex:0 0 auto;">测试云端连接</button>
-      <span id="cloudTestResult" style="font-size:11px;color:var(--sub);line-height:1.5;">不跑整图，只发一张 64×64 测试图</span>
+      <button id="cloudTestBtn" class="mp-btn" style="flex:0 0 auto;">体检云端（约 15-60 秒）</button>
+      <span id="cloudTestResult" style="font-size:11px;color:var(--sub);line-height:1.5;">还没体检。点按钮会真跑两步：① 小图看图 ② 与正式分析同尺寸的 896 联系表 + 严格 JSON（会消耗一次额度，约 15-60 秒）。换厂商/模型/Key 后需重新体检。</span>
     </div>
   </div>
   <div class="help-body" id="helpBody"></div>
@@ -1138,7 +1138,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v13.0.0";
+var APP_VER="v13.1.0";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -1332,6 +1332,9 @@ var APP_VER="v13.0.0";
         toneExpoV=$("toneExpoV"), toneContV=$("toneContV"), toneSatuV=$("toneSatuV"), toneTempV=$("toneTempV"),
         wmOn=$("wmOn"), wmOp=$("wmOp"), wmOpV=$("wmOpV");
 
+    // v13.1.0：共享代理地址收敛为唯一常量（此前在 6 处硬编码，改地址要全文搜索，极易漏改）。
+    // 要换区/加冗余：在腾讯云函数控制台再部署一个同构代理，把本常量改成数组并按顺序探活即可。
+    var SCF_BASE="https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com";
     var state={
       mode:"photo",       // photo | camera
       stream:null,
@@ -1377,10 +1380,10 @@ var APP_VER="v13.0.0";
       cloud:{
         on:(function(){ try{ return localStorage.getItem("aiComposeCloudOn")==="1"; }catch(e){ return false; } })(),
         mode:(function(){ try{ var v=localStorage.getItem("aiComposeCloudMode"); return (v==="byok")?"byok":"shared"; }catch(e){ return "shared"; } })(),
-        base:(function(){ try{ var dft="https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com"; var v=localStorage.getItem("aiComposeCloudBase");
+        base:(function(){ try{ var dft=SCF_BASE; var v=localStorage.getItem("aiComposeCloudBase");
           // v4.7.0 一次性迁移：旧版"自带 Key 直连"残留的 cephalon.cloud 直连地址会被浏览器按 Origin 拦截(403)，统一重置为安全代理地址
           if(!v||/cephalon\.cloud/i.test(v)){ try{ localStorage.setItem("aiComposeCloudBase",dft); }catch(e){} return dft; }
-          return v; }catch(e){ return "https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com"; } })(),
+          return v; }catch(e){ return SCF_BASE; } })(),
         // v12.26.0: SCF 后端已切到端脑云路由，qwen3.5-flash 已下线（实测 400 model not found）；
         // 共享代理默认模型改为视觉可用的 glm-5.3-flash。
         model:"glm-5.3-flash",
@@ -1391,6 +1394,8 @@ var APP_VER="v13.0.0";
       }
     };
 
+    // v13.1.0：共享代理地址收敛为唯一常量（此前在 6 处硬编码，改地址要全文搜索，极易漏改）。
+    // 要换区/加冗余：在腾讯云函数控制台再部署一个同构代理，把本常量改成数组并按顺序探活即可。
     function _cloudChatURL(base){ return String(base||"").replace(/\/+$/,"")+"/chat/completions"; }
     // v8.0.9: 云端"已配置可用"统一判定——shared 看访问口令、byok 看 API Key，任一套就绪即云端可用
     // v11.16.0: 双重检查 localStorage——防止内存状态与UI开关不同步导致"关了还走云端"
@@ -1419,10 +1424,10 @@ var APP_VER="v13.0.0";
         {id:"deepseek-ai/DeepSeek-V4-Flash-Vision-Exp",label:"DeepSeek V4 Flash Vision",tier:"fast",vision:true,note:"原生视觉"}
       ]},
       {id:"dashscope", name:"通义千问 · 阿里云百炼", base:"https://dashscope.aliyuncs.com/compatible-mode/v1", note:"直连已确认", cors:"yes", models:[
-        {id:"qwen3.7-plus",label:"Qwen3.7 Plus",tier:"balanced",vision:true,note:"默认推荐·1M"},
-        {id:"qwen3.8-max",label:"Qwen3.8 Max",tier:"quality",vision:true,note:"旗舰"},
-        {id:"qwen3-vl-plus",label:"Qwen3-VL Plus",tier:"quality",vision:true,note:"视觉专项"},
-        {id:"qwen3-vl-flash",label:"Qwen3-VL Flash",tier:"fast",vision:true,note:"快/省"}
+        {id:"qwen3-vl-flash",label:"Qwen3-VL Flash",tier:"fast",vision:true,note:"默认推荐 · 官方文档：默认不思考，最快"},
+        {id:"qwen3-vl-plus",label:"Qwen3-VL Plus",tier:"quality",vision:true,note:"视觉专项 · 默认不思考"},
+        {id:"qwen3.7-plus",label:"Qwen3.7 Plus",tier:"balanced",vision:true,slow:true,note:"全模态 1M · 默认开思考（本工具自动关）"},
+        {id:"qwen3.8-max",label:"Qwen3.8 Max",tier:"quality",vision:true,slow:true,note:"旗舰 · 默认开思考（本工具自动关）"}
       ]},
       {id:"openrouter", name:"OpenRouter（聚合 · 国际推荐）", base:"https://openrouter.ai/api/v1", note:"直连已确认", cors:"yes", models:[
         {id:"google/gemini-3.8-flash",label:"Gemini 3.8 Flash",tier:"fast",vision:true,note:"默认推荐·快且便宜"},
@@ -1436,9 +1441,9 @@ var APP_VER="v13.0.0";
         {id:"deepseek-v4-flash-vision-exp",label:"V4 Flash Vision Exp",tier:"balanced",vision:true,note:"旧 ID，路由至 V4.1 Flash"}
       ]},
       {id:"kimi", name:"Kimi · 月之暗面", base:"https://api.moonshot.cn/v1", note:"直连已确认", cors:"yes", models:[
-        {id:"kimi-k3.1-pro",label:"Kimi K3.1 Pro",tier:"quality",vision:true,note:"原生视觉·1M"},
-        {id:"kimi-k3.1-pro-highspeed",label:"Kimi K3.1 Pro 高速版",tier:"fast",vision:true,note:"2-3x 速度"},
-        {id:"kimi-k3",label:"Kimi K3",tier:"balanced",vision:true,note:"上一代旗舰"}
+        {id:"kimi-k3.1-pro-highspeed",label:"Kimi K3.1 Pro 高速版",tier:"fast",vision:true,slow:true,note:"官方：只能思考、关不掉（400），已自动降到 low 档"},
+        {id:"kimi-k3.1-pro",label:"Kimi K3.1 Pro",tier:"quality",vision:true,slow:true,note:"质量优先但慢 · 只能思考"},
+        {id:"kimi-k3",label:"Kimi K3",tier:"balanced",vision:true,slow:true,note:"只能思考 · 默认 max，本工具发 reasoning_effort:low"}
       ]},
       {id:"qianfan", name:"百度千帆 · 文心", base:"https://qianfan.baidubce.com/v2", note:"直连已确认", cors:"yes", models:[
         {id:"ernie-4.5-turbo-vl",label:"ERNIE 4.5 Turbo VL",tier:"balanced",vision:true,note:"默认推荐"},
@@ -1447,13 +1452,13 @@ var APP_VER="v13.0.0";
         {id:"ernie-4.5-vl-28b-a3b",label:"ERNIE 4.5 VL 28B",tier:"fast",vision:true,note:"轻量"}
       ]},
       {id:"minimax", name:"MiniMax", base:"https://api.minimaxi.com/v1", note:"直连已确认", cors:"yes", models:[
-        {id:"MiniMax-M3.1-Flash",label:"MiniMax M3.1 Flash",tier:"fast",vision:true,note:"默认推荐"},
-        {id:"MiniMax-M3",label:"MiniMax M3",tier:"quality",vision:true,note:"旗舰·图/视频"}
+        {id:"MiniMax-M3",label:"MiniMax M3",tier:"balanced",vision:true,note:"默认推荐 · 官方支持 thinking:disabled"},
+        {id:"MiniMax-M3.1-Flash",label:"MiniMax M3.1 Flash",tier:"fast",vision:true,slow:true,note:"官方：thinking 关不掉（错误码 2013）· 容易超时"}
       ]},
       {id:"stepfun", name:"阶跃星辰 StepFun", base:"https://api.stepfun.com/v1", note:"直连已确认", cors:"yes", models:[
-        {id:"step-3.7-flash",label:"Step 3.7 Flash",tier:"balanced",vision:true,note:"默认推荐"},
+        {id:"step-1o-turbo-vision",label:"Step-1o Turbo Vision",tier:"fast",vision:true,note:"默认推荐 · 视觉专项"},
+        {id:"step-3.7-flash",label:"Step 3.7 Flash",tier:"balanced",vision:true,slow:true,note:"每次回答前都思考 · 可能超时"},
         {id:"step-5-preview",label:"Step 5 Preview",tier:"quality",vision:true,note:"旗舰"},
-        {id:"step-1o-turbo-vision",label:"Step-1o Turbo Vision",tier:"fast",vision:true,note:"视觉"},
         {id:"step-1o-vision-32k",label:"Step-1o Vision 32K",tier:"fast",vision:true,note:"旧版视觉"}
       ]},
       {id:"zhipu", name:"智谱 GLM（必须代理）", base:"https://open.bigmodel.cn/api/paas/v4", note:"CORS 预检失败，浏览器直连会被拦", cors:"no", models:[
@@ -1513,14 +1518,21 @@ var APP_VER="v13.0.0";
         for(var j=0;j<list.length;j++){
           var m=list[j], o=document.createElement("option");
           o.value=m.id;
-          o.textContent=_byokTierLabel(m.tier)+" · "+m.label+(m.vision?" · 视觉":" · 仅文本")+" · "+m.id;
+          o.textContent=_byokTierLabel(m.tier)+" · "+m.label+(m.vision?(m.slow?" · 视觉(慢)":" · 视觉"):" · 仅文本")+" · "+m.id;
           cloudByokModelPreset.appendChild(o);
         }
         var oc=document.createElement("option"); oc.value="__custom__"; oc.textContent="自定义模型 ID…"; cloudByokModelPreset.appendChild(oc);
         if(match){ cloudByokModelPreset.value=match.id; if(cloudByokModel) cloudByokModel.value=match.id; if(cloudByokCustomRow) cloudByokCustomRow.style.display="none"; }
         else{ cloudByokModelPreset.value="__custom__"; if(cloudByokModel && cur) cloudByokModel.value=cur; if(cloudByokCustomRow) cloudByokCustomRow.style.display=""; }
         if(cloudByokModelHint){
-          if(match) cloudByokModelHint.innerHTML="<b>"+esc(match.label)+"</b> · "+_byokTierLabel(match.tier)+(match.vision?" · 支持图片输入":" · <span style='color:#EF6B6B'>仅文本，不适合构图</span>")+(match.note?" · "+esc(match.note):"");
+          if(match){
+            var _tm=_thinkModeOf(vendorId,match.id);
+            var _tmTxt=({et_false:"自动关思考",th_disabled:"自动关思考",low:"思考降到 low 档",or_low:"思考降到 low 档",none:"默认不思考",forced:"<b style='color:#FAAD14'>只能思考（慢）</b>"})[_tm]||"不发送思考参数";
+            cloudByokModelHint.innerHTML="<b>"+esc(match.label)+"</b> · "+_byokTierLabel(match.tier)
+              +(match.vision?" · 支持图片输入（厂商文档，未经本工具实测）":" · <span style='color:#EF6B6B'>仅文本，不适合构图</span>")
+              +" · "+_tmTxt
+              +(match.note?" · "+esc(match.note):"");
+          }
           else cloudByokModelHint.textContent="自定义模型：请确认该模型支持图片输入（vision / image_url），否则云端无法看图。";
           if(v.cors==="no") cloudByokModelHint.innerHTML+="<br><span style='color:#EF6B6B'>该厂商实测不支持浏览器直连，请改选硅基流动/OpenRouter，或走共享口令。</span>";
           else if(v.cors==="maybe") cloudByokModelHint.innerHTML+="<br><span style='color:#FAAD14'>直连未确认，请点「测试云端连接」；失败就换聚合平台。</span>";
@@ -1535,60 +1547,158 @@ var APP_VER="v13.0.0";
         cloudTestResult.style.color=ok===true?"#1a7f37":(ok===false?"#c0392b":"var(--sub)");
       }catch(e){}
     }
-    function _testCloudConnection(){
+    // 体检第②档用的合成联系表：与正式请求同尺寸（896×896）、同复杂度（2×2 + 字母角标），
+    // 这样"体检通过"才真的等价于"能出构图 JSON"——v13.0.0 用 64×64 + 5 token，测的是"网关理不理我"。
+    function _cloudDiagSheet(){
       try{
-        var byok=(state.cloud.mode==="byok");
-        var v=byok?_byokVendor(state.cloud.byokVendor):null;
-        var base=byok?v.base:state.cloud.base;
-        var key=byok?state.cloud.byokKey:state.cloud.key;
-        var model=byok?(state.cloud.byokModel||v.model):state.cloud.model;
-        if(!key){ _cloudTestResultSet("先填写"+(byok?"API Key":"访问口令")+"再测试",false); return; }
-        if(!base||!model){ _cloudTestResultSet("缺少 Base URL 或模型名",false); return; }
-        _cloudTestResultSet("正在测试 "+model+" …",null);
-        // 生成一张 64×64 小图，真实走一次视觉请求（只花很少 token）。
-        var c=document.createElement("canvas"); c.width=64; c.height=64;
-        var cx=c.getContext("2d"); cx.fillStyle="#5a6470"; cx.fillRect(0,0,64,64);
-        cx.fillStyle="#fff"; cx.font="bold 20px Arial"; cx.fillText("AI",18,38);
-        var tiny=c.toDataURL("image/jpeg",0.8);
-        var body=Object.assign({model:model,messages:[{role:"user",content:[
-          {type:"text",text:"只回复 OK"},
-          {type:"image_url",image_url:{url:tiny}}
-        ]}],temperature:0,max_tokens:5}, _cloudThinkingParams(model));
-        var h={"Content-Type":"application/json"};
-        if(byok) h["Authorization"]="Bearer "+key; else h["X-App-Token"]=key;
-        if(byok&&v.id==="openrouter"){ h["HTTP-Referer"]="https://yyds8170-ctrl.github.io/ai-composition-tool/"; h["X-OpenRouter-Title"]="AI 构图助手"; }
-        if(byok&&v.id==="anthropic"){ h["anthropic-dangerous-direct-browser-access"]="true"; }
-        var ctrl=(typeof AbortController!=="undefined")?new AbortController():null;
-        var t0=Date.now(), timer=setTimeout(function(){ try{ if(ctrl) ctrl.abort(); }catch(e){} },20000);
-        fetch(_cloudChatURL(base),{method:"POST",headers:h,body:JSON.stringify(body),signal:ctrl?ctrl.signal:undefined})
-          .then(function(r){ return r.json().catch(function(){return {};}).then(function(j){ return {ok:r.ok,status:r.status,j:j}; }); })
-          .then(function(res){
-            clearTimeout(timer);
-            var sec=((Date.now()-t0)/1000).toFixed(1);
-            if(res.ok){ _cloudTestResultSet("✅ 可用 · "+sec+"s · "+model,true); }
-            else if(res.status===401||res.status===403){ _cloudTestResultSet("❌ 鉴权失败（"+res.status+"）：Key/口令不对或没有该模型权限",false); }
-            else if(res.status===404){ _cloudTestResultSet("❌ 模型不存在（404）：请重新选择预设或确认模型 ID",false); }
-            else if(res.status===429){ _cloudTestResultSet("❌ 限流/额度不足（429）",false); }
-            else{
-              var msg=(res.j&&res.j.error&&(res.j.error.message||res.j.error.code))||("HTTP "+res.status);
-              _cloudTestResultSet("❌ "+String(msg).replace(key,"***").slice(0,90),false);
-            }
-          })
-          .catch(function(e){
-            clearTimeout(timer);
-            if(e&&e.name==="AbortError") _cloudTestResultSet("❌ 超时（20s）；检查网络或换模型",false);
-            else _cloudTestResultSet("❌ 浏览器直连被拦截（CORS）或网络不通；请换聚合平台/共享模式",false);
-          });
-      }catch(e){ _cloudTestResultSet("测试失败："+String(e.message||e).slice(0,60),false); }
+        var C=448, c=document.createElement("canvas"); c.width=896; c.height=896;
+        var x=c.getContext("2d"), labels=["原","A","B","C"], cols=["#2F3944","#3A4552","#455160","#505C6C"];
+        for(var i=0;i<4;i++){
+          var px=(i%2)*C, py=Math.floor(i/2)*C;
+          x.fillStyle=cols[i]; x.fillRect(px,py,C,C);
+          x.fillStyle=i%2?"#E8B84B":"#7FB5FF";
+          x.beginPath(); x.arc(px+C*0.5,py+C*(i<2?0.62:0.4),C*0.16,0,Math.PI*2); x.fill();
+          x.fillStyle="rgba(255,255,255,.16)"; x.fillRect(px,py+C*0.78,C,C*0.22);
+          x.fillStyle="rgba(0,0,0,.8)"; x.fillRect(px+8,py+8,44,40);
+          x.fillStyle="#fff"; x.font="bold 26px Arial"; x.textBaseline="middle"; x.fillText(labels[i],px+18,py+29);
+        }
+        return c.toDataURL("image/jpeg",0.82);
+      }catch(e){ return null; }
     }
-    // v12.26.0: glm-5.3-flash 不认 enable_thinking:false，会先输出 reasoning 再输出 content，
-    // 实测同一张图 34s→10s；必须用 thinking:{type:"disabled"}。其他厂商沿用原参数。
-    function _cloudThinkingParams(model){
-      var m=String(model||"").toLowerCase();
-      // v13.0.0：只给明确支持该参数的厂商发送，避免 OpenAI/Gemini/Kimi 等因未知字段 400。
-      if(m.indexOf("glm")===0) return {thinking:{type:"disabled"}};
-      if(/^(qwen|qwq|qvq)/.test(m)) return {enable_thinking:false};
+    function _cloudDiagFailText(status, j, key){
+      if(status===401||status===403) return "鉴权失败（"+status+"）：Key/口令不对，或该 Key 没有这个模型的权限";
+      if(status===404) return "模型不存在（404）：请重新选择预设，或确认模型 ID";
+      if(status===429) return "限流或额度不足（429）：换一个模型或稍后再试";
+      if(status>=500) return "厂商服务端错误（"+status+"）：稍后重试或换模型";
+      var msg=(j&&j.error&&(j.error.message||j.error.code))||(j&&j.base_resp&&(j.base_resp.status_msg||j.base_resp.status_code))||("HTTP "+status);
+      return String(msg).replace(key||"\u0000","***").slice(0,110);
+    }
+    function _testCloudConnection(){
+      var byok=(state.cloud.mode==="byok");
+      var v=byok?_byokVendor(state.cloud.byokVendor):null;
+      var base=byok?v.base:state.cloud.base;
+      var key=byok?state.cloud.byokKey:state.cloud.key;
+      var vendorId=byok?v.id:"shared";
+      var model=byok?(state.cloud.byokModel||_byokModelPresets(v.id)[0].id):state.cloud.model;
+      if(!key){ _cloudTestResultSet("先填写"+(byok?"API Key":"访问口令")+"再体检",false); return; }
+      if(!base||!model){ _cloudTestResultSet("缺少 Base URL 或模型名",false); return; }
+      var mode=_thinkModeOf(vendorId,model);
+      var url=_cloudChatURL(base), hdr=_cloudHeaders(vendorId,key,byok);
+      var t0=Date.now();
+      state._cloudTest=null;
+      _cloudTestResultSet("① 看图能力… · "+model,null);
+      // —— 第①档：小图视觉。断言"真的返回了内容"，而不是只看 HTTP 200 ——
+      var c1=document.createElement("canvas"); c1.width=64; c1.height=64;
+      var cx=c1.getContext("2d"); cx.fillStyle="#5a6470"; cx.fillRect(0,0,64,64);
+      cx.fillStyle="#fff"; cx.font="bold 20px Arial"; cx.fillText("AI",18,38);
+      var b1=Object.assign({model:model,messages:[{role:"user",content:[
+        {type:"text",text:"图中有两个字母，只回复这两个字母，不要其他字"},
+        {type:"image_url",image_url:{url:c1.toDataURL("image/jpeg",0.8)}}]}],temperature:0,max_tokens:64}, _cloudThinkParams(mode));
+      var ctrl1=(typeof AbortController!=="undefined")?new AbortController():null;
+      var to1=setTimeout(function(){ try{ if(ctrl1) ctrl1.abort(); }catch(e){} },25000);
+      _cloudSend(url,hdr,b1,ctrl1,mode).then(function(res){
+        clearTimeout(to1);
+        if(!res.ok) throw new Error(_cloudDiagFailText(res.status,res.j,key));
+        var m=res.j&&res.j.choices&&res.j.choices[0]&&res.j.choices[0].message||{};
+        var content=String(m.content||m.reasoning_content||"").trim();
+        var fin=res.j&&res.j.choices&&res.j.choices[0]&&res.j.choices[0].finish_reason;
+        var rt=res.j&&res.j.usage&&res.j.usage.completion_tokens_details&&res.j.usage.completion_tokens_details.reasoning_tokens;
+        if(!content) throw new Error(fin==="length"?"模型把输出预算全用在\"思考\"上（content 为空）——该模型不适合本工具":"网关返回 200 但没有内容");
+        if(fin==="length" && content.length<3) throw new Error("响应被截断（finish_reason=length）");
+        var s1=((Date.now()-t0)/1000).toFixed(1);
+        _cloudTestResultSet("① 看图 ✓ "+s1+"s → ② 真实构图请求…",null);
+        // —— 第②档：与正式分析同尺寸同预算的严格 JSON 请求（这才是"能不能用"的真正判据）——
+        var sheet=_cloudDiagSheet();
+        if(!sheet) throw new Error("无法生成体检图");
+        var b2=Object.assign({model:model,messages:[
+          {role:"system",content:"你是摄影构图评审。图中是 2×2 候选构图，左上角第一格是原图，其余是 A/B/C。只输出严格 JSON。"},
+          {role:"user",content:[{type:"text",text:'按此 JSON 输出：{"scores":{"A":0,"B":0,"C":0,"D":0},"best":"A","action":"select 或 refine 或 reject","base":"A","trim":{"l":0,"t":0,"r":0,"b":0},"confidence":80,"reason":"一句中文"}。不要输出坐标。'},
+            {type:"image_url",image_url:{url:sheet}}]}
+        ],temperature:0.1,max_tokens:520}, _cloudThinkParams(mode));
+        var t2=Date.now();
+        var ctrl2=(typeof AbortController!=="undefined")?new AbortController():null;
+        var to2=setTimeout(function(){ try{ if(ctrl2) ctrl2.abort(); }catch(e){} },60000);
+        return _cloudSend(url,hdr,b2,ctrl2,mode).then(function(res2){
+          clearTimeout(to2);
+          if(!res2.ok) throw new Error("构图请求失败："+_cloudDiagFailText(res2.status,res2.j,key));
+          var m2=res2.j&&res2.j.choices&&res2.j.choices[0]&&res2.j.choices[0].message||{};
+          var txt=String(m2.content||"");
+          var mm=txt.match(/\{[\s\S]*\}/), obj=null;
+          try{ obj=mm?JSON.parse(mm[0]):null; }catch(e){ obj=null; }
+          var sec2=((Date.now()-t2)/1000).toFixed(1), secAll=((Date.now()-t0)/1000).toFixed(1);
+          if(!obj||!obj.best) throw new Error("模型没按 JSON 返回（多为只会\"思考\"的推理模型或提示词不兼容）· "+sec2+"s");
+          var slow=parseFloat(sec2)>25;
+          state._cloudTest={ok:!slow,vision:true,json:true,sec:parseFloat(secAll),sec2:parseFloat(sec2),model:(res2.j&&res2.j.model)||model,think:mode,stripped:!!res2.stripped,at:Date.now()};
+          _cloudTestResultSet((slow?"⚠️ 能用但偏慢":"✅ 可用")+" · 看图 ✓ · 构图JSON ✓ · 构图请求 "+sec2+"s"+(res2.stripped?" · 已自动去掉该网关不支持的思考参数":"")+" · "+model, !slow);
+        });
+      }).catch(function(e){
+        var name=(e&&e.name)||"";
+        if(name==="AbortError"){ _cloudTestResultSet("❌ 超时：小图 25s / 构图请求 60s 未返回。多为\"思考模型\"算不完，换非思考模型（如通义 qwen3-vl-flash、硅基流动 Qwen3-VL-30B-A3B、DeepSeek 关思考）",false); }
+        else if(String(e&&e.message).indexOf("Failed to fetch")>=0||String(e&&e.message).indexOf("NetworkError")>=0){ _cloudTestResultSet("❌ 浏览器直连被拦（CORS）或网络不通：该厂商不支持网页直连，请改「共享口令」或换硅基流动/OpenRouter/通义",false); }
+        else _cloudTestResultSet("❌ "+String(e&&e.message||e).slice(0,120),false);
+        state._cloudTest=null;
+      });
+    }
+    /* ===================== v13.1.0 云端"思考开关"按【厂商 + 模型】配置 =====================
+       为什么不能按模型名前缀猜（v13.0.0 的做法）：
+       · 同一模型名在不同网关行为不一致——GLM-5.3 在腾讯云文档里"不支持 disabled"，
+         而我们在共享 SCF 上实测 glm-5.3-flash 接受 thinking:{type:"disabled"}（15s 出合法 JSON）。
+       · 命名空间 ID（Qwen/…、zai-org/…、google/…）此前完全不匹配，等于默认开着思考：
+         实测 896 联系表 + max_tokens 500 时，500 个输出 token 全被 reasoning 吃掉
+         （reasoning_tokens 498~499、finish_reason=length、content 为空）→ 用户看到的就是"超时/没效果"。
+       模式：et_false=enable_thinking:false；th_disabled=thinking:{type:"disabled"}；
+             low=reasoning_effort:low；or_low=OpenRouter reasoning:{effort:low}；
+             none=该模型默认不思考，不发参数；forced=只能思考（慢），不发关闭参数。 */
+    var THINK_MODE_DEFAULT="none";
+    function _thinkModeOf(vendorId, model){
+      var m=String(model||"").toLowerCase(), bare=m.replace(/^[a-z0-9_-]+\//,""); // 去掉命名空间
+      var v=String(vendorId||"");
+      if(v==="shared"){ if(m.indexOf("glm")>=0) return "th_disabled"; if(/^(qwen|qwq|qvq)/.test(m)) return "et_false"; return "none"; }
+      if(v==="deepseek") return "th_disabled";                       // 官方：thinking.type=disabled / reasoning_effort=none
+      if(v==="dashscope"){ if(/-thinking$/.test(bare)) return "forced"; if(/^(qwen3-vl-(plus|flash)|qvq)/.test(bare)) return "none"; return "et_false"; }
+      if(v==="siliconflow"){ if(/thinking/.test(bare)) return "forced"; return "et_false"; }
+      if(v==="kimi"){ if(/k3/.test(bare)) return "low"; if(/k2/.test(bare)) return "th_disabled"; return "none"; }
+      if(v==="minimax"){ return (/m3\.1/.test(bare))?"forced":"th_disabled"; }  // M3.1-Flash 关不掉思考（官方错误码 2013）
+      if(v==="stepfun"){ return /vision/.test(bare)?"none":"low"; }
+      if(v==="openrouter"){ return "or_low"; }
+      if(v==="zhipu"){ return "th_disabled"; }
+      if(v==="ark"){ return "th_disabled"; }
+      if(v==="qianfan"||v==="hunyuan"||v==="openai"||v==="gemini") return "none"; // 未确认，不发扩展参数，避免 400
+      if(m.indexOf("glm")===0) return "th_disabled";
+      if(/^(qwen|qwq|qvq)/.test(m)) return "et_false";
+      return THINK_MODE_DEFAULT;
+    }
+    function _cloudThinkParams(mode){
+      if(mode==="et_false") return {enable_thinking:false};
+      if(mode==="th_disabled") return {thinking:{type:"disabled"}};
+      if(mode==="low") return {reasoning_effort:"low"};
+      if(mode==="or_low") return {reasoning:{effort:"low"}};
       return {};
+    }
+    // v12.26.0 兼容签名：老调用点只给模型名（共享代理走 shared 规则）
+    function _cloudThinkingParams(model, vendorId){ return _cloudThinkParams(_thinkModeOf(vendorId||"shared", model)); }
+    // 统一请求头：此前"候选选优"带 OpenRouter/Anthropic 专用头、"语义分析"不带 → 测试能过、人像语义路径 401/403
+    function _cloudHeaders(vendorId, key, byok){
+      var h={"Content-Type":"application/json"};
+      if(byok){
+        h["Authorization"]="Bearer "+key;
+        if(vendorId==="openrouter"){ h["HTTP-Referer"]="https://yyds8170-ctrl.github.io/ai-composition-tool/"; h["X-OpenRouter-Title"]="AI 构图助手"; }
+        if(vendorId==="anthropic"){ h["anthropic-dangerous-direct-browser-access"]="true"; }
+      }else{ h["X-App-Token"]=key; }
+      return h;
+    }
+    // 网关对扩展参数支持不一致：400 时去掉思考参数重试一次（而不是直接把"参数不被支持"报成"网络故障"）
+    function _cloudSend(url, headers, body, ctrl, mode){
+      var stripKeys=["enable_thinking","thinking","reasoning_effort","reasoning"];
+      function post(b){
+        return fetch(url,{method:"POST",headers:headers,body:JSON.stringify(b),signal:ctrl?ctrl.signal:undefined})
+          .then(function(r){ return r.json().catch(function(){return {};}).then(function(j){ return {ok:r.ok,status:r.status,j:j}; }); });
+      }
+      return post(body).then(function(res){
+        if(res.ok || !res.status || res.status!==400 || !mode) return res;
+        var b2=Object.assign({},body); for(var i=0;i<stripKeys.length;i++){ delete b2[stripKeys[i]]; }
+        return post(b2).then(function(r2){ if(r2.ok){ r2.stripped=true; } return r2; },function(){ return res; });
+      });
     }
 
     /* ===================== 数据 ===================== */
@@ -2179,7 +2289,11 @@ var APP_VER="v13.0.0";
         try{ toastMsg(_isHeic?"暂不支持 HEIC 格式，请先在相册转成 JPG":"请选择图片文件（JPG/PNG/WebP）"); }catch(e){}
         cb(null); return;
       }
-      var maxSide=2400; // 长边超过 2400px 才压缩
+      // v13.1.0：长边压缩上限按设备内存分档。旧版一律 2400px，导致"能裁多狠"被工作分辨率
+      // 而不是原图决定（2400×1800 最多只能 1.78x）。内存 ≥4GB 的设备放到 3200px（≈7.7MP），
+      // 等效可裁幅度提到约 2.3x；iOS Safari 没有 deviceMemory，保持 2400 的保守行为不变。
+      var _mem=(typeof navigator!=="undefined"&&typeof navigator.deviceMemory==="number")?navigator.deviceMemory:0;
+      var maxSide=_mem>=4?3200:2400; // 长边超过该值才压缩
       var img=new Image();
       var url=URL.createObjectURL(f);
       // v8.0.5 B1: 解码兜底超时（损坏/截断图 10s 内既不 onload 也不 onerror 时，主动失败而非永久挂起）
@@ -2503,6 +2617,11 @@ var APP_VER="v13.0.0";
         var highClip=0, shadowClip=0;
         // v4.0.1: 肤色检测变量（YCbCr色彩空间，模型未加载时也能识别人像）
         var skinCnt=0, skinSx=0, skinSy=0, skinMinX=1e9, skinMinY=1e9, skinMaxX=-1, skinMaxY=-1;
+        // v13.1.0：肤色逐像素掩膜——供下方 16×16 skinGrid 使用。
+        // 用途：小人物（YOLO 置信<0.40 或面积<2% 时 `_personBoxOf`/`_objectGuard` 都不认）
+        // 在"大裁/重构图"时会被裁切线切掉。skinGrid 让我们在裁切带里直接查肤色质量，
+        // 不依赖模型检出，补上这条保护漏检（外部审计 P1-1）。
+        var skinMask=new Uint8Array(w*h);
         for(var i=0;i<w*h;i++){
           var r=data[i*4], g=data[i*4+1], b=data[i*4+2];
           lum[i]=0.299*r+0.587*g+0.114*b;
@@ -2518,6 +2637,7 @@ var APP_VER="v13.0.0";
           // 加 r-b>18（白纸三色接近，肤色红蓝差大）、r<246（排除高亮白纸；真人高光除外）、g>b
           if(cb>77 && cb<127 && cr>140 && cr<173 && r>95 && g>40 && b>20 && r>g && g>b && (r-b)>18 && r<246){
             skinCnt++; skinSx+=(i%w); skinSy+=Math.floor(i/w);
+            skinMask[i]=1;
             var _px=i%w, _py=Math.floor(i/w);
             if(_px<skinMinX) skinMinX=_px; if(_px>skinMaxX) skinMaxX=_px;
             if(_py<skinMinY) skinMinY=_py; if(_py>skinMaxY) skinMaxY=_py;
@@ -2971,11 +3091,13 @@ var APP_VER="v13.0.0";
         // 用于人像"主体背景分离"（McCurry 第5法则 figure-to-ground）：背景比脸亮=逆光/亮背景抢走视线。
         // 仅 256 个数，供 planFromAnalysis 按人脸/人体框采样。
         var _GW=16,_GH=16,_lumGrid=new Float32Array(_GW*_GH),_gridN=new Int32Array(_GW*_GH);
+        var _skinGrid=new Int32Array(_GW*_GH); // v13.1.0 每格肤色像素数（小人物边缘保护）
         for(var _gy=0;_gy<h;_gy++){
           var _gY=Math.min(_GH-1,Math.floor(_gy/h*_GH));
           for(var _gx=0;_gx<w;_gx++){
             var _gX=Math.min(_GW-1,Math.floor(_gx/w*_GW)),_gi=_gY*_GW+_gX;
             _lumGrid[_gi]+=lum[_gy*w+_gx]; _gridN[_gi]++;
+            if(skinMask[_gy*w+_gx]) _skinGrid[_gi]++;
           }
         }
         for(var _gi2=0;_gi2<_GW*_GH;_gi2++){ if(_gridN[_gi2]) _lumGrid[_gi2]/=_gridN[_gi2]; }
@@ -3064,6 +3186,9 @@ var APP_VER="v13.0.0";
           symEdge:_symEdgeSignal(_lumGrid,_GW,_GH,_edgeEnergy.col,w,lum,h),
           // v8.3.6 主体背景分离网格
           lumGrid:Array.from(_lumGrid), gridW:_GW, gridH:_GH,
+          // v13.1.0 新增：源图真实像素尺寸（裁切幅度预算的依据：12MP 与 48MP 能裁的幅度差 2 倍）
+          // + 16×16 肤色格（小人物未被模型检出时的边缘保护）
+          srcW:_vw0, srcH:_vh0, skinGrid:Array.from(_skinGrid), skinCellPx:Math.round((w/_GW)*(h/_GH)),
           edgeEnergy:_edgeEnergy, // v8.7.0 列/行边缘能量（归一化），供 _edgeSnap
           rod:_rod, // v8.8.0 背景保护（RoD）列/行显著性与亮度方差前缀和，供 _rodGuard
           // v12.13.0 三护栏信号真实接线：bandSat/symEdge/hasFoodEvidence 已接真实纯函数（_bandSatSignal/_symEdgeSignal/_foodEvidenceSignal）；
@@ -3732,8 +3857,12 @@ var APP_VER="v13.0.0";
         // === 场景感知候选打分（v12.28.0：云端语义 + 本地像素双证据）===
         // 场景判定
         var scene="general";
+        // v13.1.0：暗调美食不再被误判成夜景（外部审计 P1-3）。只在"有真实食物证据（下半区暖色团块 +
+        // 亮度方差像一盘菜）+ 画面偏暗 + 暖色不在天空带"时才判食物，避免把晚霞暖调整片误当美食。
+        var _topWarm=(a.topBandHsv&&typeof a.topBandHsv.ratio==="number")?a.topBandHsv.ratio:0;
+        var _foodLike=(a.hasFoodEvidence===true)&&mean<115&&!(_topWarm>0.3);
         if(isPerson) scene="portrait";
-        else if(scn==="food"||scn==="美食") scene="food";
+        else if(scn==="food"||scn==="美食"||_foodLike) scene="food";
         else if(scn==="night"||(mean<85&&lightScore>=0.3)) scene="night";
         else if(atm==="sunset_sky"||(warmRatio>=0.42&&wb>0.05&&mean>=85&&mean<=160)) scene="sunset";
         else if(scn==="waterscape"||atm==="water_reflection"||waterScore>=0.4) scene="water";
@@ -3772,8 +3901,8 @@ var APP_VER="v13.0.0";
           // 暖调画面推暖色，冷调推冷色
           if(wb>0.03&&["warm","sunset","portra","portrait-warm","c200","hk"].indexOf(f)>=0) s+=15;
           if(wb<-0.03&&["cool","chrome","classic","160c","portrait-cool"].indexOf(f)>=0) s+=15;
-          // 暗画面推提亮/霓虹
-          if(mean<90&&["night","cyber","teal"].indexOf(f)>=0) s+=20;
+          // 暗画面推提亮/霓虹（食物除外：暗调美食要暖要亮，不要夜景冷调）
+          if(mean<90&&["night","cyber","teal"].indexOf(f)>=0) s+=(_foodLike?-25:20);
           if(mean<90&&["morandi","fade","japan"].indexOf(f)>=0) s-=10;
           // 人像推肤色友好
           if(isPerson&&["portra","ektar","portrait-warm","portrait-cool","portrait-mono","japan"].indexOf(f)>=0) s+=15;
@@ -4216,6 +4345,8 @@ var APP_VER="v13.0.0";
         if(!a||!plan) return null;
         var sc=plan.sceneType||"general";
         if(/portrait/.test(sc)) return null; // 人像/人头特写交给既有保护链，保持原图
+        // v13.1.0：先过主体证据闸门——糊片/纯色/截图/占位图/找不到主体时一律不主动裁
+        try{ if(!_subjectEvidence(a,plan).ok) return null; }catch(e){}
         if(plan.crop && (plan.crop[0]+plan.crop[1]+plan.crop[2]+plan.crop[3])>0) return null;
         // 极暗/纯色/截图类仍然不折腾
         try{
@@ -4419,6 +4550,335 @@ var APP_VER="v13.0.0";
     }
     // v13.0.0：像素/模型两个方案并存时，用同一套安全 + 画幅 + 三分 + 死区评分选更优者，
     // 不再“模型说啥就覆盖啥”。返回 -1 表示不安全。
+    /* ===================== v13.1.0 构图幅度预算 / 意图候选 / 安全守卫 =====================
+       研究依据见 docs/research/v13.1-composition.md，三条硬结论：
+       ① 抖音「构图像魔法」类爆款的教学范式是"在杂乱大画面里圈一个 2:3 竖幅小框"。我对
+          该视频逐帧像素测量：框面积只占整幅 9.6% / 10.8% / 12.2% / ≈16%（等效变焦 2.5~3.2x）。
+          而 v13.0.0 的闸门（单边≤15%、四边≤40%、保留≥72~78%）≈ 只允许 1.2~1.5x，
+          结构上不可能产出这种构图——这才是"AI 不敢裁"的真正原因，不是模型不行。
+       ② 但大裁必须由「源真实像素 + 场景 + 证据」授权：12MP 裁到 10% 只剩约 890×1340，
+          发朋友圈/小红书还要上采样，噪点与压缩块被放大 3 倍。Apple 官方把"48MP 中心 12MP
+          裁切"命名为 optical-quality 2x（=保留 25% 面积），行业承认大裁的前提永远是像素够。
+       ③ 自动裁切的产品红线（Twitter 裁切研究，PACM HCI CSCW3, DOI 10.1145/3512930）：
+          必须可预览、可一键还原，且禁止"在多主体里挑最好看的脸"。→ 多主体一律拒绝大裁。
+       本文件全部函数为纯函数（只读入参、不触 DOM、不写全局），可被 Node 单测直接引用。 */
+    // 源图像素（百万像素）。srcW/srcH 缺失时按 12MP 保守估计（宁可少裁）。
+    function _srcMegapixels(a){
+      var w=a&&a.srcW, h=a&&a.srcH;
+      if(!(w>0)||!(h>0)) return 12;
+      return (w*h)/1e6;
+    }
+    // 裁切幅度预算：返回允许的最大等效变焦 maxZoom、最小保留面积 minArea、输出短边/长边下限。
+    // 场景决定"敢不敢裁"，像素决定"能不能裁"，两者取交集。
+    function _cropBudget(a, scene){
+      var mp=_srcMegapixels(a);
+      var sc=String(scene||"general");
+      var mean=(a&&typeof a.mean==="number")?a.mean:128;
+      var sharp=(a&&typeof a.sharpness==="number")?a.sharpness:50;
+      var minArea, allowTight, why;
+      if(/portrait/.test(sc)){ minArea=0.72; allowTight=false; why="人像/特写：不做大裁"; }
+      else if(_personBoxOf(a)){
+        // v13.1.0 修正：不能"只要检出一个 2% 大小的人就把幅度锁死"。实测（imgs/u50 探针）：
+        // 端侧模型开启时任何人物框都会让候选从 6~7 个掉到 3~4 个，云端 refine 命中率直接归零——
+        // 这正是"云端超越不了本地"的真因。人物保护不该靠"禁止生成候选"实现，
+        // 而是靠 _validateNewCrop 里的人物 3% 边距、物体保护与肤色边缘守卫（它们与幅度预算无关）。
+        var _pbb=_personBoxOf(a);
+        var _pbArea=Math.max(0,_pbb[2]-_pbb[0])*Math.max(0,_pbb[3]-_pbb[1]);
+        if(_pbArea>=0.10){ minArea=0.40; allowTight=false; why="人物占画面较大（≥10%）：只允许中度收紧"; }
+        else { minArea=0.30; allowTight=true; why="人物占比小：允许主动重构图，人物边距仍由硬校验兜底"; }
+      }
+      else if(sc==="animal"){ minArea=0.35; allowTight=false; why="宠物轮廓/耳朵最脆：限制收紧幅度"; }
+      else if(sc==="food"){ minArea=0.20; allowTight=true; why="食物可以大胆靠近"; }
+      else if(sc==="night"||(mean<85&&sharp<45)){ minArea=0.55; allowTight=false; why="暗调/高噪：大裁会把噪点放大"; }
+      else { minArea=0.25; allowTight=true; why="无人物的大场景：允许主动重构图"; }
+      // 像素授权：短边≥900、长边≥1350 是"发得出去且不放大"的底线（朋友圈官方短边≤1080、
+      // Instagram 4:5 长边 1080、手机全屏 1206 宽）。源像素不足时自动抬高 minArea。
+      var sw=(a&&a.srcW>0)?a.srcW:4000, sh=(a&&a.srcH>0)?a.srcH:3000;
+      var shortSide=Math.min(sw,sh), longSide=Math.max(sw,sh);
+      var areaByShort=Math.pow(900/shortSide,2);
+      var areaByLong=Math.pow(1350/longSide,2);
+      var floorArea=Math.max(areaByShort,areaByLong);
+      if(floorArea>minArea){ minArea=Math.min(0.60,floorArea); allowTight=false; why="源像素不足，已自动收紧裁切幅度"; }
+      // "小框重构图"档能小到多少，由源真实像素决定（等效变焦 z=1/sqrt(area)）。
+      // 档位按本应用的实际工作分辨率标定（上传长边压到 2400/3200px）：
+      //   ≈12MP→2.7x(14%)、≈8MP→2.35x(18%)、≈4MP→2.1x(22%)、更小→2x(25%)。
+      // 抖音魔法框实测 10~16% 面积（2.5~3.2x），需要光学长焦，属于"拍前"能力，见 docs/research/v13.1-composition.md。
+      var tightArea=mp>=12?0.14:(mp>=7?0.18:(mp>=4?0.22:0.25));
+      if(!allowTight) tightArea=minArea;
+      // 注意：floorArea 只用于"抬高"下限，绝不能把下限推到 >1（小图会让任何裁切都非法）。
+      // 源本身就不够大时（如 800px 网图），只做轻度收紧，并靠 allowTight=false 禁止小框重构图。
+      if(tightArea<floorArea && floorArea<=0.60) tightArea=floorArea;
+      if(tightArea>0.60) tightArea=0.60;
+      // tightArea 允许低于 minArea：minArea 是"常规候选"的下限，tightArea 是"小框重构图"的下限，
+      // 两者分开正是高像素图能做出 2.5~3.2x 魔法框、而普通图仍保守的原因。
+      var maxZoom=1/Math.sqrt(Math.max(0.02,tightArea));
+      return {minArea:Math.round(minArea*1000)/1000, tightArea:Math.round(tightArea*1000)/1000,
+              allowTight:!!allowTight, maxZoom:Math.round(maxZoom*100)/100,
+              srcMP:Math.round(mp*10)/10, shortSide:Math.round(shortSide), longSide:Math.round(longSide), why:why};
+    }
+    // 主体证据闸门：没有可信主体时，宁可不裁（修外部审计 P1-2「低质无主体也被强行裁切」）。
+    // 返回 {ok:false, why} 时，主动构图与云端大裁一律拒绝。
+    function _subjectEvidence(a, plan){
+      try{
+        if(!a) return {ok:false, why:"没有像素分析结果"};
+        var mean=typeof a.mean==="number"?a.mean:128;
+        var sat=typeof a.sat==="number"?a.sat:0.2;
+        var sharp=typeof a.sharpness==="number"?a.sharpness:50;
+        var dr=typeof a.dynamicRange==="number"?a.dynamicRange:0.3;
+        var sig=typeof a.sigRatio==="number"?a.sigRatio:0;
+        var ed=0, en=0;
+        try{ var eL=a.edgeEnergy&&a.edgeEnergy.eL||[], eT=a.edgeEnergy&&a.edgeEnergy.eT||[];
+          ed=(eL.reduce(function(s,v){return s+v;},0)/Math.max(1,eL.length)+eT.reduce(function(s,v){return s+v;},0)/Math.max(1,eT.length))/2; en=1; }catch(e){}
+        if(sharp<22) return {ok:false, why:"画面偏糊，裁了只会更糊"};
+        if(dr<0.10 && sat<0.10) return {ok:false, why:"画面几乎没有层次与色彩"};
+        if(mean<28) return {ok:false, why:"接近全黑"};
+        if(sat<0.03 && ed<0.02) return {ok:false, why:"纯色/无内容"};
+        if(ed>0.35 && sat<0.08) return {ok:false, why:"像截图/图文，不是照片"};
+        var hasPerson=!!_personBoxOf(a);
+        var hasFood=(a.hasFoodEvidence===true);
+        // sigRatio 缺失时退化到 bodyRatio / sigBox 面积（真实 analyzePixels 一定有，单测夹具可能只给其一）
+        if(!(sig>0)){
+          var bs=(typeof a.bodyRatio==="number")?a.bodyRatio:0;
+          if(!(bs>0) && a.sigBox && a.sigBox.length===4) bs=Math.max(0,a.sigBox[2]-a.sigBox[0])*Math.max(0,a.sigBox[3]-a.sigBox[1]);
+          sig=bs;
+        }
+        // 可信主体：模型人框 / 显著性质心占比合理 / 食物证据
+        if(!hasPerson && !hasFood && (sig<0.02||sig>0.92)) return {ok:false, why:"找不到明确主体"};
+        return {ok:true, hasPerson:hasPerson, hasFood:hasFood, sigRatio:sig};
+      }catch(e){ return {ok:false, why:"证据判定异常"}; }
+    }
+    // 肤色边缘守卫（修外部审计 P1-1「很小的人物 YOLO 没检出 → 边缘保护漏检」）：
+    // 不依赖模型检出，用 16×16 肤色格检查"被裁掉的条带里有没有成块肤色"。
+    // v13.1.0 校准（实测教训）：只看"条带里有肤色"会大量误杀——木桌/秋叶/砖墙/暖色外墙
+    // 都落进 YCbCr 肤色范围，导致真实风景一张都裁不动。所以只拦两种真正会伤到人的情况：
+    //   ① 跨界（straddling）：紧贴裁切线的 1~2 格有成块肤色，且保留区里也有肤色 → 人正被切到身上；
+    //   ② 整人出局：被裁条带里的肤色占了全图肤色的 ≥55%，且条带肤色本身成块 → 把人整个裁掉。
+    // 其余情况放行（宁少拦，不然构图能力归零）。
+    function _skinEdgeGuard(crop, a){
+      try{
+        if(!a||!Array.isArray(a.skinGrid)||!a.gridW||!crop||crop.length!==4) return {veto:false, crop:crop};
+        var GW=a.gridW, GH=a.gridH||GW, g=a.skinGrid;
+        var cellPx=(typeof a.skinCellPx==="number"&&a.skinCellPx>0)?a.skinCellPx:1000;
+        var blobCell=cellPx*0.30; // 单格肤色占比>30% 才算"一块皮肤"
+        var L=crop[0]/100, T=crop[1]/100, R=crop[2]/100, B=crop[3]/100;
+        if(!(L>0||T>0||R>0||B>0)) return {veto:false, crop:crop};
+        var total=0; for(var t=0;t<GW*GH;t++) total+=g[t]||0;
+        if(total<=0) return {veto:false};
+        // 关键校准（实测教训）：木桌/木地板/秋叶/砖墙/暖色外墙整片都会落进 YCbCr 肤色范围。
+        // 一张照片里"肤色"占比超过 18% 时，几乎必然是大面积暖色表面而不是人
+        // （真人露肤占比通常 <15%，更大就是特写——特写走人像通道根本不裁）。
+        // 不加这条会把构图能力直接清零（实测一张笔记本+木桌照片拦掉全部候选）。
+        var ratio=total/(GW*GH*cellPx);
+        if(ratio>0.18) return {veto:false, diffuse:true, skinRatio:+ratio.toFixed(3)};
+        function cells(x0,y0,x1,y1){
+          var gx0=Math.max(0,Math.floor(x0*GW)), gx1=Math.min(GW,Math.ceil(x1*GW));
+          var gy0=Math.max(0,Math.floor(y0*GH)), gy1=Math.min(GH,Math.ceil(y1*GH));
+          var out=[];
+          for(var yy=gy0;yy<gy1;yy++) for(var xx=gx0;xx<gx1;xx++) out.push(g[yy*GW+xx]||0);
+          return out;
+        }
+        function stat(list){
+          var n=list.length, sum=0, blobs=0;
+          for(var i=0;i<n;i++){ sum+=list[i]; if(list[i]>=blobCell) blobs++; }
+          return {n:n, sum:sum, blobs:blobs, avg:n?sum/n/cellPx:0};
+        }
+        // 紧贴裁切线的"跨界带"（2 格宽 ≈ 画面 12%）
+        var zones=[
+          {edge:"左", out:stat(cells(0,0,L,1)),            cross:stat(cells(Math.max(0,L-0.13),0,L+0.02,1)), kept:stat(cells(L,0,1-R,1))},
+          {edge:"右", out:stat(cells(1-R,0,1,1)),          cross:stat(cells(1-R-0.02,0,Math.min(1,1-R+0.13),1)), kept:stat(cells(L,0,1-R,1))},
+          {edge:"上", out:stat(cells(0,0,1,T)),            cross:stat(cells(0,Math.max(0,T-0.13),1,T+0.02)), kept:stat(cells(0,T,1,1-B))},
+          {edge:"下", out:stat(cells(0,1-B,1,1)),          cross:stat(cells(0,1-B-0.02,1,Math.min(1,1-B+0.13))), kept:stat(cells(0,T,1,1-B))}
+        ];
+        var diag=[];
+        for(var i=0;i<4;i++){
+          var z=zones[i];
+          if([L,T,R,B][i]<=0.005) continue;
+          // 跨界判定用"成块格数"而不是条带平均：一个人的头/手跨在裁切线上只占条带里 2~3 格，
+          // 平均质量会被整条边带稀释到 2%，用平均值判等于永远拦不住。
+          var straddle=(z.cross.blobs>=2 && z.kept.blobs>=2);
+          var removeAll=(z.out.blobs>=3 && z.out.sum/total>=0.60);
+          diag.push({edge:z.edge,crossBlobs:z.cross.blobs,crossAvg:+z.cross.avg.toFixed(3),keptBlobs:z.kept.blobs,outShare:+(z.out.sum/total).toFixed(2)});
+          if(straddle||removeAll){
+            return {veto:true, why:"裁掉的"+z.edge+"侧正切到人物皮肤（"+(straddle?"人跨在裁切线上":"会把人整个裁掉")+"）",
+                    mode:straddle?"straddle":"removeAll", crossAvg:+z.cross.avg.toFixed(3), crossBlobs:z.cross.blobs, keptBlobs:z.kept.blobs, outShare:+(z.out.sum/total).toFixed(2), diag:diag};
+          }
+        }
+        return {veto:false, diag:diag, skinTotal:total};
+      }catch(e){ return {veto:false, crop:crop}; }
+    }
+    // 两个裁切（[L,T,R,B] 百分比）保留区的 IoU，用于候选多样性去重
+    function _cropsIoU(c1, c2){
+      var a1=[c1[0]/100,c1[1]/100,1-c1[2]/100,1-c1[3]/100];
+      var a2=[c2[0]/100,c2[1]/100,1-c2[2]/100,1-c2[3]/100];
+      var ix=Math.max(0,Math.min(a1[2],a2[2])-Math.max(a1[0],a2[0]));
+      var iy=Math.max(0,Math.min(a1[3],a2[3])-Math.max(a1[1],a2[1]));
+      var inter=ix*iy, u=a1[2]-a1[0], v=a1[3]-a1[1], u2=a2[2]-a2[0], v2=a2[3]-a2[1];
+      var uni=u*v+u2*v2-inter;
+      return uni>0?inter/uni:0;
+    }
+    // "同一构图"判定：IoU 极高（近似重复），或面积与中心都几乎一样。
+    // 注意不能用普通 IoU 阈值——"紧裁的小框"嵌在"宽裁"里时 IoU 天然很高，
+    // 但它们恰恰是两种不同的构图意图（抖音魔法框 vs 原构图），必须都留给云端选。
+    function _cropsSimilar(c1, c2){
+      var iou=_cropsIoU(c1,c2);
+      if(iou>=0.88) return true;
+      var a1=(1-c1[0]/100-c1[2]/100)*(1-c1[1]/100-c1[3]/100);
+      var a2=(1-c2[0]/100-c2[2]/100)*(1-c2[1]/100-c2[3]/100);
+      var cx1=(c1[0]-c1[2])/2+50, cy1=(c1[1]-c1[3])/2+50, cx2=(c2[0]-c2[2])/2+50, cy2=(c2[1]-c2[3])/2+50;
+      var d=Math.sqrt((cx1-cx2)*(cx1-cx2)+(cy1-cy2)*(cy1-cy2))/100;
+      return (Math.abs(a1-a2)<0.05 && d<0.05);
+    }
+    // 把"窗口"（归一化 x0,y0,x1,y1）换算成 [L,T,R,B] 百分比
+    function _windowToCrop(x0,y0,x1,y1){
+      return [Math.max(0,Math.round(x0*100)),Math.max(0,Math.round(y0*100)),
+              Math.max(0,Math.round((1-x1)*100)),Math.max(0,Math.round((1-y1)*100))];
+    }
+    // 在保持原画幅的前提下，把窗口按面积缩放并把某个"主体点"放到指定相对位置（如 1/3、2/3）
+    // targetNX=1/3 表示主体落在窗口宽度的 1/3 处（左侧三分线）；越界时整体平移贴边。
+    function _anchorWindow(cx, cy, keepArea, targetNX, targetNY){
+      var s=Math.sqrt(Math.max(0.05,Math.min(1,keepArea)));
+      var w=s, h=s;
+      var x0=cx-targetNX*w, y0=cy-targetNY*h;
+      if(x0<0) x0=0; if(x0+w>1) x0=1-w;
+      if(y0<0) y0=0; if(y0+h>1) y0=1-h;
+      return [x0,y0,x0+w,y0+h];
+    }
+    // v13.1.0 意图候选：真正做"构图"的候选族（不再只有画幅转换）。
+    // 每个候选都带 intent 标签，供云端"选最优 + 在此基础上再收边"使用。
+    function _intentCandidates(a, plan, budget){
+      var out=[];
+      try{
+        if(!a||!plan) return out;
+        var ar=(typeof a.frameAspect==="number"&&isFinite(a.frameAspect))?a.frameAspect:1;
+        var box=(a.sigBox&&a.sigBox.length===4)?a.sigBox:[0.25,0.25,0.75,0.75];
+        var cx=(typeof a.cx==="number"&&isFinite(a.cx))?a.cx:0.5;
+        var cy=(typeof a.cy==="number"&&isFinite(a.cy))?a.cy:0.5;
+        var pb=_personBoxOf(a);
+        // v13.1.0：只有"人物在画面里占比较大"才禁止生成意图候选；小人物照常生成候选，
+        // 由 _validateNewCrop 的人物 3% 边距 / 物体保护 / 肤色边缘三重硬校验决定去留。
+        var pbBig=(function(){ try{ return !!pb && Math.max(0,pb[2]-pb[0])*Math.max(0,pb[3]-pb[1])>=0.10; }catch(e){ return !!pb; } })();
+        var topWarm=(a.topBandHsv&&typeof a.topBandHsv.ratio==="number")?a.topBandHsv.ratio:0;
+        var protectTop=(topWarm>0.25||(typeof a.blueWater==="number"&&a.blueWater>0.55));
+        var symStrong=(typeof a.sym==="number"&&a.sym>0.42);
+        function push(win,intent,tag,reason){
+          if(!win) return;
+          var c=_windowToCrop(win[0],win[1],win[2],win[3]);
+          var sum=c[0]+c[1]+c[2]+c[3];
+          if(sum<=2) return;
+          out.push({crop:c,intent:intent,tag:tag,reason:reason});
+        }
+        // 1) 主体三分（左/右交点）——把主体放到三分线交点，这是"随手拍→有构图"的最大一步
+        var midArea=Math.max(budget.tightArea,0.45);
+        if(!pbBig && !symStrong){
+          push(_anchorWindow(cx,cy,midArea,1/3,0.5),"thirds-left","主体放左侧三分","把主体从正中间挪到左侧三分线，画面立刻有呼吸");
+          push(_anchorWindow(cx,cy,midArea,2/3,0.5),"thirds-right","主体放右侧三分","把主体从正中间挪到右侧三分线，视线有延伸");
+        }
+        // 2) 地平线三分（上/下）——天空与地面二选一权重，正中间是最呆的位置
+        var hy=(typeof a.row==="number"&&typeof a.rowGap==="number"&&a.rowGap>18)?(a.row/(a.gridH||16)):null;
+        if(hy!==null && hy>0.15 && hy<0.85 && !pbBig){
+          push(_anchorWindow(cx,hy,Math.max(budget.tightArea,0.40),0.5,1/3),"horizon-upper","地平线放上三分","把地平线压到上三分线，地面/前景成为主角");
+          if(!protectTop) push(_anchorWindow(cx,hy,Math.max(budget.tightArea,0.40),0.5,2/3),"horizon-lower","地平线放下三分","把地平线抬到下三分线，天空/氛围占主导");
+        }
+        // 3) 主体紧抱（小框重构图）——抖音"魔法框"的核心：只留最值得看的那一块
+        var subjW=Math.max(0.05,box[2]-box[0]), subjH=Math.max(0.05,box[3]-box[1]);
+        var needArea=Math.max(budget.tightArea, Math.min(0.6,(subjW*1.6)*(subjH*1.6)));
+        if(budget.allowTight && !pbBig && subjW<0.55 && subjH<0.55){
+          push(_anchorWindow(cx,cy,needArea,0.5,0.5),"subject-tight","小框重构图","只框住最好看的那一块，主体占比明显变大");
+          push(_anchorWindow(cx,cy,Math.min(0.62,needArea*1.7),1/3,0.5),"subject-tight-third","小框+三分","只留最好看的一块，并把主体放三分线");
+        }
+        // 4) 去死边——把低能量边带裁掉，杂物/空地面出局
+        try{
+          var col=(a.edgeEnergy&&a.edgeEnergy.col)||[], row=(a.edgeEnergy&&a.edgeEnergy.row)||a.edgeEnergy.eT||[];
+          if(col.length>16&&row.length>16){
+            var avg=function(arr,f0,f1){var s=0,c=0,i0=Math.floor(f0*arr.length),i1=Math.ceil(f1*arr.length);for(var i=Math.max(0,i0);i<Math.min(arr.length,i1);i++){s+=arr[i]||0;c++;}return c?s/c:0;};
+            var midC=avg(col,0.3,0.7), midR=avg(row,0.3,0.7);
+            var L=0,T=0,R=0,B=0, lim=budget.allowTight?0.16:0.10;
+            if(avg(col,0,0.10)<midC*0.6) L=lim*0.6;
+            if(avg(col,0.9,1)<midC*0.6) R=lim*0.6;
+            if(avg(row,0,0.10)<midR*0.6 && !protectTop) T=lim*0.5;
+            if(avg(row,0.9,1)<midR*0.6) B=lim*0.6;
+            if(L+T+R+B>0.05) push([L,T,1-R,1-B],"deadzone-trim","裁掉空边","把没有内容的边带裁掉，画面更干净");
+          }
+        }catch(e){}
+        // 5) 社交画幅（保留旧能力：2:3 / 4:5 / 1:1 / 16:9），供"发朋友圈/小红书"直接用
+        var targets=(ar<0.70)?[0.75,0.8]:(ar<0.95?[1,2/3,0.8]:(ar<1.45?[4/3,1,16/9]:[16/9,4/3,0.8]));
+        for(var ti=0;ti<targets.length;ti++){
+          var c=_candidateAspectCrop(a,targets[ti]);
+          if(c) out.push({crop:c,intent:"aspect",tag:"画幅 "+_candidateRatioTag(c,ar),reason:"换成 "+_candidateRatioTag(c,ar)+" 更好发"});
+        }
+      }catch(e){}
+      return out;
+    }
+    // 云端 refine 指令 → 本地裁切：base 是候选编号，trim 是每边再收的百分比（离散档位）
+    function _cloudTrimToCrop(baseCrop, trim){
+      try{
+        var c=(baseCrop||[0,0,0,0]).slice();
+        var t=trim||{};
+        var ALLOW={0:1,5:1,10:1,15:1,20:1,25:1};
+        function v(x){ x=Math.round(Number(x)||0); if(x<0) x=0; if(!ALLOW[x]) { x=x<=2?0:(x<=7?5:(x<=12?10:(x<=17?15:(x<=22?20:25)))); } return Math.min(25,x); }
+        return [Math.min(40,c[0]+v(t.l)),Math.min(40,c[1]+v(t.t)),Math.min(40,c[2]+v(t.r)),Math.min(40,c[3]+v(t.b))];
+      }catch(e){ return (baseCrop||[0,0,0,0]).slice(); }
+    }
+    // 统一硬校验：任何"新裁切"（本地产出或云端 refine）都要过这一关，不过就退回。
+    function _validateNewCrop(crop, a, scene, budget, opts){
+      try{
+        opts=opts||{};
+        if(!crop||crop.length!==4) return {ok:false, why:"裁切参数不完整"};
+        var c=crop.map(function(v){return Math.round(v);});
+        var sum=c[0]+c[1]+c[2]+c[3];
+        if(sum<=5) return {ok:false, why:"几乎没裁（四边合计 "+sum+"%）"}; // 微裁一律归零：产品口径"要么明显更好，要么不动"
+        var area=(1-c[0]/100-c[2]/100)*(1-c[1]/100-c[3]/100);
+        var _floorArea=(typeof budget.tightArea==="number"&&budget.tightArea>0)?budget.tightArea:budget.minArea;
+        if(area<_floorArea) return {ok:false, why:"裁得太狠（保留 "+Math.round(area*100)+"% < 允许 "+Math.round(_floorArea*100)+"%）"};
+        var mxEdge=Math.max(c[0],c[1],c[2],c[3]);
+        // 分级幅度上限：宠物最脆、有人物次之；无人物的大场景/美食允许"小框重构图"。
+        // 注意真正的硬约束是"保留面积 ≥ tightArea"（等价于限制等效变焦），
+        // 四边合计只是防止某一边吃掉整幅；对称紧裁（25/25/25/25）合计会到 100，属合法构图。
+        var sc2=String(scene||"");
+        var capEdge=45, capSum=150;
+        if(sc2==="animal"){ capEdge=8; capSum=25; }
+        else if(sc2==="food"){ capEdge=30; capSum=130; } // 餐盘居中紧裁需要四边同时收，面积下限才是真约束
+        else if(_personBoxOf(a)){ capEdge=15; capSum=40; }
+        // 允许"小框重构图"的场景：居中紧裁必然让四边同时收到 (1-√面积下限)/2，
+        // 单边上限必须跟着放开，否则魔法框那种 10~16% 的居中紧裁永远被单边上限误杀。
+        if(budget.allowTight){
+          var _edgeNeed=Math.ceil((1-Math.sqrt(Math.max(0.02,budget.tightArea)))/2*100)+5; // +5：主体不在正中心时两侧不对称
+          capEdge=Math.max(capEdge,Math.min(45,_edgeNeed));
+          capSum=Math.max(capSum,4*_edgeNeed);
+        }
+        if(mxEdge>capEdge) return {ok:false, why:"单边裁切 "+mxEdge+"% 超过该场景上限 "+capEdge+"%"};
+        if(sum>capSum) return {ok:false, why:"四边合计 "+sum+"% 超过上限 "+capSum+"%"};
+        var ev=_subjectEvidence(a,null);
+        if(!ev.ok) return {ok:false, why:ev.why};
+        var sk=_skinEdgeGuard(c,a);
+        if(sk.veto) return {ok:false, why:sk.why};
+        var qs=_cropQualityScore(a,c,false);
+        if(qs<0) return {ok:false, why:"切到主体/人物/物体"};
+        // 人物：任何一条边都必须离人物框 ≥3%，多主体一律拒绝大裁（Twitter 裁切研究的教训）
+        var pb=_personBoxOf(a);
+        if(pb && (pb[0]<c[0]/100+0.03||pb[1]<c[1]/100+0.03||pb[2]>1-c[2]/100-0.03||pb[3]>1-c[3]/100-0.03)) return {ok:false, why:"会切到人物"};
+        if(area<0.45 && Array.isArray(a.allBoxes)){
+          var pc=0; for(var i=0;i<a.allBoxes.length;i++){ if(a.allBoxes[i]&&a.allBoxes[i].class==="person") pc++; }
+          if(pc>1) return {ok:false, why:"画面里不止一个人，大裁会丢掉其他人"};
+        }
+        // 物体保护：_objectGuard 若改变裁切，说明原方案切到了物体
+        try{
+          if(Array.isArray(a.allBoxes)&&a.allBoxes.length){
+            var g=_objectGuard(c,a.allBoxes);
+            if(JSON.stringify(g)!==JSON.stringify(c)) return {ok:false, why:"会切到画面里的物体"};
+          }
+        }catch(e){}
+        return {ok:true, score:qs, area:area};
+      }catch(e){ return {ok:false, why:"校验异常"}; }
+    }
+    // v13.1.0 调试出口：把构图核心函数挂到 window，供 QA 脚本用"浏览器里的真实 aiData"复算，
+    // 避免单测（Node 侧文本提取）通过而浏览器里因作用域/数据差异静默不生效却查不出来。
+    try{ if(typeof window!=="undefined"){ window.__v131core={
+      cropBudget:_cropBudget, subjectEvidence:_subjectEvidence, skinEdgeGuard:_skinEdgeGuard,
+      cropsIoU:_cropsIoU, cropsSimilar:_cropsSimilar, anchorWindow:_anchorWindow, windowToCrop:_windowToCrop,
+      intentCandidates:_intentCandidates, cloudTrimToCrop:_cloudTrimToCrop, validateNewCrop:_validateNewCrop,
+      cropQualityScore:_cropQualityScore, buildCompositionCandidates:_buildCompositionCandidates, srcMegapixels:_srcMegapixels
+    }; } }catch(e){}
     function _cropQualityScore(a, crop, noCrop){
       try{
         if(!a) return 0;
@@ -4448,6 +4908,8 @@ var APP_VER="v13.0.0";
             if(JSON.stringify(g)!==JSON.stringify(c.map(function(v){return Math.round(v);}))) return -1;
           }
         }catch(e){}
+        // v13.1.0：肤色边缘守卫——小人物未被模型检出时的最后一道保护（裁掉的条带里有成块肤色 → 否决）
+        try{ if(_skinEdgeGuard(c.map(function(v){return Math.round(v);}),a).veto) return -1; }catch(e){}
         var nx=(cx-L)/Math.max(0.01,w), ny=(cy-T)/Math.max(0.01,h);
         var fit=_thirdsFitScore(nx,ny);
         var targets=[0.75,0.8,1,4/3,16/9];
@@ -4465,8 +4927,13 @@ var APP_VER="v13.0.0";
           if(B>0&&row.length){ var bi=Math.floor((1-B)*row.length); for(var m=bi;m<row.length;m++){sum+=(row[m]||0);n++;} }
           cutEnergy=n?Math.min(1,sum/n):0;
         }catch(e){}
-        var areaScore=1-Math.min(0.45,Math.abs(area-0.85)*0.75);
-        if(area<0.62) areaScore-=0.25;
+        // v13.1.0 幅度预算感知：旧版把"保留 85% 面积"当最优、面积一小就罚分，
+        // 导致任何主动重构图（小框/靠近）在打分上永远输给"不裁"——这是"AI 不敢裁"的数学根源。
+        // 现在：预算内（area ≥ cropMinArea）越紧越加分；只有超出预算才重罚。
+        var _floor=(typeof a.cropMinArea==="number"&&a.cropMinArea>0.02&&a.cropMinArea<0.95)
+          ? a.cropMinArea : (pb?0.40:0.25);
+        var areaScore=0.70+0.30*Math.min(1,(1-area)/0.70);
+        if(area<_floor) areaScore-=0.85;
         var centerBalance=1-Math.min(1,Math.abs(nx-0.5)+Math.abs(ny-0.5));
         // 不裁不能靠"零裁切能量"白拿高分；普通照片里保留太多冗余本身是弱项。
         var isNoCrop=(L+T+R+B)<0.005;
@@ -4542,47 +5009,58 @@ var APP_VER="v13.0.0";
         return best;
       }catch(e){ return null; }
     }
+    // v13.1.0 候选生成器：从"只有画幅转换"扩到"意图模板 × 幅度预算"。
+    // 依据：抖音"魔法框"实测只保留 10~16% 面积（等效 2.5~3.2x），旧候选集结构上产不出这种构图；
+    // 但每一张新候选都必须过 _validateNewCrop（预算 + 主体证据 + 肤色边缘 + 人物/物体 + 质量分）。
+    // 输出 A..H（≤8 个真实裁切）+ 原图，供本地切换与云端"选最优或在此基础上再收边"。
     function _buildCompositionCandidates(a, plan){
       try{
         if(!a||!plan) return [];
         if(/portrait/.test(plan.sceneType||"")) return [];
         var ar=(typeof a.frameAspect==="number"&&isFinite(a.frameAspect))?a.frameAspect:1;
+        var budget=_cropBudget(a, plan.sceneType||"general");
+        try{ a.cropMinArea=budget.minArea; }catch(e){} // 让质量分与候选生成用同一套预算
         var out=[], seen={};
-        function add(crop,noCrop,tag,reason,source,expected){
-          var c=noCrop?[0,0,0,0]:(crop||[0,0,0,0]).map(function(v){return Math.round(v);});
-          var sum=c[0]+c[1]+c[2]+c[3];
-          if(!noCrop && sum<=3) return;
-          if(!noCrop){
-            // v13.0.0：候选也必须过云端同款分级保护；本地已落地的 A 保持原值，避免 1% 级抖动。
-            if(source!=="local") c=_cloudCropGuard(c,a,plan.sceneType||"general");
-            sum=c[0]+c[1]+c[2]+c[3];
-            if(sum<=3) return;
-            if(_cropQualityScore(a,c,false)<0) return;
-            // 候选被分级保护改动后，若已偏离目标画幅 >2%，宁可不展示，避免“标着 1:1 实际不是”。
-            if(expected){
-              var _r=ar*(1-c[0]/100-c[2]/100)/(1-c[1]/100-c[3]/100);
-              if(Math.abs(_r-expected)/expected>0.02) return;
-            }
-            if(source==="aspect") tag=_candidateRatioTag(c,ar);
+        function accept(c,intent,tag,reason,source,expected){
+          if(!c||c.length!==4) return false;
+          var cc=c.map(function(v){return Math.round(v);});
+          if(expected){ // 画幅候选被保护改动后偏离目标 >2% → 不展示（避免"标着 1:1 实际不是"）
+            var _r=ar*(1-cc[0]/100-cc[2]/100)/(1-cc[1]/100-cc[3]/100);
+            if(Math.abs(_r-expected)/expected>0.02) return false;
           }
-          var k=noCrop?"N":c.join(",");
-          if(seen[k]) return;
+          var v=_validateNewCrop(cc,a,plan.sceneType||"general",budget,{source:source});
+          if(!v.ok) return false;
+          var k=cc.join(",");
+          if(seen[k]) return false;
+          for(var oi=0;oi<out.length;oi++){ if(_cropsSimilar(out[oi].crop,cc)) return false; } // 近似重复才剔
           seen[k]=1;
-          out.push({crop:c,noCrop:!!noCrop,tag:tag,reason:reason,source:source,
-            score:noCrop?_cropQualityScore(a,[0,0,0,0],true):_cropQualityScore(a,c,false)});
+          out.push({crop:cc,noCrop:false,tag:tag||intent,intent:intent,reason:reason,source:source,score:v.score,area:v.area});
+          return true;
         }
-        // A：当前本地主动构图（如果本来就是原图，则跳过，让 A/B/C 都是真实裁切候选）
-        if(!plan.noCrop) add(plan.crop,false,_candidateRatioTag(plan.crop,ar),"本地主动构图","local");
-        // B/C：两个不同社交画幅
+        // 1) 本地已落地的主动构图（保持原值，避免 1% 级抖动）
+        if(!plan.noCrop && plan.crop) accept(plan.crop,"local","本地构图","本地引擎找到的构图","local");
+        // 2) 意图模板候选（三分/地平线/小框重构图/去死边/画幅）
+        var intents=_intentCandidates(a,plan,budget);
+        var quota={};
+        for(var ii=0;ii<intents.length && out.length<8;ii++){
+          var it=intents[ii];
+          quota[it.intent]=quota[it.intent]||0;
+          if(quota[it.intent]>=2) continue; // 每种意图最多 2 个，保证"思路多"而不是"同一思路的近似框"
+          if(accept(it.crop,it.intent,it.tag,it.reason,"intent")) quota[it.intent]++;
+        }
+        // 3) 兜底：意图候选不足 3 个时，补两个不同画幅（保持 v13 的能力不回退）
         var targets=(ar<0.70)?[0.75,0.8,1]:(ar<0.95?[1,2/3,0.8]:(ar<1.45?[4/3,1,16/9]:[16/9,4/3,1]));
         for(var i=0;i<targets.length && out.length<3;i++){
           var c=_candidateAspectCrop(a,targets[i]);
-          if(c) add(c,false,_candidateRatioTag(c,ar),"AI 构图候选 · "+_candidateRatioTag(c,ar),"aspect",targets[i]);
+          if(c) accept(c,"aspect","画幅 "+_candidateRatioTag(c,ar),"换成 "+_candidateRatioTag(c,ar)+" 更好发","aspect",targets[i]);
         }
-        // D：原图。必须已有 3 个真实裁切候选，联系表才固定为 A/B/C + 原图，避免字母含义漂移。
-        if(out.length<3) return [];
-        add([0,0,0,0],true,"原图","保留完整画面","original");
-        out=out.slice(0,4);
+        // 4) 强制含"最宽"和"最紧"两个极端（研究结论：候选必须覆盖不同构图意图，否则云端选择没有区分度）
+        out.sort(function(x,y){ return y.score-x.score; });
+        out=out.slice(0,8);
+        // 少于 2 个真实裁切时不组联系表（字母含义会漂移），退回语义通道
+        if(out.length<2) return [];
+        var noScore=_cropQualityScore(a,[0,0,0,0],true);
+        out.push({crop:[0,0,0,0],noCrop:true,tag:"原图",intent:"original",reason:"保留完整画面",source:"original",score:noScore,area:1});
         for(var j=0;j<out.length;j++) out[j].id=String.fromCharCode(65+j);
         return out;
       }catch(e){ return []; }
@@ -6173,6 +6651,8 @@ var APP_VER="v13.0.0";
           state._pixelFirstApplied=false;
           state._pendingCloudPlan=null;
           state._cloudFinished=false;
+          state._cloudReqAt=0;
+          state._cloudPickRaw=null;   // QA 探针：每次分析清空，避免读到上一张的云端指令形态
           // v13.0.0：先把云端状态说清楚——开关开了但没口令/熔断/失败，绝不静默装作走了云端。
           var _cloudOnLS=false; try{ _cloudOnLS=localStorage.getItem("aiComposeCloudOn")==="1"; }catch(e){}
           if(_cloudOnLS && !_cloudReady()){
@@ -6192,9 +6672,19 @@ var APP_VER="v13.0.0";
             plan={subject:"画面主体",rule:"thirds",diag:[20,30,75,70],crop:[12,10,14,14],z:1.4,f:"natural",conf:80,
               desc:"已识别画面主体，建议三分法构图，裁去边缘干扰元素。",filters:["自然 · 忠实还原","FClassic · 冷峻"]};
           }
+          // v13.1.0 产品口径"要么明显更好，要么不动"：四边合计 ≤5% 的微裁一律归零
+          //（实测 122 张真实照片里有 1 张裁成 [0,2,0,2]，用户看不出区别却丢了原图比例）。
+          try{
+            if(plan && !plan.noCrop && plan.crop){
+              var _msum=plan.crop[0]+plan.crop[1]+plan.crop[2]+plan.crop[3];
+              if(_msum>0 && _msum<=5){ plan.crop=[0,0,0,0]; plan.noCrop=true; plan.microCropZeroed=true; }
+            }
+          }catch(e){}
           state.plan=plan;
           state.analyzed=true;
           // v13.0.0：生成同一张照片的安全构图候选；本地立即可切换，云端AI会在候选里选最优。
+          // v13.1.0：候选不再只是"给用户点的列表"——离线时本地也自动采用评分最高且已过全部硬校验的
+          // 候选，这才解决用户说的"分析完不裁/没发现好构图"。云端回来仍可在此基础上继续收紧。
           try{
             state._compositionCandidates=_buildCompositionCandidates(a,plan);
             state._selectedCandidate=null;
@@ -6203,6 +6693,22 @@ var APP_VER="v13.0.0";
               if(!!_cc.noCrop===!!plan.noCrop && JSON.stringify(_cc.crop||[0,0,0,0])===JSON.stringify(plan.crop||[0,0,0,0])){ state._selectedCandidate=_cc.id; break; }
             }
             state._cloudPickReason=null; state._cloudPickId=null;
+            try{
+              var _curScore=_cropQualityScore(a,plan.crop,plan.noCrop);
+              var _best=null,_bestScore=_curScore+0.02; // 必须有净提升才换，避免 1% 级抖动
+              for(var _bi=0;_bi<state._compositionCandidates.length;_bi++){
+                var _bc=state._compositionCandidates[_bi];
+                if(_bc.noCrop) continue;
+                var _bs=_cropQualityScore(a,_bc.crop,false);
+                if(_bs>=0 && _bs>_bestScore){ _best=_bc; _bestScore=_bs; }
+              }
+              if(_best){
+                plan.crop=_best.crop.slice(); plan.noCrop=false;
+                plan.proactiveApplied=true; plan.proactiveTag=_best.tag||"AI 构图";
+                plan.aiCandidateId=_best.id; plan.desc=(_best.reason||"AI 发现更好的构图")+"（候选 "+_best.id+"，可撤销或换回原图）";
+                state._selectedCandidate=_best.id;
+              }
+            }catch(e){}
           }catch(e){ state._compositionCandidates=[]; }
           // v13.0.0 P0：像素结果立即落地，云端/模型只做后台增强，不再让用户等 16-20 秒才看到裁切。
           state.analyzing=false;
@@ -6322,19 +6828,27 @@ var APP_VER="v13.0.0";
             }
           }, true, _origEnhanceURL);
           }
-          // 云端硬截止：60s 仍未回则中止，保留已落地的本地结果（不再弹"超时"大卡）
-          setTimeout(function(){
-            if(_tokenAfterApply!==state.analyzeToken) return;
-            if(state._cloudFinished) return;
-            if(_cloudActiveNow){
+          // v13.1.0 时钟统一：60s 硬截止从"云端请求真正发出"开始算。
+          // 旧写法从点击那一刻算 60s，而本地模型预检 + 联系表编码都在云端之前，
+          // 慢机器上云端实际只剩 40 多秒——用户看到的"60 秒还没出图"有一部分是我们自己掐死的。
+          var _wd=setInterval(function(){
+            try{
+              if(_tokenAfterApply!==state.analyzeToken){ clearInterval(_wd); return; }
+              if(state._cloudFinished){ clearInterval(_wd); return; }
+              if(!_cloudActiveNow){ clearInterval(_wd); return; }
+              if(!state._cloudReqAt) return;              // 还没真正发请求（本地模型预检中），不计入云端预算
+              if(Date.now()-state._cloudReqAt<60000) return;
+              clearInterval(_wd);
               try{ if(state._cloudAbort){ state._cloudAbort.abort(); state._cloudAbort=null; } }catch(e){}
               state._cloudKilled=true; state._cloudFinished=true;
               state.analyzing=false; stage.classList.remove("scanning"); btnAnalyze.disabled=false;
-              _setCloudStatus("failed","云端超过 60 秒未返回","已保留本地构图；点「重试云端」可再试");
+              _setCloudStatus("failed","云端超过 60 秒未返回","已保留本地构图；点「重试云端」可再试，或在设置里换非思考模型");
               try{ aiRuleTag.textContent="📷 本地 · ☁️ 云端超时"; }catch(e){}
               try{ toastMsg("云端未在 60 秒内返回，已保留本地结果"); }catch(e){}
-            }
-          }, 60000);
+            }catch(e){ clearInterval(_wd); }
+          }, 1000);
+          // 兜底：云端始终没发起（例如被熔断/短路），90s 后清掉定时器，不泄漏
+          setTimeout(function(){ try{ clearInterval(_wd); }catch(e){} }, 120000);
         }catch(err){
           console.error("AI 分析异常:", err);
           state.analyzing=false;
@@ -6811,7 +7325,7 @@ var APP_VER="v13.0.0";
       if(!orig){ return false; }
       var applyNoCrop=!!p.noCrop;
       var cp=p.crop||[0,0,0,0];
-      if(!applyNoCrop && (cp[0]+cp[1]+cp[2]+cp[3])<=0) applyNoCrop=true;
+      if(!applyNoCrop && (cp[0]+cp[1]+cp[2]+cp[3])<=5) applyNoCrop=true; // v13.1.0：微裁归零（合计≤5% 视为没裁）
       function commit(url,kind){
         try{
           pushUndo();
@@ -6874,7 +7388,9 @@ var APP_VER="v13.0.0";
       try{
         if(!p) return;
         state._pendingCloudPlan=p;
-        try{ if(!p.noCrop && p.crop) p.crop=_cloudCropGuard(p.crop,state.aiData,p.sceneType||p.scene||"general"); }catch(e){}
+        // v13.1.0：云端 refine 结果已经过 _validateNewCrop（比分级保护更严），不再二次钳制，
+        // 否则"小框重构图"会被打回旧幅度，等于白做。
+        if(!p.aiRefined){ try{ if(!p.noCrop && p.crop) p.crop=_cloudCropGuard(p.crop,state.aiData,p.sceneType||p.scene||"general"); }catch(e){} }
         var _curPortrait=!!(state.plan && /portrait/.test(String(state.plan.sceneType||"")));
         if(_curPortrait || /portrait/.test(String(p.sceneType||p.scene||"")) || !p.crop || (p.crop[0]+p.crop[1]+p.crop[2]+p.crop[3])<=5){ p.crop=[0,0,0,0]; p.noCrop=true; p.aiCandidateTag="原图"; }
         var cur=state.plan||{};
@@ -6945,11 +7461,16 @@ var APP_VER="v13.0.0";
           var _semKeep=!!(p.noCrop && (p.hasReflection || (p.symmetry&&p.symmetry!=="none") || /sunset_sky|water_reflection|neon_night|cloud_sea/.test(String(p.atmosphere||""))));
           // 只拦两类：① 云端要撤销本地更紧凑的裁切（noCrop），且无对称/倒影/氛围理由；
           // ② 云端裁切本身不安全（评分 -1）。其他不同方案保留为可选卡，由用户决定。
-          if((!_semKeep && p.noCrop && _curS>=0) || (_newS<0 && _curS>=0)){
+          var _keepUnsafe=(_newS<0 && _curS>=0);
+          var _keepUndo=(!_semKeep && p.noCrop && _curS>=0);
+          if(_keepUnsafe || _keepUndo){
             try{ aiRuleTag.textContent="☁️ 云端已复核 · 保留本地构图"; }catch(e){}
             state._pendingCloudPlan=p;
-            setStatus("云端已复核 · 本地构图更紧凑，已保留","done");
-            toastMsg("云端已复核：本地构图更紧凑，保持当前结果");
+            // v13.1.0：两类原因分开说，不再把"云端方案被本地安全校验否决"报成"本地更紧凑"。
+            var _whyTxt=_keepUnsafe?"云端方案会切到主体或边缘，未通过本地安全校验":
+                                   "云端建议不裁，本地已裁得更紧凑";
+            setStatus("云端已复核 · "+_whyTxt+"，已保留本地","done");
+            toastMsg("云端已复核："+_whyTxt+"，保持当前结果");
             return;
           }
         }catch(e){}
@@ -8757,10 +9278,20 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         };
         // v13.0.0：云端模式如果本地模型已加载，先用它补人物/物体证据（不下载、不阻塞本地结果），
         // 防止“像素把真实人像误判成普通场景，云端又误判成 general → 把人裁了”。
-        if(state.aiModelEnabled && localModelReady()){
-          runLocalAIDetection(elSnap, token, function(np){
+        // v13.1.0 竞态修复：_refineAppliedPlan 走的是 _applyPlanFromOriginal，它在 img.onload 里才
+        // 提交 state.plan / _softSig；旧代码紧接着同步重建候选并发云端，会让"联系表"用旧方案、
+        // 而签名用新方案——云端回来可能把刚精修好的构图又退回旧裁切。这里等提交落地（最多 1.5s）。
+        function _startCloudAfterCommit(){
+          var _t0=Date.now();
+          var _tick=setInterval(function(){
+            var committed=false;
+            try{
+              var sig=JSON.stringify({c:state.plan&&state.plan.crop,src:state.sourceName});
+              committed=(sig===state._softSig)||(Date.now()-_t0>1500);
+            }catch(e){ committed=true; }
+            if(!committed) return;
+            clearInterval(_tick);
             if(token!==state.analyzeToken) return;
-            try{ if(np) _refineAppliedPlan(np); }catch(e){}
             try{
               state._compositionCandidates=_buildCompositionCandidates(state.aiData,state.plan);
               state._selectedCandidate=null;
@@ -8770,6 +9301,13 @@ if(aiModelState!=="idle"){ resolve(false); return; }
               }
             }catch(e){}
             _startCloud();
+          },60);
+        }
+        if(state.aiModelEnabled && localModelReady()){
+          runLocalAIDetection(elSnap, token, function(np){
+            if(token!==state.analyzeToken) return;
+            try{ if(np) _refineAppliedPlan(np); }catch(e){}
+            _startCloudAfterCommit();
           }, true);
         }else{
           _startCloud();
@@ -9045,7 +9583,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       if(cloudMode){ cloudMode.value=state.cloud.mode||"shared"; }
       if(cloudSharedRow){ cloudSharedRow.style.display=byok?"none":""; }
       if(cloudByokRow){ cloudByokRow.style.display=byok?"":"none"; }
-      if(cloudBase && document.activeElement!==cloudBase){ cloudBase.value=state.cloud.base||"https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com"; }
+      if(cloudBase && document.activeElement!==cloudBase){ cloudBase.value=state.cloud.base||SCF_BASE; }
       if(cloudKey && document.activeElement!==cloudKey){ cloudKey.value=state.cloud.key||""; }
       // 厂商下拉填充 + 选中
       if(cloudVendor){
@@ -9130,11 +9668,11 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       function _saveCloudInputs(){
         var v=(cloudBase.value||"").trim();
         if(/cephalon\.cloud/i.test(v)){
-          v="https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com";
+          v=SCF_BASE;
           cloudBase.value=v;
           try{ toastMsg("Cephalon 官方地址无法在浏览器直连（会被拦截），已改回安全代理地址"); }catch(e){}
         }
-        state.cloud.base=v||"https://1334762369-i3x3zem36d.ap-guangzhou.tencentscf.com";
+        state.cloud.base=v||SCF_BASE;
         state.cloud.key=(cloudKey.value||"").trim();
         try{ localStorage.setItem("aiComposeCloudBase", state.cloud.base); }catch(e){}
         try{ localStorage.setItem("aiComposeCloudKey", state.cloud.key); }catch(e){}
@@ -9172,10 +9710,13 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         try{ localStorage.setItem("aiComposeByokModel", state.cloud.byokModel||""); }catch(e){}
         _cloudUIApplyMode();
       }
-      if(cloudVendor){ cloudVendor.addEventListener("change",_saveByokInputs); }
-      if(cloudByokKey){ cloudByokKey.addEventListener("input",_saveByokInputs); cloudByokKey.addEventListener("change",_saveByokInputs); }
-      if(cloudByokModel){ cloudByokModel.addEventListener("input",_saveByokInputs); cloudByokModel.addEventListener("change",_saveByokInputs); }
-      if(cloudByokModelPreset){ cloudByokModelPreset.addEventListener("change",function(){
+      function _resetCloudTest(){ try{ state._cloudTest=null; _cloudTestResultSet("换了厂商/模型/Key，需要重新体检。",null); }catch(e){} }
+      // v13.1.0：体检结论只对它当时测的那一套配置有效——旧版结论会"粘"在换掉之后的模型上，
+      // 让用户误以为某个预设通过了（实际通过的是上一个）。
+      if(cloudVendor){ cloudVendor.addEventListener("change",function(){ _saveByokInputs(); _resetCloudTest(); }); }
+      if(cloudByokKey){ cloudByokKey.addEventListener("input",function(){ _saveByokInputs(); _resetCloudTest(); }); cloudByokKey.addEventListener("change",_saveByokInputs); }
+      if(cloudByokModel){ cloudByokModel.addEventListener("input",function(){ _saveByokInputs(); _resetCloudTest(); }); cloudByokModel.addEventListener("change",_saveByokInputs); }
+      if(cloudByokModelPreset){ cloudByokModelPreset.addEventListener("change",function(){ _resetCloudTest();
         var val=cloudByokModelPreset.value;
         if(val==="__custom__"){
           if(cloudByokCustomRow) cloudByokCustomRow.style.display="";
@@ -9210,6 +9751,19 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       try{
         var body=document.getElementById("aiBody"); if(!body) return;
         var old=document.getElementById("compCandidatesCard");
+        // v13.1.0 安全护栏：候选可能是"模型复核前"的像素场景生成的。最终判定为人像/特写时
+        // 一律不展示可切换的裁切候选，避免用户一键把人像裁坏（人像/特写=保持原图）。
+        // 修正：第一版还把 aiData.isPerson 也当清空条件，实测把"画面里有用餐者的美食照/
+        // 有远景路人的风景照"的候选条一起清掉了（云端回归前 16 张里 5 张 cand=0，其中 3 张是
+        // food/landscape）——那属于"能力被静默清零"。人像保护仍由场景判定 + _validateNewCrop
+        // 的人物 3% 边距/肤色边缘兜底；只有"人像/特写场景"或"判为人物且当前根本没裁"才收起候选条。
+        var _scNow=String((state.plan&&state.plan.sceneType)||(state.aiData&&state.aiData.sceneType)||"");
+        var _personPreserved=!!(state.aiData&&state.aiData.isPerson===true&&state.plan&&state.plan.noCrop);
+        if(/portrait/.test(_scNow)||_personPreserved){
+          if(old&&old.parentNode) old.parentNode.removeChild(old);
+          state._compositionCandidates=[];
+          return;
+        }
         var list=state._compositionCandidates||[];
         if(list.length<2){ if(old&&old.parentNode) old.parentNode.removeChild(old); return; }
         var cur=state.plan||{};
@@ -9263,43 +9817,48 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       }catch(e){}
     }
     // v13.0.0：把 A/B/C/原图 四个真实裁切候选画成 2×2 联系表，让云端 VLM 直接“看图选最美”。
+    // v13.1.0：联系表按候选数自适应 2×2（≤4，每格 448px）或 3×3（5~9，每格 384px）。
+    // 每格分辨率是"能不能看清小主体/边界杂物"的关键，所以格子数增加时同步放大整幅画布。
     function _buildCandidateSheet(el, cands){
       try{
         if(!el||!cands||cands.length<2) return null;
         var iw=el.naturalWidth||el.videoWidth, ih=el.naturalHeight||el.videoHeight;
         if(!iw||!ih) return null;
-        var CELL=448, W=896, H=896, PAD=12;
+        var n=Math.min(9,cands.length);
+        var GRID=(n<=4)?2:3, CELL=(n<=4)?448:384, PAD=12;
+        var W=GRID*CELL, H=GRID*CELL;
         var c=document.createElement("canvas"); c.width=W; c.height=H;
         var ctx=c.getContext("2d");
         ctx.fillStyle="#0A0C0E"; ctx.fillRect(0,0,W,H);
         var orig=null, alts=[];
         for(var q=0;q<cands.length;q++){ if(cands[q].noCrop) orig=cands[q]; else alts.push(cands[q]); }
-        // 原图固定左上；A/B/C 按图片内容 hash 轮换位置，抵消“偏爱某个格子”的位置偏差。
+        // 原图固定左上；其余按图片内容 hash 轮换位置，抵消“偏爱某个格子”的位置偏差。
         var hseed=iw+ih;
         for(var hj=0;hj<alts.length;hj++){ hseed+=alts[hj].crop[0]*7+alts[hj].crop[1]*11+alts[hj].crop[2]*13+alts[hj].crop[3]*17; }
         var rot=alts.length? (hseed%alts.length):0;
         var ordered=[];
         if(orig) ordered.push(orig);
         for(var rj=0;rj<alts.length;rj++) ordered.push(alts[(rj+rot)%alts.length]);
-        var colors=["#E8EDF2","#FFB454","#54C8F7","#67D97A"];
-        for(var i=0;i<ordered.length && i<4;i++){
-          var x=(i%2)*CELL, y=Math.floor(i/2)*CELL;
+        var colors=["#E8EDF2","#FFB454","#54C8F7","#67D97A","#C89BF5","#F5739B","#7FE8D9","#F5D76F","#B6C2D2"];
+        var badge=Math.round(CELL*0.10), fsBadge=Math.round(CELL*0.058), fsTag=Math.round(CELL*0.033);
+        for(var i=0;i<ordered.length && i<n;i++){
+          var x=(i%GRID)*CELL, y=Math.floor(i/GRID)*CELL;
           var cp=ordered[i].noCrop?[0,0,0,0]:(ordered[i].crop||[0,0,0,0]);
           var sx=Math.round(cp[0]/100*iw), sy=Math.round(cp[1]/100*ih);
           var sw=Math.max(4,Math.round((100-cp[0]-cp[2])/100*iw));
           var sh=Math.max(4,Math.round((100-cp[1]-cp[3])/100*ih));
-          var availW=CELL-PAD*2, availH=CELL-PAD*2-28;
+          var availW=CELL-PAD*2, availH=CELL-PAD*2-Math.round(CELL*0.06);
           var sc=Math.min(availW/sw,availH/sh);
           var dw=Math.max(1,Math.round(sw*sc)), dh=Math.max(1,Math.round(sh*sc));
           var dx=x+Math.round((CELL-dw)/2), dy=y+PAD+Math.round((availH-dh)/2);
           ctx.drawImage(el,sx,sy,sw,sh,dx,dy,dw,dh);
-          ctx.strokeStyle=colors[i]||"#fff"; ctx.lineWidth=4; ctx.strokeRect(x+2,y+2,CELL-4,CELL-4);
-          ctx.fillStyle="rgba(0,0,0,.78)"; ctx.fillRect(x+8,y+8,46,40);
-          ctx.fillStyle=colors[i]||"#fff"; ctx.font="bold 26px -apple-system,Arial,sans-serif"; ctx.textBaseline="middle";
-          ctx.fillText(ordered[i].noCrop?"原":ordered[i].id,x+17,y+29);
-          ctx.fillStyle="rgba(0,0,0,.82)"; ctx.fillRect(x+8,y+CELL-44,Math.min(CELL-16,240),34);
-          ctx.fillStyle="#E8EDF2"; ctx.font="13px -apple-system,Arial,sans-serif";
-          ctx.fillText((ordered[i].noCrop?"原图":ordered[i].id+" · "+(ordered[i].tag||"")),x+14,y+CELL-27);
+          ctx.strokeStyle=colors[i]||"#fff"; ctx.lineWidth=(GRID===2?4:3); ctx.strokeRect(x+2,y+2,CELL-4,CELL-4);
+          ctx.fillStyle="rgba(0,0,0,.78)"; ctx.fillRect(x+8,y+8,badge,badge*0.9);
+          ctx.fillStyle=colors[i]||"#fff"; ctx.font="bold "+fsBadge+"px -apple-system,Arial,sans-serif"; ctx.textBaseline="middle";
+          ctx.fillText(ordered[i].noCrop?"原":ordered[i].id,x+8+Math.round(badge*0.3),y+8+badge*0.47);
+          ctx.fillStyle="rgba(0,0,0,.82)"; ctx.fillRect(x+8,y+CELL-Math.round(CELL*0.10),Math.min(CELL-16,Math.round(CELL*0.55)),Math.round(CELL*0.076));
+          ctx.fillStyle="#E8EDF2"; ctx.font=fsTag+"px -apple-system,Arial,sans-serif";
+          ctx.fillText((ordered[i].noCrop?"原图":ordered[i].id+" · "+(ordered[i].tag||"")),x+14,y+CELL-Math.round(CELL*0.062));
         }
         return c.toDataURL("image/jpeg",0.82);
       }catch(e){ return null; }
@@ -9317,23 +9876,30 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         var byok=(state.cloud.mode==="byok");
         var base=byok?_byokVendor(state.cloud.byokVendor).base:state.cloud.base;
         var key=byok?state.cloud.byokKey:state.cloud.key;
-        var model=byok?(state.cloud.byokModel||_byokVendor(state.cloud.byokVendor).model):state.cloud.model;
-        if(!base||!key){ state._cloudFailReason="auth"; onDone(null); return; }
+        // v13.1.0：BYOK 未填模型时取该厂商第一个预设（旧写法取 .model，而新预设表只有 models 数组 →
+        // 结果是 undefined 进请求体，必然 400 却被报成"网络故障"）。
+        var model=byok?(state.cloud.byokModel||(_byokModelPresets(state.cloud.byokVendor)[0]||{}).id||""):state.cloud.model;
+        if(!base||!key||!model){ state._cloudFailReason="auth"; onDone(null); return; }
         var sheet=_buildCandidateSheet(el,cands);
         if(!sheet){ state._cloudFailReason="network"; onDone(null); return; }
         var ids=cands.map(function(c){return c.id;});
+        var _origId=(function(){ for(var z=0;z<cands.length;z++){ if(cands[z].noCrop) return cands[z].id; } return ids[ids.length-1]; })();
+        var _cropIds=ids.filter(function(x){ return x!==_origId; });
         var scoreSchema="{"; for(var si=0;si<ids.length;si++){ scoreSchema+='"'+ids[si]+'":0'+(si<ids.length-1?",":""); } scoreSchema+="}";
-        var sys=["你是专业摄影构图评审。图中是同一张照片的多个候选构图：左上角固定是原图，其余格是 A/B/C 裁切候选，每格左上角有字母或“原”。",
-          "给每个候选打 0-100 构图分，选出最高分。评分看：主体/人物是否完整、画面最美区域是否突出、负空间与平衡、是否切到杂物/人物、裁切是否自然。",
-          "如果候选是同类重复或都差不多，选最自然的一张；人像/特写优先原图；拿不准选原图。只输出严格 JSON。"
+        var sys=["你是专业摄影构图评审。图中是同一张照片的多个候选构图，每格左上角有编号，左上角第一格固定是「原图」。",
+          "任务分两步：① 给每个候选打 0-100 构图分并选出最好的一个；② 再判断在这个最好的候选上，是否还需要把某几条边继续往里收一点，才能把画面里最美的区域突出来（这一步叫 refine）。",
+          "评分看：主体是否突出、人物/宠物是否完整、有没有杂物或大片没有内容的空边、负空间与平衡、裁切是否自然。",
+          "收边规则：每边只能是 0 / 5 / 10 / 15 / 20 / 25（百分比），只往里收不往外扩；拿不准就填 0。人像特写、对称、倒影、引导线完整的画面一律全部填 0。",
+          "如果你认为这张照片本来就不该裁（候选都不如原图，或画面里没有更好的区域），action 填 reject 并说明原因。",
+          "只输出严格 JSON：不要 markdown、不要坐标、不要像素值、不要输出多余字段。"
         ].join("\n");
-        var user="左上角是原图，其余为 "+ids.join(" / ")+" 裁切候选。按此 JSON 输出：\n"
-          +'{"scene":"food/portrait/landscape/street/architecture/animal/waterscape/night/general","subject":"一句中文","highlight":"最美区域","scores":'+scoreSchema+',"best":"'+ids[0]+'","worst":"'+ids[0]+'","confidence":80,"hasPerson":false,"personCount":0,"cutsPerson":false,"reason":"为什么选它，一句中文","conf":80,"filter":"自然/暖阳/冷调/黑白/浓郁/清新/电影感/莫兰迪/港风","filterReason":"一句"}\n'
-          +"要求：scores 覆盖所有候选；best 必须最高分；worst 选最差；confidence 0-100；如果画面有人，hasPerson=true 并填 personCount；如果 best 候选会切到人物，cutsPerson=true；不要输出坐标。";
+        var user="格子共 "+ids.length+" 个：左上角第一格是【原图，编号 "+_origId+"】，其余格依次是 "+_cropIds.join(" / ")+"（每格左上角都标了自己的编号）。按此 JSON 输出：\n"
+          +'{"scene":"food/portrait/landscape/street/architecture/animal/waterscape/night/general","subject":"一句中文","highlight":"最美区域","scores":'+scoreSchema+',"best":"'+_cropIds[0]+'","worst":"'+_cropIds[0]+'","confidence":80,"hasPerson":false,"personCount":0,"cutsPerson":false,"action":"select 或 refine 或 reject","base":"'+_cropIds[0]+'","trim":{"l":0,"t":0,"r":0,"b":0},"guard":"face 或 subject 或 none","reason":"为什么，一句中文","conf":80,"filter":"自然/暖阳/冷调/黑白/浓郁/清新/电影感/莫兰迪/港风","filterReason":"一句"}\n'
+          +"要求：scores 覆盖所有编号；best 必须是最高分；action=refine 时 base 填你选的编号、trim 表示在该候选基础上每边再往里收多少；action=select 表示候选已经够好；action=reject 表示宁可用原图。";
         var body=Object.assign({model:model,messages:[
           {role:"system",content:sys},
           {role:"user",content:[{type:"text",text:user},{type:"image_url",image_url:{url:sheet}}]}
-        ],temperature:0.1,max_tokens:500}, _cloudThinkingParams(model));
+        ],temperature:0.1,max_tokens:520}, _cloudThinkingParams(model, byok?state.cloud.byokVendor:"shared"));
         if(state._cloudAbort){ try{ state._cloudAbort.abort(); }catch(e){} }
         var ctrl=(typeof AbortController!=="undefined")?new AbortController():null;
         state._cloudAbort=ctrl;
@@ -9352,32 +9918,49 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             if(state.cloudFailCount>=3){ state.cloudFailCount=0; state.cloudTripUntil=Date.now()+300000; }
             finish(null); return;
           }
-          res.json().then(function(j){
+          // v13.1.0：_cloudSend 已经读过 body，这里直接用解析好的 j（旧写法在这里再 res.json() 会抛错→被当成网络故障）
+          Promise.resolve(res.j).then(function(j){
             try{
-              var txt=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;
+              var _ch=j&&j.choices&&j.choices[0];
+              var txt=_ch&&_ch.message&&_ch.message.content;
+              var _fin=_ch&&_ch.finish_reason;
+              var _rt=j&&j.usage&&j.usage.completion_tokens_details&&j.usage.completion_tokens_details.reasoning_tokens;
+              if(!txt||!String(txt).trim()){
+                // 200 但没内容：几乎总是"思考 token 把输出预算吃光"（实测 reasoning_tokens 498/500）
+                state._cloudFailReason=(_fin==="length"?"thinking":"network");
+                state.cloudFailCount=(state.cloudFailCount||0)+1;
+                finish(null); return;
+              }
               var obj=parse(txt);
-              if(!obj){ state._cloudFailReason="network"; finish(null); return; }
+              if(!obj){ state._cloudFailReason="format"; finish(null); return; }
+              // QA 探针（不参与业务判定）：保留模型指令形态，用来统计 refine/reject 的真实触发率。
+              try{ state._cloudPickRaw={
+                hasActionKey:Object.prototype.hasOwnProperty.call(obj,"action"),
+                action:String(obj.action||"").toLowerCase()||"(缺省)",
+                base:obj.base==null?null:String(obj.base).toUpperCase(), trim:obj.trim||null,
+                best:obj.best||null, cutsPerson:obj.cutsPerson===true,
+                keys:Object.keys(obj).join(",")
+              }; }catch(e){}
               var scores={}, best=null, bestScore=-1;
               for(var i=0;i<ids.length;i++){
                 var id=ids[i], v=(obj.scores&&obj.scores[id]!=null)?Number(obj.scores[id]):NaN;
                 if(isFinite(v)){ scores[id]=Math.max(0,Math.min(100,v)); if(scores[id]>bestScore){bestScore=scores[id];best=id;} }
               }
               var _cutsPerson=(obj.cutsPerson===true)||(obj.hasPerson===true && obj.cutsPerson===undefined && obj.personCount>0);
-              var want=String(obj.best||"").toUpperCase().replace(/[^A-D]/g,"");
-              var worst=String(obj.worst||"").toUpperCase().replace(/[^A-D]/g,"");
+              var want=String(obj.best||"").toUpperCase().replace(/[^A-I]/g,"");
+              var worst=String(obj.worst||"").toUpperCase().replace(/[^A-I]/g,"");
               if(scores[want]!==undefined && scores[want]>=bestScore-4 && want!==worst) best=want;
               if(!best && want) best=want;
               if(!best) best=ids[0];
               function candById(id){ for(var q=0;q<cands.length;q++){ if(cands[q].id===id) return cands[q]; } return null; }
+              function origCand(){ for(var q=0;q<cands.length;q++){ if(cands[q].noCrop) return cands[q]; } return cands[cands.length-1]; }
               var pick=candById(best);
               // 安全复核：云端选的候选如果切到人物/物体，退回最高分仍安全的候选，最后退原图。
-              if(pick){
-                var a=state.aiData||{};
-                if(_cropQualityScore(a,pick.crop,pick.noCrop)<0){
-                  pick=null;
-                  var order=ids.slice().sort(function(x,y){return (scores[y]||0)-(scores[x]||0);});
-                  for(var oi=0;oi<order.length;oi++){ var cc=candById(order[oi]); if(cc && _cropQualityScore(a,cc.crop,cc.noCrop)>=0){ pick=cc; best=cc.id; break; } }
-                }
+              var a=state.aiData||{};
+              if(pick && _cropQualityScore(a,pick.crop,pick.noCrop)<0){
+                pick=null;
+                var order=ids.slice().sort(function(x,y){return (scores[y]||0)-(scores[x]||0);});
+                for(var oi=0;oi<order.length;oi++){ var cc=candById(order[oi]); if(cc && _cropQualityScore(a,cc.crop,cc.noCrop)>=0){ pick=cc; best=cc.id; break; } }
               }
               if(!pick){ state._cloudFailReason="network"; finish(null); return; }
               var sceneKey=String(obj.scene||"").toLowerCase();
@@ -9387,10 +9970,35 @@ if(aiModelState!=="idle"){ resolve(false); return; }
               // 食物/宠物被 VLM 误标 portrait 时以本地强证据为准；本地已判 portrait 时不允许云端降级。
               if(/^(food|animal)$/.test(_localSc) && /portrait/.test(sceneKey) && !(state.aiData&&state.aiData.isPerson)) sceneKey=_localSc;
               if(/portrait/.test(_localSc) && !/portrait/.test(sceneKey)) sceneKey=_localSc;
-              // 云端在候选里识别出人像时，必须退回原图（本地可能先误判成普通场景）。
+              var action=String(obj.action||"select").toLowerCase();
+              var guarded=false, refined=false, guardWhy="";
+              // ① 云端识别出人像是主体 → 一律退回原图（本地可能先误判成普通场景）
               if(/portrait/.test(sceneKey) || _cutsPerson){
-                var _origC=candById("D")||cands[cands.length-1];
-                if(_origC){ pick=_origC; best=_origC.id; }
+                var _o=origCand(); if(_o){ pick=_o; best=_o.id; }
+                guarded=true;
+              }
+              // ② 云端明确"这张不该裁" → 用原图，并把理由如实显示
+              else if(action==="reject"){
+                var _o2=origCand(); if(_o2){ pick=_o2; best=_o2.id; }
+                guarded=true;
+              }
+              // ③ v13.1.0 核心：云端在选中候选的基础上继续"往里收边"——这才是超越本地候选的那一步。
+              //    坐标全部由本地按离散档位算出，并过与本地候选完全相同的硬校验；不过就退回原候选。
+              else if(action==="refine"){
+                try{
+                  var bid=String(obj.base||best).toUpperCase().replace(/[^A-I]/g,"");
+                  var bc=candById(bid)||pick;
+                  if(bc && !bc.noCrop){
+                    var nc=_cloudTrimToCrop(bc.crop, obj.trim);
+                    var bud=_cropBudget(a, sceneKey);
+                    var val=_validateNewCrop(nc, a, sceneKey, bud);
+                    if(val.ok && !_cropsSimilar(nc, bc.crop)){
+                      var _ar=(typeof a.frameAspect==="number"&&a.frameAspect>0)?a.frameAspect:1;
+                      pick={crop:nc,noCrop:false,id:bc.id,tag:"AI 微调 · "+_candidateRatioTag(nc,_ar),reason:String(obj.reason||"")};
+                      best=bc.id; refined=true;
+                    } else if(!val.ok){ guarded=true; guardWhy=val.why; }
+                  }
+                }catch(e){ guarded=true; guardWhy="微调指令无法解析"; }
               }
               var conf=Math.max(40,Math.min(98,parseInt(obj.conf,10)||state.plan&&state.plan.conf||82));
               var fk=null; try{ fk=_cf2k(obj.filter); }catch(e){}
@@ -9398,23 +10006,27 @@ if(aiModelState!=="idle"){ resolve(false); return; }
                 crop:pick.crop.slice(), noCrop:!!pick.noCrop, sceneType:sceneKey,
                 conf:conf, cloud:true, cloudPick:true, aiPick:pick.id, aiScores:scores,
                 aiReason:String(obj.reason||""), aiHighlight:String(obj.highlight||""), aiPickConf:Math.max(0,Math.min(100,parseInt(obj.confidence,10)||0)), aiWorst:worst, aiHasPerson:!!obj.hasPerson, aiCutsPerson:_cutsPerson,
+                aiRefined:refined, aiRejected:(action==="reject"), aiGuardWhy:guardWhy,
                 aiCandidateTag:pick.tag||"", subject:String(obj.subject||(state.plan&&state.plan.subject)||"画面主体"),
                 f:fk||(state.plan&&state.plan.f)||"natural"
               });
-              if(!p.noCrop && p.crop){ try{ p.crop=_cloudCropGuard(p.crop,state.aiData,sceneKey); }catch(e){} }
+              // 只有"未经统一校验"的旧路径才再过一次分级保护；refine/候选都已过 _validateNewCrop（更严）
+              if(!refined && !p.noCrop && p.crop){ try{ p.crop=_cloudCropGuard(p.crop,state.aiData,sceneKey); }catch(e){} }
               if(/portrait/.test(sceneKey) || !p.crop || (p.crop[0]+p.crop[1]+p.crop[2]+p.crop[3])<=5){ p.crop=[0,0,0,0]; p.noCrop=true; p.aiCandidateTag="原图"; }
-              p.desc="云端AI对比 "+cands.length+" 个构图候选，选中「"+pick.id+" · "+(pick.tag||"")+"」："+(obj.reason||"画面最自然")+"。";
+              p.desc=refined
+                ? ("云端AI在「"+pick.id+" · "+(p.aiCandidateTag||"")+"」基础上继续收紧边距，只保留最美的区域："+(obj.reason||"画面更集中")+"。")
+                : (action==="reject"
+                    ? ("云端AI复核后认为这张不该再裁："+(obj.reason||"原图更完整")+"。")
+                    : ("云端AI对比 "+cands.length+" 个构图候选，选中「"+pick.id+" · "+(pick.tag||"")+"」："+(obj.reason||"画面最自然")+"。"));
               state.cloudFailCount=0; state.cloudTripUntil=0; state._cloudFailReason="";
               finish(p);
             }catch(e){ state._cloudFailReason="network"; finish(null); }
           }).catch(function(){ state._cloudFailReason="network"; finish(null); });
         }
         function req(){
-          var h={"Content-Type":"application/json"};
-          if(byok) h["Authorization"]="Bearer "+key; else h["X-App-Token"]=key;
-          if(byok&&state.cloud.byokVendor==="openrouter"){ h["HTTP-Referer"]="https://yyds8170-ctrl.github.io/ai-composition-tool/"; h["X-OpenRouter-Title"]="AI 构图助手"; }
-          if(byok&&state.cloud.byokVendor==="anthropic"){ h["anthropic-dangerous-direct-browser-access"]="true"; }
-          return fetch(_cloudChatURL(base),{method:"POST",headers:h,body:JSON.stringify(body),signal:ctrl?ctrl.signal:undefined});
+          state._cloudReqAt=Date.now(); // v13.1.0：60s 预算从这里开始算
+          var h=_cloudHeaders(byok?state.cloud.byokVendor:"shared", key, byok);
+          return _cloudSend(_cloudChatURL(base),h,body,ctrl,_thinkModeOf(byok?state.cloud.byokVendor:"shared",model)).then(function(r){ return {ok:r.ok,status:r.status,j:r.j}; });
         }
         var timer=setTimeout(function(){ try{ if(ctrl) ctrl.abort(); }catch(e){} state._cloudFailReason="timeout"; finish(null); },55000);
         req().then(function(r){ return r; }).then(function(r){ clearTimeout(timer); handle(r); }).catch(function(e){
@@ -9496,6 +10108,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         } else if(rs==="busy"){ info={t:"云端暂时忙",d:"云端临时拥挤，已自动切<b>本地引擎</b>出结果（本地功能不受任何影响），稍后自动重试云端。"};
         } else if(rs==="cors"){ info={t:"云端厂商不支持直连或 Key 无效",d:"你选的厂商不允许浏览器跨域直连（或 API Key 不对/网络被拦）。已先用<b>本地引擎</b>；请在设置里改回「共享口令」模式，或换用支持直连的厂商（DeepSeek/通义/智谱/Kimi 等）。"}; }
         else if(rs==="blind"){ info={t:"云端视觉服务暂不可用",d:"云端模型当前<b>读不到图片</b>（服务端视觉通道异常，与口令、网络无关），已自动改用<b>本地引擎</b>分析，裁切照常生效；云端恢复后会自动用回云端。"}; }
+        else if(rs==="thinking"){ info={t:"这个模型想太多，没给出结果",d:"云端返回了 200，但把输出预算全用在内部\"思考\"上，正文是空的（实测 reasoning 占满 500 token）。这是<b>模型选型问题，不是你的网络或口令问题</b>：请在设置里换成<b>非思考</b>模型（通义 qwen3-vl-flash / 硅基流动 Qwen3-VL-30B-A3B / DeepSeek 关思考），或先用本地引擎。"}; }
+        else if(rs==="format"){ info={t:"云端没按格式回答",d:"模型返回了内容但不是可解析的构图 JSON（多为纯推理型模型）。本次已用<b>本地引擎</b>；换一个视觉模型再试即可。"}; }
         else { info={t:"网络不通或云端超时",d:"已自动回退<b>本地引擎</b>分析（本地照样能用）；联网后可重试云端。"}; }
         setStatus(info.t+"，本次为本地引擎结果","warn");
         _setCloudStatus(rs==="trip"?"trip":"failed", info.t, String(info.d||"").replace(/<[^>]+>/g,""));
@@ -9539,7 +10153,11 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       var _byok=(state.cloud.mode==="byok");
       var _vd=_byok?_byokVendor(state.cloud.byokVendor):null;
       var base=_byok?_vd.base.replace(/\/+$/,""):(state.cloud.base||"").replace(/\/+$/,"");
-      var model=_byok?(state.cloud.byokModel||_vd.model||"deepseek-chat"):(state.cloud.model||"qwen3.5-flash");
+      // v13.1.0：删除 deepseek-chat / qwen3.5-flash 死兜底（前者是纯文本模型、后者已从代理下线，
+      // 命中兜底等于必然 400）。改为取该厂商第一个已确认视觉预设，取不到就直接回退本地并说明原因。
+      var _fb=_byok?(_byokModelPresets(state.cloud.byokVendor)[0]||{}):{};
+      var model=_byok?(state.cloud.byokModel||_fb.id||""):(state.cloud.model||"");
+      if(!model){ state._cloudFailReason="auth"; if(onDone) onDone(null); return; }
       var appToken=_byok?state.cloud.byokKey:state.cloud.key;
       if(!appToken || !base){ if(onDone) onDone(null); return; }
       var vw=el.videoWidth||el.naturalWidth||640, vh=el.videoHeight||el.naturalHeight||480;
@@ -9657,7 +10275,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         {type:"text", text:prompt},
         {type:"image_url", image_url:{ url:dataUrl }}
       ]}], temperature:0.1, // v11.18.0: 0.15→0.1 更稳定（结构化字段枚举一致性）
-        max_tokens:900 }, _cloudThinkingParams(model));
+        max_tokens:900 }, _cloudThinkingParams(model, _byok?state.cloud.byokVendor:"shared"));
       // v4.7.0: 新云端请求发起前中止上一个仍在飞行的请求（连点分析/快速换图不堆积请求；旧请求 token 已过期会自行丢弃）
       if(state._cloudAbort){ try{ state._cloudAbort.abort(); }catch(e){} state._cloudAbort=null; }
       var ctrl=(typeof AbortController!=="undefined")?new AbortController():null;
@@ -9669,8 +10287,8 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       // 连续失败熔断：3 次失败后 5 分钟内直走本地（避免免费期额度/体验双重恶化）
       var _tryN=0;
       function _req(){
-        var _h={ "Content-Type":"application/json" };
-        if(_byok){ _h["Authorization"]="Bearer "+appToken; } else { _h["X-App-Token"]=appToken; } // v8.0.9
+        state._cloudReqAt=Date.now(); // v13.1.0：60s 预算从这里开始算
+        var _h=_cloudHeaders(_byok?state.cloud.byokVendor:"shared", appToken, _byok); // v13.1.0：与体检/候选路径同一套头
         return fetch(_cloudChatURL(base), {
           method:"POST",
           headers:_h,
@@ -10428,15 +11046,14 @@ if(aiModelState!=="idle"){ resolve(false); return; }
             var rp=["你是摄影构图审查员。这是一张已经裁切完成的成片。",
               "请只判断：画面中的人物是否完整？有没有被切掉头顶、下巴、手、脚或身体任何部位？",
               '只输出JSON：{"complete":true或false,"cutPart":"被切部位或无"}。complete=false 仅当确实切到人物部位，构图留白不算问题。'].join("\n");
-            var rbody=Object.assign({ model:model, messages:[{role:"user",content:[{type:"text",text:rp},{type:"image_url",image_url:{url:thumb}}]}], temperature:0.1, max_tokens:120 }, _cloudThinkingParams(model));
+            var rbody=Object.assign({ model:model, messages:[{role:"user",content:[{type:"text",text:rp},{type:"image_url",image_url:{url:thumb}}]}], temperature:0.1, max_tokens:120 }, _cloudThinkingParams(model, _byok?state.cloud.byokVendor:"shared"));
             var done=false;
             var finish=function(fp){ if(done) return; done=true; cb(fp); };
             var tm=setTimeout(function(){ finish(p); }, 6000);
             // v8.0.5 B5: 自审请求也挂主 AbortController，换图/重分析时立即中止，不再白飞一次请求
             // v12.13.0 G审计P0-2: 关云后迟到响应不报"云端分析完成·二次审查"
             try{ setStatus((typeof _cloudReady==="function"&&_cloudReady())?"云端分析完成·正在做人物完整性二次审查…":"分析完成（本地引擎）","done"); }catch(e){}
-            var _srh={"Content-Type":"application/json"};
-            if(_byok){ _srh["Authorization"]="Bearer "+appToken; } else { _srh["X-App-Token"]=appToken; }
+            var _srh=_cloudHeaders(_byok?state.cloud.byokVendor:"shared", appToken, _byok);
             fetch(_cloudChatURL(base),{method:"POST",headers:_srh,body:JSON.stringify(rbody),signal:ctrl?ctrl.signal:undefined})
               .then(function(r){ return r.json(); })
               .then(function(j){
@@ -12257,11 +12874,24 @@ if(aiModelState!=="idle"){ resolve(false); return; }
 
   }catch(e){ console.error(e); }
   // v4.3: 只读调试钩子（自动化回归断言用，不影响任何功能与模型行为）
+  // v13.1.0 调试钩子（只读，不参与业务）：QA 脚本可以直接用真实 aiData 复算候选/预算/校验失败原因，
+  // 避免"候选数为 0 却不知道被哪道闸门拦下"只能靠猜。
+  window.__aiDbg={
+    budget:function(sc){ try{ return window.__v131core.cropBudget(state.aiData, sc||(state.plan&&state.plan.sceneType)||'general'); }catch(e){ return {err:String(e)}; } },
+    evidence:function(){ try{ return window.__v131core.subjectEvidence(state.aiData, state.plan); }catch(e){ return {err:String(e)}; } },
+    intents:function(sc){ try{ return window.__v131core.intentCandidates(state.aiData, state.plan, window.__v131core.cropBudget(state.aiData, sc||(state.plan&&state.plan.sceneType)||'general')); }catch(e){ return {err:String(e)}; } },
+    build:function(sc){ try{ return window.__v131core.buildCompositionCandidates(state.aiData, state.plan); }catch(e){ return {err:String(e)}; } },
+    validate:function(c,sc){ try{ return window.__v131core.validateNewCrop(c, state.aiData, sc||(state.plan&&state.plan.sceneType)||'general', window.__v131core.cropBudget(state.aiData, sc||(state.plan&&state.plan.sceneType)||'general')); }catch(e){ return {err:String(e)}; } },
+    keys:function(){ try{ return Object.keys(state.aiData||{}); }catch(e){ return []; } },
+    probe:function(){ var c=window.__v131core||{}; return { core:typeof window.__v131core, budget:typeof c.cropBudget, validate:typeof c.validateNewCrop,
+      intents:typeof c.intentCandidates, build:typeof c.buildCompositionCandidates, quality:typeof c.cropQualityScore, skin:typeof c.skinEdgeGuard }; }
+  };
   try{ window.__ai={
-    get plan(){ return state&&state.plan?{rule:state.plan.rule,sceneType:state.plan.sceneType,conf:state.plan.conf,subject:state.plan.subject,f:state.plan.f||null,noCrop:!!state.plan.noCrop,crop:state.plan.crop||null,selfReviewed:!!state.plan.selfReviewed,selfReviewNote:state.plan.selfReviewNote||"",fromCache:!!state.plan.fromCache,notes:state.plan.notes||null,_dbgSkin:(state.plan&&state.plan._dbgSkin)||null,tiltHint:state.plan.tiltHint||null,proactiveCrop:state.plan.proactiveCrop||null,proactiveTag:state.plan.proactiveTag||null,proactiveReason:state.plan.proactiveReason||null,cloudFlag:!!state.plan.cloud,cropIntent:state.plan.cropIntent||null,tiltDeg:state.aiData&&state.aiData.tiltDeg||null,tiltConf:state.aiData&&state.aiData.tiltConf||null}:null; },
+    get plan(){ return state&&state.plan?{rule:state.plan.rule,sceneType:state.plan.sceneType,conf:state.plan.conf,subject:state.plan.subject,f:state.plan.f||null,noCrop:!!state.plan.noCrop,crop:state.plan.crop||null,selfReviewed:!!state.plan.selfReviewed,selfReviewNote:state.plan.selfReviewNote||"",fromCache:!!state.plan.fromCache,notes:state.plan.notes||null,_dbgSkin:(state.plan&&state.plan._dbgSkin)||null,tiltHint:state.plan.tiltHint||null,proactiveCrop:state.plan.proactiveCrop||null,proactiveTag:state.plan.proactiveTag||null,proactiveReason:state.plan.proactiveReason||null,cloudFlag:!!state.plan.cloud,aiPick:state.plan.aiPick||null,aiRefined:!!state.plan.aiRefined,aiRejected:!!state.plan.aiRejected,aiGuardWhy:state.plan.aiGuardWhy||null,aiCandidateTag:state.plan.aiCandidateTag||null,candCount:(state._compositionCandidates||[]).length,cropIntent:state.plan.cropIntent||null,tiltDeg:state.aiData&&state.aiData.tiltDeg||null,tiltConf:state.aiData&&state.aiData.tiltConf||null}:null; },
     get cloudPlan(){ var p=state&&state._pendingCloudPlan; return p?{rule:p.rule,sceneType:p.sceneType||p.scene||null,conf:p.conf,subject:p.subject||"",noCrop:!!p.noCrop,crop:p.crop||null,cropIntent:p.cropIntent||null,cloud:true,symmetry:p.symmetry||null,atmosphere:p.atmosphere||null,hasReflection:!!p.hasReflection}:null; },
     get candidates(){ return (state&&state._compositionCandidates||[]).map(function(c){return {id:c.id,tag:c.tag,crop:c.crop,noCrop:c.noCrop,score:c.score,reason:c.reason,source:c.source};}); },
     get selectedCandidate(){ return state&&state._selectedCandidate||null; },
+    get cloudPickRaw(){ return state&&state._cloudPickRaw||null; },
     get data(){ return state&&state.aiData?{sceneType:(state.plan&&state.plan.sceneType)||'',rowGap:state.aiData.rowGap,rowPeakN:state.aiData.rowPeakN,bodyRatio:state.aiData.bodyRatio,frameAspect:state.aiData.frameAspect||null,sat:state.aiData.sat,mean:state.aiData.mean,detectedClasses:state.aiData.detectedClasses,allBoxes:state.aiData.allBoxes||null,isPerson:state.aiData.isPerson,headTop:state.aiData.headTop,personLeft:state.aiData.personLeft,personRight:state.aiData.personRight,personBottom:state.aiData.personBottom,topBBox:state.aiData.topBBox,personScore:state.aiData.personScore,faceAvailable:state.aiData.faceAvailable,sym:state.aiData.sym,vSym:state.aiData.vSym,hSym:state.aiData.hSym,contrast:state.aiData.contrast,sharpness:state.aiData.sharpness,highClip:state.aiData.highClip,shadowClip:state.aiData.shadowClip,dynamicRange:state.aiData.dynamicRange,skinRatio:state.aiData.skinRatio,skinCx:state.aiData.skinCx,skinCy:state.aiData.skinCy,isPersonLikely:state.aiData.isPersonLikely,skinAspect:state.aiData.skinAspect,skinFill:state.aiData.skinFill,skinHRatio:state.aiData.skinHRatio,modelLoaded:(state.aiData&&'modelLoaded' in state.aiData)?state.aiData.modelLoaded:null,
 waterScore:state.aiData.waterScore,manmadeScore:state.aiData.manmadeScore,lightScore:state.aiData.lightScore,
 lowTexLower:state.aiData.lowTexLower,glareLower:state.aiData.glareLower,horizonOk:state.aiData.horizonOk,

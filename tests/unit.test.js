@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard, _decloudPlan, _bandSatSignal, _symEdgeSignal, _foodEvidenceSignal, _cloudCropGuard, _personBoxOf, _proactiveComposition, _balanceCrop, _cropQualityScore, _saferCropVariant, _candidateRatioTag, _candidateAspectCrop, _buildCompositionCandidates } = require('./pure-functions.js');
+const { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard, _decloudPlan, _bandSatSignal, _symEdgeSignal, _foodEvidenceSignal, _cloudCropGuard, _personBoxOf, _proactiveComposition, _balanceCrop, _cropQualityScore, _saferCropVariant, _candidateRatioTag, _candidateAspectCrop, _buildCompositionCandidates, _cropBudget, _subjectEvidence, _skinEdgeGuard, _cropsIoU, _cropsSimilar, _anchorWindow, _intentCandidates, _cloudTrimToCrop, _validateNewCrop } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -1030,6 +1030,14 @@ test('filter 黄昏场景: 高暖比+暖wb → 推荐黄昏类', () => {
   const r = recWith({ warmRatio: 0.5, wb: 0.08, mean: 120 }, { personScore: 0.3, scene: 'landscape' });
   assert.ok(['sunset','teal','warm'].indexOf(r.filter) >= 0, '黄昏池内, 实得=' + r.filter);
 });
+test('filter 暗调美食: 有食物证据+偏暗 → 不推夜景冷调滤镜（v13.1.0）', () => {
+  const r = recWith({ mean: 92, sat: 0.3, lightScore: 0.5, hasFoodEvidence: true, topBandHsv: { ratio: 0.05 } }, { scene: null });
+  assert.ok(['night', 'cyber', 'teal', 'cool', 'mono', 'mono-warm'].indexOf(r.filter) < 0, '暗美食不该走夜景/冷调, 实得=' + r.filter);
+});
+test('filter 晚霞不误判为美食: 暖色在天空带 → 仍走黄昏池（v13.1.0）', () => {
+  const r = recWith({ warmRatio: 0.5, wb: 0.08, mean: 105, sat: 0.3, lightScore: 0.4, hasFoodEvidence: true, topBandHsv: { ratio: 0.55 } }, { scene: 'landscape' });
+  assert.ok(['sunset', 'teal', 'warm', 'cine', 'hk'].indexOf(r.filter) >= 0, '暖天空该留在黄昏池, 实得=' + r.filter);
+});
 test('filter 食物场景: scene=food → 推荐暖食欲色', () => {
   const r = recWith({ mean: 150, sat: 0.25, wb: 0.05 }, { scene: 'food' });
   assert.ok(r.filter, '应推荐');
@@ -1998,11 +2006,7 @@ test('guard链: food真证据+低饱和顶带→只减顶底边', () => {
   assert.deepStrictEqual(out,[12,0,12,0]);
 });
 
-if (process.exitCode) {
-  console.log(`\n有测试失败：已通过 ${passed} 个`);
-} else {
-  console.log(`\n✓ 单元测试全部通过：${passed}/${passed}（滤镜推荐打分制）`);
-}
+// （汇总统计移到文件末尾，确保 v12.10 之后的分块断言也被计入）
 
 // -------------------- v12.10: _contentGuard + aestheticScore --------------------
 {
@@ -2127,23 +2131,138 @@ if (process.exitCode) {
   console.log('  ✓ v12.29.0 底部物体保护改收顶部（3条）');
 }
 
-// -------------------- v13.0.0: 构图候选 A/B/C/原图 --------------------
-{
+test('v13.1.0 意图候选生成', () => {
   const under={frameAspect:0.75,cx:0.303,cy:0.489,sigBox:[0,0,1,1],bodyRatio:0.075,
     edgeEnergy:{col:new Array(24).fill(0.4),row:new Array(16).fill(0.4)},allBoxes:[],topBandHsv:{ratio:0.05},blueWater:0,sym:0.1};
   const list=_buildCompositionCandidates(under,{sceneType:'general',crop:[0,0,10,16],noCrop:false});
-  assert.ok(list.length>=3,'应生成至少3个候选: '+JSON.stringify(list));
+  assert.ok(list.length>=4,'应生成至少3个裁切候选+原图: '+JSON.stringify(list));
+  assert.ok(list.length<=9,'候选总数≤9（3×3 联系表）: '+list.length);
   assert.strictEqual(list[list.length-1].noCrop,true,'最后一项应为原图');
   const ids=list.map(c=>c.id).join('');
-  assert.ok(/^[A-D]+$/.test(ids)&&new Set(ids.split('')).size===ids.length,'候选 id 唯一');
+  assert.ok(/^[A-I]+$/.test(ids)&&new Set(ids.split('')).size===ids.length,'候选 id 唯一且在 A..I: '+ids);
+  const intents=new Set(list.filter(c=>!c.noCrop).map(c=>c.intent));
+  assert.ok(intents.size>=2,'候选应覆盖≥2种构图意图: '+[...intents].join(','));
   assert.ok(list.some(c=>!c.noCrop&&c.crop[3]>=12),'应含底部收紧候选');
+  // 每个候选都必须过统一硬校验（预算/证据/肤色/人物/物体/质量分）
+  const bud=_cropBudget(under,'general');
+  for(const c of list){ if(c.noCrop) continue;
+    const v=_validateNewCrop(c.crop,under,'general',bud);
+    assert.ok(v.ok,'候选应通过统一校验 '+c.crop+': '+(v.why||''));
+  }
   assert.strictEqual(_buildCompositionCandidates(under,{sceneType:'portrait',crop:[0,0,10,16]}).length,0,'人像不生成候选');
   const animal={frameAspect:1.5,cx:0.5,cy:0.5,sigBox:[0.2,0.3,0.8,0.7],bodyRatio:0.3,
     edgeEnergy:{col:new Array(24).fill(0.4),row:new Array(16).fill(0.4)},allBoxes:[],topBandHsv:{ratio:0.05},blueWater:0,sym:0.1};
   const al=_buildCompositionCandidates(animal,{sceneType:'animal',crop:[0,0,0,0],noCrop:true});
   for(const c of al){ if(!c.noCrop){ assert.ok(Math.max(...c.crop)<=8,'动物候选单边≤8: '+c.crop); assert.ok(c.crop.reduce((a,b)=>a+b,0)<=25,'动物候选四边≤25: '+c.crop); } }
-  console.log('  ✓ v13.0.0 构图候选 A/B/C/原图（5条）');
-}
+  console.log('  · v13.1.0 意图候选：'+list.length+'个候选 / '+intents.size+'种意图');
+});
+
+test('v13.1.0 幅度预算（源像素决定能裁多狠）', () => {
+  const g12=_cropBudget({frameAspect:1.33,srcW:4000,srcH:3000,mean:130,sharpness:60},'landscape');
+  assert.strictEqual(g12.allowTight,true,'12MP 大场景允许主动重构图');
+  assert.ok(g12.tightArea<=0.15 && g12.tightArea>=0.10,'12MP 小框下限≈14% 面积: '+g12.tightArea);
+  assert.ok(g12.maxZoom>=2.6 && g12.maxZoom<=3.2,'12MP 等效变焦≈2.7x: '+g12.maxZoom);
+  const g8=_cropBudget({frameAspect:1.33,srcW:3200,srcH:2400,mean:130,sharpness:60},'landscape');
+  assert.ok(Math.abs(g8.tightArea-0.18)<0.01,'≈8MP（3200px 工作图）小框下限 18%: '+g8.tightArea);
+  const g4=_cropBudget({frameAspect:1.33,srcW:2400,srcH:1800,mean:130,sharpness:60},'landscape');
+  assert.ok(g4.minArea>=0.25,'长边 2400 时输出像素底线把幅度压在 ≤2x: '+JSON.stringify(g4));
+  const withPerson=_cropBudget({frameAspect:1.5,srcW:4000,srcH:3000,cocoPersonBox:{l:0.3,t:0.2,r:0.5,b:0.9}},'street');
+  assert.ok(withPerson.minArea>=0.40 && !withPerson.allowTight,'大人物（占画面≥10%）只允许中度收紧: '+JSON.stringify(withPerson));
+  // v13.1.0 修正：小人物不应该把幅度锁死（实测这会候选从 6~7 掉到 3~4、云端 refine 命中归零）
+  const tinyPerson=_cropBudget({frameAspect:1.5,srcW:4000,srcH:3000,cocoPersonBox:{l:0.05,t:0.7,r:0.12,b:0.95}},'street');
+  assert.strictEqual(tinyPerson.allowTight,true,'小人物（<10% 面积）仍允许主动重构图: '+JSON.stringify(tinyPerson));
+  assert.ok(tinyPerson.minArea>=0.28 && tinyPerson.minArea<=0.40,'小人物仍保持中度保守: '+tinyPerson.minArea);
+  const bp={frameAspect:1.5,srcW:4000,srcH:3000,cx:0.62,cy:0.45,sigBox:[0.45,0.25,0.8,0.65],bodyRatio:0.2,
+    edgeEnergy:{col:new Array(24).fill(0.4),row:new Array(16).fill(0.4)},allBoxes:[],topBandHsv:{ratio:0.05},blueWater:0,sym:0.1,
+    cocoPersonBox:{l:0.05,t:0.7,r:0.12,b:0.95}};
+  const ti=_intentCandidates(bp,Object.assign({},bp,{sceneType:'street',crop:[0,0,0,0]}),_cropBudget(bp,'street'));
+  assert.ok(ti.length>=3,'小人物照片仍应拿到多个构图意图候选: '+ti.length);
+  const bpBig=Object.assign({},bp,{cocoPersonBox:{l:0.3,t:0.15,r:0.55,b:0.95}});
+  const tiBig=_intentCandidates(bpBig,Object.assign({},bpBig,{sceneType:'street',crop:[0,0,0,0]}),_cropBudget(bpBig,'street'));
+  assert.ok(!tiBig.some(c=>/subject-tight/.test(c.intent)),'大人物禁止小框重构图候选');
+  // 但幅度放开不等于人物保护放开：把小人物裁掉的候选必须被统一校验拦下
+  const _cut=ti.find(c=>c.crop.some(v=>v>0));
+  if(_cut){
+    const _v=_validateNewCrop([25,25,0,0],bpBig,'street',_cropBudget(bpBig,'street'));
+    assert.strictEqual(_v.ok,false,'会切到人物的裁切必须被拒绝: '+JSON.stringify(_v));
+  }
+  const night=_cropBudget({frameAspect:1.5,srcW:4000,srcH:3000,mean:60,sharpness:30},'night');
+  assert.ok(night.minArea>=0.55,'暗调/高噪不做大裁: '+night.minArea);
+  const small=_cropBudget({frameAspect:1.5,srcW:1200,srcH:900},'landscape');
+  assert.ok(!small.allowTight && small.minArea>0.25,'小图自动收紧幅度: '+JSON.stringify(small));
+  console.log('  · 预算档位 12MP='+g12.tightArea+' / 8MP='+g8.tightArea+' / 2400px='+g4.minArea);
+});
+
+test('v13.1.0 主体证据闸门', () => {
+  assert.strictEqual(_subjectEvidence({sharpness:10,mean:120,sat:0.3,dynamicRange:0.4,sigRatio:0.2},null).ok,false,'糊片不裁');
+  assert.strictEqual(_subjectEvidence({sharpness:60,mean:120,sat:0.02,dynamicRange:0.05,sigRatio:0.2,edgeEnergy:{eL:[0.01],eT:[0.01]}},null).ok,false,'无层次无色彩不裁');
+  assert.strictEqual(_subjectEvidence({sharpness:60,mean:10,sat:0.2,dynamicRange:0.3,sigRatio:0.2},null).ok,false,'接近全黑不裁');
+  assert.strictEqual(_subjectEvidence({sharpness:60,mean:120,sat:0.2,dynamicRange:0.3,sigRatio:0.001},null).ok,false,'找不到主体不裁');
+  assert.strictEqual(_subjectEvidence({sharpness:60,mean:120,sat:0.2,dynamicRange:0.3,bodyRatio:0.2},null).ok,true,'有显著主体才放行');
+  assert.strictEqual(_subjectEvidence({sharpness:60,mean:120,sat:0.2,dynamicRange:0.3,hasFoodEvidence:true,sigRatio:0.001},null).ok,true,'食物证据可放行');
+});
+
+test('v13.1.0 肤色边缘守卫（只拦"切到人"和"整人出局"，不拦暖色表面）', () => {
+  const mkGrid=(cells)=>{ const g=new Array(256).fill(0); for(const [i,v] of cells) g[i]=v; return {gridW:16,gridH:16,skinCellPx:1000,skinGrid:g}; };
+  // ① 跨界：紧贴下裁线（y≥0.78 的行 12-14）有 2 块皮肤，保留区（行 5-6）也有 2 块 → 否决
+  const straddle=mkGrid([[13*16+6,400],[14*16+6,400],[13*16+7,380],[5*16+6,400],[6*16+6,420]]);
+  assert.strictEqual(_skinEdgeGuard([0,0,0,20],straddle).veto,true,'人跨在裁切线上必须否决');
+  // ② 只有裁切带有零星皮肤（暖墙/木桌），保留区没有 → 放行
+  const warmWall=mkGrid([[13*16+6,320],[14*16+6,330]]);
+  assert.strictEqual(_skinEdgeGuard([0,0,0,20],warmWall).veto,false,'暖色墙面不该拦构图');
+  // ③ 整人出局：裁掉条带里有 ≥3 块皮肤且占全图皮肤 ≥60% → 否决
+  const removeMan=mkGrid([[13*16+6,420],[14*16+6,430],[15*16+6,410],[13*16+7,400]]);
+  assert.strictEqual(_skinEdgeGuard([0,0,0,20],removeMan).veto,true,'把人整个裁掉必须否决');
+  // ④ 完全无肤色 / 不裁 → 放行
+  assert.strictEqual(_skinEdgeGuard([0,0,0,20],mkGrid([])).veto,false,'无肤色不触发');
+  assert.strictEqual(_skinEdgeGuard([0,0,0,0],straddle).veto,false,'不裁时不检查');
+  // ⑤ 没有 skinGrid 的旧数据 → 安全放行（不崩）
+  assert.strictEqual(_skinEdgeGuard([10,10,10,10],{}).veto,false,'缺格数据不崩');
+  // ⑥ 大面积暖色表面（木桌/秋叶/砖墙整片落进肤色范围）→ 不拦构图（实测一张笔记本木桌照片曾拦掉全部候选）
+  const wood=[]; for(let i=0;i<256;i++) wood.push([i,400]);
+  assert.strictEqual(_skinEdgeGuard([24,18,9,15],{gridW:16,gridH:16,skinCellPx:1000,skinGrid:wood}).veto,false,'全图暖色表面不该当成有人');
+});
+
+test('v13.1.0 云端 refine 指令与几何工具', () => {
+  assert.deepEqual(_cloudTrimToCrop([10,5,10,5],{t:10,b:15}),[10,15,10,20],'离散档位相加');
+  assert.deepEqual(_cloudTrimToCrop([0,0,0,0],{l:12}),[10,0,0,0],'非档位值就近取档（12→10）');
+  assert.deepEqual(_cloudTrimToCrop([20,20,20,20],{l:25}),[40,20,20,20],'叠加后单边封顶 40');
+  assert.deepEqual(_cloudTrimToCrop([0,0,0,0],{l:25}),[25,0,0,0],'档位本身≤25');
+  assert.deepEqual(_cloudTrimToCrop([5,5,5,5],{l:-3}),[5,5,5,5],'负值忽略');
+  const win=_anchorWindow(0.6,0.5,0.25,1/3,0.5);
+  assert.ok(Math.abs(((0.6-win[0])/(win[2]-win[0]))-1/3)<0.02,'主体落在窗口左三分: '+JSON.stringify(win));
+  const win2=_anchorWindow(0.05,0.5,0.25,1/3,0.5);
+  assert.ok(win2[0]>=0 && win2[2]<=1,'越界时整体平移贴边: '+JSON.stringify(win2));
+  assert.ok(_cropsSimilar([0,0,10,16],[0,0,10,16]),'完全相同必判相似');
+  assert.ok(!_cropsSimilar([0,0,0,0],[25,25,25,25]),'宽裁 vs 居中紧裁是两种构图');
+  assert.ok(_cropsIoU([0,0,0,0],[0,0,0,0])>0.99,'IoU 自反');
+});
+
+test('v13.1.0 小框重构图按源像素解锁（够大才有 / 小图与宠物不放开）', () => {
+  const mk = (w, h, sb) => ({ frameAspect: w / h, cx: 0.55, cy: 0.5, sigBox: sb, bodyRatio: 0.04, srcW: w, srcH: h,
+    sharpness: 60, dynamicRange: 0.4, sat: 0.25, mean: 130, allBoxes: [], topBandHsv: { ratio: 0.05 }, blueWater: 0, sym: 0.1,
+    edgeEnergy: { col: new Array(24).fill(0.4), row: new Array(16).fill(0.4) } });
+  const small = [0.42, 0.55, 0.58, 0.72];
+  const hi = _buildCompositionCandidates(mk(4000, 3000, small), { sceneType: 'landscape', crop: [0, 0, 0, 0], noCrop: true });
+  assert.ok(hi.some(c => c.intent && /subject-tight/.test(c.intent) && c.area <= 0.2), '12MP 应产出 ≤20% 面积的小框候选: ' + JSON.stringify(hi.map(c => [c.intent, c.area])));
+  const lo = _buildCompositionCandidates(mk(1600, 1200, small), { sceneType: 'landscape', crop: [0, 0, 0, 0], noCrop: true });
+  assert.ok(lo.every(c => c.noCrop || c.area >= 0.5), '小图（1600px）候选保留面积不得低于 50%');
+  const an = _buildCompositionCandidates(mk(4000, 3000, small), { sceneType: 'animal', crop: [0, 0, 0, 0], noCrop: true });
+  assert.ok(an.every(c => c.noCrop || (Math.max.apply(null, c.crop) <= 8)), '宠物即使高像素也不放开幅度');
+  const food = _buildCompositionCandidates(mk(4000, 3000, [0.35, 0.4, 0.6, 0.62]), { sceneType: 'food', crop: [0, 0, 0, 0], noCrop: true });
+  assert.ok(food.some(c => c.area <= 0.25), '12MP 美食应能居中紧抱餐盘');
+});
+
+test('v13.1.0 小图（800px 网图）只做轻度收紧', () => {
+  const a = { frameAspect: 1.33, cx: 0.55, cy: 0.5, sigBox: [0.3, 0.35, 0.75, 0.68], bodyRatio: 0.15, srcW: 800, srcH: 600,
+    sharpness: 60, dynamicRange: 0.4, sat: 0.25, mean: 130, allBoxes: [], topBandHsv: { ratio: 0.05 }, blueWater: 0, sym: 0.1,
+    edgeEnergy: { col: new Array(24).fill(0.4), row: new Array(16).fill(0.4) } };
+  const b = _cropBudget(a, 'landscape');
+  assert.ok(b.tightArea <= 0.6 && b.maxZoom <= 1.35, '小图预算必须保守: ' + JSON.stringify(b));
+  const l = _buildCompositionCandidates(a, { sceneType: 'landscape', crop: [0, 0, 0, 0], noCrop: true });
+  assert.ok(l.length >= 3, '小图仍要给出候选（温和收紧）: ' + l.length);
+  assert.ok(l.every(c => c.noCrop || c.area >= 0.55), '小图候选保留面积≥55%');
+});
 
 // -------------------- v12.28.0: 云端分级裁切保护 --------------------
 {
@@ -2160,4 +2279,15 @@ if (process.exitCode) {
   const cut=_cloudCropGuard([15,0,0,0],{sigBox:[0,0.4,0.2,0.6]},'general');
   assert.deepStrictEqual(cut,[0,0,0,0], '主体框被切>25%则不裁');
   console.log('  ✓ v12.28.0 云端分级裁切保护（7条）');
+}
+
+// -------------------- 汇总（放在所有断块之后，数字才是真实的） --------------------
+{
+  // passed 只统计 test() 用例；v12.10 之后还有若干"分块断言组"（每组自己打印 ✓ 与条数），
+  // 它们失败时同样会置 exitCode，所以这里如实说明两类计数，不再把总数写成单一数字。
+  if (process.exitCode) {
+    console.log(`\n有测试失败：test() 用例已通过 ${passed} 个（分块断言见上方各行）`);
+  } else {
+    console.log(`\n✓ 单元测试全部通过：test() 用例 ${passed} 个 + 上方分块断言组（每组标注条数）全部通过`);
+  }
 }

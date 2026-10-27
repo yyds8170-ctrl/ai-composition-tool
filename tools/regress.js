@@ -56,6 +56,21 @@ function listImages(dir) {
     .sort()
     .map(f => path.join(dir, f));
 }
+// v13.1.0 数据诚实化：跑之前先按 md5 去重并报告真实唯一数。
+// 背景：旧版宣称"本地 100 张/云端 50 张"，md5 实测只有 70/42 个唯一图（还混入 emoji 占位图）。
+const crypto = require('crypto');
+function dedupeImages(images) {
+  const seen = new Map(), out = [], dup = [];
+  for (const p of images) {
+    let h = '';
+    try { h = crypto.createHash('md5').update(fs.readFileSync(p)).digest('hex'); } catch (e) { out.push(p); continue; }
+    if (seen.has(h)) { dup.push(path.basename(p) + '==' + path.basename(seen.get(h))); continue; }
+    seen.set(h, p); out.push(p);
+  }
+  if (dup.length) console.log('⚠ 重复图（已自动剔除，报告口径按唯一图计）: ' + dup.join(', '));
+  console.log('唯一图数: ' + out.length + ' / 输入 ' + images.length);
+  return out;
+}
 
 function round(v, n = 4) {
   if (typeof v !== 'number' || !isFinite(v)) return v;
@@ -90,7 +105,8 @@ async function runImage(page, imgPath) {
           subject: p.subject, f: p.f, noCrop: p.noCrop,
           crop: p.crop ? p.crop.map(v => (typeof v === 'number' ? Number(v.toFixed(4)) : v)) : null,
           selfReviewed: p.selfReviewed, cropIntent: p.cropIntent,
-          proactiveCrop: p.proactiveCrop || null, proactiveTag: p.proactiveTag || null
+          proactiveCrop: p.proactiveCrop || null, proactiveTag: p.proactiveTag || null,
+          aiPick: p.aiPick || null, aiRefined: !!p.aiRefined, candCount: p.candCount || 0
         },
         data: d ? {
           detectedClasses: d.detectedClasses,
@@ -150,8 +166,9 @@ async function main() {
     dirs.push(path.join(ROOT, 'imgs/regression'));
   }
 
-  const images = [];
+  let images = [];
   for (const d of dirs) images.push(...listImages(d));
+  images = dedupeImages(images);
   if (images.length === 0) { console.error('没有测试图'); process.exit(2); }
 
   console.log(`=== 回归开始：${images.length} 张图 ===`);
@@ -186,7 +203,9 @@ async function main() {
       const r = await runImage(page, img);
       results[name] = r;
       if (r && r.plan) {
-        console.log(`crop=[${r.plan.crop}] scene=${r.plan.sceneType} conf=${r.plan.conf}% person=${r.data ? r.data.isPerson : '?'} f=${r.activeFilter || '-'} pc=${r.plan.proactiveCrop ? 'Y' : 'N'}`);
+        const _cp = r.plan.crop || [0, 0, 0, 0];
+        const _area = Math.round((1 - _cp[0] / 100 - _cp[2] / 100) * (1 - _cp[1] / 100 - _cp[3] / 100) * 100);
+        console.log(`crop=[${r.plan.crop}] area=${_area}% scene=${r.plan.sceneType} conf=${r.plan.conf}% person=${r.data ? r.data.isPerson : '?'} f=${r.activeFilter || '-'} pc=${r.plan.proactiveCrop ? 'Y' : 'N'} cands=${r.plan.candCount || 0}${r.plan.aiPick ? ' pick=' + r.plan.aiPick : ''}`);
       } else {
         console.log('NO RESULT');
       }

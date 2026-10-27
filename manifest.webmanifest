@@ -1,7 +1,7 @@
 {
   "name": "AI 构图助手",
   "short_name": "构图助手",
-  "description": "AI 构图助手 Pro v13.0.0 · 真AI构图：本地生成 A/B/C/原图安全候选，云端 VLM 看图选最美并自动落地；云端状态可见、可重试；BYOK 内置已核对的视觉模型预设与一键连接测试；永久免费、不限使用次数",
+  "description": "AI 构图助手 Pro v13.1.0 · 真AI构图：本地一次给出最多 8 种不同构图思路，云端 AI 选最优并可在其基础上继续收紧边距（坐标本地计算 + 四道硬保护）；BYOK 改为真实链路体检；云端状态可见、可重试；永久免费、不限使用次数",
   "id": "/ai-composition-tool/",
   "start_url": "./index.html",
   "scope": "./",
@@ -24,5 +24,5 @@
       "purpose": "any maskable"
     }
   ],
-  "version":"13.0.0"
+  "version":"13.1.0"
 }
