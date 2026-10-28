@@ -1,0 +1,6 @@
+共 3 张，分 1 批（每批 40 张）
+
+=== 批 1: 3 张 ===
+big08.jpg | CLOUD scene=general rule=thirds cloudCrop=[0,0,11,0] cloudNoCrop=false localCrop=[0,0,11,0] | ☁️ 云端 · 三分法 · 80% | 已应用云端AI · 三分法 · 80%2848×2133 · 284 | refined=false rejected=false pick=A cand=3 guard=-
+p020.jpg | CLOUD scene=landscape rule=center cloudCrop=[11,5,0,5] cloudNoCrop=false localCrop=[11,5,0,5] | ☁️ 云端 · 居中构图 · 80% | 已应用云端AI · 居中构图 · 80%2136×1440 · 89 | refined=false rejected=false pick=F cand=7 guard=-
+p071.jpg | CLOUD scene=night rule=thirds cloudCrop=[6,0,0,6] cloudNoCrop=false localCrop=[6,0,0,6] | ☁️ 云端 · 三分法 · 80% | 已应用云端AI · 三分法 · 80%2256×1504 · 3:2 | refined=false rejected=false pick=C cand=4 guard=-
