@@ -1,0 +1,26 @@
+v13.2.0 光影/低照度真实照片验收（17 张，含内置示例图）
+生成时间：2026-10-28T06:26:41.053Z
+
+| 图片 | 场景 | 候选 | 裁切(上,右,下,左)% | 套用滤镜 | 推荐依据（数字） | 原片→撤销 |
+| --- | --- | ---: | --- | --- | --- | --- |
+| ls00_sample.jpg | general | 7 | 0,0,10,16 | lowkey-keep | 光影作品·低照度保真：只降 1.5% 曝光，不抬黑位（均值45·亮区19%·对角73%） | PASS（lowkey-keep→clear→lowkey-keep·JS） |
+| ls01.jpg | waterscape | 7 | 0,20,0,0 | lowkey-keep | 光影作品·低照度保真：只降 1.5% 曝光，不抬黑位（均值74·亮区31%·对角40%） | PASS（lowkey-keep→clear→lowkey-keep·JS） |
+| ls02.jpg | general | 6 | 0,8,0,10 | lowkey-keep | 光影作品·低照度保真：只降 1.5% 曝光，不抬黑位（均值49·亮区22%·对角44%） | PASS（lowkey-keep→clear→lowkey-keep·JS） |
+| ls03.jpg | architecture | 7 | 11,5,0,5 | lowkey-mono | 光影作品·高反差黑白：去色，让明暗几何成为主体（均值126·亮区32%·对角42%） | PASS（lowkey-mono→clear→lowkey-mono·JS） |
+| ls06.jpg | landscape | 7 | 0,0,28,0 | 160c | 户外绿意·通透蓝天，风光利器（均值121·亮区30%·对角84%） | - |
+| ls07.jpg | general | 8 | 0,25,0,0 | classic | 冷调场景·冷峻低饱和，几何线条（均值124·亮区30%·对角90%） | - |
+| ls08.jpg | architecture | 6 | 11,0,0,0 | lowkey-mono | 光影作品·高反差黑白：去色，让明暗几何成为主体（均值44·亮区23%·对角38%） | PASS（lowkey-mono→clear→lowkey-mono·JS） |
+| ls09.jpg | general | 5 | 0,5,0,6 | lowkey-mono | 光影作品·高反差黑白：去色，让明暗几何成为主体（均值83·亮区29%·对角50%） | PASS（lowkey-mono→clear→lowkey-mono·JS） |
+| ls10.jpg | general | 6 | 0,6,0,6 | lowkey-mono | 光影作品·高反差黑白：去色，让明暗几何成为主体（均值40·亮区21%·对角53%） | PASS（lowkey-mono→clear→lowkey-mono·JS） |
+| ls11.jpg | general | 6 | 0,8,0,10 | lowkey-keep | 光影作品·低照度保真：只降 1.5% 曝光，不抬黑位（均值49·亮区22%·对角44%） | PASS（lowkey-keep→clear→lowkey-keep·JS） |
+| ls12.jpg | general | 6 | 0,16,0,0 | lowkey-keep | 光影作品·低照度保真：只降 1.5% 曝光，不抬黑位（均值93·亮区32%·对角57%） | PASS（lowkey-keep→clear→lowkey-keep） |
+| ls13.jpg | night | 6 | 0,0,11,0 | lowkey-keep | 光影作品·低照度保真：只降 1.5% 曝光，不抬黑位（均值62·亮区21%·对角21%） | PASS（lowkey-keep→clear→lowkey-keep·JS） |
+| ls14.jpg | general | 2 | 0,6,0,6 | classic | 冷调场景·冷峻低饱和，几何线条（均值131·亮区29%·对角30%） | - |
+| ls15.jpg | landscape | 7 | 0,16,0,0 | 160c | 户外绿意·通透蓝天，风光利器（均值131·亮区39%·对角47%） | - |
+| ls16.jpg | portrait | 0 | 0,0,0,0 | lowkey-keep | 光影作品·低照度保真：只降 1.5% 曝光，不抬黑位（均值43·亮区20%·对角40%） | PASS（lowkey-keep→clear→lowkey-keep·JS） |
+| ls17.jpg | general | 4 | 6,5,6,6 | lowkey-mono | 光影作品·高反差黑白：去色，让明暗几何成为主体（均值31·亮区20%·对角28%） | PASS（lowkey-mono→clear→lowkey-mono·JS） |
+| ls18.jpg | landscape | 7 | 0,8,0,8 | lowkey-cool | 光影作品·冷银单色：冷水/荧光灯分离（均值60·亮区22%·对角53%） | PASS（lowkey-cool→clear→lowkey-cool） |
+
+合计：有候选 **16/17**；低照度四档自动/推荐 **13** 张；自动套用 **17** 张；原片回退链路 **13/13 PASS**；页面错误 **0**。
+
+口径：候选=真实裁切+原图；0 候选只允许出现在“确实有人”的人像（本批 ls16 为逆光人物剪影，按人像保护保留原图）。

@@ -25,7 +25,7 @@ const srv=http.createServer((req,res)=>{let p=decodeURIComponent(req.url.split('
     const d=window.__aiDbg, plan=window.__ai.plan;
     const sc=(plan&&plan.sceneType)||'general';
     const budget=d.budget(sc), ev=d.evidence(), intents=d.intents(sc), built=d.build(sc);
-    const perIntents=(Array.isArray(intents)?intents:[]).map(it=>({intent:it.intent,crop:it.crop,v:d.validate(it.crop,sc)}));
+    const perIntents=(Array.isArray(intents)?intents:[]).map(it=>({intent:it.intent,crop:it.crop,v:d.validate(it.crop,sc),q:(window.__v131core&&window.__v131core.cropQualityScore)?window.__aiDbg.score(it.crop):null}));
     return {img, src:document.getElementById('photoView').naturalWidth+'x'+document.getElementById('photoView').naturalHeight,
       plan:{crop:plan&&plan.crop,noCrop:plan&&plan.noCrop,scene:sc,proactive:plan&&plan.proactiveCrop},
       budget, evidence:ev, intentCount:Array.isArray(intents)?intents.length:intents, perIntents,

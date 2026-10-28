@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v13.1.0 · 实景视觉构图生成工具</title>
-<meta name="description" content="AI 构图助手 Pro v13.1.0 · 真AI构图：本地一次给出最多 8 种不同构图思路（三分/地平线/小框重构图/去死边/画幅），云端 AI 不只挑一个，还能在选中方案上继续往里收边；每一步都有本地硬保护（人物/宠物/主体/像素预算）；BYOK 改为真实链路体检；永久免费、不限使用次数">
+<title>AI 构图助手 Pro v13.2.0 · 实景视觉构图生成工具</title>
+<meta name="description" content="AI 构图助手 Pro v13.2.0 · 真AI构图：本地一次给出最多 8 种不同构图思路（三分/地平线/小框重构图/去死边/画幅），云端 AI 不只挑一个，还能在选中方案上继续往里收边；每一步都有本地硬保护（人物/宠物/主体/像素预算）；BYOK 改为真实链路体检；永久免费、不限使用次数">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v13.1.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切（永久免费不限次数）">
+<meta property="og:title" content="AI 构图助手 Pro v13.2.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切（永久免费不限次数）">
 <meta property="og:description" content="给不会拍照的普通人：本地一次给出多种不同构图思路，云端AI看图挑最美、还能在选中方案上继续收紧边距。云端开关/口令/失败原因一眼可见；BYOK 选厂商即自动填视觉模型，一键测试连接。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
@@ -57,6 +57,8 @@
   #baseLayer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;transform-origin:center center;will-change:transform,filter;}
 
   #photoView.cmp-clip{clip-path:inset(0 0 0 var(--cmpPos,50%));}
+  /* v13.2 P0：导入照片一律 contain 完整显示（原来 cover 会被舞台再裁一刀，用户看到的不是最终结果） */
+  #photoView.fit-contain,#baseLayer.fit-contain,#cmpBase.fit-contain{object-fit:contain;background:#000;}
   #videoCam.cmp-clip{clip-path:inset(0 0 0 var(--cmpPos,50%));}
   .cmp-ui{position:absolute;inset:0;z-index:6;pointer-events:none;}
   .cmp-line{position:absolute;top:0;bottom:0;left:var(--cmpPos,50%);width:2.5px;background:#fff;box-shadow:0 0 10px rgba(255,255,255,.8);transform:translateX(-50%);}
@@ -414,7 +416,7 @@
   .filter-pill.active{color:var(--text);border-color:var(--amber);background:var(--panel2);}
   .filter-pill.active .sw{border-color:var(--amber);}
   /* v9.0.0 滤镜推荐横幅：仅命中时出现，沉默原则——null 不弹 */
-  .frec{display:flex;align-items:center;gap:8px;padding:8px 10px;margin:6px 0;border:1px solid var(--amber);border-radius:10px;background:var(--panel2);font-size:12px;}
+  .frec{position:fixed;left:12px;right:12px;bottom:calc(10px + var(--safe-b));z-index:60;display:flex;align-items:center;gap:8px;padding:9px 11px;margin:0;border:1px solid var(--amber);border-radius:12px;background:rgba(24,27,32,.97);box-shadow:0 12px 34px rgba(0,0,0,.5);font-size:12px;}
   .frec-t{flex:1;color:var(--text);line-height:1.4;}
   .frec-b{flex-shrink:0;border:1px solid var(--amber);background:var(--amber);color:#111;font-weight:600;font-size:11.5px;padding:5px 12px;border-radius:999px;cursor:pointer;}
   .frec-b.ghost{background:transparent;color:var(--sub);border-color:var(--line);}
@@ -457,6 +459,11 @@
   .f-soft{filter:blur(.5px) brightness(1.05) saturate(.94) contrast(.93);}
   .f-aurora{filter:saturate(1.24) contrast(1.06) brightness(1.03) hue-rotate(18deg) sepia(.06);}
   .f-silver{filter:grayscale(1) contrast(1.3) brightness(.97);}
+  /* v13.2 低照度四档：只动黑位/色相，不抬亮部（与 FILTERS 表 css 保持一致） */
+  .f-lowkey-keep{filter:brightness(.985) saturate(.95);}
+  .f-lowkey-mono{filter:grayscale(1) contrast(1.02);}
+  .f-lowkey-amber{filter:sepia(.16) saturate(.85) brightness(.975);}
+  .f-lowkey-cool{filter:grayscale(.6) sepia(.1) hue-rotate(180deg) saturate(.85) brightness(.98);}
   /* toast */
   .help-sheet{position:fixed;left:0;right:0;bottom:0;top:0;background:var(--bg);z-index:100;display:none;flex-direction:column;padding:14px 16px calc(16px + var(--safe-b));overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;}
   .help-sheet.show{display:flex;animation:sheetUp .25s ease;}
@@ -864,11 +871,6 @@
         <span class="ztick" data-z="3">3x</span>
       </div>
     </div>
-    <div class="frec" id="frecBanner" style="display:none;">
-      <span class="frec-t" id="frecText"></span>
-      <button class="frec-b" id="frecApply">应用</button>
-      <button class="frec-b ghost" id="frecReject">原片</button>
-    </div>
     <div class="filters" id="filterBar">
       <button class="filter-pill active" data-f="clear"><span class="sw" style="background:linear-gradient(135deg,#6b7280,#9aa3ad)"></span>原图</button>
       <button class="filter-pill" data-f="natural"><span class="sw" style="background:linear-gradient(135deg,#7fb069,#a9c46d)"></span>自然</button>
@@ -900,6 +902,10 @@
       <button class="filter-pill" data-f="portrait-cool"><span class="sw" style="background:linear-gradient(135deg,#7aa8c9,#b8d8e8)"></span>人像冷</button>
       <button class="filter-pill" data-f="portrait-mono"><span class="sw" style="background:linear-gradient(135deg,#2a2d32,#9a9fa6)"></span>人像黑白</button>
       <button class="filter-pill" data-f="night"><span class="sw" style="background:linear-gradient(135deg,#1e2a4a,#4a6b9e)"></span>暗夜提亮</button>
+      <button class="filter-pill" data-f="lowkey-keep"><span class="sw" style="background:linear-gradient(135deg,#2b2f35,#8a7a5c)"></span>保真暗调</button>
+      <button class="filter-pill" data-f="lowkey-mono"><span class="sw" style="background:linear-gradient(135deg,#202327,#c3ccd4)"></span>暗部银盐</button>
+      <button class="filter-pill" data-f="lowkey-amber"><span class="sw" style="background:linear-gradient(135deg,#3a2f22,#d9a25f)"></span>逆光琥珀</button>
+      <button class="filter-pill" data-f="lowkey-cool"><span class="sw" style="background:linear-gradient(135deg,#26313a,#8fb8d8)"></span>冷银单色</button>
     </div>
     <div class="strength-row" id="strengthRow" style="display:none;">
       <span class="lbl">滤镜强度</span>
@@ -969,6 +975,13 @@
     </button>
   </div>
 
+  <!-- v13.2：滤镜依据条必须浮在 AI 面板之上（面板 z-index:30 会盖住 controls 里的按钮，
+       实测 elementFromPoint 命中 ai-foot，用户点不到「原片」）。 -->
+  <div class="frec" id="frecBanner" style="display:none;">
+    <span class="frec-t" id="frecText"></span>
+    <button class="frec-b" id="frecApply">应用</button>
+    <button class="frec-b ghost" id="frecReject">原片</button>
+  </div>
 
     <!-- 裁切工具 -->
     <div class="crop-tool" id="cropTool">
@@ -1051,7 +1064,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v13.1.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v13.2.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1067,14 +1080,16 @@
         <label class="mp-sw"><input type="checkbox" id="faceOn"><span class="mp-sl"></span>启用精准人脸检测</label>
         <button class="mp-btn" id="faceReload">重新加载</button>
       </div>
-      <div class="mp-desc">MediaPipe Face Detection，专门识别人脸位置，比估算更准确，解决"把汽车当人脸"问题，约 3MB。加载成功后自动用于人像构图。</div>
+      <div class="mp-desc">MediaPipe Tasks Vision 人脸检测（BlazeFace，自托管约 0.2MB 模型 + 共用运行时）。识别人脸框与 6 个关键点，用于人像构图与视线留白；开启一次后下次进入自动恢复。</div>
+      <div id="faceErr" style="display:none;color:#ff8a80;font-size:11px;margin-top:4px;line-height:1.5;"></div>
       <div style="height:8px;"></div>
       <div class="mp-head" style="font-size:13px;">🧍 姿态检测 <span class="mp-badge idle" id="poseBadge">未加载</span></div>
       <div class="mp-row">
         <label class="mp-sw"><input type="checkbox" id="poseOn"><span class="mp-sl"></span>启用人体姿态检测</label>
         <button class="mp-btn" id="poseReload">重新加载</button>
       </div>
-      <div class="mp-desc">MediaPipe Pose，检测 33 个人体关节点（头/肩/肘/手/髋/膝/脚），用于精准人像构图、姿态引导、背景虚化人体轮廓，约 5MB。</div>
+      <div class="mp-desc">MediaPipe Tasks Vision 姿态（Pose Landmarker Lite，自托管约 5.8MB 模型），检测 33 个关节点（头/肩/肘/手/髋/膝/脚），用于精准人像构图与姿态引导。</div>
+      <div id="poseErr" style="display:none;color:#ff8a80;font-size:11px;margin-top:4px;line-height:1.5;"></div>
       <div class="mp-row">
         <label class="mp-sw"><input type="checkbox" id="teachOn" checked><span class="mp-sl"></span>实景构图·步骤教学引导</label>
         <button class="mp-btn" id="teachReset">重置教学</button>
@@ -1087,7 +1102,7 @@
     <div class="mp-row">
       <label class="mp-sw"><input type="checkbox" id="cloudOn"><span class="mp-sl"></span>启用云端 VLM 构图分析</label>
     </div>
-    <div class="mp-desc">联网时调用大模型"看懂"画面（场景/主体/构图），比本地像素算法更准；未填口令或断网时自动回退本地引擎。启用后照片会发送至云端分析。<b>v13.1.0 起</b>：云端可以在本地候选基础上继续帮你"收紧边距"，但坐标一律由本地计算并过人物/宠物/主体/像素四道硬保护，云端说"不该裁"时我们就不裁。</div>
+    <div class="mp-desc">联网时调用大模型"看懂"画面（场景/主体/构图），比本地像素算法更准；未填口令或断网时自动回退本地引擎。启用后照片会发送至云端分析。<b>v13.1.0 起</b>：云端可以在本地候选基础上继续帮你"收紧边距"（v13.2 新增低照度光影构图与自托管人脸/姿态），但坐标一律由本地计算并过人物/宠物/主体/像素四道硬保护，云端说"不该裁"时我们就不裁。</div>
     <div class="mp-row">
       <label class="mp-sw"><input type="checkbox" id="cloudDeepReview"><span class="mp-sl"></span>人物完整性二次复核（更慢，默认关）</label>
     </div>
@@ -1138,7 +1153,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v13.1.0";
+var APP_VER="v13.2.0";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -1710,6 +1725,10 @@ var APP_VER="v13.1.0";
       velvia:{name:"FVelvia",css:"saturate(1.38) contrast(1.1) brightness(0.98)",desc:"浓郁色彩，红蓝对撞"},
       "160c":{name:"F160C",css:"saturate(1.26) brightness(1.05) contrast(1.03)",desc:"高饱和通透，天空更蓝"},
       c200:{name:"FC200",css:"saturate(0.96) contrast(1.07) brightness(1.02) sepia(0.07)",desc:"柔和胶片绿调"},
+      "lowkey-keep":{name:"保真暗调",css:"brightness(0.985) saturate(0.95)",desc:"只降一点曝光，黑位与光束原样保留"},
+      "lowkey-mono":{name:"暗部银盐",css:"grayscale(1) contrast(1.02)",desc:"去色让明暗几何成为主体，不压死暗部"},
+      "lowkey-amber":{name:"逆光琥珀",css:"sepia(0.16) saturate(0.85) brightness(0.975)",desc:"暖高光、不抬黑位，适合逆光与钨丝灯"},
+      "lowkey-cool":{name:"冷银单色",css:"grayscale(0.6) sepia(0.1) hue-rotate(180deg) saturate(0.85) brightness(0.98)",desc:"冷色分离，仅冷水面/荧光灯用"},
       portra:{name:"Portra400",css:"sepia(0.14) saturate(1.12) brightness(1.04) contrast(0.96)",desc:"经典暖调人像胶片"},
       cool:{name:"冷调",css:"saturate(0.92) brightness(1.03) contrast(1.03) sepia(0.04) hue-rotate(4deg)",desc:"清冷干净，适合夜景"},
       warm:{name:"暖调",css:"sepia(0.2) saturate(1.15) brightness(1.02) contrast(0.98)",desc:"暖金色调，日落氛围"},
@@ -2095,7 +2114,10 @@ var APP_VER="v13.1.0";
     function setFilter(f){
       state.filter=f;
       state.strength=100;
-      filterBar.querySelectorAll(".filter-pill").forEach(function(b){ b.classList.toggle("active",b.dataset.f===f); });
+      var _pillHit=0;
+      filterBar.querySelectorAll(".filter-pill").forEach(function(b){ var _on=(b.dataset.f===f); if(_on)_pillHit++; b.classList.toggle("active",_on); });
+      state._setFilterHit=_pillHit; // v13.2 QA：pill 缺失会让“已套用”在 UI 上显示为未选中（activeFilter=null）
+      state._setFilterId=f;
       var el = state.mode==="camera" ? videoCam : photoView;
       el.className="show f-"+f;
       el.style.opacity="1";
@@ -2115,20 +2137,52 @@ var APP_VER="v13.1.0";
     function _hideFrec(){ try{ var _bn=document.getElementById("frecBanner"); if(_bn) _bn.style.display="none"; var _tx=document.getElementById("frecText"); if(_tx) _tx.textContent=""; }catch(e2){} }
     function _maybeRecommendFilter(aFinal){
       try{
-        if(state._frecShown) return;
+        var _prevWhy=state._frecWhy||{};
+        state._frecWhy={stage:"enter",shown:!!state._frecShown,hasAI:!!state.aiData,ts:Date.now()};
+        if(state._frecShown){
+          // 每图只推一次：后续调用保留第一次的决策与依据（否则 QA 看到 rec=null，误判成“没推荐”）
+          var _r0=state._frecRec;
+          state._frecWhy={stage:"already-shown",shown:true,hasAI:!!state.aiData,ts:Date.now(),
+            rec:_r0?{filter:_r0.filter,strength:_r0.strength,rule:_r0.rule,reason:_r0.reason}:null,
+            light:_prevWhy.light||null,prevStage:_prevWhy.stage||null};
+          return;
+        }
         var ai=state.aiData||{};
+        // v13.2：模型未回写时不要锁死推荐——像素阶段的 scene 常是 general，美食/人像/晚霞要等
+        // YOLO/VLM 证据回来再定池子（否则暗调美食会被 lowkey 白名单抢走，实测 big01/big03）。
+        // 最多等 8s；模型失败/未开启则按像素兜底，不会永久沉默。
+        if(state.aiModelEnabled && ai.modelLoaded!==true){
+          if(!state._frecWaitStart) state._frecWaitStart=Date.now();
+          if(Date.now()-state._frecWaitStart<8000){
+            state._frecWhy={stage:"wait-model",elapsed:Date.now()-state._frecWaitStart,hasAI:true,ts:Date.now()};
+            setTimeout(function(){ try{ _maybeRecommendFilter(null); }catch(e){} }, 900);
+            return;
+          }
+        } else { state._frecWaitStart=0; }
         var pc=0;
         if(Array.isArray(ai.allBoxes)){ for(var _bi=0;_bi<ai.allBoxes.length;_bi++){ if(ai.allBoxes[_bi]&&ai.allBoxes[_bi].class==="person") pc++; } }
         var sig={personScore:(typeof ai.personScore==="number")?ai.personScore:null,personCount:pc,scene:(state.plan&&state.plan.sceneType)||null,atmosphere:(state.plan&&state.plan.atmosphere)||null};
-        var rec=_recommendFilter(aFinal||ai, sig);
+        // v13.2：aFinal 可能是裁切终检后的精简对象（缺 lumGrid），低照度判定会直接失效；
+        // 这里以完整 aiData 打底再叠 aFinal，保证 _lightGeometry 拿得到亮度网格。
+        var _aiM=Object.assign({}, ai, aFinal||{});
+        var rec=_recommendFilter(_aiM, sig);
         if(rec&&rec.filter&&sig.scene) rec.scene=sig.scene;
         try{ rec=_applyPref(rec, JSON.parse(localStorage.getItem("ai_cmp_pref")||"[]")); }catch(e){}
-        if(!rec||!rec.filter||!FILTERS[rec.filter]) return; // 沉默：不弹横幅
+        state._frecWhy.rec=rec?{filter:rec.filter,strength:rec.strength,rule:rec.rule,reason:rec.reason}:null;
+        try{ state._frecWhy.light=_lightGeometry(_aiM); }catch(e){}
+        if(!rec||!rec.filter||!FILTERS[rec.filter]){ state._frecWhy.stage="null-rec"; return; } // 沉默：不弹横幅
+        state._frecWhy.stage="shown";
+        // 方案里建议的滤镜与推荐器保持一致，避免状态栏说“Portra400 可手动预览”而实际套的是保真暗调
+        if(state.plan && String(rec.filter).indexOf("lowkey-")===0) state.plan.f=rec.filter;
         state._frecShown=true; state._frecRec=rec;
         var _tx=document.getElementById("frecText");
         if(_tx) _tx.textContent="推荐「"+FILTERS[rec.filter].name+"」 · "+rec.reason;
+        var _ap=document.getElementById("frecApply"); if(_ap) _ap.style.display="";
         var _bn=document.getElementById("frecBanner");
         if(_bn) _bn.style.display="flex";
+        // v13.2：推荐可能因“等模型”而延迟到本次调用才产出；调用方那一刻已经调过 _applyAutoFilter，
+        // 这里补一次，否则会只出横幅、不落滤镜（实测 17 张全部 f=clear）。
+        try{ _applyAutoFilter(); }catch(e){}
       }catch(e){}
     }
     // v12.27.0: 普通场景默认套用推荐滤镜（温和强度 60-78），人像/美食也走同一推荐器；
@@ -2145,16 +2199,29 @@ var APP_VER="v13.1.0";
         if(p.atmosphere==="sunset_sky"||sc==="sunset") return;
         if((typeof a.highClip==="number"&&a.highClip>0.12)&&(typeof a.shadowClip==="number"&&a.shadowClip>0.35)) return;
         if(sc==="portrait"||sc==="portrait_close"){ if((a.faceCount||0)>=3) return; }
-        if(a.sat<0.04) return;
+        // v13.2：低照度作品本就低饱和（甚至接近黑白），sat 闸门只拦“普通场景强行加色”，
+        // 不拦 lowkey-* 白名单（否则“保真暗调”永远自动套不上）。
+        var _lkF=(String(rec.filter).indexOf("lowkey-")===0);
+        if(!_lkF && a.sat<0.04) return;
         state._autoFilterApplied=true;
+        try{ pushUndo(); }catch(e){} // v13.2：自动套滤镜也进撤销栈，撤销/点“原图”都能回退
         setFilter(rec.filter);
         // 自动滤镜只做“温和增强”：35-55 强度，不再 60-78 一把拉满；人像更轻。
         var _base=rec.strength||55;
         var _str=(sc==="portrait"||sc==="portrait_close")?(_base*0.55):(_base*0.65);
         state.strength=Math.round(Math.min(55,Math.max(35,_str)));
         applyStrength();
-        try{ _hideFrec(); }catch(e){}
-        toastMsg("已套用「"+FILTERS[rec.filter].name+"」"+state.strength+"%，点「原图」可换回");
+        if(_lkF){
+          // v13.2：低照度作品自动套用后**保留依据条**（亮区/对角/均值），并把“应用”换成“原片”回退。
+          // 用户要求“每条推荐都要能说出为什么”，如果套完就隐藏，依据就看不到了。
+          var _tx2=document.getElementById("frecText");
+          if(_tx2) _tx2.textContent="已套用「"+FILTERS[rec.filter].name+"」 · "+rec.reason;
+          var _ap2=document.getElementById("frecApply"); if(_ap2) _ap2.style.display="none";
+          var _bn2=document.getElementById("frecBanner"); if(_bn2) _bn2.style.display="flex";
+        } else {
+          try{ _hideFrec(); }catch(e){}
+        }
+        toastMsg("已套用「"+FILTERS[rec.filter].name+"」"+state.strength+"%，点「原片」可换回");
       }catch(e){}
     }
     (function(){
@@ -2180,7 +2247,14 @@ var APP_VER="v13.1.0";
           var rec=state._frecRec;
           if(rec&&rec.rule){ // 记录一次推翻（同场景同 rule 累计≥3 后该 rule 本场景沉默）
             var h=[]; try{ h=JSON.parse(localStorage.getItem("ai_cmp_pref")||"[]"); }catch(e){ h=[]; }
-            if(Array.isArray(h)){ h.push({rule:rec.rule,scene:rec.scene||null,type:"reject",ts:Date.now()}); h=h.slice(-200); localStorage.setItem("ai_cmp_pref",JSON.stringify(h)); }
+            // v13.2：自动套用后点「原片」只是“这张不要”，记为 revert；只有真正拒绝“推荐横幅”才累计 reject，
+          // 否则连续看 3 张同类照片就会把整个场景的推荐能力静默清零（项目铁律：能力不能被静默归零）。
+          var _pt=(state._autoFilterApplied&&state.filter&&String(state.filter).indexOf("lowkey-")===0)?"revert":"reject";
+          if(Array.isArray(h)){ h.push({rule:rec.rule,scene:rec.scene||null,type:_pt,ts:Date.now()}); h=h.slice(-200); localStorage.setItem("ai_cmp_pref",JSON.stringify(h)); }
+          }
+          // v13.2：低照度作品是“先套后给依据条”，点「原片」必须真的回退，而不是只关掉横幅
+          if(state._autoFilterApplied && state.filter && String(state.filter).indexOf("lowkey-")===0){
+            pushUndo(); setFilter("clear"); toastMsg("已恢复原片，滤镜推荐已记录");
           }
         }catch(e){}
         state._frecRec=null; _hideFrec();
@@ -2213,6 +2287,34 @@ var APP_VER="v13.1.0";
       var sc=Math.max(boxW/srcW, boxH/srcH);
       var dw=srcW*sc, dh=srcH*sc;
       return {x:(boxW-dw)/2, y:(boxH-dh)/2, w:dw, h:dh};
+    }
+    // v13.2 P0：舞台比例跟随照片（原来固定 4:3 + object-fit:cover，导入的照片会被舞台再裁一次，
+    // 导致预览框和最终裁切完全不是一个）。跟随之后 cover 不再需要裁边，所见即所得。
+    // photo 模式下图片按 contain 完整显示，displayRect 就是它真实的屏幕矩形
+    function getFitRect(srcW,srcH){
+      var boxW=stage.clientWidth, boxH=stage.clientHeight;
+      var sc=Math.min(boxW/srcW, boxH/srcH);
+      var dw=srcW*sc, dh=srcH*sc;
+      return {x:(boxW-dw)/2, y:(boxH-dh)/2, w:dw, h:dh};
+    }
+    function _fitStageTo(w,h){
+      try{
+        if(!(w>0)||!((h)>0)) return;
+        var ar=w/h;
+        if(ar<0.45||ar>2.4){ stage.style.aspectRatio="4 / 3"; return; } // 极端长图/全景不跟，避免舞台过矮/过高
+        stage.style.aspectRatio=w+" / "+h;
+      }catch(e){}
+    }
+    function _resetStageAspect(){ try{ stage.style.aspectRatio="4 / 3"; }catch(e){} }
+    // v13.2：导入照片用 contain（完整可见）；相机仍用 cover（铺满取景框）
+    function _setPhotoFit(on){
+      try{
+        // 注意：滤镜会把 className 整串重写（show f-xxx），所以这里必须用内联样式，class 会被冲掉
+        [photoView, baseLayer, cmpBase].forEach(function(el){
+          if(!el) return;
+          el.style.objectFit = on ? "contain" : "cover";
+        });
+      }catch(e){}
     }
     function currentEl(){
       return state.mode==="camera" ? videoCam : (photoView.src ? photoView : null);
@@ -2257,7 +2359,7 @@ var APP_VER="v13.1.0";
       }).then(function(){
         state.mode="camera";
         videoCam.classList.add("show");
-        photoView.classList.remove("show");
+        photoView.classList.remove("show"); _setPhotoFit(false);
         noSrc.classList.remove("show");
         camBadge.classList.add("on"); camBadge.classList.remove("err");
         camBadgeTxt.textContent="相机已连接";
@@ -2453,11 +2555,17 @@ var APP_VER="v13.1.0";
       // 先等新源加载完再分析——消除 headless 软渲染下读到裁后旧图导致的 crop run-to-run 抖动。
       state._srcGen=(state._srcGen||0)+1;
       videoCam.classList.remove("show");
-      photoView.classList.add("show");
+      photoView.classList.add("show"); _setPhotoFit(true);
       photoView.onload=function(){
-        state.displayRect=getCoverRect(photoView.naturalWidth, photoView.naturalHeight);
-        if(state.histOn) renderHist();
-        updateSrcMeta(photoView.naturalWidth, photoView.naturalHeight);
+        _fitStageTo(photoView.naturalWidth, photoView.naturalHeight);
+        requestAnimationFrame(function(){
+          try{
+            state.displayRect=getFitRect(photoView.naturalWidth, photoView.naturalHeight);
+            if(state.histOn) renderHist();
+            updateSrcMeta(photoView.naturalWidth, photoView.naturalHeight);
+            if(state.plan) _showCropPreview(state.plan);
+          }catch(e){}
+        });
         state._srcLoadedGen=state._srcGen; // 本代次源已加载完成
       };
       photoView.onerror=function(){
@@ -3831,18 +3939,36 @@ var APP_VER="v13.1.0";
         var waterScore=(typeof a.waterScore==="number"&&isFinite(a.waterScore))?a.waterScore:0;
         var manmadeScore=(typeof a.manmadeScore==="number"&&isFinite(a.manmadeScore))?a.manmadeScore:0;
         var pf=_scenePrefix((sig&&typeof sig.scene==="string")?sig.scene:"", wb);
+        // v13.2：光影几何提前算——它既是候选池白名单的依据，也是“高光断层”闸门对明暗作品的例外依据。
+        var _lgF=null; try{ _lgF=_lightGeometry(a); }catch(e){}
+        // “明暗作品”两类：① 低照度且有层次（lowKey）；② 接近黑白但反差大（去色后只剩光影）。
+        var _shadowWork=!!(_lgF&&_lgF.ok&&(_lgF.lowKey||(sat<=0.06&&contrast>=55)));
+        // 暗调美食/晚霞不是“光影作品”：v13.1 的 P1-3 结论是暗调美食要暖要亮，晚霞要保留蓝橙过渡。
+        // 它们不参与白名单，也不享受高光放宽（否则会把“提亮”放到本来就快爆的高光上）。
+        var _scnE=(sig&&typeof sig.scene==="string")?sig.scene:null;
+        var _atmE=(sig&&typeof sig.atmosphere==="string")?sig.atmosphere:null;
+        var _foodSceneEarly=(_scnE==="food"||_scnE==="美食");
+        var _shadowExcluded=_foodSceneEarly||_atmE==="sunset_sky"||_scnE==="sunset";
         // G1-G5 硬闸门（安全底线不松；v13.0.0 对“暗但有层次”的场景放行轻度 night 滤镜）
         if(sharpness<25) return GATE; // 糊片
-        if(highClip>0.15) return GATE; // 高光断层
+        if(highClip>0.15){
+          // 明暗作品本就允许高光“过一点”（光束/亮窗是主体），白名单四档都不抬亮部；
+          // 但 24% 以上仍视为断层，宁可不推。
+          if(!_shadowWork||_shadowExcluded||highClip>0.24) return GATE; // 高光断层
+        }
         if(highClip>0.12 && shadowClip>0.35) return GATE; // 逆光剪影：保留蓝橙过渡，不自动加色
         if(shadowClip>0.28){
           // 暗部很大但画面有明确亮部/对比（如地下通道的光束）→ 允许温和提亮；死黑平坦画面仍拦截
-          var _darkLayered=(mean>=40 && contrast>=45);
+          // v13.2：明暗作品只要“亮区成块 + 反差足够”就放行（实测 ls10 均值39.99 被 >=40 卡掉 0.01）
+          var _darkLayered=(mean>=40 && contrast>=45) || (_shadowWork && contrast>=45 && _lgF.litRatio>=0.12);
           if(!_darkLayered) return GATE;
         }
         if(sat>0.52 && mean>=80) return GATE; // 明亮且已浓，避免“塑料感”
         if(sat>0.72) return GATE; // 极端过饱和
-        if(mean<38) return GATE; // 近纯黑
+        if(mean<38){
+          // 近纯黑：没有可辨认的亮区结构才判死；有亮区（≥12%）的暗调作品仍可给“不抬黑位”的四档
+          if(!(_shadowWork && contrast>=45 && _lgF.litRatio>=0.12)) return GATE;
+        }
         if(mean<48 && contrast<35) return GATE; // 暗且平，提亮只会发灰
         var ps=(sig&&typeof sig.personScore==="number"&&isFinite(sig.personScore))?sig.personScore:0;
         var pc=(sig&&typeof sig.personCount==="number"&&isFinite(sig.personCount))?sig.personCount:0;
@@ -3885,6 +4011,16 @@ var APP_VER="v13.1.0";
           general:["natural","provia","morandi","fade","classic"]
         };
         var pool=POOLS[scene]||POOLS.general;
+        // v13.2：低照度/光影作品用白名单硬覆盖（不是扣分）。研究结论：提亮会爆高光、抬黑位会毁氛围、
+        // 人像胶片(portra)本身抬黑位，与 low-key 结构相反。判据见 _lightGeometry + docs/research/v13.2-light-shadow.md
+        if(_shadowWork && !_shadowExcluded){
+          // 排序按证据：① 明确冷光源（冷水面/夜景且 wb<-0.02）才优先冷银；
+          // ② 接近黑白的明暗作品优先银盐（去色只剩几何）；③ 其余优先“保真暗调”（最安全）。
+          var _cold=(wb<-0.02)&&(scn==="night"||scn==="waterscape"||scene==="night"||scene==="water");
+          if(_cold) pool=["lowkey-cool","lowkey-mono","lowkey-keep","lowkey-amber"];
+          else if(sat<=0.06) pool=["lowkey-mono","lowkey-keep","lowkey-amber","lowkey-cool"];
+          else pool=["lowkey-keep","lowkey-mono","lowkey-amber","lowkey-cool"];
+        }
         // 极低饱和时，仅在建筑/街拍/通用场景加黑白候选（food/sunset/人像不加）
         if(sat<0.06 && scene!=="food" && scene!=="sunset" && scene!=="portrait"){
           pool=pool.concat(["mono","mono-warm","chrome"]);
@@ -3965,9 +4101,19 @@ var APP_VER="v13.1.0";
           "c200":"柔和胶片绿调",
           "hk":"港风霓虹，高饱和",
           "cool":"清冷干净，适合夜景",
-          "natural":"轻度增强，忠实还原"
+          "natural":"轻度增强，忠实还原",
+          "lowkey-keep":"低照度保真：只降 1.5% 曝光，不抬黑位",
+          "lowkey-mono":"高反差黑白：去色，让明暗几何成为主体",
+          "lowkey-amber":"逆光琥珀：暖高光，不抬黑位",
+          "lowkey-cool":"冷银单色：冷水/荧光灯分离"
         };
-        return {filter:top.filter,strength:strength,reason:pf+(reasons[top.filter]||"场景适配"),rule:"SCORE"};
+        // v13.2：每条推荐都带数字依据（用户要求“说不出依据就不推”）。光影作品额外标明亮区/对角。
+        var _ev="（均值"+Math.round(mean)+((_lgF&&_lgF.ok)?("·亮区"+Math.round(_lgF.litRatio*100)+"%·对角"+Math.round(_lgF.diagRatio*100)+"%"):"")+"）";
+        var _pre=_shadowWork?"光影作品·":pf;
+        var _rt=reasons[top.filter]||"场景适配";
+        // 同一款 Portra 用在美食上，理由不该还写“人像”
+        if(scene==="food"&&["portra","warm","sunset","c200","hk"].indexOf(top.filter)>=0) _rt="暖调胶片，食物更有食欲";
+        return {filter:top.filter,strength:strength,reason:_pre+_rt+_ev,rule:"SCORE"};
       }catch(e){ return GATE; }
     }
     // v9.3.0 可训练偏好（自研轻量）+ v9.5.0 采纳正向偏好：纯函数消费 history[{rule,scene,type}]。
@@ -3985,7 +4131,7 @@ var APP_VER="v13.1.0";
           var e=history[i]; if(!e||typeof e!=="object") continue;
           if(e.rule!==rule) continue;
           if(scene&&e.scene&&e.scene!==scene) continue;
-          if(e.type==='adopt') ado++; else rej++; // 兼容 v9.3 无 type 的旧记录按推翻处理
+          if(e.type==='adopt') ado++; else if(e.type!=='revert') rej++; // revert=只是换回原片，不参与“本场景沉默”
         }
         if(rej>=3) return {filter:null,strength:0,reason:"",rule:rule+"(PREF)"};
         if(ado>=3){
@@ -4576,7 +4722,9 @@ var APP_VER="v13.1.0";
       var mean=(a&&typeof a.mean==="number")?a.mean:128;
       var sharp=(a&&typeof a.sharpness==="number")?a.sharpness:50;
       var minArea, allowTight, why;
-      if(/portrait/.test(sc)){ minArea=0.72; allowTight=false; why="人像/特写：不做大裁"; }
+      var _isPortraitScene=/portrait/.test(sc);
+      if(_isPortraitScene && !(_personBoxOf(a)||a.isPerson===true||((typeof a.skinRatio==="number"?a.skinRatio:0)>0.06))){ _isPortraitScene=false; }
+      if(_isPortraitScene){ minArea=0.72; allowTight=false; why="人像/特写：不做大裁"; }
       else if(_personBoxOf(a)){
         // v13.1.0 修正：不能"只要检出一个 2% 大小的人就把幅度锁死"。实测（imgs/u50 探针）：
         // 端侧模型开启时任何人物框都会让候选从 6~7 个掉到 3~4 个，云端 refine 命中率直接归零——
@@ -4632,7 +4780,11 @@ var APP_VER="v13.1.0";
         if(sharp<22) return {ok:false, why:"画面偏糊，裁了只会更糊"};
         if(dr<0.10 && sat<0.10) return {ok:false, why:"画面几乎没有层次与色彩"};
         if(mean<28) return {ok:false, why:"接近全黑"};
-        if(sat<0.03 && ed<0.02) return {ok:false, why:"纯色/无内容"};
+        if(sat<0.03 && ed<0.02){
+          // v13.2：黑白/低饱和的建筑光影照样有内容——用光影几何兜底（ls03 就是被这条误杀）
+          var _lgp=null; try{ _lgp=_lightGeometry(a); }catch(e){}
+          if(!(_lgp&&_lgp.ok&&(_lgp.diagRatio>=0.35||_lgp.litRatio>=0.10))) return {ok:false, why:"纯色/无内容"};
+        }
         if(ed>0.35 && sat<0.08) return {ok:false, why:"像截图/图文，不是照片"};
         var hasPerson=!!_personBoxOf(a);
         var hasFood=(a.hasFoodEvidence===true);
@@ -4643,7 +4795,13 @@ var APP_VER="v13.1.0";
           sig=bs;
         }
         // 可信主体：模型人框 / 显著性质心占比合理 / 食物证据
-        if(!hasPerson && !hasFood && (sig<0.02||sig>0.92)) return {ok:false, why:"找不到明确主体"};
+        // v13.2：光影/极简照片没有"显著物体"，但有明确明暗结构——亮区集中或对角梯度占优就认它当主体，
+        // 否则这类照片会被判"找不到主体"直接不裁（ls01/ls03 就是 0 候选的原因之一）。
+        if(!hasPerson && !hasFood && (sig<0.02||sig>0.92)){
+          var _lgv=null; try{ _lgv=_lightGeometry(a); }catch(e){}
+          if(_lgv&&_lgv.ok&&(_lgv.litRatio>=0.06||_lgv.diagRatio>=0.42)) return {ok:true,hasPerson:false,hasFood:false,sigRatio:Math.max(sig,_lgv.litRatio),byLight:true};
+          return {ok:false, why:"找不到明确主体"};
+        }
         return {ok:true, hasPerson:hasPerson, hasFood:hasFood, sigRatio:sig};
       }catch(e){ return {ok:false, why:"证据判定异常"}; }
     }
@@ -4669,7 +4827,7 @@ var APP_VER="v13.1.0";
         // （真人露肤占比通常 <15%，更大就是特写——特写走人像通道根本不裁）。
         // 不加这条会把构图能力直接清零（实测一张笔记本+木桌照片拦掉全部候选）。
         var ratio=total/(GW*GH*cellPx);
-        if(ratio>0.18) return {veto:false, diffuse:true, skinRatio:+ratio.toFixed(3)};
+        if(ratio>0.08) return {veto:false, diffuse:true, skinRatio:+ratio.toFixed(3)}; // v13.2：暖墙/霉斑/锈色整片落进肤色范围一律放行（示例图实测 11% 被误判成人皮）
         function cells(x0,y0,x1,y1){
           var gx0=Math.max(0,Math.floor(x0*GW)), gx1=Math.min(GW,Math.ceil(x1*GW));
           var gy0=Math.max(0,Math.floor(y0*GH)), gy1=Math.min(GH,Math.ceil(y1*GH));
@@ -4800,6 +4958,26 @@ var APP_VER="v13.1.0";
             if(L+T+R+B>0.05) push([L,T,1-R,1-B],"deadzone-trim","裁掉空边","把没有内容的边带裁掉，画面更干净");
           }
         }catch(e){}
+        // 4.5) v13.2 光影几何（自己找构图）：以"亮区∪显著主体"为目标框，
+        //      按预算下限补足面积，生成"光影紧裁"与"对角线光影"两类候选。
+        var lg=null; try{ lg=_lightGeometry(a); }catch(e){}
+        if(lg&&lg.ok&&!pbBig){
+          var _union=lg.bbox.slice();
+          if(box&&box.length===4){
+            _union[0]=Math.min(_union[0],box[0]); _union[1]=Math.min(_union[1],box[1]);
+            _union[2]=Math.max(_union[2],box[2]); _union[3]=Math.max(_union[3],box[3]);
+          }
+          var _ucx=(_union[0]+_union[2])/2, _ucy=(_union[1]+_union[3])/2;
+          var _uarea=Math.max(0.06,(_union[2]-_union[0])*(_union[3]-_union[1]));
+          var _need=Math.max(budget.tightArea, Math.min(0.72,_uarea*1.28));
+          push(_anchorWindow(_ucx,_ucy,_need,0.5,0.5),"light-tight","光影紧裁","只留光束和它的落点，明暗切割更利落");
+          if(lg.diagRatio>=0.42){
+            push(_anchorWindow(_ucx,_ucy,Math.min(0.80,_need*1.3),1/3,0.5),"light-diag","对角线光影","让光束沿对角线穿过画面");
+          }
+          if(lg.lowKey){
+            push(_anchorWindow(_ucx,_ucy,Math.min(0.85,_need*1.6),0.5,2/3),"light-dark-frame","暗部做减法","压暗四周、保留亮区，氛围更集中");
+          }
+        }
         // 5) 社交画幅（保留旧能力：2:3 / 4:5 / 1:1 / 16:9），供"发朋友圈/小红书"直接用
         var targets=(ar<0.70)?[0.75,0.8]:(ar<0.95?[1,2/3,0.8]:(ar<1.45?[4/3,1,16/9]:[16/9,4/3,0.8]));
         for(var ti=0;ti<targets.length;ti++){
@@ -4810,6 +4988,44 @@ var APP_VER="v13.1.0";
       return out;
     }
     // 云端 refine 指令 → 本地裁切：base 是候选编号，trim 是每边再收的百分比（离散档位）
+    // v13.2：光影几何分析（对角线光束 / 明暗切割 / 负空间）
+    // 依据：CADB(BMVC2021) 13 类构图里 diagonal/curved/radial/pattern/fill-frame 我们此前一个都没检测；
+    // 而"硬光+几何切割"正是手机随手拍最容易出大片的一类（研究见 docs/research/v13.2-light-shadow.md）。
+    function _lightGeometry(a){
+      try{
+        var g=a&&a.lumGrid, gw=a&&a.gridW, gh=a&&a.gridH;
+        if(!g||!gw||!gh||g.length<gw*gh) return {ok:false,why:"没有亮度网格"};
+        var N=gw*gh, i, y, x, mx=0, sum=0;
+        for(i=0;i<N;i++){ sum+=g[i]; if(g[i]>mx) mx=g[i]; }
+        var scale=(mx<=1.5)?1:255;             // 兼容 0~1 与 0~255 两种网格
+        var mean=sum/N, vs=0;
+        for(i=0;i<N;i++){ var d=g[i]-mean; vs+=d*d; }
+        var sd=Math.sqrt(vs/N)||1e-6;
+        var thr=mean+0.55*sd;
+        var minX=gw,minY=gh,maxX=-1,maxY=-1,lit=0;
+        for(y=0;y<gh;y++)for(x=0;x<gw;x++){
+          if(g[y*gw+x]>=thr){ lit++; if(x<minX)minX=x; if(x>maxX)maxX=x; if(y<minY)minY=y; if(y>maxY)maxY=y; }
+        }
+        if(!lit||maxX<0) return {ok:false,why:"没有明显亮区"};
+        var bin={h:0,v:0,d45:0,d135:0}, tot=0, minGrad=0.045*scale;
+        for(y=1;y<gh-1;y++)for(x=1;x<gw-1;x++){
+          var gx=g[y*gw+x+1]-g[y*gw+x-1], gy=g[(y+1)*gw+x]-g[(y-1)*gw+x];
+          var m=Math.abs(gx)+Math.abs(gy); if(m<minGrad) continue; tot+=m;
+          var ang=Math.atan2(gy,gx)*180/Math.PI, aa=Math.abs(ang);
+          if(aa<22.5||aa>157.5) bin.h+=m;
+          else if(aa>67.5&&aa<112.5) bin.v+=m;
+          else if(ang>0) bin.d135+=m; else bin.d45+=m;
+        }
+        var diagRatio=tot?(bin.d45+bin.d135)/tot:0;
+        var bbox=[minX/gw,minY/gh,(maxX+1)/gw,(maxY+1)/gh];
+        var contrast=(typeof a.contrast==="number")?a.contrast:0;
+        var lowKey=(typeof a.mean==="number"&&a.mean<110&&sd>0.11*scale&&contrast>0.32);
+        return {ok:true,bbox:bbox,cx:(bbox[0]+bbox[2])/2,cy:(bbox[1]+bbox[3])/2,
+          area:Math.max(0.02,(bbox[2]-bbox[0])*(bbox[3]-bbox[1])),litRatio:lit/N,
+          diagRatio:diagRatio,sd:Math.round(sd),dir:(bin.d45+bin.d135)>=(bin.h+bin.v)?"diag":"orth",
+          lowKey:!!lowKey,why:"亮区 "+(lit/N*100).toFixed(0)+"% · 对角梯度 "+(diagRatio*100).toFixed(0)+"%"};
+      }catch(e){ return {ok:false,why:"光影分析异常"}; }
+    }
     function _cloudTrimToCrop(baseCrop, trim){
       try{
         var c=(baseCrop||[0,0,0,0]).slice();
@@ -4873,7 +5089,7 @@ var APP_VER="v13.1.0";
     }
     // v13.1.0 调试出口：把构图核心函数挂到 window，供 QA 脚本用"浏览器里的真实 aiData"复算，
     // 避免单测（Node 侧文本提取）通过而浏览器里因作用域/数据差异静默不生效却查不出来。
-    try{ if(typeof window!=="undefined"){ window.__v131core={
+    try{ if(typeof window!=="undefined"){ window.__v132core={ preview:_showCropPreview, hidePreview:_hideCropPreview, fitRect:getFitRect, fitStage:_fitStageTo }; window.__v131core={
       cropBudget:_cropBudget, subjectEvidence:_subjectEvidence, skinEdgeGuard:_skinEdgeGuard,
       cropsIoU:_cropsIoU, cropsSimilar:_cropsSimilar, anchorWindow:_anchorWindow, windowToCrop:_windowToCrop,
       intentCandidates:_intentCandidates, cloudTrimToCrop:_cloudTrimToCrop, validateNewCrop:_validateNewCrop,
@@ -5016,7 +5232,11 @@ var APP_VER="v13.1.0";
     function _buildCompositionCandidates(a, plan){
       try{
         if(!a||!plan) return [];
-        if(/portrait/.test(plan.sceneType||"")) return [];
+        // v13.2：只有"确实有人"才整体不组候选。纯像素把人像场景猜错时（水面/木纹被判 portrait_close，
+        // ls01 就是这样 0 候选），不该连候选表都不给；人物安全仍由 _validateNewCrop 的肤色/人物边距兜底。
+        // “确实有人”= 可定位人物框，或高置信 person / 真脸 / 真肤色（ls09 的 0.377 无框假人不再触发）。
+        var _personStrong=_personBoxOf(a)||(a.isPerson===true&&((typeof a.personScore==="number"&&a.personScore>=0.5)||a.faceAvailable===true||(typeof a.skinRatio==="number"&&a.skinRatio>=0.05)));
+        if(/portrait/.test(plan.sceneType||"") && _personStrong) return [];
         var ar=(typeof a.frameAspect==="number"&&isFinite(a.frameAspect))?a.frameAspect:1;
         var budget=_cropBudget(a, plan.sceneType||"general");
         try{ a.cropMinArea=budget.minArea; }catch(e){} // 让质量分与候选生成用同一套预算
@@ -5058,7 +5278,7 @@ var APP_VER="v13.1.0";
         out.sort(function(x,y){ return y.score-x.score; });
         out=out.slice(0,8);
         // 少于 2 个真实裁切时不组联系表（字母含义会漂移），退回语义通道
-        if(out.length<2) return [];
+        if(out.length<1) return [];   // v13.2：只有 1 个真实裁切也组表（2 格：裁切+原图），否则这些照片云端只能退回语义通道
         var noScore=_cropQualityScore(a,[0,0,0,0],true);
         out.push({crop:[0,0,0,0],noCrop:true,tag:"原图",intent:"original",reason:"保留完整画面",source:"original",score:noScore,area:1});
         for(var j=0;j<out.length;j++) out[j].id=String.fromCharCode(65+j);
@@ -5552,6 +5772,12 @@ var APP_VER="v13.1.0";
           a.detectedClasses.indexOf("orange")>=0 || a.detectedClasses.indexOf("broccoli")>=0 || a.detectedClasses.indexOf("carrot")>=0 ||
           a.detectedClasses.indexOf("hot dog")>=0 || a.detectedClasses.indexOf("pizza")>=0 || a.detectedClasses.indexOf("cake")>=0);
         if(_foodClsL || a.sym>0.30 || (a.rowGap>25 && a.bodyRatio<0.35)){ modelPerson=false; }
+        // v13.2：更一般的“弱人物证据”闸门。实测 ls09（黑白螺旋中庭）YOLO person=0.377、
+        // 无脸/无肤色/无可定位人物框，却被当成 portrait → 0 候选。人物安全本来就要求可定位的框
+        // （_personBoxOf 只认 score≥0.40），低于 0.40 又没有脸/肤色的“人”不应决定场景。
+        var _psW=(state.aiData&&typeof state.aiData.personScore==="number")?state.aiData.personScore:0;
+        var _skinW=(typeof a.skinRatio==="number")?a.skinRatio:0;
+        if(_psW<0.40 && !a.faceAvailable && _skinW<0.03){ modelPerson=false; }
       }
       // v12.26.0: 纯天空/海面/城市天际线里的"人"多为 YOLO 误检（实测 sky/water/street 连续误判 portrait）。
       // 只在"主体占比很小 + 场景证据很强 + person 置信不高"三条同时满足时忽略，避免误伤真实小人物/环境人像。
@@ -6710,6 +6936,9 @@ var APP_VER="v13.1.0";
               }
             }catch(e){}
           }catch(e){ state._compositionCandidates=[]; }
+          // v13.2：方案落定后重建一次候选。场景可能被模型/后续逻辑修正（例如水面被先判成 portrait_close），
+          // 而候选是在修正前用旧方案构建并丢弃的——ls01 就是这样 0 候选。重建后候选表才反映最终场景。
+          try{ state._compositionCandidates=_buildCompositionCandidates(state.aiData, state.plan); }catch(e){}
           // v13.0.0 P0：像素结果立即落地，云端/模型只做后台增强，不再让用户等 16-20 秒才看到裁切。
           state.analyzing=false;
           stage.classList.remove("scanning");
@@ -6742,7 +6971,9 @@ var APP_VER="v13.1.0";
               state._pixelApplied=true;
               state._pixelFirstApplied=true;
               // 仅中性滤镜走"原生画质"路径；风格滤镜交给推荐器决定（带五道硬闸门）
-              var autoFilter = (p.f==="natural" || p.f==="clear") ? (p.f||"clear") : "clear";
+              // v13.2：低照度只自动套"保真暗调"（几乎不改色，安全）；银盐/琥珀/冷银作为建议让人自己点。
+              var _autoOk = (p.f==="natural" || p.f==="clear" || p.f==="lowkey-keep");
+              var autoFilter = _autoOk ? (p.f||"clear") : "clear";
               var _check=setInterval(function(){
                 if(photoView.naturalWidth && photoView.complete){
                   clearInterval(_check); _check=null;
@@ -6762,8 +6993,10 @@ var APP_VER="v13.1.0";
                   try{ _maybeRecommendFilter((typeof _a2!=="undefined"&&_a2)?_a2:null); }catch(e){}
                   try{ _applyAutoFilter(); }catch(e){}
                   var _pre=p.proactiveApplied?("已主动优化构图（"+p.proactiveTag+"）· "):"已自动应用：";
-                  var _fn=(state.filter&&state.filter!=="clear"&&FILTERS[state.filter])?FILTERS[state.filter].name:"";
-                  var _pmsg=p.proactiveApplied?("已主动构图："+p.proactiveTag+(_fn?(" + "+_fn+"滤镜"):"")+"，可撤销"):(autoFilter==="clear"?"构图优化完成，滤镜已保持原图（"+ (FILTERS[p.f]?FILTERS[p.f].name:"") +"可手动预览）":"已应用自然滤镜，构图保持原样");
+                  // v13.2：文案以“最终真正套上的滤镜”为准，不再出现“已保持原图”但其实套了低保真滤镜的矛盾
+                  var _actId=(state.filter&&state.filter!=="clear"&&FILTERS[state.filter])?state.filter:null;
+                  var _actName=_actId?FILTERS[_actId].name:"";
+                  var _pmsg=p.proactiveApplied?("已主动构图："+p.proactiveTag+(_actName?(" + "+_actName+"滤镜"):"")+"，可撤销"):(_actName?("已应用「"+_actName+"」滤镜，构图保持原样，可撤销"):"构图优化完成，滤镜已保持原图");
                   if(p.noCrop){
                     setStatus(_pre+"裁切+构图优化（未裁切）· "+(_scores?_scores.grade+"级 "+_scores.total+"分":""), "done");
                     toastMsg(_pmsg);
@@ -7328,6 +7561,9 @@ var APP_VER="v13.1.0";
       if(!applyNoCrop && (cp[0]+cp[1]+cp[2]+cp[3])<=5) applyNoCrop=true; // v13.1.0：微裁归零（合计≤5% 视为没裁）
       function commit(url,kind){
         try{
+          // v13.2 P0：落地后必须立刻收起预览遮罩——图已经是裁切结果了，
+          // 再把裁切百分比画在它上面等于二次裁切，用户看到的就是"框和结果完全不一样"。
+          try{ _hideCropPreview(); }catch(_){}
           pushUndo();
           state.cropResult=(kind==="crop")?url:null;
           state.sourceKind=kind;
@@ -7336,7 +7572,7 @@ var APP_VER="v13.1.0";
           var gen=state._srcGen;
           photoView.onload=function(){
             try{
-              state.displayRect=getCoverRect(photoView.naturalWidth,photoView.naturalHeight);
+              state.displayRect=getFitRect(photoView.naturalWidth,photoView.naturalHeight);
               updateSrcMeta(photoView.naturalWidth,photoView.naturalHeight);
               state._srcLoadedGen=gen;
               setZoom(p.z||1);
@@ -7346,7 +7582,7 @@ var APP_VER="v13.1.0";
               try{ _applyAutoFilter(); }catch(e){}
             }catch(e){}
           };
-          photoView.classList.add("show");
+          photoView.classList.add("show"); _setPhotoFit(true);
           photoView.src=url;
           state.plan=p; state.analyzed=true;
           state._pixelApplied=true;
@@ -7640,18 +7876,37 @@ var APP_VER="v13.1.0";
         if(!pl||pl.noCrop||!pl.crop){ cp.style.display="none"; return; }
         var cr=pl.crop; var sum=(cr[0]||0)+(cr[1]||0)+(cr[2]||0)+(cr[3]||0);
         if(sum<=0){ cp.style.display="none"; return; }
-        var L=Math.max(0,Math.min(50,cr[0]||0)), T=Math.max(0,Math.min(50,cr[1]||0));
-        var R=Math.max(0,Math.min(50,cr[2]||0)), B=Math.max(0,Math.min(50,cr[3]||0));
-        var midH=Math.max(10,100-T-B), midW=Math.max(10,100-L-R);
+        // v13.2 P0：裁切框必须按"图片在舞台里的真实显示矩形"换算。
+        // 旧版直接把裁切百分比套在舞台上，而舞台是 4:3 固定框 + object-fit:cover，
+        // 导入的竖图只露出中间一条 → 预览框和最终裁切对不上（用户实测反馈的"完全不是一个"）。
+        // 以遮罩层自身的盒子为准（它与 photoView 同构；直接量 stage 会因外层样式差异对不上）
+        var bw=cp.clientWidth||stage.clientWidth, bh=cp.clientHeight||stage.clientHeight;
+        // 当场按元素真实尺寸算显示矩形，不用 state.displayRect（应用裁切后它是上一张图的，会滞后）
+        var _pv=document.getElementById("photoView");
+        var _iw=(_pv&&_pv.naturalWidth)||0, _ih=(_pv&&_pv.naturalHeight)||0;
+        var _isContain=_pv&&_pv.style&&_pv.style.objectFit==="contain";
+        var d;
+        if(_iw>0&&_ih>0){
+          var _sc=_isContain?Math.min(bw/_iw,bh/_ih):Math.max(bw/_iw,bh/_ih);
+          var _dw=_iw*_sc, _dh=_ih*_sc;
+          d={x:(bw-_dw)/2,y:(bh-_dh)/2,w:_dw,h:_dh};
+        } else { d=state.displayRect; }
+        if(!d||!(d.w>0)||!(d.h>0)) d={x:0,y:0,w:bw,h:bh}; // 相机/未就绪时退回整框
+        var L=d.x+d.w*((cr[0]||0)/100), T=d.y+d.h*((cr[1]||0)/100);
+        var R=d.x+d.w*(1-((cr[2]||0)/100)), B=d.y+d.h*(1-((cr[3]||0)/100));
+        var visL=Math.max(0,L), visT=Math.max(0,T), visR=Math.min(bw,R), visB=Math.min(bh,B);
+        if(visR-visL<=1||visB-visT<=1){ cp.style.display="none"; return; } // 保留区完全在可视范围外
         cp.style.display="block";
         var elT=document.getElementById("cpTop"), elB=document.getElementById("cpBottom");
         var elL=document.getElementById("cpLeft"), elR=document.getElementById("cpRight");
         var elF=document.getElementById("cpFrame");
-        if(elT) elT.style.cssText="left:0;top:0;width:100%;height:"+T+"%;";
-        if(elB) elB.style.cssText="left:0;bottom:0;width:100%;height:"+B+"%;";
-        if(elL) elL.style.cssText="left:0;top:"+T+"%;width:"+L+"%;height:"+midH+"%;";
-        if(elR) elR.style.cssText="right:0;top:"+T+"%;width:"+R+"%;height:"+midH+"%;";
-        if(elF) elF.style.cssText="left:"+L+"%;top:"+T+"%;width:"+midW+"%;height:"+midH+"%;";
+        var midH=Math.max(0,visB-visT), midW=Math.max(0,visR-visL);
+        if(elT) elT.style.cssText="left:0;top:0;width:100%;height:"+Math.max(0,visT)+"px;";
+        if(elB) elB.style.cssText="left:0;top:"+visB+"px;width:100%;height:"+Math.max(0,bh-visB)+"px;";
+        if(elL) elL.style.cssText="left:0;top:"+visT+"px;width:"+Math.max(0,visL)+"px;height:"+midH+"px;";
+        if(elR) elR.style.cssText="left:"+visR+"px;top:"+visT+"px;width:"+Math.max(0,bw-visR)+"px;height:"+midH+"px;";
+        if(elF) elF.style.cssText="left:"+visL+"px;top:"+visT+"px;width:"+midW+"px;height:"+midH+"px;";
+        state._cropPreviewPx={L:visL,T:visT,R:visR,B:visB,box:{w:bw,h:bh},img:d};
       }catch(e){}
     }
     function _hideCropPreview(){ try{ var cp=document.getElementById("cropPreview"); if(cp) cp.style.display="none"; }catch(e){} }
@@ -7675,7 +7930,7 @@ var APP_VER="v13.1.0";
       state._compositionCandidates=[]; state._selectedCandidate=null;
       try{ _clearCloudStatusTimer(); state._cloudStatus=null; state._pendingCloudPlan=null; var _csc=document.getElementById("cloudStatusCard"); if(_csc&&_csc.parentNode)_csc.parentNode.removeChild(_csc); }catch(e){}
       // v9.0.0 换图即重置滤镜推荐（每图最多弹一次，残留横幅必须收起）
-      state._frecShown=false; state._frecRec=null; try{ _hideFrec(); }catch(e){}
+      state._frecShown=false; state._frecRec=null; state._frecWaitStart=0; try{ _hideFrec(); }catch(e){}
     }
 
     /* ===================== 直方图 ===================== */
@@ -8163,7 +8418,7 @@ var APP_VER="v13.1.0";
       try{
         if(!(state.aicMode && state.mode==="camera" && state.stream)){ return; }
         videoCam.classList.add("show");
-        photoView.classList.remove("show");
+        photoView.classList.remove("show"); _setPhotoFit(false);
         try{ var _pr=videoCam.play(); if(_pr&&_pr.catch){ _pr.catch(function(){}); } }catch(e){}
         if(_reset){
           if(state.zoom && state.zoom>1.001){ state.zoom=1; try{ zoomRange.value=1; }catch(e){} applyZoom(); }
@@ -8413,13 +8668,13 @@ var APP_VER="v13.1.0";
       if(state.fileURL){ URL.revokeObjectURL(state.fileURL); state.fileURL=null; }
       // 清空画面
       photoView.removeAttribute("src");
-      photoView.classList.remove("show");
+      photoView.classList.remove("show"); _setPhotoFit(false);
       videoCam.classList.remove("show");
       // 重置所有状态
       state.zoom=1; state.filter="clear"; state.plan=null; state.analyzed=false;
       state.sourceKind=""; state.sourceName=""; state.cropResult=null; state.origURL=null;
       // v9.0.0 换图即重置滤镜推荐（每图最多弹一次）
-      state._frecShown=false; state._frecRec=null; _hideFrec();
+      state._frecShown=false; state._frecRec=null; state._frecWaitStart=0; _hideFrec();
       // v1.7.0 / v8.0.4: 真正清掉进行中的倒计时（原仅置 null，旧 interval 仍会到点误拍）
       state.timer=0;
       if(state.timerInterval){ clearInterval(state.timerInterval); state.timerInterval=null; }
@@ -8427,7 +8682,7 @@ var APP_VER="v13.1.0";
       state.blurOn=false; state.blurAperture=2.8;
       state.burstMode=false; state.burstCount=0; state.burstShots=[];
       state.liveFaceTracking=false; state.lightDirection=null;
-      state.displayRect=null;
+      state.displayRect=null; _resetStageAspect();
       // 关闭浮层与覆盖层
       closeAi(); resetGuides(); removeAiBox();
       if(cmpOn){ setCmp(false); }
@@ -8490,8 +8745,8 @@ var APP_VER="v13.1.0";
     var HELP_SECTIONS=[
       {t:"快速开始",svg:"🚀 ",html:'<p>1. 导入照片 / 实时取景 / 示例样张</p><p>2. 点击 AI 分析，自动生成构图方案</p><p>3. 一键应用 或 手动调整滤镜/裁切</p><p>4. 导出 / 分享成品</p>'},
       {t:"AI 分析",svg:"🤖 ",html:'<p>YOLO11n 本地模型识别 80 类主体（精度 mAP 39.5），模型检测到"人"即硬判定人像，不再靠肤色误判；加载失败自动回退 Coco-SSD</p><p>自动场景分类：人像 / 风景 / 建筑 / 街景 / 美食 / 动物</p><p>构图评分真实化：清晰度对数刻度 + 色彩分多档 + 对称机会校正</p><p>滤镜自动应用：仅自然/清透类滤镜自动套用，强风格滤镜只预览不强制改色</p>'},
-      {t:"模型管理",svg:"🧠 ",html:'<p>物体检测：YOLO11n（约11MB，识别"人"判定人像核心，失败回退 Coco-SSD 约18MB）</p><p>人脸检测：MediaPipe Face（约6MB，精准人脸定位）</p><p>姿态检测：MediaPipe Pose（约16MB，33个人体关节点）</p><p>三个模型可同时开启，互不冲突；模型文件已同源托管并加入离线缓存，国内网络也能稳定加载，加载完成后徽标变"已加载"</p>'},
-      {t:"常见问题",svg:"❓ ",html:'<p>Q: 模型加载失败？A: 点"重新加载"，系统按 同源托管→unpkg→jsdelivr 三通道自动切换，每通道 10 秒超时；仍失败请检查网络后重试</p><p>Q: 导入照片无变焦？A: 导入照片分析时按需推荐焦段，不强制数字变焦</p><p>Q: 背景虚化没效果？A: 需开启 AI 模型并检测到人物轮廓</p><p>Q: AI 分析会乱裁图？A: 裁切遵循人像硬保护与裁后构图质量分，构图合理时建议保持原图</p>'}
+      {t:"模型管理",svg:"🧠 ",html:'<p>物体检测：YOLO11n（约11MB，识别"人"判定人像核心，失败回退 Coco-SSD 约18MB）</p><p>人脸检测：MediaPipe Tasks Vision BlazeFace（自托管 0.2MB 模型，共用一套 13.5MB wasm 运行时）</p><p>姿态检测：Tasks Vision Pose Landmarker Lite（自托管 5.8MB，33 个关节点）</p><p>三个模型可同时开启，互不冲突；人脸/姿态运行时不走 CDN，随版本自托管并把运行结果缓存，开启过一次后离线可用，加载完成徽标变"已加载"</p>'},
+      {t:"常见问题",svg:"❓ ",html:'<p>Q: 模型加载失败？A: 人脸/姿态已改为随版本自托管的 Tasks Vision（v13.2+），不再依赖 CDN；若失败请确认版本已包含 model/tasks 目录，再点"重新加载"。物体模型仍会自动重试</p><p>Q: 导入照片无变焦？A: 导入照片分析时按需推荐焦段，不强制数字变焦</p><p>Q: 背景虚化没效果？A: 需开启 AI 模型并检测到人物轮廓</p><p>Q: AI 分析会乱裁图？A: 裁切遵循人像硬保护与裁后构图质量分，构图合理时建议保持原图</p>'}
     ];
     function openHelp(){
       helpBody.innerHTML="";
@@ -8552,16 +8807,31 @@ var AI_MODEL_URL_FALLBACK="model/model.json";
     // v4.5 P0-2: MediaPipe 三通道——jsdelivr→unpkg→同源（自托管 wasm/bin 在 model/mediapipe/），杜绝单点加载失败
     // v8.3.2: 同源优先（GitHub Pages 国内可达性最好、SW 预缓存离线可用、无国际线路挂起）→ unpkg → jsdelivr；
     //         每通道 10s 超时主动切换（jsdelivr 在国内移动网络常长时间 pending 不触发 onerror，不死等）
+    // v13.2：人脸/姿态已迁 Tasks Vision 自托管，这里的多通道只保留给「背景虚化」的自拍分割。
     var MP_CDNS={
-      face_detection:["model/mediapipe/face_detection/","https://unpkg.com/@mediapipe/face_detection/","https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/"],
-      pose:["model/mediapipe/pose/","https://unpkg.com/@mediapipe/pose/","https://cdn.jsdelivr.net/npm/@mediapipe/pose/"],
       selfie_segmentation:["model/mediapipe/selfie_segmentation/","https://unpkg.com/@mediapipe/selfie_segmentation/","https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/"]
     };
-    var _mpOkBase={face_detection:0,pose:0,selfie_segmentation:0}; // 记录主JS成功通道，locateFile 与之对齐（默认 0=同源）
+    var _mpOkBase={selfie_segmentation:0}; // 记录主JS成功通道，locateFile 与之对齐（默认 0=同源）
+    // v13.2：失败原因必须说清楚（旧版只显示"加载失败"，用户和开发者都无从下手）
+    var _mpErr={face:null,pose:null,seg:null};
+    function _mpErrSet(kind,stage,e){
+      var msg=(e&&e.message)?e.message:(e?String(e):"");
+      _mpErr[kind]={stage:stage,msg:String(msg).slice(0,200),at:Date.now()};
+      try{ window.__mpErr=_mpErr; }catch(_){}
+      try{
+        var el=document.getElementById(kind+"Err");
+        if(el){ el.style.display="block";
+          el.textContent="失败原因："+stage+(msg?(" · "+String(msg).slice(0,140)):""); }
+      }catch(_){}
+    }
+    function _mpErrClear(kind){
+      _mpErr[kind]=null;
+      try{ var el=document.getElementById(kind+"Err"); if(el){ el.style.display="none"; el.textContent=""; } }catch(_){}
+    }
     function mpLocate(pkg,file){ return MP_CDNS[pkg][_mpOkBase[pkg]!==undefined?_mpOkBase[pkg]:0]+file; }
-    function loadScriptMP(pkg,file){
+    function loadScriptMP(pkg,file,startCh){
       return new Promise(function(res,rej){
-        var chIdx=0;
+        var chIdx=startCh||0;
         function tryNext(){
           if(chIdx>=MP_CDNS[pkg].length){ rej(new Error("MP "+pkg+" 全部通道失败")); return; }
           var s=document.createElement("script");
@@ -8596,13 +8866,11 @@ var AI_MODEL_URL_FALLBACK="model/model.json";
         .then(function(){ _modelQBusy=false; _modelQPump(); },
               function(){ _modelQBusy=false; _modelQPump(); });
     }
-    var FACE_DET_URL="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js";
     // v13.0.0：人脸/姿态模型改成用户主动开启（默认关）——不再首屏 5/6 秒后自动下载 18MB，
     // 手机上会和 YOLO/ORT 抢带宽，造成“模型永远在下载”。构图默认走像素引擎，人像细节按需增强。
     var faceModelState="idle", faceModel=null, faceEnabled=(function(){ try{ return localStorage.getItem("faceEnabled")==="true"; }catch(e){ return false; } })();
     var faceBadge=null;  // mpBadge 已在前面初始化，不要覆盖
     // v3.0.0: MediaPipe Pose 人体姿态检测
-    var POSE_URL="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js";
     var poseModelState="idle", poseModel=null, poseEnabled=(function(){ try{ return localStorage.getItem("poseEnabled")==="true"; }catch(e){ return false; } })();
     var poseBadge=null, lastPoseDetect=0;
     var poseData=null; // 存储最新的姿态关键点
@@ -9429,6 +9697,15 @@ if(aiModelState!=="idle"){ resolve(false); return; }
               if(typeof state.aiData.personScore==="number"){ a2.personScore=state.aiData.personScore; }
               if(typeof state.aiData.faceCount==="number"){ a2.faceCount=state.aiData.faceCount; }
               if(state.aiData.faceBoxes){ a2.faceBoxes=state.aiData.faceBoxes; }
+              // v13.2：Tasks Vision 的 detect 是同步的，结果在 a2 组装前就写进旧 aiData；
+              // 这里必须把人脸关键点/框/置信与姿态字段一起带上，否则会被 a2 覆盖丢失（旧版异步回调“碰巧”没这问题）
+              if(state.aiData.faceLM){ a2.faceLM=state.aiData.faceLM; }
+              if(state.aiData.faceBBox){ a2.faceBBox=state.aiData.faceBBox; }
+              if(typeof state.aiData.faceConfidence==="number"){ a2.faceConfidence=state.aiData.faceConfidence; }
+              if(state.aiData.poseReady){ a2.poseReady=true; }
+              if(typeof state.aiData.poseVisMean==="number"){ a2.poseVisMean=state.aiData.poseVisMean; }
+              if(typeof state.aiData.shoulderTilt==="number"){ a2.shoulderTilt=state.aiData.shoulderTilt; }
+              if(typeof state.aiData.skinRatio==="number"){ a2.skinRatio=state.aiData.skinRatio; }
               if(state.aiData.modelLoaded===true){ a2.modelLoaded=true; }
               a2.modelLoaded=true; // v4.1: 保留模型加载标记（state.aiData=a2覆盖后modelLoaded会丢，导致肤色兜底误判）
               state.aiData=a2; // v4.1: 同步aiData，保证数据面板/评分一致
@@ -9537,16 +9814,16 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         tryLoadModel(true);
       });
     faceReload.addEventListener("click",function(){
-      // v4.0.1: 修复死代码，调用正确的重载函数
-      faceModelState="idle"; faceModel=null; updateFaceUI();
+      // v4.0.1: 修复死代码，调用正确的重载函数；v13.2：重载前先释放旧 wasm 实例
+      _tvCloseFace(); faceModelState="idle"; faceModel=null; updateFaceUI();
       toastMsg("正在重新加载人脸检测模型…");
       loadFaceModel(true).then(function(ok){
         toastMsg(ok?"人脸检测模型加载成功":"人脸检测模型加载失败，请检查网络");
       });
     });
     poseReload.addEventListener("click",function(){
-      // v4.0.1: 修复死代码，调用正确的重载函数
-      poseModelState="idle"; poseModel=null; updatePoseUI();
+      // v4.0.1: 修复死代码，调用正确的重载函数；v13.2：重载前先释放旧 wasm 实例
+      _tvClosePose(); poseModelState="idle"; poseModel=null; updatePoseUI();
       toastMsg("正在重新加载姿态检测模型…");
       loadPoseModel(true).then(function(ok){
         toastMsg(ok?"姿态检测模型加载成功":"姿态检测模型加载失败，请检查网络");
@@ -9765,6 +10042,11 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           return;
         }
         var list=state._compositionCandidates||[];
+        // v13.2：懒重建。候选可能在场景最终确定前构建过（水面被先判 portrait_close，ls01 就是 0 候选），
+        // 渲染时若为空且当前确实该裁，就按"现在的"方案重建一次。
+        if(!list.length && state.plan && !state.plan.noCrop && !(state.aiData&&state.aiData.isPerson===true)){
+          try{ state._compositionCandidates=_buildCompositionCandidates(state.aiData,state.plan); list=state._compositionCandidates||[]; }catch(e){}
+        }
         if(list.length<2){ if(old&&old.parentNode) old.parentNode.removeChild(old); return; }
         var cur=state.plan||{};
         var selected=state._selectedCandidate;
@@ -11116,85 +11398,109 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       if(!faceBadge) return;
       faceBadge.className="mp-badge "+(faceModelState==="ready"?"ready":faceModelState==="loading"?"loading":faceModelState==="fail"?"fail":"idle");
       faceBadge.textContent=faceModelState==="ready"?"已加载":faceModelState==="loading"?"加载中…":faceModelState==="fail"?"加载失败":"未加载";
+      if(faceModelState==="ready") _mpErrClear("face");
       var cb=document.getElementById("faceOn");
       if(cb) cb.checked=faceEnabled;
+    }
+    /* v13.2：MediaPipe Tasks Vision（自托管，锁 1.1.1）
+       为什么换：legacy solutions 胶水在部分 Chrome/Safari 首次 send 就 abort
+       （Module.arguments has been replaced…），探针/三通道/CDN 升级都救不了；
+       Tasks 的 createFromOptions 在 resolve 前完成 wasm 编译与模型装载，detect() 同步返回。
+       delegate 固定 CPU（iOS GPU 有未修 issue）。 */
+    var _tvMod=null,_tvVision=null,_tvLoading=null;
+    function _tvLoad(){
+      if(_tvVision) return Promise.resolve(_tvVision);
+      if(_tvLoading) return _tvLoading;
+      _tvLoading=new Promise(function(res,rej){
+        // 同源 .js（GitHub Pages 对 .mjs 的 MIME 不可靠，bundle 复制为 .js 发布）
+        import("./model/tasks/vision_bundle.js").then(function(m){
+          _tvMod=m;
+          return m.FilesetResolver.forVisionTasks("./model/tasks/wasm");
+        }).then(function(vision){ _tvVision=vision; res(vision); })
+          .catch(function(e){ _tvLoading=null; rej(e); });
+      });
+      return _tvLoading;
+    }
+    function _tvCloseFace(){ try{ if(faceModel&&faceModel.close) faceModel.close(); }catch(e){} }
+    function _applyFaceResult(results,w,h){
+      if(!state.aiData){ state.aiData={}; }
+      var dets=(results&&results.detections)||[];
+      var iw=w||1, ih=h||1, fbs=[];
+      for(var i=0;i<dets.length;i++){
+        var bb=dets[i]&&dets[i].boundingBox;
+        if(!bb) continue;
+        // Tasks 的 boundingBox 是**像素**（originX/originY/width/height），必须除以画布尺寸。
+        // faceBoxes 的既有约定是 [x1,y1,x2,y2]（不是 w/h）；faceBBox 才是 [x,y,w,h]——两者不能统一。
+        var _x1=Math.max(0,bb.originX/iw), _y1=Math.max(0,bb.originY/ih);
+        fbs.push([_x1,_y1,Math.min(1,_x1+bb.width/iw),Math.min(1,_y1+bb.height/ih)]);
+      }
+      state.aiData.faceCount=dets.length;
+      state.aiData.faceBoxes=fbs;
+      if(dets.length>0){
+        var d=dets[0], b=d.boundingBox;
+        state.aiData.faceX=Math.max(0,Math.min(1,(b.originX+b.width/2)/iw));
+        state.aiData.faceY=Math.max(0,Math.min(1,(b.originY+b.height/2)/ih));
+        state.aiData.faceAvailable=true;
+        state.aiData.faceConfidence=(d.categories&&d.categories[0]&&typeof d.categories[0].score==="number")?d.categories[0].score:1;
+        state.aiData.faceBBox=[Math.max(0,b.originX/iw),Math.max(0,b.originY/ih),Math.min(1,b.width/iw),Math.min(1,b.height/ih)];
+        // keypoints 是**归一化**坐标（与 boundingBox 不能混用）
+        if(Array.isArray(d.keypoints)&&d.keypoints.length>=3){
+          state.aiData.faceLM=d.keypoints.map(function(p){return {x:p.x,y:p.y};});
+        } else { state.aiData.faceLM=null; }
+      } else {
+        state.aiData.faceAvailable=false; state.aiData.faceCount=0; state.aiData.faceBoxes=[]; state.aiData.faceLM=null;
+      }
     }
     function loadFaceModel(force){
       return new Promise(function(resolve){
         if(faceModelState==="ready"){ resolve(true); return; }
         if(faceModelState==="loading"){ resolve(false); return; }
-        if(location.protocol==="file:" || location.protocol==="null"){ faceModelState="fail"; updateFaceUI(); resolve(false); return; }
+        if(location.protocol==="file:" || location.protocol==="null"){ faceModelState="fail"; _mpErrSet("face","file:// 协议下不能加载 wasm",null); updateFaceUI(); resolve(false); return; }
         faceModelState="loading"; updateFaceUI();
-        // v4.0.1: 10秒超时，避免卡死
-        var faceTimeout=setTimeout(function(){ faceModelState="fail"; updateFaceUI(); resolve(false); },10000);
-        loadScriptMP("face_detection","face_detection.js").then(function(){
-          clearTimeout(faceTimeout);
-          if(typeof FaceDetection==="undefined"){ faceModelState="fail"; updateFaceUI(); resolve(false); return; }
-          try{
-            faceModel=new FaceDetection({locateFile:function(file){ return mpLocate("face_detection",file); }});
-            faceModel.setOptions({model:"short", minDetectionConfidence:0.6});
-            faceModel.onResults(function(results){
-              // v4.4 P2-2: 探针结果隔离——1x1 探针帧不污染 aiData（探针 send 会写 faceAvailable=false）
-              if(state.aiData && state.aiData._probeGuard){ delete state.aiData._probeGuard; return; }
-              // v4.3: 空指针保护（豆包BUG-02：state.aiData 未初始化时回调抛错）
-              if(!state.aiData){ state.aiData={}; }
-              // v7.9 #35: 记录人脸数量与所有人脸框，供多人合影建议/裁切并集保护
-              state.aiData.faceCount=results.detections.length;
-              var _fbs=[];
-              results.detections.forEach(function(_dd){ var _bb=(_dd&&_dd.locationData)?_dd.locationData.relativeBoundingBox:null;
-                if(_bb){ _fbs.push([Math.max(0,_bb.xmin),Math.max(0,_bb.ymin),Math.min(1,_bb.xmin+_bb.width),Math.min(1,_bb.ymin+_bb.height)]); } });
-              state.aiData.faceBoxes=_fbs;
-              if(results.detections && results.detections.length>0){
-                var d=results.detections[0];
-                // MediaPipe 返回的是归一化坐标 [x,y,w,h]；v4.5 P2: locationData 可能缺失（探针时序）加空保护
-                var bbox=(d && d.locationData)?d.locationData.relativeBoundingBox:null;
-                if(bbox){
-                  state.aiData.faceX=Math.max(0,Math.min(1,bbox.xmin+bbox.width/2));
-                  state.aiData.faceY=Math.max(0,Math.min(1,bbox.ymin+bbox.height/2));
-                  state.aiData.faceAvailable=true;
-                  state.aiData.faceConfidence=d.score[0];
-                  // v6.0: 保存人脸归一化框，供裁切保护框使用（人脸/眼睛是构图红线，不可裁）
-                  state.aiData.faceBBox=[Math.max(0,bbox.xmin),Math.max(0,bbox.ymin),Math.min(1,bbox.width),Math.min(1,bbox.height)];
-                  // v8.6.0: 保存主脸 6 个归一化关键点（0右眼/1左眼/2鼻尖/3嘴/4右耳/5左耳，画面镜像语义，直接用画面 x），
-                  // 供视线朝向（yaw）与 nose room 视线留白判定；点不足（<3）则置空，宁缺毋滥。
-                  if(Array.isArray(d.landmarks)&&d.landmarks.length>=3){
-                    state.aiData.faceLM=d.landmarks.map(function(p){return {x:p.x,y:p.y};});
-                  } else { state.aiData.faceLM=null; }
-                }
-              } else {
-                state.aiData.faceAvailable=false; state.aiData.faceCount=0; state.aiData.faceBoxes=[]; state.aiData.faceLM=null;
-              }
-            });
-            // v4.3: 就绪探针——构造完成≠wasm就绪（Qwen：UI显示已加载但send永久无效+控制台刷屏）
-            // 发1x1探针验证编译成功；v8.3.3: 超时 10s→60s（约6MB+WASM 编译，弱网慢于10s）
-            var probeDone=false;
-            var probeT=setTimeout(function(){
-              if(!probeDone){ if(state.aiData){ delete state.aiData._probeGuard; } faceModelState="fail"; faceModel=null; updateFaceUI(); resolve(false); } // v4.5 P2: 超时顺手清理探针标记（豆包NEW-v4-01防御）
-            },60000);
-            try{
-              var pc=document.createElement("canvas"); pc.width=1; pc.height=1;
-              var pctx=pc.getContext("2d"); if(pctx){ pctx.fillStyle="#808080"; pctx.fillRect(0,0,1,1); }
-              if(state.aiData){ state.aiData._probeGuard=true; } // v4.4 P2-2: 探针帧标记，onResults 拦截
-              faceModel.send({image:pc}).then(function(){
-                if(!probeDone){ probeDone=true; clearTimeout(probeT); faceModelState="ready"; updateFaceUI(); toastMsg("人脸检测模型加载成功"); resolve(true); }
-              }).catch(function(){
-                if(!probeDone){ probeDone=true; clearTimeout(probeT); faceModelState="fail"; faceModel=null; updateFaceUI(); resolve(false); }
-              });
-            }catch(e2){
-              if(!probeDone){ probeDone=true; clearTimeout(probeT); faceModelState="fail"; faceModel=null; updateFaceUI(); resolve(false); }
-            }
-          }catch(e){ console.warn("人脸模型初始化失败:",e); faceModelState="fail"; updateFaceUI(); resolve(false); }
-        }).catch(function(e){ console.warn("人脸模型加载失败:",e); faceModelState="fail"; updateFaceUI(); resolve(false); });
+        var timedOut=false;
+        var t=setTimeout(function(){ timedOut=true; faceModelState="fail"; _mpErrSet("face","Tasks Vision 60s 未就绪（检查 model/tasks 是否随版本发布）",null); updateFaceUI(); resolve(false); },60000);
+        _tvLoad().then(function(vision){
+          if(timedOut) return null;
+          return _tvMod.FaceDetector.createFromOptions(vision,{
+            baseOptions:{modelAssetPath:"./model/tasks/models/blaze_face_short_range.tflite",delegate:"CPU"},
+            runningMode:"IMAGE",
+            minDetectionConfidence:0.6
+          });
+        }).then(function(det){
+          if(timedOut){ try{ if(det&&det.close) det.close(); }catch(e){} return; }
+          if(!det) return;
+          faceModel=det;
+          // 64×64 灰帧探针：验证 wasm+模型真的能推理（不再依赖 onResults 时序）
+          var pc=document.createElement("canvas"); pc.width=64; pc.height=64;
+          var pctx=pc.getContext("2d"); if(pctx){ pctx.fillStyle="#808080"; pctx.fillRect(0,0,64,64); }
+          det.detect(pc);
+          clearTimeout(t); faceModelState="ready"; _mpErrClear("face"); updateFaceUI();
+          toastMsg("人脸检测模型加载成功"); resolve(true);
+        }).catch(function(e){
+          clearTimeout(t);
+          if(timedOut) return;
+          faceModelState="fail"; _mpErrSet("face","Tasks Vision 初始化失败",e);
+          _tvCloseFace(); faceModel=null; updateFaceUI(); resolve(false);
+        });
       });
     }
     var lastFaceDetect=0;
     function detectFace(el){
-      if(!faceEnabled || faceModelState!=="ready" || !faceModel || !el) return;
-      // v2.0.0: 节流，最多每 400ms 运行一次，避免卡顿
+      function why(w){ try{ state._tvFaceWhy=w; }catch(e){} }
+      if(!faceEnabled){ why("disabled"); return; }
+      if(faceModelState!=="ready"){ why("state:"+faceModelState); return; }
+      if(!faceModel){ why("no-model"); return; }
+      if(!el){ why("no-el"); return; }
       var now=Date.now();
-      if(now-lastFaceDetect<400) return;
+      if(now-lastFaceDetect<400){ why("throttle"); return; } // 节流 400ms
       lastFaceDetect=now;
-      try{ faceModel.send({image:el}); }catch(e){}
+      try{
+        var w=el.naturalWidth||el.videoWidth||el.width||1;
+        var h=el.naturalHeight||el.videoHeight||el.height||1;
+        var _r=faceModel.detect(el);
+        why("ok:"+((( _r&&_r.detections)||[]).length));
+        _applyFaceResult(_r,w,h);
+      }catch(e){ why("error:"+(e&&e.message?e.message:e)); _mpErrSet("face","推理失败",e); }
     }
     // 绑定人脸检测开关
     var faceOnEl=document.getElementById("faceOn");
@@ -11203,7 +11509,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
         faceEnabled=faceOnEl.checked;
         try{ localStorage.setItem("faceEnabled", faceEnabled?"true":"false"); }catch(e){}
         if(faceEnabled){ loadFaceModel(true); }
-        else { faceModelState="idle"; faceModel=null; updateFaceUI(); toastMsg("人脸检测已关闭"); }
+        else { _tvCloseFace(); faceModelState="idle"; faceModel=null; updateFaceUI(); toastMsg("人脸检测已关闭"); }
       });
     }
     updateFaceUI();
@@ -11220,66 +11526,69 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       var cb=document.getElementById("poseOn");
       if(cb) cb.checked=poseEnabled;
     }
+    function _tvClosePose(){ try{ if(poseModel&&poseModel.close) poseModel.close(); }catch(e){} }
+    function _applyPoseResult(res){
+      if(!state.aiData){ state.aiData={}; }
+      var lm=(res&&res.landmarks&&res.landmarks[0])||null;
+      if(!lm||lm.length<25) return;
+      poseData=lm.map(function(p){return {x:p.x,y:p.y,z:p.z,visibility:p.visibility};}); // 33 点，归一化
+      // v13.2：PoseLandmarker 对“像人的墙/几何”也会吐 33 点，必须看 visibility。
+      // 先记录关键点（鼻/肩/髋）的平均置信，供闸门和 QA 使用。
+      var _vIdx=[0,11,12,23,24], _vS=0, _vN=0;
+      for(var _vi=0;_vi<_vIdx.length;_vi++){ var _vp=poseData[_vIdx[_vi]]; if(_vp&&typeof _vp.visibility==="number"&&isFinite(_vp.visibility)){ _vS+=_vp.visibility; _vN++; } }
+      state.aiData.poseVisMean=_vN?Math.round(_vS/_vN*100)/100:null;
+      // 可见度过低（墙面/几何被误当人）→ 不写任何人物字段；实测真人 0.86，纹理 0.1-0.3
+      if(!(_vN>=3 && (state.aiData.poseVisMean||0)>=0.5)) return;
+      var nose=poseData[0], ls=poseData[11], rs=poseData[12];
+      if(nose&&ls&&rs){
+        state.aiData.faceX=Math.max(0,Math.min(1,nose.x));
+        state.aiData.faceY=Math.max(0,Math.min(1,nose.y));
+        state.aiData.faceAvailable=true;
+        state.aiData.isPerson=true;
+        // v8.1.1: 已有 COCO 全身框时，肩-髋局部框不得覆盖（仅无模型兜底才用）
+        if(!state.aiData.cocoPersonBox){
+          state.aiData.personLeft=Math.max(0,Math.min(1,Math.min(ls.x,rs.x)-0.1));
+          state.aiData.personRight=Math.max(0,Math.min(1,Math.max(ls.x,rs.x)+0.1));
+          state.aiData.headTop=Math.max(0,nose.y-0.08);
+          state.aiData.personBottom=Math.min(1,Math.max(poseData[23]?poseData[23].y:0.8, poseData[24]?poseData[24].y:0.8)+0.1);
+        }
+        // 归一化到 [-90,90]：镜像自拍时 atan2 会给 ~180°，会被误读成“肩线歪了”
+        var _tilt=Math.atan2(rs.y-ls.y, rs.x-ls.x)*180/Math.PI;
+        if(_tilt>90) _tilt-=180; else if(_tilt<-90) _tilt+=180;
+        state.aiData.shoulderTilt=_tilt;
+        state.aiData.poseReady=true;
+      }
+    }
     function loadPoseModel(force){
       return new Promise(function(resolve){
         if(poseModelState==="ready"){ resolve(true); return; }
         if(poseModelState==="loading"){ resolve(false); return; }
         if(location.protocol==="file:" || location.protocol==="null"){ poseModelState="fail"; updatePoseUI(); resolve(false); return; }
         poseModelState="loading"; updatePoseUI();
-        // v4.0.1: 10秒超时
-        var poseTimeout=setTimeout(function(){ poseModelState="fail"; updatePoseUI(); resolve(false); },10000);
-        loadScriptMP("pose","pose.js").then(function(){
-          clearTimeout(poseTimeout);
-          if(typeof Pose==="undefined"){ poseModelState="fail"; updatePoseUI(); resolve(false); return; }
-          try{
-            poseModel=new Pose({locateFile:function(file){ return mpLocate("pose",file); }});
-            poseModel.setOptions({modelComplexity:1, enableSegmentation:false, smoothLandmarks:true});
-            poseModel.onResults(function(results){
-              // v4.3: 空指针保护（豆包BUG-02：state.aiData 未初始化时回调抛错）
-              if(!state.aiData){ state.aiData={}; }
-              if(results.poseLandmarks){
-                poseData=results.poseLandmarks; // 33个关键点
-                // 用姿态数据优化人体位置
-                var nose=poseData[0], ls=poseData[11], rs=poseData[12];
-                if(nose && ls && rs){
-                  state.aiData.faceX=Math.max(0,Math.min(1,nose.x));
-                  state.aiData.faceY=Math.max(0,Math.min(1,nose.y));
-                  state.aiData.faceAvailable=true;
-                  state.aiData.isPerson=true;
-                  // 肩膀中心
-                  var sx=(ls.x+rs.x)/2, sy=(ls.y+rs.y)/2;
-                  // v8.1.1: 已有 COCO 全身框时，肩-髋局部框不得覆盖（仅无模型兜底才用），避免竞态导致裁切漏护头脚
-                  if(!state.aiData.cocoPersonBox){
-                    state.aiData.personLeft=Math.max(0,Math.min(1,Math.min(ls.x,rs.x)-0.1));
-                    state.aiData.personRight=Math.max(0,Math.min(1,Math.max(ls.x,rs.x)+0.1));
-                    state.aiData.headTop=Math.max(0,nose.y-0.08);
-                    state.aiData.personBottom=Math.min(1,Math.max(poseData[23]?poseData[23].y:0.8, poseData[24]?poseData[24].y:0.8)+0.1);
-                  }
-                  // 姿态分析
-                  var shoulderTilt=Math.atan2(rs.y-ls.y, rs.x-ls.x)*180/Math.PI;
-                  state.aiData.shoulderTilt=shoulderTilt;
-                  state.aiData.poseReady=true;
-                }
-              }
-            });
-            // v4.3: 就绪探针——构造完成≠wasm就绪，1x1探针验证编译成功；v8.3.3: 超时 10s→120s（约16MB+WASM 编译，弱网下最慢模型）
-            var pDone=false;
-            var pT=setTimeout(function(){
-              if(!pDone){ poseModelState="fail"; poseModel=null; updatePoseUI(); resolve(false); }
-            },120000);
-            try{
-              var pc2=document.createElement("canvas"); pc2.width=1; pc2.height=1;
-              var pctx2=pc2.getContext("2d"); if(pctx2){ pctx2.fillStyle="#808080"; pctx2.fillRect(0,0,1,1); }
-              poseModel.send({image:pc2}).then(function(){
-                if(!pDone){ pDone=true; clearTimeout(pT); poseModelState="ready"; updatePoseUI(); toastMsg("姿态检测模型加载成功"); resolve(true); }
-              }).catch(function(){
-                if(!pDone){ pDone=true; clearTimeout(pT); poseModelState="fail"; poseModel=null; updatePoseUI(); resolve(false); }
-              });
-            }catch(e2){
-              if(!pDone){ pDone=true; clearTimeout(pT); poseModelState="fail"; poseModel=null; updatePoseUI(); resolve(false); }
-            }
-          }catch(e){ console.warn("姿态模型初始化失败:",e); poseModelState="fail"; updatePoseUI(); resolve(false); }
-        }).catch(function(e){ console.warn("姿态模型加载失败:",e); poseModelState="fail"; updatePoseUI(); resolve(false); });
+        var timedOut=false;
+        var t=setTimeout(function(){ timedOut=true; poseModelState="fail"; _mpErrSet("pose","Tasks Vision 60s 未就绪（检查 model/tasks 是否随版本发布）",null); updatePoseUI(); resolve(false); },60000);
+        _tvLoad().then(function(vision){
+          if(timedOut) return null;
+          return _tvMod.PoseLandmarker.createFromOptions(vision,{
+            baseOptions:{modelAssetPath:"./model/tasks/models/pose_landmarker_lite.task",delegate:"CPU"},
+            runningMode:"IMAGE",
+            numPoses:1
+          });
+        }).then(function(lm){
+          if(timedOut){ try{ if(lm&&lm.close) lm.close(); }catch(e){} return; }
+          if(!lm) return;
+          poseModel=lm;
+          var pc=document.createElement("canvas"); pc.width=64; pc.height=64;
+          var pctx=pc.getContext("2d"); if(pctx){ pctx.fillStyle="#808080"; pctx.fillRect(0,0,64,64); }
+          lm.detect(pc);
+          clearTimeout(t); poseModelState="ready"; _mpErrClear("pose"); updatePoseUI();
+          toastMsg("姿态检测模型加载成功"); resolve(true);
+        }).catch(function(e){
+          clearTimeout(t);
+          if(timedOut) return;
+          poseModelState="fail"; _mpErrSet("pose","Tasks Vision 初始化失败",e);
+          _tvClosePose(); poseModel=null; updatePoseUI(); resolve(false);
+        });
       });
     }
     function detectPose(el){
@@ -11287,21 +11596,34 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       var now=Date.now();
       if(now-lastPoseDetect<700) return; // 节流 700ms
       lastPoseDetect=now;
-      try{ poseModel.send({image:el}); }catch(e){}
+      try{ _applyPoseResult(poseModel.detect(el)); }catch(e){ _mpErrSet("pose","推理失败",e); }
     }
+    // v13.2 QA 钩子：__aiDbg 在大 try 块之外，看不到块内的函数声明；这里把真实推理入口挂到 window。
+    window.__aiTvRun={
+      face:function(){ if(!photoView||!photoView.naturalWidth) return "no-image"; var t0=Date.now(); detectFace(photoView); return {state:faceModelState,has:!!faceModel,ms:Date.now()-t0,count:(state.aiData&&state.aiData.faceCount)||0}; },
+      pose:function(){ if(!photoView||!photoView.naturalWidth) return "no-image"; var t0=Date.now(); detectPose(photoView); return {state:poseModelState,has:!!poseModel,ms:Date.now()-t0,ready:!!(state.aiData&&state.aiData.poseReady)}; }
+    };
     var poseOnEl=document.getElementById("poseOn");
     if(poseOnEl){
       poseOnEl.addEventListener("change",function(){
         poseEnabled=poseOnEl.checked;
         try{ localStorage.setItem("poseEnabled", poseEnabled?"true":"false"); }catch(e){}
         if(poseEnabled){ loadPoseModel(true); }
-        else { poseModelState="idle"; poseModel=null; updatePoseUI(); toastMsg("姿态检测已关闭"); }
+        else { _tvClosePose(); poseModelState="idle"; poseModel=null; updatePoseUI(); toastMsg("姿态检测已关闭"); }
       });
     }
     updatePoseUI();
     // v13.0.0：姿态模型同样改为按需开启，避免首屏下载 5.8MB wasm + 6.4MB 模型。
     var poseCb=document.getElementById("poseOn");
     if(poseCb) poseCb.checked=poseEnabled;
+    // v13.2：已经主动开启过的用户，重进页面要自动恢复（旧版只记住勾选、不加载模型，
+    // 面板显示“已开启”但永远不推理）。延后 1.5s 并走串行队列，不抢 YOLO 首屏带宽。
+    setTimeout(function(){
+      try{
+        if(faceEnabled && faceModelState==="idle") _modelQPush(function(){ return loadFaceModel(true); });
+        if(poseEnabled && poseModelState==="idle") _modelQPush(function(){ return loadPoseModel(true); });
+      }catch(e){}
+    }, 1500);
 
     /* ===================== v1.4.0: 实时取景辅助（AI主体锁定/光线/水平/变焦/可拍建议） ===================== */
     var live={raf:null,bright:105,gamma:0,lastDetect:0,detecting:false,subj:null,subjScore:0,brightTick:0,devOK:false};
@@ -11366,7 +11688,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
       style=style||"full";
       // 确保 videoCam 显示、photoView 隐藏
       videoCam.classList.add("show");
-      photoView.classList.remove("show");
+      photoView.classList.remove("show"); _setPhotoFit(false);
       // v8.2.3 实景构图工作室：full 模式进入全新全屏沉浸界面（圆环/教练/教学/快门），轻量(lite)保持旧界面
       if(style==="full"){
         var _st=document.getElementById("aicStudio");
@@ -12522,7 +12844,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
     renderGallery();
     window.addEventListener("resize",function(){
       if(state.mode==="photo" && photoView.naturalWidth){
-        state.displayRect=getCoverRect(photoView.naturalWidth, photoView.naturalHeight);
+        state.displayRect=getFitRect(photoView.naturalWidth, photoView.naturalHeight);
       }
       // v8.0.4: 裁切面板打开时，横竖屏切换/窗口变化后防抖重排裁切框，避免选框与画面错位
       if(typeof layoutCrop==="function" && cropTool && cropTool.classList.contains("show")){
@@ -12533,7 +12855,7 @@ if(aiModelState!=="idle"){ resolve(false); return; }
     window.addEventListener("orientationchange",function(){
       // v8.0.4: 部分机型 orientationchange 早于布局完成，延迟再重算一次
       setTimeout(function(){
-        if(state.mode==="photo" && photoView.naturalWidth){ try{ state.displayRect=getCoverRect(photoView.naturalWidth, photoView.naturalHeight); }catch(e){} }
+        if(state.mode==="photo" && photoView.naturalWidth){ try{ state.displayRect=getFitRect(photoView.naturalWidth, photoView.naturalHeight); }catch(e){} }
         if(typeof layoutCrop==="function" && cropTool && cropTool.classList.contains("show")){ try{ layoutCrop(); }catch(e){} }
       },300);
     });
@@ -12883,16 +13205,26 @@ if(aiModelState!=="idle"){ resolve(false); return; }
     build:function(sc){ try{ return window.__v131core.buildCompositionCandidates(state.aiData, state.plan); }catch(e){ return {err:String(e)}; } },
     validate:function(c,sc){ try{ return window.__v131core.validateNewCrop(c, state.aiData, sc||(state.plan&&state.plan.sceneType)||'general', window.__v131core.cropBudget(state.aiData, sc||(state.plan&&state.plan.sceneType)||'general')); }catch(e){ return {err:String(e)}; } },
     keys:function(){ try{ return Object.keys(state.aiData||{}); }catch(e){ return []; } },
+    score:function(crop){ try{ return window.__v131core.cropQualityScore(state.aiData, crop, false); }catch(e){ return String(e); } },
+    // v13.2 QA：直接在当前照片上跑一次 Tasks Vision（不依赖 YOLO 回调时序），并回报模型状态/耗时
+    face:function(){ try{ return window.__aiTvRun?window.__aiTvRun.face():"no-hook"; }catch(e){ return String(e); } },
+    pose:function(){ try{ return window.__aiTvRun?window.__aiTvRun.pose():"no-hook"; }catch(e){ return String(e); } },
+    vision:function(){ return {tvLoaded:!!_tvVision,face:faceModelState,pose:poseModelState,faceErr:_mpErr.face,poseErr:_mpErr.pose,faceWhy:state._tvFaceWhy||null}; },
+    preview:function(crop){ try{ if(!window.__v132core||!window.__v132core.preview) return "no __v132core"; window.__v132core.preview({crop:crop,noCrop:false}); return true; }catch(e){ return String(e); } },
+    fit:function(){ try{ var cp=document.getElementById("cropPreview"); return {rect:state.displayRect,stage:{w:stage.clientWidth,h:stage.clientHeight},cp:cp?{w:cp.clientWidth,h:cp.clientHeight}:null,fit:photoView.style.objectFit,px:state._cropPreviewPx||null}; }catch(e){ return String(e); } },
     probe:function(){ var c=window.__v131core||{}; return { core:typeof window.__v131core, budget:typeof c.cropBudget, validate:typeof c.validateNewCrop,
       intents:typeof c.intentCandidates, build:typeof c.buildCompositionCandidates, quality:typeof c.cropQualityScore, skin:typeof c.skinEdgeGuard }; }
   };
   try{ window.__ai={
     get plan(){ return state&&state.plan?{rule:state.plan.rule,sceneType:state.plan.sceneType,conf:state.plan.conf,subject:state.plan.subject,f:state.plan.f||null,noCrop:!!state.plan.noCrop,crop:state.plan.crop||null,selfReviewed:!!state.plan.selfReviewed,selfReviewNote:state.plan.selfReviewNote||"",fromCache:!!state.plan.fromCache,notes:state.plan.notes||null,_dbgSkin:(state.plan&&state.plan._dbgSkin)||null,tiltHint:state.plan.tiltHint||null,proactiveCrop:state.plan.proactiveCrop||null,proactiveTag:state.plan.proactiveTag||null,proactiveReason:state.plan.proactiveReason||null,cloudFlag:!!state.plan.cloud,aiPick:state.plan.aiPick||null,aiRefined:!!state.plan.aiRefined,aiRejected:!!state.plan.aiRejected,aiGuardWhy:state.plan.aiGuardWhy||null,aiCandidateTag:state.plan.aiCandidateTag||null,candCount:(state._compositionCandidates||[]).length,cropIntent:state.plan.cropIntent||null,tiltDeg:state.aiData&&state.aiData.tiltDeg||null,tiltConf:state.aiData&&state.aiData.tiltConf||null}:null; },
+    get filter(){ var el=document.querySelector('.filter-pill.active'); return {id:state.filter||null,strength:state.strength,pill:el?el.getAttribute('data-f'):null,pillHit:(typeof state._setFilterHit==='number')?state._setFilterHit:null,rec:state._frecRec?{filter:state._frecRec.filter,strength:state._frecRec.strength,rule:state._frecRec.rule,reason:state._frecRec.reason}:null,why:state._frecWhy||null,autoApplied:!!state._autoFilterApplied}; },
     get cloudPlan(){ var p=state&&state._pendingCloudPlan; return p?{rule:p.rule,sceneType:p.sceneType||p.scene||null,conf:p.conf,subject:p.subject||"",noCrop:!!p.noCrop,crop:p.crop||null,cropIntent:p.cropIntent||null,cloud:true,symmetry:p.symmetry||null,atmosphere:p.atmosphere||null,hasReflection:!!p.hasReflection}:null; },
     get candidates(){ return (state&&state._compositionCandidates||[]).map(function(c){return {id:c.id,tag:c.tag,crop:c.crop,noCrop:c.noCrop,score:c.score,reason:c.reason,source:c.source};}); },
     get selectedCandidate(){ return state&&state._selectedCandidate||null; },
     get cloudPickRaw(){ return state&&state._cloudPickRaw||null; },
     get data(){ return state&&state.aiData?{sceneType:(state.plan&&state.plan.sceneType)||'',rowGap:state.aiData.rowGap,rowPeakN:state.aiData.rowPeakN,bodyRatio:state.aiData.bodyRatio,frameAspect:state.aiData.frameAspect||null,sat:state.aiData.sat,mean:state.aiData.mean,detectedClasses:state.aiData.detectedClasses,allBoxes:state.aiData.allBoxes||null,isPerson:state.aiData.isPerson,headTop:state.aiData.headTop,personLeft:state.aiData.personLeft,personRight:state.aiData.personRight,personBottom:state.aiData.personBottom,topBBox:state.aiData.topBBox,personScore:state.aiData.personScore,faceAvailable:state.aiData.faceAvailable,sym:state.aiData.sym,vSym:state.aiData.vSym,hSym:state.aiData.hSym,contrast:state.aiData.contrast,sharpness:state.aiData.sharpness,highClip:state.aiData.highClip,shadowClip:state.aiData.shadowClip,dynamicRange:state.aiData.dynamicRange,skinRatio:state.aiData.skinRatio,skinCx:state.aiData.skinCx,skinCy:state.aiData.skinCy,isPersonLikely:state.aiData.isPersonLikely,skinAspect:state.aiData.skinAspect,skinFill:state.aiData.skinFill,skinHRatio:state.aiData.skinHRatio,modelLoaded:(state.aiData&&'modelLoaded' in state.aiData)?state.aiData.modelLoaded:null,
+faceCount:state.aiData.faceCount,faceBoxes:state.aiData.faceBoxes||null,faceBBox:state.aiData.faceBBox||null,faceLM:state.aiData.faceLM||null,faceConfidence:state.aiData.faceConfidence,
+poseReady:!!state.aiData.poseReady,poseVisMean:(typeof state.aiData.poseVisMean==="number"?state.aiData.poseVisMean:null),shoulderTilt:(typeof state.aiData.shoulderTilt==="number"?state.aiData.shoulderTilt:null),
 waterScore:state.aiData.waterScore,manmadeScore:state.aiData.manmadeScore,lightScore:state.aiData.lightScore,
 lowTexLower:state.aiData.lowTexLower,glareLower:state.aiData.glareLower,horizonOk:state.aiData.horizonOk,
 orthoRatio:state.aiData.orthoRatio,vertColRatio:state.aiData.vertColRatio,brightRatio:state.aiData.brightRatio,

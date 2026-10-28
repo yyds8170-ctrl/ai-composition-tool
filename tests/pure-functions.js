@@ -772,18 +772,36 @@
         var waterScore=(typeof a.waterScore==="number"&&isFinite(a.waterScore))?a.waterScore:0;
         var manmadeScore=(typeof a.manmadeScore==="number"&&isFinite(a.manmadeScore))?a.manmadeScore:0;
         var pf=_scenePrefix((sig&&typeof sig.scene==="string")?sig.scene:"", wb);
+        // v13.2：光影几何提前算——它既是候选池白名单的依据，也是“高光断层”闸门对明暗作品的例外依据。
+        var _lgF=null; try{ _lgF=_lightGeometry(a); }catch(e){}
+        // “明暗作品”两类：① 低照度且有层次（lowKey）；② 接近黑白但反差大（去色后只剩光影）。
+        var _shadowWork=!!(_lgF&&_lgF.ok&&(_lgF.lowKey||(sat<=0.06&&contrast>=55)));
+        // 暗调美食/晚霞不是“光影作品”：v13.1 的 P1-3 结论是暗调美食要暖要亮，晚霞要保留蓝橙过渡。
+        // 它们不参与白名单，也不享受高光放宽（否则会把“提亮”放到本来就快爆的高光上）。
+        var _scnE=(sig&&typeof sig.scene==="string")?sig.scene:null;
+        var _atmE=(sig&&typeof sig.atmosphere==="string")?sig.atmosphere:null;
+        var _foodSceneEarly=(_scnE==="food"||_scnE==="美食");
+        var _shadowExcluded=_foodSceneEarly||_atmE==="sunset_sky"||_scnE==="sunset";
         // G1-G5 硬闸门（安全底线不松；v13.0.0 对“暗但有层次”的场景放行轻度 night 滤镜）
         if(sharpness<25) return GATE; // 糊片
-        if(highClip>0.15) return GATE; // 高光断层
+        if(highClip>0.15){
+          // 明暗作品本就允许高光“过一点”（光束/亮窗是主体），白名单四档都不抬亮部；
+          // 但 24% 以上仍视为断层，宁可不推。
+          if(!_shadowWork||_shadowExcluded||highClip>0.24) return GATE; // 高光断层
+        }
         if(highClip>0.12 && shadowClip>0.35) return GATE; // 逆光剪影：保留蓝橙过渡，不自动加色
         if(shadowClip>0.28){
           // 暗部很大但画面有明确亮部/对比（如地下通道的光束）→ 允许温和提亮；死黑平坦画面仍拦截
-          var _darkLayered=(mean>=40 && contrast>=45);
+          // v13.2：明暗作品只要“亮区成块 + 反差足够”就放行（实测 ls10 均值39.99 被 >=40 卡掉 0.01）
+          var _darkLayered=(mean>=40 && contrast>=45) || (_shadowWork && contrast>=45 && _lgF.litRatio>=0.12);
           if(!_darkLayered) return GATE;
         }
         if(sat>0.52 && mean>=80) return GATE; // 明亮且已浓，避免“塑料感”
         if(sat>0.72) return GATE; // 极端过饱和
-        if(mean<38) return GATE; // 近纯黑
+        if(mean<38){
+          // 近纯黑：没有可辨认的亮区结构才判死；有亮区（≥12%）的暗调作品仍可给“不抬黑位”的四档
+          if(!(_shadowWork && contrast>=45 && _lgF.litRatio>=0.12)) return GATE;
+        }
         if(mean<48 && contrast<35) return GATE; // 暗且平，提亮只会发灰
         var ps=(sig&&typeof sig.personScore==="number"&&isFinite(sig.personScore))?sig.personScore:0;
         var pc=(sig&&typeof sig.personCount==="number"&&isFinite(sig.personCount))?sig.personCount:0;
@@ -826,6 +844,16 @@
           general:["natural","provia","morandi","fade","classic"]
         };
         var pool=POOLS[scene]||POOLS.general;
+        // v13.2：低照度/光影作品用白名单硬覆盖（不是扣分）。研究结论：提亮会爆高光、抬黑位会毁氛围、
+        // 人像胶片(portra)本身抬黑位，与 low-key 结构相反。判据见 _lightGeometry + docs/research/v13.2-light-shadow.md
+        if(_shadowWork && !_shadowExcluded){
+          // 排序按证据：① 明确冷光源（冷水面/夜景且 wb<-0.02）才优先冷银；
+          // ② 接近黑白的明暗作品优先银盐（去色只剩几何）；③ 其余优先“保真暗调”（最安全）。
+          var _cold=(wb<-0.02)&&(scn==="night"||scn==="waterscape"||scene==="night"||scene==="water");
+          if(_cold) pool=["lowkey-cool","lowkey-mono","lowkey-keep","lowkey-amber"];
+          else if(sat<=0.06) pool=["lowkey-mono","lowkey-keep","lowkey-amber","lowkey-cool"];
+          else pool=["lowkey-keep","lowkey-mono","lowkey-amber","lowkey-cool"];
+        }
         // 极低饱和时，仅在建筑/街拍/通用场景加黑白候选（food/sunset/人像不加）
         if(sat<0.06 && scene!=="food" && scene!=="sunset" && scene!=="portrait"){
           pool=pool.concat(["mono","mono-warm","chrome"]);
@@ -906,9 +934,19 @@
           "c200":"柔和胶片绿调",
           "hk":"港风霓虹，高饱和",
           "cool":"清冷干净，适合夜景",
-          "natural":"轻度增强，忠实还原"
+          "natural":"轻度增强，忠实还原",
+          "lowkey-keep":"低照度保真：只降 1.5% 曝光，不抬黑位",
+          "lowkey-mono":"高反差黑白：去色，让明暗几何成为主体",
+          "lowkey-amber":"逆光琥珀：暖高光，不抬黑位",
+          "lowkey-cool":"冷银单色：冷水/荧光灯分离"
         };
-        return {filter:top.filter,strength:strength,reason:pf+(reasons[top.filter]||"场景适配"),rule:"SCORE"};
+        // v13.2：每条推荐都带数字依据（用户要求“说不出依据就不推”）。光影作品额外标明亮区/对角。
+        var _ev="（均值"+Math.round(mean)+((_lgF&&_lgF.ok)?("·亮区"+Math.round(_lgF.litRatio*100)+"%·对角"+Math.round(_lgF.diagRatio*100)+"%"):"")+"）";
+        var _pre=_shadowWork?"光影作品·":pf;
+        var _rt=reasons[top.filter]||"场景适配";
+        // 同一款 Portra 用在美食上，理由不该还写“人像”
+        if(scene==="food"&&["portra","warm","sunset","c200","hk"].indexOf(top.filter)>=0) _rt="暖调胶片，食物更有食欲";
+        return {filter:top.filter,strength:strength,reason:_pre+_rt+_ev,rule:"SCORE"};
       }catch(e){ return GATE; }
     }
 
@@ -988,7 +1026,7 @@
           var e=history[i]; if(!e||typeof e!=="object") continue;
           if(e.rule!==rule) continue;
           if(scene&&e.scene&&e.scene!==scene) continue;
-          if(e.type==='adopt') ado++; else rej++; // 兼容 v9.3 无 type 的旧记录按推翻处理
+          if(e.type==='adopt') ado++; else if(e.type!=='revert') rej++; // revert=只是换回原片，不参与“本场景沉默”
         }
         if(rej>=3) return {filter:null,strength:0,reason:"",rule:rule+"(PREF)"};
         if(ado>=3){
@@ -1957,7 +1995,11 @@
     function _buildCompositionCandidates(a, plan){
       try{
         if(!a||!plan) return [];
-        if(/portrait/.test(plan.sceneType||"")) return [];
+        // v13.2：只有"确实有人"才整体不组候选。纯像素把人像场景猜错时（水面/木纹被判 portrait_close，
+        // ls01 就是这样 0 候选），不该连候选表都不给；人物安全仍由 _validateNewCrop 的肤色/人物边距兜底。
+        // “确实有人”= 可定位人物框，或高置信 person / 真脸 / 真肤色（ls09 的 0.377 无框假人不再触发）。
+        var _personStrong=_personBoxOf(a)||(a.isPerson===true&&((typeof a.personScore==="number"&&a.personScore>=0.5)||a.faceAvailable===true||(typeof a.skinRatio==="number"&&a.skinRatio>=0.05)));
+        if(/portrait/.test(plan.sceneType||"") && _personStrong) return [];
         var ar=(typeof a.frameAspect==="number"&&isFinite(a.frameAspect))?a.frameAspect:1;
         var budget=_cropBudget(a, plan.sceneType||"general");
         try{ a.cropMinArea=budget.minArea; }catch(e){} // 让质量分与候选生成用同一套预算
@@ -1999,7 +2041,7 @@
         out.sort(function(x,y){ return y.score-x.score; });
         out=out.slice(0,8);
         // 少于 2 个真实裁切时不组联系表（字母含义会漂移），退回语义通道
-        if(out.length<2) return [];
+        if(out.length<1) return [];   // v13.2：只有 1 个真实裁切也组表（2 格：裁切+原图），否则这些照片云端只能退回语义通道
         var noScore=_cropQualityScore(a,[0,0,0,0],true);
         out.push({crop:[0,0,0,0],noCrop:true,tag:"原图",intent:"original",reason:"保留完整画面",source:"original",score:noScore,area:1});
         for(var j=0;j<out.length;j++) out[j].id=String.fromCharCode(65+j);
@@ -2019,7 +2061,9 @@
       var mean=(a&&typeof a.mean==="number")?a.mean:128;
       var sharp=(a&&typeof a.sharpness==="number")?a.sharpness:50;
       var minArea, allowTight, why;
-      if(/portrait/.test(sc)){ minArea=0.72; allowTight=false; why="人像/特写：不做大裁"; }
+      var _isPortraitScene=/portrait/.test(sc);
+      if(_isPortraitScene && !(_personBoxOf(a)||a.isPerson===true||((typeof a.skinRatio==="number"?a.skinRatio:0)>0.06))){ _isPortraitScene=false; }
+      if(_isPortraitScene){ minArea=0.72; allowTight=false; why="人像/特写：不做大裁"; }
       else if(_personBoxOf(a)){
         // v13.1.0 修正：不能"只要检出一个 2% 大小的人就把幅度锁死"。实测（imgs/u50 探针）：
         // 端侧模型开启时任何人物框都会让候选从 6~7 个掉到 3~4 个，云端 refine 命中率直接归零——
@@ -2074,7 +2118,11 @@
         if(sharp<22) return {ok:false, why:"画面偏糊，裁了只会更糊"};
         if(dr<0.10 && sat<0.10) return {ok:false, why:"画面几乎没有层次与色彩"};
         if(mean<28) return {ok:false, why:"接近全黑"};
-        if(sat<0.03 && ed<0.02) return {ok:false, why:"纯色/无内容"};
+        if(sat<0.03 && ed<0.02){
+          // v13.2：黑白/低饱和的建筑光影照样有内容——用光影几何兜底（ls03 就是被这条误杀）
+          var _lgp=null; try{ _lgp=_lightGeometry(a); }catch(e){}
+          if(!(_lgp&&_lgp.ok&&(_lgp.diagRatio>=0.35||_lgp.litRatio>=0.10))) return {ok:false, why:"纯色/无内容"};
+        }
         if(ed>0.35 && sat<0.08) return {ok:false, why:"像截图/图文，不是照片"};
         var hasPerson=!!_personBoxOf(a);
         var hasFood=(a.hasFoodEvidence===true);
@@ -2085,7 +2133,13 @@
           sig=bs;
         }
         // 可信主体：模型人框 / 显著性质心占比合理 / 食物证据
-        if(!hasPerson && !hasFood && (sig<0.02||sig>0.92)) return {ok:false, why:"找不到明确主体"};
+        // v13.2：光影/极简照片没有"显著物体"，但有明确明暗结构——亮区集中或对角梯度占优就认它当主体，
+        // 否则这类照片会被判"找不到主体"直接不裁（ls01/ls03 就是 0 候选的原因之一）。
+        if(!hasPerson && !hasFood && (sig<0.02||sig>0.92)){
+          var _lgv=null; try{ _lgv=_lightGeometry(a); }catch(e){}
+          if(_lgv&&_lgv.ok&&(_lgv.litRatio>=0.06||_lgv.diagRatio>=0.42)) return {ok:true,hasPerson:false,hasFood:false,sigRatio:Math.max(sig,_lgv.litRatio),byLight:true};
+          return {ok:false, why:"找不到明确主体"};
+        }
         return {ok:true, hasPerson:hasPerson, hasFood:hasFood, sigRatio:sig};
       }catch(e){ return {ok:false, why:"证据判定异常"}; }
     }
@@ -2105,7 +2159,7 @@
         // （真人露肤占比通常 <15%，更大就是特写——特写走人像通道根本不裁）。
         // 不加这条会把构图能力直接清零（实测一张笔记本+木桌照片拦掉全部候选）。
         var ratio=total/(GW*GH*cellPx);
-        if(ratio>0.18) return {veto:false, diffuse:true, skinRatio:+ratio.toFixed(3)};
+        if(ratio>0.08) return {veto:false, diffuse:true, skinRatio:+ratio.toFixed(3)}; // v13.2：暖墙/霉斑/锈色整片落进肤色范围一律放行（示例图实测 11% 被误判成人皮）
         function cells(x0,y0,x1,y1){
           var gx0=Math.max(0,Math.floor(x0*GW)), gx1=Math.min(GW,Math.ceil(x1*GW));
           var gy0=Math.max(0,Math.floor(y0*GH)), gy1=Math.min(GH,Math.ceil(y1*GH));
@@ -2232,6 +2286,26 @@
             if(L+T+R+B>0.05) push([L,T,1-R,1-B],"deadzone-trim","裁掉空边","把没有内容的边带裁掉，画面更干净");
           }
         }catch(e){}
+        // 4.5) v13.2 光影几何（自己找构图）：以"亮区∪显著主体"为目标框，
+        //      按预算下限补足面积，生成"光影紧裁"与"对角线光影"两类候选。
+        var lg=null; try{ lg=_lightGeometry(a); }catch(e){}
+        if(lg&&lg.ok&&!pbBig){
+          var _union=lg.bbox.slice();
+          if(box&&box.length===4){
+            _union[0]=Math.min(_union[0],box[0]); _union[1]=Math.min(_union[1],box[1]);
+            _union[2]=Math.max(_union[2],box[2]); _union[3]=Math.max(_union[3],box[3]);
+          }
+          var _ucx=(_union[0]+_union[2])/2, _ucy=(_union[1]+_union[3])/2;
+          var _uarea=Math.max(0.06,(_union[2]-_union[0])*(_union[3]-_union[1]));
+          var _need=Math.max(budget.tightArea, Math.min(0.72,_uarea*1.28));
+          push(_anchorWindow(_ucx,_ucy,_need,0.5,0.5),"light-tight","光影紧裁","只留光束和它的落点，明暗切割更利落");
+          if(lg.diagRatio>=0.42){
+            push(_anchorWindow(_ucx,_ucy,Math.min(0.80,_need*1.3),1/3,0.5),"light-diag","对角线光影","让光束沿对角线穿过画面");
+          }
+          if(lg.lowKey){
+            push(_anchorWindow(_ucx,_ucy,Math.min(0.85,_need*1.6),0.5,2/3),"light-dark-frame","暗部做减法","压暗四周、保留亮区，氛围更集中");
+          }
+        }
         // 5) 社交画幅（保留旧能力：2:3 / 4:5 / 1:1 / 16:9），供"发朋友圈/小红书"直接用
         var targets=(ar<0.70)?[0.75,0.8]:(ar<0.95?[1,2/3,0.8]:(ar<1.45?[4/3,1,16/9]:[16/9,4/3,0.8]));
         for(var ti=0;ti<targets.length;ti++){

@@ -9,7 +9,8 @@ const lines = fs.readFileSync(file, 'utf8').split('\n');
 let total = 0, crop = 0, noCrop = 0, err = 0, micro = 0, big = 0, personCut = 0;
 const areas = [], byScene = {}, candCounts = [];
 for (const l of lines) {
-  const m = l.trim().match(/^(\S+\.(?:jpg|jpeg|png)) \.\.\. crop=\[([\d,\. ]+)\] area=(\d+)% scene=(\S+) conf=(\d+)% person=(\S+) f=(\S+) pc=(\S+) cands=(\d+)/);
+  // v13.2：行尾新增 fid=/auto=/why= 诊断字段，这里用非贪婪跳过，保持旧日志也能解析
+  const m = l.trim().match(/^(\S+\.(?:jpg|jpeg|png)) \.\.\. crop=\[([\d,\. ]+)\] area=(\d+)% scene=(\S+) conf=(\d+)% person=(\S+).*?\bf=(\S+).*?\bpc=(\S+) cands=(\d+)/);
   if (!m) { if (/ERROR|NO RESULT/.test(l)) err++; continue; }
   total++;
   const name = m[1], cropArr = m[2].split(',').map(Number), area = +m[3], scene = m[4], person = m[6];

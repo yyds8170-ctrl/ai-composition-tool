@@ -121,6 +121,9 @@ async function runImage(page, imgPath) {
         activeFilter: (() => {
           const el = document.querySelector('.filter-pill.active');
           return el ? el.getAttribute('data-f') : null;
+        })(),
+        filterState: (() => {
+          try { return window.__ai && window.__ai.filter ? window.__ai.filter : null; } catch (e) { return null; }
         })()
       };
     });
@@ -205,7 +208,9 @@ async function main() {
       if (r && r.plan) {
         const _cp = r.plan.crop || [0, 0, 0, 0];
         const _area = Math.round((1 - _cp[0] / 100 - _cp[2] / 100) * (1 - _cp[1] / 100 - _cp[3] / 100) * 100);
-        console.log(`crop=[${r.plan.crop}] area=${_area}% scene=${r.plan.sceneType} conf=${r.plan.conf}% person=${r.data ? r.data.isPerson : '?'} f=${r.activeFilter || '-'} pc=${r.plan.proactiveCrop ? 'Y' : 'N'} cands=${r.plan.candCount || 0}${r.plan.aiPick ? ' pick=' + r.plan.aiPick : ''}`);
+        const _fs = r.filterState || {};
+        const _why = _fs.why ? ` why=${_fs.why.stage}${_fs.why.rec ? '/rec=' + _fs.why.rec.filter : ''}` : '';
+        console.log(`crop=[${r.plan.crop}] area=${_area}% scene=${r.plan.sceneType} conf=${r.plan.conf}% person=${r.data ? r.data.isPerson : '?'} f=${r.activeFilter || '-'} fid=${_fs.id || '-'} auto=${_fs.autoApplied ? 'Y' : 'N'}${_why} pc=${r.plan.proactiveCrop ? 'Y' : 'N'} cands=${r.plan.candCount || 0}${r.plan.aiPick ? ' pick=' + r.plan.aiPick : ''}`);
       } else {
         console.log('NO RESULT');
       }

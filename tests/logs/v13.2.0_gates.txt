@@ -1,0 +1,59 @@
+=== v13.2.0 门禁 / 静态部分 2026-10-28T14:37:16+08:00 ===
+
+--- extract-pure ---
+已生成 tests\pure-functions.js ，函数： _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard, _decloudPlan, _bandSatSignal, _symEdgeSignal, _foodEvidenceSignal, _contentGuard, _thirdsFitScore, aestheticScore, _cloudCropGuard, _personBoxOf, _proactiveComposition, _balanceCrop, _cropQualityScore, _saferCropVariant, _candidateRatioTag, _candidateAspectCrop, _buildCompositionCandidates, _srcMegapixels, _cropBudget, _subjectEvidence, _skinEdgeGuard, _cropsIoU, _cropsSimilar, _windowToCrop, _anchorWindow, _intentCandidates, _cloudTrimToCrop, _validateNewCrop
+
+--- unit (415) ---
+
+✓ 单元测试全部通过：test() 用例 415 个 + 上方分块断言组（每组标注条数）全部通过
+
+--- fuzz ---
+✓ 模糊测试未发现问题
+
+--- sw syntax ---
+sw.js syntax OK
+
+--- version sync ---
+PASS · title v13.2.0
+PASS · meta description v13.2.0
+PASS · og:title v13.2.0
+PASS · 完整指南 v13.2.0
+PASS · APP_VER v13.2.0
+PASS · sw 注释 v13.2.0
+PASS · sw CACHE v132000
+PASS · sw 广播 v13.2.0
+PASS · manifest version 13.2.0
+PASS · manifest 描述 v13.2.0
+PASS · package 13.2.0
+版本门禁：11/11 PASS
+
+--- redline ---
+红线扫描：0 命中
+
+=== 交互/走查（最终构建） 2026-10-28T14:53:52+08:00 ===
+--- 390x844 walkthrough ---
+=== 390×844 走查 ===
+横向溢出: 无
+按钮/输入框越界或过小: 无
+异常换行: 无
+控制台错误: 无
+截图: qa/v132walk2
+--- e2e ---
+   btnCmp box: {"x":316,"y":595,"w":62}
+5. 对比滑块叠层验证...
+   stacking: photoView z-index=auto, cmpBase z-index=auto
+
+=== QA 结果 ===
+✓ 无 console error / 无 pageerror / 无 4xx/5xx
+--- stacking ---
+cmpPos=20% 竖条 md5: 6a96d305089b8c9f13ea1fead17f7594
+cmpPos=80% 竖条 md5: c746ab309e232979108ece9393eab9d7
+PASS：同一位置在分割线移动后画面变化（叠层正确，效果层在上、原图层在下）
+: ڳʱʱѹòء
+--- preview=final crop (3 images) ---
+断言：contain PASS | 比例一致 0.00% PASS | 框=期望 PASS
+✓ 无页面错误
+断言：contain PASS | 比例一致 0.00% PASS | 框=期望 PASS
+✓ 无页面错误
+断言：contain PASS | 比例一致 0.00% PASS | 框=期望 PASS
+✓ 无页面错误

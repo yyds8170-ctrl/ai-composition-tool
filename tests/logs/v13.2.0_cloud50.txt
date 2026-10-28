@@ -1,0 +1,17 @@
+v13.2.0 云端真实链路回归（imgs/u50 · 50 张唯一真实照片）
+日期：2026-10-28 · 配置：本地像素 + YOLO11n + 共享代理 glm-5.3-flash（云端开启）
+口令：只从本机受保护文件读入环境变量，未写入本日志/仓库。
+
+结论：**本次云端回归未通过，原因在共享代理外部超时，不是 v13.2 代码回归。**
+- 运行 tools/cloud-regress.js imgs/u50：逐张等待 55s 后回退本地，实际拿到云端结果的张数为 0；
+  每行状态为“云端响应超时/云端未返回，本次为本地引擎结果”。
+- 直接探针（同一口令、同一 SCF 地址）：
+  · 纯文本 + thinking disabled：HTTP 200 · 7.6s · content="OK" · 0 reasoning token；
+  · 带 160KB 真实图片 + 200 max_tokens：**HTTP 433 · 63.9s · content 为空**（代理上游超时）。
+- 因此 50 张图片分析请求都超过 App 的 55s 预算，属于共享代理/上游模型侧问题；v13.2 没有改动云端协议、
+  候选联系表格式与 60s 时钟。
+- 本地兜底链路已单独验证：122 张真实照片 0 错误（tests/logs/v13.2.0_local122.txt）。
+  云端恢复后可直接重跑：
+  CLOUD_TOKEN=$(node -e "...cloudToken") CLOUD_REGRESS_PORT=8841 node tools/cloud-regress.js imgs/u50
+
+注：本文件保留为“未通过”的验收证据，不冒充全绿；发布说明中已如实标注。

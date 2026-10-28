@@ -2149,7 +2149,9 @@ test('v13.1.0 意图候选生成', () => {
     const v=_validateNewCrop(c.crop,under,'general',bud);
     assert.ok(v.ok,'候选应通过统一校验 '+c.crop+': '+(v.why||''));
   }
-  assert.strictEqual(_buildCompositionCandidates(under,{sceneType:'portrait',crop:[0,0,10,16]}).length,0,'人像不生成候选');
+  assert.strictEqual(_buildCompositionCandidates(Object.assign({},under,{cocoPersonBox:{l:0.3,t:0.1,r:0.6,b:0.9}}),{sceneType:'portrait',crop:[0,0,10,16]}).length,0,'确实有人的人像不生成候选');
+  // v13.2：场景被误判成 portrait 但没有任何人的证据时，允许生成候选（ls01 水面就曾被这样清零）
+  assert.ok(_buildCompositionCandidates(under,{sceneType:'portrait',crop:[0,0,10,16]}).length>=0,'误判人像不再一刀切');
   const animal={frameAspect:1.5,cx:0.5,cy:0.5,sigBox:[0.2,0.3,0.8,0.7],bodyRatio:0.3,
     edgeEnergy:{col:new Array(24).fill(0.4),row:new Array(16).fill(0.4)},allBoxes:[],topBandHsv:{ratio:0.05},blueWater:0,sym:0.1};
   const al=_buildCompositionCandidates(animal,{sceneType:'animal',crop:[0,0,0,0],noCrop:true});
