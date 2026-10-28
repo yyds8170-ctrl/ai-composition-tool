@@ -823,7 +823,9 @@
         if(isPerson) scene="portrait";
         else if(scn==="food"||scn==="美食"||_foodLike) scene="food";
         else if(scn==="night"||(mean<85&&lightScore>=0.3)) scene="night";
-        else if(atm==="sunset_sky"||(warmRatio>=0.42&&wb>0.05&&mean>=85&&mean<=160)) scene="sunset";
+        // v13.2.1：暖木桌/砖墙也会 warmRatio≥0.42，不能单凭暖色就判晚霞。
+        // 建筑/街拍/美食/人像这些“语义场景”需要云端 atmosphere=sunset_sky 才走日落池。
+        else if(atm==="sunset_sky"||(warmRatio>=0.42&&wb>0.05&&mean>=85&&mean<=160&&!/^(architecture|street|food|portrait|portrait_close)$/.test(scn||""))) scene="sunset";
         else if(scn==="waterscape"||atm==="water_reflection"||waterScore>=0.4) scene="water";
         else if(scn==="architecture") scene="architecture";
         else if(scn==="street") scene="street";

@@ -17,7 +17,14 @@ const IMG = process.argv[2] || path.join(__dirname, '..', 'imgs', 'picsum', 'p02
   await p.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
   const errs = [];
   p.on('pageerror', e => errs.push('pageerror: ' + e.message.slice(0, 160)));
-  p.on('console', m => { if (m.type() === 'error') errs.push('console: ' + m.text().slice(0, 160)); });
+  p.on('console', m => {
+    if (m.type() !== 'error') return;
+    const t = m.text();
+    // Chromium 的自动播放策略：页面未获得用户手势时 navigator.vibrate 会被拦截并记一条 console error。
+    // 这是浏览器策略提示，不是功能失败（更新条出现时本来就没有“用户刚点过”这个前提）。
+    if (/navigator\.vibrate|user hasn't tapped/i.test(t)) return;
+    errs.push('console: ' + t.slice(0, 160));
+  });
   const badResp = [];
   p.on('response', r => { if (r.status() >= 400) badResp.push(r.status() + ' ' + r.url().slice(0, 90)); });
   console.log('打开线上站点…');

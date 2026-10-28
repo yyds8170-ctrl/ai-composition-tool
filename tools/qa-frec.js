@@ -162,7 +162,9 @@ function listImages(p) {
       console.log(`ERR ${name}: ${e.message}`);
     }
   }
-  await browser.close();
-  srv.close();
+  // 先落盘证据，再关浏览器：Chrome 偶发卡在 close()，不能让 JSON 丢在最后一步
   console.log(JSON.stringify({ images: out, pageErrors: errs }, null, 1));
+  try { browser.close(); } catch (e) {}
+  try { srv.close(); } catch (e) {}
+  setTimeout(() => process.exit(0), 500);
 })();
