@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v13.2.3 · 实景视觉构图生成工具</title>
-<meta name="description" content="AI 构图助手 Pro v13.2.3 · 真AI构图：本地一次给出最多 8 种不同构图思路（三分/地平线/小框重构图/去死边/画幅），云端 AI 不只挑一个，还能在选中方案上继续往里收边；每一步都有本地硬保护（人物/宠物/主体/像素预算）；BYOK 改为真实链路体检；永久免费、不限使用次数">
+<title>AI 构图助手 Pro v13.3.0 · 实景视觉构图生成工具</title>
+<meta name="description" content="AI 构图助手 Pro v13.3.0 · 真AI构图：本地一次给出最多 8 种不同构图思路（三分/地平线/小框重构图/去死边/画幅），AI 主动发现干净死区并收成标准社交画幅；云端 AI 不只挑一个，还能在选中方案上继续往里收边；一键成片与预览所见即所得；每一步都有本地硬保护（人物/宠物/主体/像素预算）；永久免费、不限使用次数">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v13.2.3 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切（永久免费不限次数）">
+<meta property="og:title" content="AI 构图助手 Pro v13.3.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切（永久免费不限次数）">
 <meta property="og:description" content="给不会拍照的普通人：本地一次给出多种不同构图思路，云端AI看图挑最美、还能在选中方案上继续收紧边距。云端开关/口令/失败原因一眼可见；BYOK 选厂商即自动填视觉模型，一键测试连接。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
@@ -1066,7 +1066,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v13.2.3 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v13.3.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1155,7 +1155,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v13.2.3";
+var APP_VER="v13.3.0";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -5169,6 +5169,40 @@ var APP_VER="v13.2.3";
         return 0.26*overlap + 0.19*fit + 0.16*standard + 0.17*cutScore + 0.12*areaScore + 0.06*centerBalance + 0.04*tightGain;
       }catch(e){ return -1; }
     }
+    // v13.3.0 主动构图增强：AI 主动发现"干净死区"（平滑天空 / 空地面 / 纯色边框）并收成标准社交画幅。
+    // 关键护栏：被裁条带的平均边缘能量必须很低（< 0.25，说明那里没有主体轮廓），且结果落在标准画幅；
+    // 条带能量较高（纹理/主体，例如山湖两侧都有内容）时不主动裁，避免"激进=乱切"。
+    function _cropResultAspect(a, crop){
+      try{
+        var ar=(typeof a.frameAspect==="number"&&isFinite(a.frameAspect))?a.frameAspect:1;
+        var L=crop[0]/100,T=crop[1]/100,R=crop[2]/100,B=crop[3]/100;
+        return ar*(1-L-R)/(1-T-B);
+      }catch(e){ return 1; }
+    }
+    function _cutBandEnergy(a, crop){
+      try{
+        var ee=a.edgeEnergy||{}, col=ee.col||[], row=ee.row||[];
+        var L=crop[0]/100,T=crop[1]/100,R=crop[2]/100,B=crop[3]/100;
+        function avg(arr,f0,f1){var s=0,n=0,i0=Math.floor(f0*arr.length),i1=Math.ceil(f1*arr.length);
+          for(var i=Math.max(0,i0);i<Math.min(arr.length,i1);i++){s+=arr[i];n++;}return n?s/n:0;}
+        var s=0,n=0;
+        if(T>0){s+=avg(row,0,T);n++;}
+        if(B>0){s+=avg(row,1-B,1);n++;}
+        if(L>0){s+=avg(col,0,L);n++;}
+        if(R>0){s+=avg(col,1-R,1);n++;}
+        return n?s/n:0;
+      }catch(e){ return 1; }
+    }
+    // 主动采用加成：被裁条带是干净死区 + 结果是标准社交画幅 → 给一个小加成，让 AI 主动把它收成成片。
+    function _proactiveCleanBonus(a, crop){
+      try{
+        if(_cutBandEnergy(a,crop)>=0.25) return 0;
+        var real=_cropResultAspect(a,crop);
+        var stds=[16/9,4/3,0.8,1,0.75,2/3];
+        for(var i=0;i<stds.length;i++){ if(Math.abs(real-stds[i])/stds[i]<0.03) return 0.03; }
+        return 0;
+      }catch(e){ return 0; }
+    }
     // v13.0.0：当模型硬证据发现某个上下对称裁切会切到底部主体时，优先尝试把底部裁切量移到顶部
     //（常见于建筑/街景：顶部是空天，底部是植物/椅子/车）。只接受通过物体/人物保护的候选。
     function _saferCropVariant(a, crop){
@@ -6931,12 +6965,18 @@ var APP_VER="v13.2.3";
             state._cloudPickReason=null; state._cloudPickId=null;
             try{
               var _curScore=_cropQualityScore(a,plan.crop,plan.noCrop);
-              var _best=null,_bestScore=_curScore+0.02; // 必须有净提升才换，避免 1% 级抖动
+              // v13.3.0 主动构图增强：默认仍要求候选质量分净提升 > 0.02（避免 1% 级抖动）；
+              // 但当候选切掉的是"干净死区"（被裁条带边缘能量 < 0.25，平滑天空/空地面）且结果是标准
+              // 社交画幅时，给小加成主动采用——这是 AI 主动发现并收成好构图，而不是对有内容的画面乱切。
+              // 候选仍须先过 _validateNewCrop（主体/人物/物体/肤色/像素全部安全）。
+              var _best=null,_bestScore=_curScore+0.02;
               for(var _bi=0;_bi<state._compositionCandidates.length;_bi++){
                 var _bc=state._compositionCandidates[_bi];
                 if(_bc.noCrop) continue;
                 var _bs=_cropQualityScore(a,_bc.crop,false);
-                if(_bs>=0 && _bs>_bestScore){ _best=_bc; _bestScore=_bs; }
+                if(_bs<0) continue;
+                var _eff=_bs+_proactiveCleanBonus(a,_bc.crop);
+                if(_eff>_bestScore){ _best=_bc; _bestScore=_eff; }
               }
               if(_best){
                 plan.crop=_best.crop.slice(); plan.noCrop=false;
@@ -7861,24 +7901,29 @@ var APP_VER="v13.2.3";
     }
     aiApply.addEventListener("click",function(){
       if(!state.analyzed || !state.plan) return;
+      // v13.3 P0 修复：预览画的是哪个 plan，就应用哪个 plan，且统一从原图（state.origURL）裁切。
+      // 当前画面若已被像素/云端方案裁过，从原图再裁得到同一结果（幂等），
+      // 绝不在"裁后图"上按原图百分比二次裁切——那正是用户实测"预览框好好的，成片却完全不一样"的根因。
       var p=state.plan;
-      var _wasNoCrop=!!p.noCrop; // v4.8.2: 记录应用前是否要裁切，防清零后文案误报
-      var ok=applyPlanCrop(); // 手动"一键成品"保持原交互：裁切后收起面板
+      var _wasNoCrop=_planIsNoCrop(p);
+      var ok=_applyPlanFromOriginal(p,"一键成片");
       if(!ok){ setStatus("智能裁切失败，请重试", "err"); return; }
-      state.plan=p; state.analyzed=true;   // 保留 AI 结果，可继续智能裁切微调
-      // v4.2: 已应用的裁切区域清零——旧plan的crop还是原始值，重复"一键应用"会反复裁同一区域（豆包BUG-12）
-      if(p.crop){ p.crop=[0,0,0,0]; p.noCrop=true; }
-      setZoom(p.z||1);
-      setFilter(p.f||"clear");
+      // 变焦 / 滤镜 / 预览收起 已在 _applyPlanFromOriginal 落地时统一处理；
+      // 手动"一键成品"保持原交互：裁切后收起面板
       if(_wasNoCrop){
         setStatus("已应用：滤镜优化（构图已很合理，未裁切）", "done");
-        toastMsg("已应用"+(FILTERS[p.f]||FILTERS.natural).name+"滤镜，构图保持原样"); // v4.4: night 兜底
       } else {
         setStatus("已一键应用：智能裁切 + 滤镜 + 变焦", "done");
-        toastMsg("已应用智能裁切 + "+(FILTERS[p.f]||FILTERS.natural).name+" + "+(p.z||1).toFixed(1)+"x，可继续「按构图框智能裁切」微调"); // v4.4: night 兜底
       }
       aiPanel.classList.remove("open");
     });
+    // 判定一个 plan 是否"实际不裁切"：显式 noCrop，或四边合计 ≤5%（微裁归零，与 _applyPlanFromOriginal 口径一致）
+    function _planIsNoCrop(p){
+      if(!p) return true;
+      if(p.noCrop) return true;
+      var c=p.crop||[0,0,0,0];
+      return (c[0]+c[1]+c[2]+c[3])<=5;
+    }
     aiCropNow.addEventListener("click",function(){
       if(!state.analyzed || !state.plan) return;
       openCrop(true);
@@ -13269,7 +13314,7 @@ hSym2:state.aiData.hSym}:null; }
   }; }catch(e){}
 })();
   </script>
-<div id="aicUpdateBar" class="hide"><span class="ub-t">🔧 v13.0.0：真 AI 构图来了——本地先生成 A/B/C/原图安全候选，云端 VLM 直接看图选最美并自动落地；云端状态条明示「分析中/已选/失败/缺口令」，点开即可重试或去填口令；BYOK 厂商内置已确认的视觉模型预设（硅基/通义/OpenRouter/DeepSeek/Kimi/千帆/MiniMax/阶跃等），支持一键测试连接。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
+<div id="aicUpdateBar" class="hide"><span class="ub-t">🔧 v13.3.0：①修复「一键拍得更好看」成片与预览不一致——主按钮统一从原图按当前构图裁切，预览画的就是成片（同一裁切、同一画幅，云端任意候选都成立）；②AI 主动构图更激进：自动发现平滑天空/空地面等干净死区，主动收成 16:9/4:3 等标准社交画幅，同时保留人像不切头手脚、美食/晚霞不推黑白、极暗/纯色不裁等硬护栏。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
 <script>
 (function(){
   // v8.2.3 新版本就绪提示条：SW 激活后广播 → 页面弹出"立即刷新"，根治旧缓存看不到新功能
