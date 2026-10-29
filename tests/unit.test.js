@@ -2054,7 +2054,10 @@ test('guard链: food真证据+低饱和顶带→只减顶底边', () => {
   assert.ok(r && r.crop, '竖幅街景应给出 4:5 候选');
   assert.ok(r.crop[0]+r.crop[2]===0, '4:5 候选只裁上下');
   assert.ok(r.crop[1]<=8 && r.crop[3]<=8, '上下裁切应温和');
-  assert.ok(_proactiveComposition(A,{sceneType:'portrait',crop:[0,0,0,0]})===null, '人像不主动裁');
+  // v13.4.0：只有"真·人像"（占画面较大的真人/真脸）才整体不裁；误判成 portrait 但无显著真人的按普通场景主动构图
+  assert.ok(_proactiveComposition(A,{sceneType:'portrait',crop:[0,0,0,0]})!==null, '假人像（无显著真人）应主动构图');
+  const Areal=Object.assign({},A,{cocoPersonBox:{l:0.3,t:0.2,r:0.7,b:0.9},faceAvailable:true});
+  assert.ok(_proactiveComposition(Areal,{sceneType:'portrait',crop:[0,0,0,0]})===null, '真·人像仍不主动裁');
   const sunset=Object.assign({},A,{topBandHsv:{ratio:0.6}});
   const rs=_proactiveComposition(sunset,{sceneType:'street',crop:[0,0,0,0]});
   assert.ok(rs && rs.crop[1]===0, '晚霞/蓝天顶部应保留，裁切让给底部');
