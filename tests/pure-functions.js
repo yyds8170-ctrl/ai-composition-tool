@@ -759,6 +759,8 @@
 
     function _recommendFilter(a, sig){
       var GATE={filter:null,strength:0,reason:"",rule:"GATE"};
+      // v13.2.3 诊断：GATE 也要说清是哪道闸门（不弹横幅，但 QA/设置页能看到原因）
+      function _gate(why){ return {filter:null,strength:0,reason:String(why||""),rule:"GATE"}; }
       try{
         if(!a||typeof a!=="object"||typeof a.mean!=="number"||!isFinite(a.mean)) return GATE;
         var mean=a.mean, wb=(typeof a.wb==="number"&&isFinite(a.wb))?a.wb:0;
@@ -783,26 +785,29 @@
         var _foodSceneEarly=(_scnE==="food"||_scnE==="美食");
         var _shadowExcluded=_foodSceneEarly||_atmE==="sunset_sky"||_scnE==="sunset";
         // G1-G5 硬闸门（安全底线不松；v13.0.0 对“暗但有层次”的场景放行轻度 night 滤镜）
-        if(sharpness<25) return GATE; // 糊片
+        if(sharpness<25) return _gate("糊片"); // 糊片
         if(highClip>0.15){
           // 明暗作品本就允许高光“过一点”（光束/亮窗是主体），白名单四档都不抬亮部；
           // 但 24% 以上仍视为断层，宁可不推。
-          if(!_shadowWork||_shadowExcluded||highClip>0.24) return GATE; // 高光断层
+          if(!_shadowWork||_shadowExcluded||highClip>0.24) return _gate("高光断层"); // 高光断层
         }
-        if(highClip>0.12 && shadowClip>0.35) return GATE; // 逆光剪影：保留蓝橙过渡，不自动加色
+        if(highClip>0.12 && shadowClip>0.35) return _gate("逆光剪影"); // 逆光剪影：保留蓝橙过渡，不自动加色
         if(shadowClip>0.28){
           // 暗部很大但画面有明确亮部/对比（如地下通道的光束）→ 允许温和提亮；死黑平坦画面仍拦截
           // v13.2：明暗作品只要“亮区成块 + 反差足够”就放行（实测 ls10 均值39.99 被 >=40 卡掉 0.01）
           var _darkLayered=(mean>=40 && contrast>=45) || (_shadowWork && contrast>=45 && _lgF.litRatio>=0.12);
-          if(!_darkLayered) return GATE;
+          if(!_darkLayered) return _gate("暗部死黑且平");
         }
-        if(sat>0.52 && mean>=80) return GATE; // 明亮且已浓，避免“塑料感”
-        if(sat>0.72) return GATE; // 极端过饱和
+        // v13.2.3：低照度/明暗作品的白名单四档本来就不加饱和（只降/去色），
+        // 不能因为霓虹夜景 sat 高就一刀切沉默；只有非光影作品才拦“明亮且过饱和/极端过饱和”。
+        var _shadowSafe=_shadowWork && !_shadowExcluded;
+        if(sat>0.52 && mean>=80 && !_shadowSafe) return _gate("明亮且过饱和"); // 明亮且已浓，避免“塑料感”
+        if(sat>0.72 && !_shadowSafe) return _gate("极端过饱和"); // 极端过饱和
         if(mean<38){
           // 近纯黑：没有可辨认的亮区结构才判死；有亮区（≥12%）的暗调作品仍可给“不抬黑位”的四档
-          if(!(_shadowWork && contrast>=45 && _lgF.litRatio>=0.12)) return GATE;
+          if(!(_shadowWork && contrast>=45 && _lgF.litRatio>=0.12)) return _gate("近纯黑");
         }
-        if(mean<48 && contrast<35) return GATE; // 暗且平，提亮只会发灰
+        if(mean<48 && contrast<35) return _gate("暗且平"); // 暗且平，提亮只会发灰
         var ps=(sig&&typeof sig.personScore==="number"&&isFinite(sig.personScore))?sig.personScore:0;
         var pc=(sig&&typeof sig.personCount==="number"&&isFinite(sig.personCount))?sig.personCount:0;
         var scn=(sig&&typeof sig.scene==="string")?sig.scene:null;
@@ -851,7 +856,8 @@
         if(_shadowWork && !_shadowExcluded){
           // 排序按证据：① 明确冷光源（冷水面/夜景且 wb<-0.02）才优先冷银；
           // ② 接近黑白的明暗作品优先银盐（去色只剩几何）；③ 其余优先“保真暗调”（最安全）。
-          var _cold=(wb<-0.02)&&(scn==="night"||scn==="waterscape"||scene==="night"||scene==="water");
+          // 饱和霓虹夜景优先“保真暗调”，不要被冷银去色（colorful 夜景把颜色当主体）
+          var _cold=(wb<-0.02)&&sat<=0.55&&(scn==="night"||scn==="waterscape"||scene==="night"||scene==="water");
           if(_cold) pool=["lowkey-cool","lowkey-mono","lowkey-keep","lowkey-amber"];
           else if(sat<=0.06) pool=["lowkey-mono","lowkey-keep","lowkey-amber","lowkey-cool"];
           else pool=["lowkey-keep","lowkey-mono","lowkey-amber","lowkey-cool"];
@@ -944,7 +950,7 @@
         };
         // v13.2：每条推荐都带数字依据（用户要求“说不出依据就不推”）。光影作品额外标明亮区/对角。
         var _ev="（均值"+Math.round(mean)+((_lgF&&_lgF.ok)?("·亮区"+Math.round(_lgF.litRatio*100)+"%·对角"+Math.round(_lgF.diagRatio*100)+"%"):"")+"）";
-        var _pre=_shadowWork?"光影作品·":pf;
+        var _pre=_shadowSafe?"光影作品·":pf;
         var _rt=reasons[top.filter]||"场景适配";
         // 同一款 Portra 用在美食上，理由不该还写“人像”
         if(scene==="food"&&["portra","warm","sunset","c200","hk"].indexOf(top.filter)>=0) _rt="暖调胶片，食物更有食欲";

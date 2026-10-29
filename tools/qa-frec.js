@@ -136,6 +136,7 @@ function listImages(p) {
         scene: snap && snap.plan && snap.plan.sceneType,
         subject: snap && snap.plan && snap.plan.subject,
         isPerson: d.isPerson, detectedClasses: d.detectedClasses, personScore: d.personScore,
+        allBoxes: d.allBoxes || null, faceBBox: d.faceBBox || null,
         faceAvailable: d.faceAvailable, faceCount: d.faceCount, faceBoxes: d.faceBoxes, skinRatio: d.skinRatio,
         poseReady: d.poseReady, shoulderTilt: d.shoulderTilt,
         crop: snap && snap.plan && snap.plan.crop,

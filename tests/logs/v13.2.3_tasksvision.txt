@@ -1,0 +1,236 @@
+注：人脸/姿态代码未变；以下为 v13.2.2 最终构建实测。
+
+注：人脸/姿态代码未变；以下为 v13.2.1 最终构建实测。
+
+{
+ "images": {
+  "person": "portrait_front_1.jpg",
+  "plains": [
+   "ls03.jpg",
+   "ls10.jpg",
+   "ls08.jpg"
+  ]
+ },
+ "steps": [],
+ "load": {
+  "ms": 2,
+  "vision": {
+   "tvLoaded": true,
+   "face": "ready",
+   "pose": "ready",
+   "faceErr": null,
+   "poseErr": null,
+   "faceWhy": null
+  }
+ },
+ "badges": {
+  "face": "已加载",
+  "pose": "已加载"
+ },
+ "person": {
+  "file": "portrait_front_1.jpg",
+  "faceCall": {
+   "state": "ready",
+   "has": true,
+   "ms": 28,
+   "count": 1
+  },
+  "poseCall": {
+   "state": "ready",
+   "has": true,
+   "ms": 56,
+   "ready": true
+  },
+  "data": {
+   "src": "-8b9b-4810-ae0a-52ebe94f25b4",
+   "w": 800,
+   "h": 800,
+   "faceCount": 1,
+   "faceBoxes": [
+    [
+     0.3525,
+     0.1375,
+     0.53375,
+     0.31875
+    ]
+   ],
+   "faceLM": [
+    {
+     "x": 0.4410886764526367,
+     "y": 0.19205492734909058
+    },
+    {
+     "x": 0.49726322293281555,
+     "y": 0.1996995359659195
+    },
+    {
+     "x": 0.48380303382873535,
+     "y": 0.24242185056209564
+    },
+    {
+     "x": 0.4695565700531006,
+     "y": 0.2748396694660187
+    },
+    {
+     "x": 0.3658318817615509,
+     "y": 0.1924435794353485
+    },
+    {
+     "x": 0.4947167932987213,
+     "y": 0.2080336958169937
+    }
+   ],
+   "faceConfidence": 0.8124450445175171,
+   "faceAvailable": true,
+   "poseReady": true,
+   "poseVisMean": 0.86,
+   "shoulderTilt": -1.0807321570468673
+  }
+ },
+ "plains": [
+  {
+   "file": "ls03.jpg",
+   "faceCall": {
+    "state": "ready",
+    "has": true,
+    "ms": 30,
+    "count": 0
+   },
+   "poseCall": {
+    "state": "ready",
+    "has": true,
+    "ms": 33,
+    "ready": false
+   },
+   "data": {
+    "src": "-83ed-45f1-85ad-1fa458de4207",
+    "w": 1200,
+    "h": 1600,
+    "faceCount": 0,
+    "faceBoxes": [],
+    "faceLM": null,
+    "faceAvailable": false,
+    "poseReady": false,
+    "poseVisMean": null,
+    "shoulderTilt": null
+   }
+  },
+  {
+   "file": "ls10.jpg",
+   "faceCall": {
+    "state": "ready",
+    "has": true,
+    "ms": 121,
+    "count": 0
+   },
+   "poseCall": {
+    "state": "ready",
+    "has": true,
+    "ms": 95,
+    "ready": false
+   },
+   "data": {
+    "src": "-f462-4785-a9b1-382150c55ffb",
+    "w": 1600,
+    "h": 2400,
+    "faceCount": 0,
+    "faceBoxes": [],
+    "faceLM": null,
+    "faceAvailable": false,
+    "poseReady": false,
+    "poseVisMean": null,
+    "shoulderTilt": null
+   }
+  },
+  {
+   "file": "ls08.jpg",
+   "faceCall": {
+    "state": "ready",
+    "has": true,
+    "ms": 45,
+    "count": 0
+   },
+   "poseCall": {
+    "state": "ready",
+    "has": true,
+    "ms": 57,
+    "ready": false
+   },
+   "data": {
+    "src": "-8340-4627-87f8-7ea0ff8712d7",
+    "w": 1920,
+    "h": 1281,
+    "faceCount": 0,
+    "faceBoxes": [],
+    "faceLM": null,
+    "faceAvailable": false,
+    "poseReady": false,
+    "poseVisMean": null,
+    "shoulderTilt": null
+   }
+  }
+ ],
+ "afterOff": {
+  "tvLoaded": true,
+  "face": "idle",
+  "pose": "idle",
+  "faceErr": null,
+  "poseErr": null,
+  "faceWhy": "ok:0"
+ },
+ "afterReopen": {
+  "ms": 711,
+  "vision": {
+   "tvLoaded": true,
+   "face": "ready",
+   "pose": "ready",
+   "faceErr": null,
+   "poseErr": null,
+   "faceWhy": "ok:0"
+  }
+ },
+ "realPathTv": {
+  "tvLoaded": true,
+  "face": "ready",
+  "pose": "ready",
+  "faceErr": null,
+  "poseErr": null,
+  "faceWhy": null
+ },
+ "realPath": {
+  "switched": true,
+  "data": {
+   "status": "已应用人像保护建议：保留原图 · 三分法800×800 · 1:1",
+   "model": {
+    "yolo": "ready",
+    "coco": "idle",
+    "ready": true
+   },
+   "faceCount": 1,
+   "faceBoxes": [
+    [
+     0.3525,
+     0.1375,
+     0.53375,
+     0.31875
+    ]
+   ],
+   "faceConfidence": 0.8124450445175171,
+   "faceAvailable": true,
+   "poseReady": true,
+   "poseVisMean": 0.86,
+   "scene": "portrait_close",
+   "person": true,
+   "faceWhy": "ok:1",
+   "lsModel": "1"
+  }
+ },
+ "requests": [
+  "200 /model/tasks/vision_bundle.js",
+  "200 /model/tasks/wasm/vision_wasm_internal.js",
+  "200 /model/tasks/wasm/vision_wasm_internal.wasm",
+  "200 /model/tasks/models/blaze_face_short_range.tflite",
+  "200 /model/tasks/models/pose_landmarker_lite.task"
+ ],
+ "pageErrors": []
+}
