@@ -1062,6 +1062,18 @@ test('filter 建筑低饱和可推黑白: scene=architecture+sat=0.05 → chrome
   const r = recWith({ sat: 0.05, mean: 120, manmadeScore: 0.8 }, { scene: 'architecture' });
   assert.ok(['chrome','mono-warm','provia'].indexOf(r.filter) >= 0, '建筑可接受, 实得=' + r.filter);
 });
+test('filter v13.5 人像低饱和不推黑白: personScore高+sat低 → 非mono/lowkey-mono', () => {
+  const r = recWith({ sat: 0.03, mean: 130, skinRatio: 0.15, faceAvailable: true }, { personScore: 0.8 });
+  assert.ok(['mono','mono-warm','silver','portrait-mono','lowkey-mono','lowkey-cool'].indexOf(r.filter) < 0, '人像不该推黑白, 实得=' + r.filter);
+});
+test('filter v13.5 暖调低饱和不推黑白: warmRatio高+sat低 → 非mono', () => {
+  const r = recWith({ sat: 0.03, warmRatio: 0.5, wb: 0.08, mean: 130, waterScore: 0.1 }, { scene: 'landscape' });
+  assert.ok(['mono','mono-warm','lowkey-mono'].indexOf(r.filter) < 0, '暖调不该推黑白, 实得=' + r.filter);
+});
+test('filter v13.5 暗调美食不进冷调池: 有食物证据偏暗 → 非night/cyber/teal/mono', () => {
+  const r = recWith({ mean: 70, sat: 0.4, lightScore: 0.3, hasFoodEvidence: true, topBandHsv: { ratio: 0.05 } }, { scene: 'food' });
+  assert.ok(['night','cyber','teal','cool','mono','mono-warm'].indexOf(r.filter) < 0, '暗美食走暖食欲色, 实得=' + r.filter);
+});
 test('filter v12.28 假人像: 云端 portrait 但本地无人像证据 → 不推人像专属', () => {
   const r = recWith({ skinRatio: 0, isPersonLikely: false, faceAvailable: false, mean: 120, sat: 0.2 }, { scene: 'portrait', personScore: 0, personCount: 0 });
   assert.ok(['portra','ektar','portrait-warm','portrait-cool','portrait-mono'].indexOf(r.filter) < 0, '假人像不推人像色, 实得=' + r.filter);
