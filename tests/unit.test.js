@@ -4,7 +4,7 @@
  * 被测代码由 tools/extract-pure.js 从 index.html 逐字提取，保证与线上一致。
  * =============================================================================*/
 const assert = require('assert');
-const { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard, _decloudPlan, _bandSatSignal, _symEdgeSignal, _foodEvidenceSignal, _cloudCropGuard, _personBoxOf, _proactiveComposition, _balanceCrop, _cropQualityScore, _saferCropVariant, _candidateRatioTag, _candidateAspectCrop, _buildCompositionCandidates, _cropBudget, _subjectEvidence, _skinEdgeGuard, _cropsIoU, _cropsSimilar, _anchorWindow, _intentCandidates, _cloudTrimToCrop, _validateNewCrop } = require('./pure-functions.js');
+const { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard, _decloudPlan, _bandSatSignal, _symEdgeSignal, _foodEvidenceSignal, _cloudCropGuard, _personBoxOf, _proactiveComposition, _balanceCrop, _cropQualityScore, _saferCropVariant, _candidateRatioTag, _candidateAspectCrop, _buildCompositionCandidates, _cropBudget, _subjectEvidence, _skinEdgeGuard, _cropsIoU, _cropsSimilar, _anchorWindow, _intentCandidates, _cloudTrimToCrop, _validateNewCrop, _nonDeadEdgeCalm } = require('./pure-functions.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -2296,6 +2296,32 @@ test('v13.1.0 小图（800px 网图）只做轻度收紧', () => {
   const cut=_cloudCropGuard([15,0,0,0],{sigBox:[0,0.4,0.2,0.6]},'general');
   assert.deepStrictEqual(cut,[0,0,0,0], '主体框被切>25%则不裁');
   console.log('  ✓ v12.28.0 云端分级裁切保护（7条）');
+}
+
+// -------------------- v13.7.0: 非死边单边大裁收敛护栏 --------------------
+{
+  // 构造 row/col 能量序列（100 桶，row[0]=顶边）。中心带 30-70 基准能量 1.0。
+  function rowWith(topStrip){ var r=[]; for(var i=0;i<100;i++) r.push(i<27?topStrip:1.0); return r; }
+  function colWith(leftStrip){ var c=[]; for(var i=0;i<100;i++) c.push(i<22?leftStrip:1.0); return c; }
+  // A: 顶部条带内容能量高（有植物，非死边）→ top 27 收敛到 14
+  var a=_nonDeadEdgeCalm([0,27,0,0],{row:rowWith(1.0),col:rowWith(1.0)});
+  assert.ok(a[1]===14, '非死边 top27→14: '+a[1]);
+  // B: 顶部条带能量极低（白墙真死边）→ top 27 原样保留
+  var b=_nonDeadEdgeCalm([0,27,0,0],{row:rowWith(0.08),col:rowWith(1.0)});
+  assert.ok(b[1]===27, '真死边 top27 不动: '+b[1]);
+  // C: 单边裁 <16% → 不触发，原样
+  var c=_nonDeadEdgeCalm([0,10,0,0],{row:rowWith(1.0),col:rowWith(1.0)});
+  assert.ok(c[1]===10, '小裁 top10 不动: '+c[1]);
+  // D: 无 edgeEnergy → 原样
+  var d=_nonDeadEdgeCalm([0,27,0,0],null);
+  assert.deepStrictEqual(d,[0,27,0,0],'无能量信号原样');
+  // E: 左边 22 且左条带非死边 → 收敛到 11
+  var e=_nonDeadEdgeCalm([22,0,0,0],{row:rowWith(1.0),col:colWith(1.0)});
+  assert.ok(e[0]===11, '非死边 left22→11: '+e[0]);
+  // F: 只少裁不增边——其他边保持
+  var f=_nonDeadEdgeCalm([22,5,0,8],{row:rowWith(1.0),col:colWith(1.0)});
+  assert.ok(f[1]===5 && f[3]===8, '其他边不动: '+f);
+  console.log('  ✓ v13.7.0 非死边单边大裁收敛护栏（6条）');
 }
 
 // -------------------- 汇总（放在所有断块之后，数字才是真实的） --------------------

@@ -862,14 +862,14 @@
           else if(sat<=0.06) pool=["lowkey-mono","lowkey-keep","lowkey-amber","lowkey-cool"];
           else pool=["lowkey-keep","lowkey-mono","lowkey-amber","lowkey-cool"];
         }
-        // v13.5.0：黑白硬闸门（证据驱动，不只扣分）。色彩即主体的场景——美食/晚霞/暖调/人像肤色——
+        // v13.6.0：黑白硬闸门（证据驱动，不只扣分）。色彩即主体的场景——美食/晚霞/暖调/人像肤色——
         // 一律把黑白/冷银从候选池剔除，绝不让 mono 靠“低饱和加分”翻盘（修 sky_5 美食被推 mono）。
         var _monoKeys=["mono","mono-warm","silver","portrait-mono","lowkey-mono","lowkey-cool"];
         var _warmSubject=(scene==="food"||scene==="sunset"||warmRatio>0.4||isPerson);
         if(_warmSubject){
           pool=pool.filter(function(f){ return _monoKeys.indexOf(f)<0; });
         }
-        // v13.5.0：低饱和中性画面（建筑/街拍/通用纹理）才补黑白候选；concat 改为去重 push，避免同一键重复打分。
+        // v13.6.0：低饱和中性画面（建筑/街拍/通用纹理）才补黑白候选；concat 改为去重 push，避免同一键重复打分。
         if(sat<0.06 && !_warmSubject && (scene==="architecture"||scene==="street"||scene==="general")){
           ["mono","mono-warm","chrome"].forEach(function(f){ if(pool.indexOf(f)<0) pool.push(f); });
         }
@@ -1756,18 +1756,18 @@
       try{
         if(!a||!plan) return null;
         var sc=plan.sceneType||"general";
-        if(/portrait/.test(sc) && _isRealPortrait(a)) return null; // v13.5.0：只挡真·人像；假人像按底层场景主动构图
-        // v13.5.0：动物特写且主体已填满画面（bodyRatio≥0.55，如猫/犬特写贴耳须爪）不硬裁——裁切易脆；
+        if(/portrait/.test(sc) && _isRealPortrait(a)) return null; // v13.6.0：只挡真·人像；假人像按底层场景主动构图
+        // v13.6.0：动物特写且主体已填满画面（bodyRatio≥0.55，如猫/犬特写贴耳须爪）不硬裁——裁切易脆；
         // 美食不在此列（食物无关节脆件，仍可主动收紧）。
         if(/animal/.test(sc) && (typeof a.bodyRatio==="number"&&isFinite(a.bodyRatio)&&a.bodyRatio>=0.55)) return null;
         // v13.1.0：先过主体证据闸门——糊片/纯色/截图/占位图/找不到主体时一律不主动裁
         try{ if(!_subjectEvidence(a,plan).ok) return null; }catch(e){}
         if(plan.crop && (plan.crop[0]+plan.crop[1]+plan.crop[2]+plan.crop[3])>0) return null;
-        // 极暗/纯色/截图类仍然不折腾（v13.5.0：真·近黑/纯灰/UI 才拦，暗调有光影放行）
+        // 极暗/纯色/截图类仍然不折腾（v13.6.0：真·近黑/纯灰/UI 才拦，暗调有光影放行）
         try{ if(typeof _realContentGuard==="function" && _realContentGuard(a)) return null; }catch(e){}
         var ar=(typeof a.frameAspect==="number"&&isFinite(a.frameAspect)&&a.frameAspect>0.2&&a.frameAspect<5)?a.frameAspect:1;
         var box=(a.sigBox&&a.sigBox.length===4)?a.sigBox:[0.25,0.25,0.75,0.75];
-        // v13.5.0：sigBox 把整框框住时（暗墙/地下通道），用质心+占比合成小框；
+        // v13.6.0：sigBox 把整框框住时（暗墙/地下通道），用质心+占比合成小框；
         // 但主体已占满画面（bodyRatio 大，如猫特写）时不收缩——那是真主体贴边，收缩会切耳须爪。
         var _sbw=box[2]-box[0], _sbh=box[3]-box[1];
         var _br=(typeof a.bodyRatio==="number")?a.bodyRatio:0.20;
@@ -1839,10 +1839,10 @@
           var _ov=(_ow*_oh)/(_bw*_bh);
           if(_ov<(minOv||0.80)) return;
           if(cx<l+0.03||cx>1-r-0.03||cy<t+0.03||cy>1-b-0.03) return;
-          // 氛围保护：顶部是晚霞/蓝天彩带时，不主动裁顶（v13.5.0：阈值收紧到 0.45，弱暖色不再一律 veto）
+          // 氛围保护：顶部是晚霞/蓝天彩带时，不主动裁顶（v13.6.0：阈值收紧到 0.45，弱暖色不再一律 veto）
           var topWarm=(a.topBandHsv&&typeof a.topBandHsv.ratio==="number")?a.topBandHsv.ratio:0;
           if(t>0.04 && (topWarm>0.45 || (typeof a.blueWater==="number"&&a.blueWater>0.65))) return;
-          // 对称保护：强对称不主动单边裁（v13.5.0：从 0.42 收紧到 0.50，弱对称允许轻收）
+          // 对称保护：强对称不主动单边裁（v13.6.0：从 0.42 收紧到 0.50，弱对称允许轻收）
           if((l+r)>0.02 && typeof a.sym==="number" && a.sym>0.50) return;
           cands.push({crop:[Math.round(l*100),Math.round(t*100),Math.round(r*100),Math.round(b*100)],tag:tag,reason:reason,score:score,area:area});
         }
@@ -1905,7 +1905,7 @@
             push(0,tF,0,bF,tagF,"轻度收紧上下，保留主体与氛围，画面更紧凑",0.58,0.60,0.70);
           }
         }
-        // D. v13.5.0 默认兜底：只要任一侧有可判定的低信息死区边带（能量比 <0.6），且 push 的主体/质心/人物校验都过，
+        // D. v13.6.0 默认兜底：只要任一侧有可判定的低信息死区边带（能量比 <0.6），且 push 的主体/质心/人物校验都过，
         //    就主动裁掉死边收成更紧凑的构图，而不是返回 null 摆烂。push 内部已硬校验不切主体。
         if(!cands.length && !/animal|food/.test(sc)){
           var ee=a.edgeEnergy||{}, col=ee.col||[], row=ee.row||[];
@@ -2241,7 +2241,7 @@
           ed=(eL.reduce(function(s,v){return s+v;},0)/Math.max(1,eL.length)+eT.reduce(function(s,v){return s+v;},0)/Math.max(1,eT.length))/2; en=1; }catch(e){}
         if(sharp<22) return {ok:false, why:"画面偏糊，裁了只会更糊"};
         if(dr<0.10 && sat<0.10) return {ok:false, why:"画面几乎没有层次与色彩"};
-        // v13.5.0：真·近黑才拦（mean 极低且无任何亮区/光影结构）；暗调但有光束/主体（如暗墙里的黑跑车）放行
+        // v13.6.0：真·近黑才拦（mean 极低且无任何亮区/光影结构）；暗调但有光束/主体（如暗墙里的黑跑车）放行
         if(mean<26){
           var _lgDark=null; try{ _lgDark=_lightGeometry(a); }catch(e){}
           if(!(_lgDark&&_lgDark.ok&&(_lgDark.litRatio>=0.05||_lgDark.diagRatio>=0.30))) return {ok:false, why:"接近全黑"};
@@ -2506,4 +2506,25 @@
       }catch(e){ return {ok:false, why:"校验异常"}; }
     }
 
-module.exports = { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard, _decloudPlan, _bandSatSignal, _symEdgeSignal, _foodEvidenceSignal, _contentGuard, _isRealPortrait, _realEdgeDensity, _gridStdCV, _realContentGuard, _bandDead, _thirdsFitScore, aestheticScore, _cloudCropGuard, _personBoxOf, _proactiveComposition, _balanceCrop, _cropQualityScore, _saferCropVariant, _candidateRatioTag, _candidateAspectCrop, _buildCompositionCandidates, _srcMegapixels, _cropBudget, _subjectEvidence, _skinEdgeGuard, _cropsIoU, _cropsSimilar, _windowToCrop, _anchorWindow, _intentCandidates, _cloudTrimToCrop, _validateNewCrop };
+    function _nonDeadEdgeCalm(crop, ee){
+      try{
+        if(!crop||crop.length!==4) return crop;
+        var c=crop.map(function(v){return v;});
+        var row=(ee&&ee.row)||[], col=(ee&&ee.col)||[];
+        if(!row.length||!col.length) return c;
+        function avg(arr,f0,f1){
+          var i0=Math.floor(f0*arr.length), i1=Math.ceil(f1*arr.length), s=0,n=0;
+          for(var i=Math.max(0,i0);i<Math.min(arr.length,i1);i++){ s+=(arr[i]||0); n++; }
+          return n?s/n:0;
+        }
+        var cR=avg(row,0.30,0.70), cC=avg(col,0.30,0.70);
+        var THR=0.50, BIG=16; // 单边裁≥16% 且条带能量>中心50% → 判为非死边，该边裁量减半
+        if(c[1]>=BIG){ var tS=avg(row,0,c[1]/100);          if(tS>cR*THR) c[1]=Math.round(c[1]*0.5); }
+        if(c[3]>=BIG){ var bS=avg(row,1-c[3]/100,1);        if(bS>cR*THR) c[3]=Math.round(c[3]*0.5); }
+        if(c[0]>=BIG){ var lS=avg(col,0,c[0]/100);          if(lS>cC*THR) c[0]=Math.round(c[0]*0.5); }
+        if(c[2]>=BIG){ var rS=avg(col,1-c[2]/100,1);        if(rS>cC*THR) c[2]=Math.round(c[2]*0.5); }
+        return c;
+      }catch(e){ return crop; }
+    }
+
+module.exports = { _deriveCrop, _smartCrop, _landscapeCrop, _classifyYaw, _gazeGuard, _edgeSnap, _rodGuard, _cloudCropIntentGuard, _jointGuard, _objectGuard, _portraitFraming, _aspectCrop, _figureGround, _yoloNMS, _estTiltDeg, _guidanceEyeLevel, _guidanceEyeOnGrid, _guidanceDistance, _guidanceOrientation, _faceLightSplit, _lightPosition, _warmLightHint, _windowLightHint, _lowAngleAdvice, _composeDiagnosis, _recommendFilter, _confBand, _medianBox, _consensusPerson, _sceneDebounce, _debangText, _applyPref, _lightDiagnosisPro, _gazeGuardPro, _guidanceDistancePro, _guidanceWaistLevel, _singlePersonGate, _classifyComposition, _composeOverlay, _finalPipelinePlan, _classifyMulti, _scenePrefix, _sceneComposeTip, _aimAlign, _composeVariants, _deadZoneStrength, _cropIntentFromBox, _directionsOppose, _hardProtectionHit, _localConf, _extractIntentLocal, _parseIntentCloud, _negotiateBox, _arbitrateCrop, _hueInWarmBand, _sunsetWarmGuard, _foodMisClassGuard, _symmetryGuard, _decloudPlan, _bandSatSignal, _symEdgeSignal, _foodEvidenceSignal, _contentGuard, _isRealPortrait, _realEdgeDensity, _gridStdCV, _realContentGuard, _bandDead, _thirdsFitScore, aestheticScore, _cloudCropGuard, _personBoxOf, _proactiveComposition, _balanceCrop, _cropQualityScore, _saferCropVariant, _candidateRatioTag, _candidateAspectCrop, _buildCompositionCandidates, _srcMegapixels, _cropBudget, _subjectEvidence, _skinEdgeGuard, _cropsIoU, _cropsSimilar, _windowToCrop, _anchorWindow, _intentCandidates, _cloudTrimToCrop, _validateNewCrop, _nonDeadEdgeCalm };
