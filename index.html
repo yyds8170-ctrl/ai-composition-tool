@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"><!-- v4.6 P2-8: 放开缩放（Hy4 BUG-10：user-scalable=no 禁用桌面缩放） -->
-<title>AI 构图助手 Pro v13.5.0 · 实景视觉构图生成工具</title>
-<meta name="description" content="AI 构图助手 Pro v13.5.0 · 真AI构图：本地一次给出最多 8 种不同构图思路（三分/地平线/小框重构图/去死边/画幅），AI 主动发现干净死区并收成标准社交画幅；暗调/夜景也能主动找好构图；云端 AI 不只挑一个，还能在选中方案上继续往里收边；一键成片与预览所见即所得；每一步都有本地硬保护（人物/宠物/主体/像素预算）；永久免费、不限使用次数">
+<title>AI 构图助手 Pro v13.6.0 · 实景视觉构图生成工具</title>
+<meta name="description" content="AI 构图助手 Pro v13.6.0 · 真AI构图：本地一次给出最多 8 种不同构图思路（三分/地平线/小框重构图/去死边/画幅），AI 主动发现干净死区并收成标准社交画幅；暗调/夜景也能主动找好构图；云端 AI 不只挑一个，还能在选中方案上继续往里收边；一键成片与预览所见即所得；每一步都有本地硬保护（人物/宠物/主体/像素预算）；永久免费、不限使用次数">
 <meta name="theme-color" content="#0A0C0E">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="AI 构图助手 Pro">
-<meta property="og:title" content="AI 构图助手 Pro v13.5.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切（永久免费不限次数）">
+<meta property="og:title" content="AI 构图助手 Pro v13.6.0 · 实景视觉构图生成工具 · AI 拍照 / 构图 / 裁切（永久免费不限次数）">
 <meta property="og:description" content="给不会拍照的普通人：本地一次给出多种不同构图思路，云端AI看图挑最美、还能在选中方案上继续收紧边距。云端开关/口令/失败原因一眼可见；BYOK 选厂商即自动填视觉模型，一键测试连接。">
 <meta property="og:url" content="https://yyds8170-ctrl.github.io/ai-composition-tool/">
 <meta property="og:image" content="https://yyds8170-ctrl.github.io/ai-composition-tool/imgs/banner.png">
@@ -1066,7 +1066,7 @@
 
   <!-- ===== 使用说明 ===== -->
   <div class="help-sheet" id="helpSheet">
-    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v13.5.0 完整指南</span></div>
+    <div class="rule-head"><b>使用说明</b><span style="font-size:11px;color:var(--sub)">AI 构图助手 PRO · v13.6.0 完整指南</span></div>
     <button class="rule-close" id="helpClose">×</button>
     <!-- v2.0.0 多模型管理 -->
     <div class="model-panel" id="modelPanel">
@@ -1155,7 +1155,7 @@
 
 <script>
 /* ===== 统一版本号（v5.1.4 起）：title / 品牌区 / 提交信息只改这一处 ===== */
-var APP_VER="v13.5.0";
+var APP_VER="v13.6.0";
     // v8.0.4 全局安全网：只静默已知无害的第三方(CDN/模型)网络错误，其余异常照常抛出并在控制台记录，不掩盖真问题、不改变任何业务逻辑
     (function(){
       // v8.0.5 B2: 只按"第三方CDN/模型资源"特征静默，去掉裸 Failed to fetch/NetworkError 等通用词
@@ -4031,14 +4031,14 @@ var APP_VER="v13.5.0";
           else if(sat<=0.06) pool=["lowkey-mono","lowkey-keep","lowkey-amber","lowkey-cool"];
           else pool=["lowkey-keep","lowkey-mono","lowkey-amber","lowkey-cool"];
         }
-        // v13.5.0：黑白硬闸门（证据驱动，不只扣分）。色彩即主体的场景——美食/晚霞/暖调/人像肤色——
+        // v13.6.0：黑白硬闸门（证据驱动，不只扣分）。色彩即主体的场景——美食/晚霞/暖调/人像肤色——
         // 一律把黑白/冷银从候选池剔除，绝不让 mono 靠“低饱和加分”翻盘（修 sky_5 美食被推 mono）。
         var _monoKeys=["mono","mono-warm","silver","portrait-mono","lowkey-mono","lowkey-cool"];
         var _warmSubject=(scene==="food"||scene==="sunset"||warmRatio>0.4||isPerson);
         if(_warmSubject){
           pool=pool.filter(function(f){ return _monoKeys.indexOf(f)<0; });
         }
-        // v13.5.0：低饱和中性画面（建筑/街拍/通用纹理）才补黑白候选；concat 改为去重 push，避免同一键重复打分。
+        // v13.6.0：低饱和中性画面（建筑/街拍/通用纹理）才补黑白候选；concat 改为去重 push，避免同一键重复打分。
         if(sat<0.06 && !_warmSubject && (scene==="architecture"||scene==="street"||scene==="general")){
           ["mono","mono-warm","chrome"].forEach(function(f){ if(pool.indexOf(f)<0) pool.push(f); });
         }
@@ -4503,7 +4503,7 @@ var APP_VER="v13.5.0";
       }catch(e){}
       return null;
     }
-    // v13.5.0：区分"真·人像"与"假·人像"。
+    // v13.6.0：区分"真·人像"与"假·人像"。
     // 旧版只要 sceneType 含 portrait 就一刀切不裁——时代广场海报人脸、街上极小路人都会误触。
     // 现在：只有"确实占画面较大的真人"或"真脸"才整体保护；占比极小的路人/广告牌脸按底层场景处理。
     function _isRealPortrait(a){
@@ -4526,7 +4526,7 @@ var APP_VER="v13.5.0";
         return false;
       }catch(e){ return false; }
     }
-    // v13.5.0：用真实的 col/row 能量曲线算全图边缘密度（旧版引用不存在的 eL/eT，恒得 0，把低饱和片全误杀）
+    // v13.6.0：用真实的 col/row 能量曲线算全图边缘密度（旧版引用不存在的 eL/eT，恒得 0，把低饱和片全误杀）
     function _realEdgeDensity(a){
       try{
         var ee=a.edgeEnergy||{}, col=ee.col||[], row=ee.row||[];
@@ -4534,7 +4534,7 @@ var APP_VER="v13.5.0";
         return (avg(col)+avg(row))/2;
       }catch(e){ return 0; }
     }
-    // v13.5.0：亮度网格的相对变异系数 sd/(mean+8)。均匀死黑≈0.1；暗调但有明暗结构（车/光束）>0.4
+    // v13.6.0：亮度网格的相对变异系数 sd/(mean+8)。均匀死黑≈0.1；暗调但有明暗结构（车/光束）>0.4
     function _gridStdCV(a){
       try{
         var g=a.lumGrid, gw=a.gridW, gh=a.gridH;
@@ -4547,7 +4547,7 @@ var APP_VER="v13.5.0";
         return sd/(Math.abs(m)+8);
       }catch(e){ return 0.9; }
     }
-    // v13.5.0：内容防御升级版——只挡真·近黑（极低 mean 且极低变异）/纯灰纯色（低饱和+无边缘+无光影）/UI 截图。
+    // v13.6.0：内容防御升级版——只挡真·近黑（极低 mean 且极低变异）/纯灰纯色（低饱和+无边缘+无光影）/UI 截图。
     // 暗调但有光影或主体（如暗水泥墙里的黑跑车）放行，不再因为 mean 低就摆烂不裁。
     function _realContentGuard(a){
       try{
@@ -4565,7 +4565,7 @@ var APP_VER="v13.5.0";
         return false;
       }catch(e){ return false; }
     }
-    // v13.5.0：逐边死区程度——被裁条带相对画面中心的能量越低、越平滑，死区越"干净"。0~1。
+    // v13.6.0：逐边死区程度——被裁条带相对画面中心的能量越低、越平滑，死区越"干净"。0~1。
     function _bandDead(a,crop){
       try{
         var ee=a.edgeEnergy||{}, col=ee.col||[], row=ee.row||[];
@@ -4592,18 +4592,18 @@ var APP_VER="v13.5.0";
       try{
         if(!a||!plan) return null;
         var sc=plan.sceneType||"general";
-        if(/portrait/.test(sc) && _isRealPortrait(a)) return null; // v13.5.0：只挡真·人像；假人像按底层场景主动构图
-        // v13.5.0：动物特写且主体已填满画面（bodyRatio≥0.55，如猫/犬特写贴耳须爪）不硬裁——裁切易脆；
+        if(/portrait/.test(sc) && _isRealPortrait(a)) return null; // v13.6.0：只挡真·人像；假人像按底层场景主动构图
+        // v13.6.0：动物特写且主体已填满画面（bodyRatio≥0.55，如猫/犬特写贴耳须爪）不硬裁——裁切易脆；
         // 美食不在此列（食物无关节脆件，仍可主动收紧）。
         if(/animal/.test(sc) && (typeof a.bodyRatio==="number"&&isFinite(a.bodyRatio)&&a.bodyRatio>=0.55)) return null;
         // v13.1.0：先过主体证据闸门——糊片/纯色/截图/占位图/找不到主体时一律不主动裁
         try{ if(!_subjectEvidence(a,plan).ok) return null; }catch(e){}
         if(plan.crop && (plan.crop[0]+plan.crop[1]+plan.crop[2]+plan.crop[3])>0) return null;
-        // 极暗/纯色/截图类仍然不折腾（v13.5.0：真·近黑/纯灰/UI 才拦，暗调有光影放行）
+        // 极暗/纯色/截图类仍然不折腾（v13.6.0：真·近黑/纯灰/UI 才拦，暗调有光影放行）
         try{ if(typeof _realContentGuard==="function" && _realContentGuard(a)) return null; }catch(e){}
         var ar=(typeof a.frameAspect==="number"&&isFinite(a.frameAspect)&&a.frameAspect>0.2&&a.frameAspect<5)?a.frameAspect:1;
         var box=(a.sigBox&&a.sigBox.length===4)?a.sigBox:[0.25,0.25,0.75,0.75];
-        // v13.5.0：sigBox 把整框框住时（暗墙/地下通道），用质心+占比合成小框；
+        // v13.6.0：sigBox 把整框框住时（暗墙/地下通道），用质心+占比合成小框；
         // 但主体已占满画面（bodyRatio 大，如猫特写）时不收缩——那是真主体贴边，收缩会切耳须爪。
         var _sbw=box[2]-box[0], _sbh=box[3]-box[1];
         var _br=(typeof a.bodyRatio==="number")?a.bodyRatio:0.20;
@@ -4675,10 +4675,10 @@ var APP_VER="v13.5.0";
           var _ov=(_ow*_oh)/(_bw*_bh);
           if(_ov<(minOv||0.80)) return;
           if(cx<l+0.03||cx>1-r-0.03||cy<t+0.03||cy>1-b-0.03) return;
-          // 氛围保护：顶部是晚霞/蓝天彩带时，不主动裁顶（v13.5.0：阈值收紧到 0.45，弱暖色不再一律 veto）
+          // 氛围保护：顶部是晚霞/蓝天彩带时，不主动裁顶（v13.6.0：阈值收紧到 0.45，弱暖色不再一律 veto）
           var topWarm=(a.topBandHsv&&typeof a.topBandHsv.ratio==="number")?a.topBandHsv.ratio:0;
           if(t>0.04 && (topWarm>0.45 || (typeof a.blueWater==="number"&&a.blueWater>0.65))) return;
-          // 对称保护：强对称不主动单边裁（v13.5.0：从 0.42 收紧到 0.50，弱对称允许轻收）
+          // 对称保护：强对称不主动单边裁（v13.6.0：从 0.42 收紧到 0.50，弱对称允许轻收）
           if((l+r)>0.02 && typeof a.sym==="number" && a.sym>0.50) return;
           cands.push({crop:[Math.round(l*100),Math.round(t*100),Math.round(r*100),Math.round(b*100)],tag:tag,reason:reason,score:score,area:area});
         }
@@ -4741,7 +4741,7 @@ var APP_VER="v13.5.0";
             push(0,tF,0,bF,tagF,"轻度收紧上下，保留主体与氛围，画面更紧凑",0.58,0.60,0.70);
           }
         }
-        // D. v13.5.0 默认兜底：只要任一侧有可判定的低信息死区边带（能量比 <0.6），且 push 的主体/质心/人物校验都过，
+        // D. v13.6.0 默认兜底：只要任一侧有可判定的低信息死区边带（能量比 <0.6），且 push 的主体/质心/人物校验都过，
         //    就主动裁掉死边收成更紧凑的构图，而不是返回 null 摆烂。push 内部已硬校验不切主体。
         if(!cands.length && !/animal|food/.test(sc)){
           var ee=a.edgeEnergy||{}, col=ee.col||[], row=ee.row||[];
@@ -4908,7 +4908,7 @@ var APP_VER="v13.5.0";
           ed=(eL.reduce(function(s,v){return s+v;},0)/Math.max(1,eL.length)+eT.reduce(function(s,v){return s+v;},0)/Math.max(1,eT.length))/2; en=1; }catch(e){}
         if(sharp<22) return {ok:false, why:"画面偏糊，裁了只会更糊"};
         if(dr<0.10 && sat<0.10) return {ok:false, why:"画面几乎没有层次与色彩"};
-        // v13.5.0：真·近黑才拦（mean 极低且无任何亮区/光影结构）；暗调但有光束/主体（如暗墙里的黑跑车）放行
+        // v13.6.0：真·近黑才拦（mean 极低且无任何亮区/光影结构）；暗调但有光束/主体（如暗墙里的黑跑车）放行
         if(mean<26){
           var _lgDark=null; try{ _lgDark=_lightGeometry(a); }catch(e){}
           if(!(_lgDark&&_lgDark.ok&&(_lgDark.litRatio>=0.05||_lgDark.diagRatio>=0.30))) return {ok:false, why:"接近全黑"};
@@ -5326,7 +5326,7 @@ var APP_VER="v13.5.0";
         var isStd=false;
         for(var i=0;i<stds.length;i++){ if(Math.abs(real-stds[i])/stds[i]<0.04){ isStd=true; break; } }
         if(!isStd) return 0;
-        // v13.5.0：加成随死区干净程度缩放——平滑天空/空地面/纯色暗墙加成更大，最高约 0.08
+        // v13.6.0：加成随死区干净程度缩放——平滑天空/空地面/纯色暗墙加成更大，最高约 0.08
         var dz=(typeof _bandDead==="function")?_bandDead(a,crop):0;
         var bonus=0.02+0.05*Math.min(1,dz*1.5);
         if(energy<0.12) bonus+=0.01; // 极干净死区再补
@@ -5997,14 +5997,22 @@ var APP_VER="v13.5.0";
         var closeUpRatio = (a.bodyH!==undefined) ? a.bodyH : a.bodyRatio;
         // v4.6 P2-7: 弱网特写兜底（Qwen 三轮遗留）——模型/面部均不可用时，肤色 bbox 高占比+密实度近似特写
         if(a.bodyH===undefined && !modelLoaded && a.skinHRatio!==undefined && a.skinHRatio>=0.45 && a.skinFill>=0.35){ closeUpRatio = 0.75; }
-        sceneType = closeUpRatio > 0.72 ? "portrait_close" : "portrait";
+        // v13.6.0：只有"显著真人"（bodyRatio≥0.15）才标 portrait/portrait_close；远处小人/YOLO 误检
+        // （森林小路/自行车道/桥倒影/庙会伞）落 general，避免错误触发人像不裁护栏与近中人像滤镜池。
+        // 群体（personCount≥2）不是单人肖像，落 general/street，不误触发 portrait_close 一刀切不裁。
+        var _pcN=(state.aiData && typeof state.aiData.personCount==="number")?state.aiData.personCount:1;
+        if(_pcN>=2){ sceneType="general"; }
+        else if(typeof closeUpRatio==="number" && closeUpRatio<0.15){ sceneType="general"; }
+        else sceneType = closeUpRatio > 0.72 ? "portrait_close" : "portrait";
       } else if(!weakPerson){
         // v8.3.0 场景通道重排（26 类目真实照片数据校准）：水景三通道 → 夜景 → 建筑 → 食物 → 风景 → 街景
         // 水景：水岸线局部倒影(shoreReflect，轴位置任意)+蓝水面(blueWater)+低人工结构(manmadeScore)
         // 水面均为白天场景：mean≥45 排除"极暗夜景水面"（night_1 类城市夜景水面倒影应归 night）
-        var _w1=(a.mean>=45 && a.blueWater>=0.65 && a.shoreReflect>=0.25 && a.manmadeScore<0.55);
-        var _w2=(a.mean>=45 && a.shoreReflect>=0.55 && a.manmadeScore<0.50);
-        var _w3=(a.mean>=45 && a.blueWater>=0.35 && a.shoreReflect>=0.30 && a.manmadeScore<0.40);
+        // v13.6.0：水面要"白天(mean≥55) + 成片蓝水 + 明确水岸倒影(shoreReflect)"三重证据。
+        // 仅凭上部蓝天/整体蓝调/暗蓝夜景不再判水（修 landscape蓝雪/night_neon蓝调误判 waterscape）。
+        var _w1=(a.mean>=55 && a.blueWater>=0.70 && a.shoreReflect>=0.50 && a.manmadeScore<0.55);
+        var _w2=(a.mean>=55 && a.shoreReflect>=0.60 && a.manmadeScore<0.50);
+        var _w3=(a.mean>=55 && a.blueWater>=0.72 && a.shoreReflect>=0.50 && a.manmadeScore<0.40);
         if(_w1||_w2||_w3){
           sceneType = "waterscape";
         } else if(a.mean<75 && a.sat>=0.5 && a.contrast<60){
@@ -6034,8 +6042,8 @@ var APP_VER="v13.5.0";
         var _a3=(a.centerVert>=0.42 && a.centerH2>=0.06 && a.centerH2<=0.13 && a.manmadeScore>=0.20 && a.manmadeScore<0.50 && a.mean>=90);
         if((!boatSkip && (_a1||_a2||_a3)) || facadeHint){
           sceneType = "architecture";
-        } else if(!isPerson && a.sat>0.35 && a.mean>60 && a.mean<170 && a.rowGap<25 && a.contrast<90 && a.bodyRatio>=0.15 && a.bodyRatio<0.55 && a.wb>0){
-          sceneType = "food"; // v4.5 P1-4: 纯肉盘/无餐具美食弱通道（GLM：肉盘无检出时退化landscape）——饱和暖调+中亮度+无明显水平结构+主体适中
+        } else if(!isPerson && a.sat>0.35 && a.mean>60 && a.mean<160 && a.rowGap<25 && a.contrast<90 && a.bodyRatio>=0.15 && a.bodyRatio<0.55 && a.wb>0 && a.warmRatio>=0.25 && (a.hasFoodEvidence===true || _foodCls)){
+          sceneType = "food"; // v4.5 P1-4: 纯肉盘/无餐具美食弱通道；v13.6.0：warmRatio≥0.25 + hasFoodEvidence/餐具类硬证据，修烛光/皮具/产品/雨窗误判 food
         } else if(a.mean>90 && _umb>=2 && _psn>=2){
           // v8.3.0 白天街头市集（置于 landscape 前，防止被"明亮高饱和小主体"风景通道抢先）
           sceneType="street";
@@ -6100,6 +6108,7 @@ var APP_VER="v13.5.0";
           var foodDetCount=0;
           for(var fw2=0;fw2<a.detectedClasses.length;fw2++){ if(foodWeak.indexOf(a.detectedClasses[fw2])>=0){ foodDetCount++; } }
           var landscapeGuard = (a.rowGap>25 && !hasTable && a.bodyRatio<0.35 && foodDetCount<2);
+          // v13.6.0：单个小杯/瓶仍弱翻盘，但加 sat/暖调前提（保留真食物召回）。
           if(hasFW && a.sat>0.2 && (hasTable || hasSmall || a.bodyRatio<0.45) && !landscapeGuard){ sceneType="food"; }
         }
         } // v8.2.9: night 通道 else 闭合
@@ -6109,9 +6118,12 @@ var APP_VER="v13.5.0";
       plan.sceneType = sceneType;
       plan.offlineGuess = !modelLoaded && isPerson && !modelPerson; // v4.5 P0-1: 弱网像素初判标记
       // v4.0.1: 保险机制——如果 isPerson 为 true，强制人像场景
-      if(isPerson && sceneType!=="portrait" && sceneType!=="portrait_close"){
-        var closeUpRatio2 = (a.bodyH!==undefined) ? a.bodyH : a.bodyRatio;
-        sceneType = closeUpRatio2 > 0.72 ? "portrait_close" : "portrait";
+      // v13.6.0：与上方门控一致——群体(personCount≥2)或远处小人(closeUp<0.15)不再被强制 portrait，
+      // 否则 multi_subject 群体/森林小路/自行车道会绕过显式判定被拉回 portrait_close。
+      var _pcForce=(state.aiData && typeof state.aiData.personCount==="number")?state.aiData.personCount:1;
+      var _cur2=(a.bodyH!==undefined)?a.bodyH:a.bodyRatio;
+      if(isPerson && sceneType!=="portrait" && sceneType!=="portrait_close" && _pcForce<2 && !(typeof _cur2==="number"&&_cur2<0.15)){
+        sceneType = _cur2 > 0.72 ? "portrait_close" : "portrait";
         plan.sceneType = sceneType;
       }
       
@@ -6324,7 +6336,7 @@ var APP_VER="v13.5.0";
       var _sceneForCrop = plan.sceneType || "general";
       var _cropThresh = (_sceneForCrop==="waterscape"||_sceneForCrop==="landscape"||_sceneForCrop==="architecture"||_sceneForCrop==="street") ? 0.03 : 0.05;
       var needCrop = totalCrop > _cropThresh;
-      // v13.5.0 内容防御升级版：只挡真·近黑/纯灰/UI 截图；暗调但有光影/主体照常进入后续主动构图
+      // v13.6.0 内容防御升级版：只挡真·近黑/纯灰/UI 截图；暗调但有光影/主体照常进入后续主动构图
       if(typeof _realContentGuard==="function" && _realContentGuard(a)){ needCrop=false; }
       if(!needCrop || isCloseUp){
         cropLeft = cropRight = cropTop = cropBottom = 0;
@@ -6372,18 +6384,18 @@ var APP_VER="v13.5.0";
         if(state.mode!=="camera"){ plan.z = 1.0; }
         plan.subject="人像";
       } else if(sceneType==="food"){
-        // v13.5.0：美食走暖食欲胶片（portra/warm），不再用 vivid(saturate1.5) 把菜推成塑料色；
+        // v13.6.0：美食走暖食欲胶片（portra/warm），不再用 vivid(saturate1.5) 把菜推成塑料色；
         // 暗调美食也不进 night/cyber 冷调。
         plan.filters=["Portra · 暖调胶片","暖调 · 食欲氛围","自然 · 忠实还原"];
         plan.f = "portra";
         plan.subject=a.subject||"美食";
       } else if(sceneType==="animal"){
-        // v13.5.0：动物自然真实+毛发质感，低饱和时也不硬上 vivid
+        // v13.6.0：动物自然真实+毛发质感，低饱和时也不硬上 vivid
         plan.filters=["自然 · 忠实还原","Provia · 中性通透","暖调 · 柔和"];
         plan.f = a.sat>0.45 ? "provia" : "natural";
         plan.subject=a.subject||"动物";
       } else if(a.sat < 0.05){
-        // v13.5.0：黑白硬闸门——只给真·低饱和且非暖调/晚霞/美食/肤色的中性画面。
+        // v13.6.0：黑白硬闸门——只给真·低饱和且非暖调/晚霞/美食/肤色的中性画面。
         // 美食/晚霞/暖色即便 sat 低也不推黑白（颜色即主体）。
         var _warmForMono=(typeof warmRatio==="number"?warmRatio:0)>0.34 || (typeof a.wb==="number"&&a.wb>0.06);
         if(_warmForMono || sceneType==="sunset" || sceneType==="food" || sceneType==="water"){
@@ -6778,7 +6790,7 @@ var APP_VER="v13.5.0";
       }catch(e){}
       // v13.0.0 用户口径硬保护：人像/人头特写不自动裁切（保持原图与完整人物）。
       // 这条放在所有构图/景别化裁切之后，防止模型精修把像素阶段的人像保护覆盖掉。
-      // v13.5.0：只有"真·人像"（占画面较大的真人/真脸）才整体归零保护；
+      // v13.6.0：只有"真·人像"（占画面较大的真人/真脸）才整体归零保护；
       // 假·人像（广告牌海报脸、占比极小路人）已由前面的主动构图产出裁切，这里不再一刀切覆盖。
       try{
         if(/portrait/.test(plan.sceneType||"") && _isRealPortrait(a)){
@@ -7111,7 +7123,7 @@ var APP_VER="v13.5.0";
               // 但当候选切掉的是"干净死区"（被裁条带边缘能量 < 0.25，平滑天空/空地面）且结果是标准
               // 社交画幅时，给小加成主动采用——这是 AI 主动发现并收成好构图，而不是对有内容的画面乱切。
               // 候选仍须先过 _validateNewCrop（主体/人物/物体/肤色/像素全部安全）。
-              // v13.5.0：默认要求候选质量分净提升 > 0.02；但当候选切掉的是"强死区"（加成≥0.05：平滑天空/
+              // v13.6.0：默认要求候选质量分净提升 > 0.02；但当候选切掉的是"强死区"（加成≥0.05：平滑天空/
               // 空地面/纯色暗墙）时门槛降到 0.01，让 AI 主动发现并收成标准社交画幅，而不是对有内容的画面乱切。
               // 候选仍须先过 _validateNewCrop（主体/人物/物体/肤色/像素全部安全）。
               var _best=null, _bestScore=-1;
@@ -9564,6 +9576,10 @@ if(aiModelState!=="idle"){ resolve(false); return; }
           var _mb=0;
           for(var _bi=0;_bi<valid.length;_bi++){ if(valid[_bi].class==="boat" && valid[_bi].score>_mb){ _mb=valid[_bi].score; } }
           state.aiData.maxBoatScore=_mb;
+          // v13.6.0：统计"够大的真人"个数——群体(≥2)不是单人肖像，场景分类不标 portrait
+          var _pc2=0;
+          for(var _pi=0;_pi<valid.length;_pi++){ if(valid[_pi].class==="person" && valid[_pi].score>=0.4 && (valid[_pi].bbox[3]/ih)>=0.08){ _pc2++; } }
+          state.aiData.personCount=_pc2;
           // v8.3.0: bird 置信度记录（花苞/花瓣偶被误检 bird，低信度 bird 不参与 animal 场景覆盖）
           var _mbd=0;
           for(var _bdi=0;_bdi<valid.length;_bdi++){ if(valid[_bdi].class==="bird" && valid[_bdi].score>_mbd){ _mbd=valid[_bdi].score; } }
@@ -13462,7 +13478,7 @@ hSym2:state.aiData.hSym}:null; }
   }; }catch(e){}
 })();
   </script>
-<div id="aicUpdateBar" class="hide"><span class="ub-t">🎨 v13.5.0：滤镜推荐重做——①黑白只给真·低饱和的建筑/街拍/通用纹理，美食/晚霞/暖调/人像肤色一律不推黑白（证据硬闸门，不再只扣分）；②美食走 Portra 暖食欲胶片，不再把菜推成饱和 1.5 的塑料色；③暗调美食不进夜景冷调池；④人像优先肤色友好。每条推荐都带命中的亮度/饱和/暖色依据。糊片/过曝/近纯黑/过饱和等硬闸门与主动构图（75% 裁切率）全部保留。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
+<div id="aicUpdateBar" class="hide"><span class="ub-t">🏞️ v13.6.0：场景误判系统性修复——①水面要"白天+成片蓝水+明确水岸倒影"三重证据，蓝天/雪山/暗蓝夜景不再被误判成水景；②美食弱通道加暖食证据，烛光/皮具/产品不再误判美食；③只有显著真人（单人、占比够大）才标人像，远处小人/群体不再错误触发人像不裁护栏。真·人像不切头手脚、多主体不挑一个、美食/晚霞不推黑白等硬护栏与 75% 主动裁切率全部保留。</span><button class="ub-b" id="aicUpdateGo">立即刷新</button><button class="ub-x" id="aicUpdateX">✕</button></div>
 <script>
 (function(){
   // v8.2.3 新版本就绪提示条：SW 激活后广播 → 页面弹出"立即刷新"，根治旧缓存看不到新功能
